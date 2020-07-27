@@ -1,0 +1,53 @@
+// Copyright 2020 The Loimos Project Developers.
+// See the top-level LICENSE file for details.
+//
+// SPDX-License-Identifier: MIT
+
+mainmodule loimos {
+  readonly CProxy_Main mainProxy;
+  readonly CProxy_People peopleArray;
+  readonly CProxy_Locations locationsArray;
+
+  mainchare Main {
+    entry Main(CkArgMsg*);
+    entry void run() {
+      for(day = 0; day < num_days; day++) {
+          serial {
+              peopleArray.SendVisitMessages();
+              CkStartQD(CkCallback(CkIndex_Main::StartComputingInteractions(), mainProxy));
+          }
+          when StartComputingInteractions() {
+            serial {
+              locationsArray.ComputeInteractions();
+              CkStartQD(CkCallback(CkIndex_Main::ComputedInteractions(), mainProxy));
+            }
+          }
+          when ComputedInteractions() {
+            serial {
+              peopleArray.ReportStats();
+            }
+          }
+          when ReceiveStats() {
+          }
+      }
+    };
+    entry void StartComputingInteractions(); // calls ComputeInteractions
+    entry void SentVisits();
+    entry void ComputedInteractions();
+    entry void ReceiveStats();
+  };
+
+  array [1D] People {
+    entry People();
+    entry void SendVisitMessages(); // calls ReceiveVisitMessages
+    entry void UpdateDiseaseState();
+    entry void ReportStats(); // contribute call to ReceiveStats
+  };
+
+  array [1D] Locations {
+    entry Locations();
+    entry void ReceiveVisitMessages();
+    entry void ComputeInteractions(); // calls UpdateDiseaseState
+  };
+
+};
