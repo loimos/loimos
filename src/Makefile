@@ -1,6 +1,6 @@
-CHARMC      = /Users/bhatele/work/apps/charm/mpi-darwin-x86_64/bin/charmc 
+CHARMC      = /Users/emeneses/Desktop/charm-v6.10.1/netlrts-darwin-x86_64/bin/charmc 
 
-OBJS		= Main.o People.o Locations.o
+OBJS		= Main.o People.o Locations.o Defs.o
 OBJS_DECL	= loimos.decl.h
 
 loimos: $(OBJS) $(OBJS_DECL)
@@ -19,5 +19,11 @@ People.o: People.C People.h main.decl.h
 Locations.o: Locations.C Locations.h main.decl.h
 	$(CHARMC) $(OPTS) $(INC) -o Locations.o Locations.C
 
+Defs.o: Defs.h
+	$(CHARMC) $(OPTS) $(INC) -o Defs.o Defs.C
+
 clean:
 	rm -f *.decl.h *.def.h *.o charmrun loimos
+
+test: loimos
+	./charmrun +p4 ./loimos 110 20 15 6 15 ++local	

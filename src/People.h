@@ -7,11 +7,19 @@
 #ifndef __PEOPLE_H__
 #define __PEOPLE_H__
 
+#include <random>
+#include <vector>
+
+#define LOCATION_LAMBDA 5.2
+
 class People : public CBase_People {
+  private:
+	int numLocalPeople;
+	std::vector<char> peopleState;
   public:
     People();
-    void SendVisitMessages(); // calls ReceiveVisitMessages
-    void UpdateDiseaseState();
+    void SendVisitMessages(); 
+    void UpdateDiseaseState(int personIdx, char state);
     void ReportStats();
 };
 

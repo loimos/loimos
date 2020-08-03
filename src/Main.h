@@ -12,7 +12,7 @@
 
 class Main : public CBase_Main {
   Main_SDAG_CODE
-  int day, num_days;
+  int day;
 
   public:
     Main(CkArgMsg* msg);
