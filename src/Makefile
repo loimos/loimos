@@ -1,4 +1,4 @@
-CHARMC      = /Users/emeneses/Desktop/charm-v6.10.1/netlrts-darwin-x86_64/bin/charmc 
+CHARMC      = $(HOME)/charm/mpi-darwin-x86_64/bin/charmc
 
 OBJS		= Main.o People.o Locations.o Defs.o
 OBJS_DECL	= loimos.decl.h

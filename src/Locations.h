@@ -12,12 +12,12 @@
 
 class Locations : public CBase_Locations {
   private:
-	int numLocalLocations;
-	std::vector<std::set<int> > locState;
+    int numLocalLocations;
+    std::vector<std::set<int> > locState;
   public:
     Locations();
     void ReceiveVisitMessages(int personIdx, int locationIdx);
-    void ComputeInteractions(); // calls UpdateDiseaseState
+    void ComputeInteractions(); // calls ReceiveInfections
 };
 
 #endif // __LOCATIONS_H__

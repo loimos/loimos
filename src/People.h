@@ -14,13 +14,13 @@
 
 class People : public CBase_People {
   private:
-	int numLocalPeople;
-	std::vector<char> peopleState;
+    int numLocalPeople;
+    std::vector<char> peopleState;
   public:
     People();
     void SendVisitMessages(); 
-    void UpdateDiseaseState(int personIdx, char state);
-    void ReportStats();
+    void ReceiveInfections(int personIdx, char state);
+    void EndofDayStateUpdate();
 };
 
 #endif // __PEOPLE_H__

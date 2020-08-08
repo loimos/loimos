@@ -17,8 +17,8 @@ extern /* readonly */ CProxy_People peopleArray;
 extern /* readonly */ CProxy_Locations locationsArray;
 extern /* readonly */ int numPeople;
 extern /* readonly */ int numLocations;
-extern /* readonly */ int numPeopleSubsets;
-extern /* readonly */ int numLocationSubsets;
+extern /* readonly */ int numPeoplePartitions;
+extern /* readonly */ int numLocationPartitions;
 extern /* readonly */ int numDays;
 
 int getElemsPerCont(int numElements, int numContainers);

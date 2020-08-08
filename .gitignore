@@ -1,0 +1,6 @@
+*.decl.h
+*.def.h
+
+*.o
+charmrun
+loimosita

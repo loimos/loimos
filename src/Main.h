@@ -16,7 +16,6 @@ class Main : public CBase_Main {
 
   public:
     Main(CkArgMsg* msg);
-    void SentVisits(void);
 };
 
 #endif // __MAIN_H__
