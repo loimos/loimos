@@ -16,6 +16,7 @@ class People : public CBase_People {
   private:
     int numLocalPeople;
     std::vector<char> peopleState;
+    std::default_random_engine generator;
   public:
     People();
     void SendVisitMessages(); 

@@ -12,6 +12,7 @@ People::People() {
   // getting number of people assigned to this chare
   numLocalPeople = getNumLocalElems(numPeople, numPeoplePartitions, thisIndex);
   peopleState.resize(numLocalPeople, HEALTHY);
+  generator.seed(thisIndex);
   
   // CkPrintf("People chare %d with %d people\n",thisIndex,numLocalPeople);
 }
@@ -20,7 +21,6 @@ void People::SendVisitMessages() {
   int visits, personIdx, locationIdx, locationSubset;
 
   // initialize random number generator for a Poisson distribution
-  std::default_random_engine generator;
   std::poisson_distribution<int> poisson_dist(LOCATION_LAMBDA);
 
   // initialize random number generator for a uniform distribution
@@ -32,11 +32,12 @@ void People::SendVisitMessages() {
 
     // getting random number of locations to visit
     visits = poisson_dist(generator);
-    // CkPrintf("Person %d with %d visits\n",personIdx,visits);
+    //CkPrintf("Person %d with %d visits\n",personIdx,visits);
     for(int j=0; j<visits; j++) {
 
       // generate random location to visit
       locationIdx = uniform_dist(generator);
+      //CkPrintf("Person %d visits %d\n",personIdx,locationIdx);
       locationSubset = getContainerIndex(locationIdx, numLocations, numLocationPartitions);
 
       // sending message to location
@@ -49,8 +50,8 @@ void People::ReceiveInfections(int personIdx, char state) {
   // updating state of a person
   int localIdx = getLocalIndex(personIdx, numPeople, numPeoplePartitions);
 
-  peopleState[localIdx] = state;
-  // CkPrintf("Person %d state %d\n",personIdx,state);
+  if(state) peopleState[localIdx] = state;
+  //CkPrintf("Partition %d - Person %d state %d\n",thisIndex,personIdx,state);
 }
 
 void People::EndofDayStateUpdate() {

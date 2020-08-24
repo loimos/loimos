@@ -13,7 +13,9 @@
 class Locations : public CBase_Locations {
   private:
     int numLocalLocations;
-    std::vector<std::set<int> > locState;
+    std::vector<std::vector<int> > locState;
+    std::default_random_engine generator;
+    float MAX_RANDOM_VALUE;
   public:
     Locations();
     void ReceiveVisitMessages(int personIdx, int locationIdx);
