@@ -10,7 +10,7 @@
 
 People::People() {
   // getting number of people assigned to this chare
-  numLocalPeople = getNumLocalElems(numPeople, numPeoplePartitions, thisIndex);
+  numLocalPeople = getNumLocalElements(numPeople, numPeoplePartitions, thisIndex);
   peopleState.resize(numLocalPeople, HEALTHY);
   generator.seed(thisIndex);
   
@@ -38,7 +38,7 @@ void People::SendVisitMessages() {
       // generate random location to visit
       locationIdx = uniform_dist(generator);
       //CkPrintf("Person %d visits %d\n",personIdx,locationIdx);
-      locationSubset = getContainerIndex(locationIdx, numLocations, numLocationPartitions);
+      locationSubset = getPartitionIndex(locationIdx, numLocations, numLocationPartitions);
 
       // sending message to location
       locationsArray[locationSubset].ReceiveVisitMessages(personIdx, locationIdx);

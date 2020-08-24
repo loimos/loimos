@@ -11,7 +11,7 @@
 
 Locations::Locations() {
   // getting number of locations assigned to this chare
-  numLocalLocations = getNumLocalElems(numLocations, numLocationPartitions, thisIndex);
+  numLocalLocations = getNumLocalElements(numLocations, numLocationPartitions, thisIndex);
   locState.resize(numLocalLocations);
   generator.seed(thisIndex);
   MAX_RANDOM_VALUE = (float)generator.max();
@@ -42,7 +42,7 @@ void Locations::ComputeInteractions() {
         state = INFECTED;
       else
         state = HEALTHY;
-      peopleSubsetIdx = getContainerIndex(*it, numPeople, numPeoplePartitions);
+      peopleSubsetIdx = getPartitionIndex(*it, numPeople, numPeoplePartitions);
       peopleArray[peopleSubsetIdx].ReceiveInfections(*it,state);
     }
     tmp++;

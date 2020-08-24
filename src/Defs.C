@@ -14,14 +14,14 @@ int getNumElementsPerPartition(int numElements, int numPartitions){
   return floor((float)numElements/(float)numPartitions);
 }
 
-int getNumLocalElems(int numElements, int numPartitions, int partitionIndex){
-  int elemsPerCont = getNumElementsPerPartition(numElements,numPartitions);
+int getNumLocalElements(int numElements, int numPartitions, int partitionIndex){
+  int elementsPerPartition = getNumElementsPerPartition(numElements,numPartitions);
   if(partitionIndex == (numPartitions-1))
-    return numElements - elemsPerCont*(numPartitions-1);
-  return elemsPerCont;
+    return numElements - elementsPerPartition*(numPartitions-1);
+  return elementsPerPartition;
 }
 
-int getContainerIndex(int globalIndex, int numElements, int numPartitions){
+int getPartitionIndex(int globalIndex, int numElements, int numPartitions){
   int partitionIndex = globalIndex/getNumElementsPerPartition(numElements,numPartitions);
   if(partitionIndex >= numPartitions)
     return (numPartitions-1);
@@ -29,14 +29,14 @@ int getContainerIndex(int globalIndex, int numElements, int numPartitions){
 }
 
 int getLocalIndex(int globalIndex, int numElements, int numPartitions){
-  int partitionIndex = getContainerIndex(globalIndex,numElements,numPartitions);
-  int elemsPerCont = getNumElementsPerPartition(numElements,numPartitions);
-  return globalIndex - partitionIndex*elemsPerCont;
+  int partitionIndex = getPartitionIndex(globalIndex,numElements,numPartitions);
+  int elementsPerPartition = getNumElementsPerPartition(numElements,numPartitions);
+  return globalIndex - partitionIndex*elementsPerPartition;
 }
 
 int getGlobalIndex(int localIndex, int partitionIndex, int numElements, int numPartitions){
-  int elemsPerCont = getNumElementsPerPartition(numElements,numPartitions);
-  return partitionIndex*elemsPerCont+localIndex;
+  int elementsPerPartition = getNumElementsPerPartition(numElements,numPartitions);
+  return partitionIndex*elementsPerPartition+localIndex;
 }
 
 #endif // __DEFS_H__

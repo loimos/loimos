@@ -21,14 +21,14 @@ extern /* readonly */ int numPeoplePartitions;
 extern /* readonly */ int numLocationPartitions;
 extern /* readonly */ int numDays;
 
-int getElemsPerCont(int numElements, int numContainers);
+int getNumElementsPerPartition(int numElements, int numPartitions);
 
-int getNumLocalElems(int numElements, int numContainers, int containerIndex);
+int getNumLocalElements(int numElements, int numPartitions, int partitionIndex);
 
-int getContainerIndex(int globalIndex, int numElements, int numContainers);
+int getPartitionIndex(int globalIndex, int numElements, int numPartitions);
 
-int getLocalIndex(int globalIndex, int numElements, int numContainers);
+int getLocalIndex(int globalIndex, int numElements, int numPartitions);
 
-int getGlobalIndex(int localIndex, int contIndex, int numElements, int numContainers);
+int getGlobalIndex(int localIndex, int partitionIndex, int numElements, int numPartitions);
 
 #endif // __DEFS_H__
