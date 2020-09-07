@@ -7,6 +7,8 @@
 #include "loimos.decl.h"
 #include "People.h"
 #include "Defs.h"
+#include "DiseaseModel.h"
+#include <tuple>
 
 People::People() {
   float value;
@@ -14,8 +16,8 @@ People::People() {
   newCases = 0;
   // getting number of people assigned to this chare
   numLocalPeople = getNumLocalElements(numPeople, numPeoplePartitions, thisIndex);
-  peopleState.resize(numLocalPeople, SUSCEPTIBLE);
-  peopleDay.resize(numLocalPeople, 0);
+  peopleState.resize(numLocalPeople, std::make_tuple(HEALTHY, __INT_MAX__));
+  
   generator.seed(thisIndex);
   MAX_RANDOM_VALUE = (float)generator.max();
   // randomnly choosing people as infectious
@@ -61,42 +63,45 @@ void People::SendVisitMessages() {
   }
 }
 
-void People::ReceiveInfections(int personIdx) {
+void People::ReceiveInfections(int personIdx, bool trigger_infection) {
   // updating state of a person
   int localIdx = getLocalIndex(personIdx, numPeople, numPeoplePartitions);
-  peopleState[localIdx] = EXPOSED;
-  peopleDay[localIdx] = day + INCUBATION_PERIOD;
+
+  // Handle disease transition.
+  DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
+  int currState, timeLeftInState;
+
+  std::tie(currState, timeLeftInState) = peopleState[localIdx];
+  if (trigger_infection && currState == HEALTHY) {
+    peopleState[localIdx] = diseaseModel->transitionFromState(currState, "untreated", generator);
+  }
   //CkPrintf("Partition %d - Person %d state %d\n",thisIndex,personIdx,state);
 }
 
 void People::EndofDayStateUpdate() {
-  int cont = 0;
-  // counting infected people
-  for(std::vector<char>::iterator it = peopleState.begin() ; it != peopleState.end(); ++it) {
-    switch(*it) {
-      case SUSCEPTIBLE:
-        break;
-      case EXPOSED:
-        if(day > peopleDay[cont]) {
-          newCases++;
-          peopleDay[cont] = day + INFECTION_PERIOD;
-          peopleState[cont] = INFECTIOUS;
-        }
-        break;
-      case INFECTIOUS:
-        if(day > peopleDay[cont]) {
-          peopleState[cont] = RECOVERED;
-        }
-        break;
-      case RECOVERED:
-        break;
+  int total = 0;
+  // CProxy_DiseaseModel diseaseModelProxy = CProxy_DiseaseModel::ckNew("");
+  DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
+  // CkPrintf("Init State %d", diseaseModel->getUninfectedState());
+
+  // for(std::vector<std::tuple<int,int>>::iterator it = peopleState.begin() ; it != peopleState.end(); ++it) {
+  int totalStates = diseaseModel->getTotalStates();
+  std::vector<int> stateSummary(totalStates, 0);
+  for(int i = 0; i < peopleState.size(); i++) {
+    std::tuple<int,int> current = peopleState[i];
+    int currState, timeLeftInState;
+    std::tie(currState, timeLeftInState) = current;
+    timeLeftInState -= (3600) * 24; // One day in seconds
+
+    if (timeLeftInState <= 0) {
+      peopleState[i] = diseaseModel->transitionFromState(currState, "untreated", generator);
     }
-    cont++;
+
+    // counting infected people
+    stateSummary[currState] += 1;
   }
 
-  // contributing to reduction
+  // Contribute the result to the reductiontarget cb.
   CkCallback cb(CkReductionTarget(Main, ReceiveStats), mainProxy);
-  contribute(sizeof(int), &newCases, CkReduction::sum_int, cb);
-  day++;
-  newCases = 0;
+  contribute(stateSummary, CkReduction::sum_int, cb);
 }

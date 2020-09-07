@@ -9,22 +9,21 @@
 
 #include <random>
 #include <vector>
+#include <tuple>
 
 #define LOCATION_LAMBDA 5.2
 
 class People : public CBase_People {
   private:
     int numLocalPeople;
-    int day;
-    int newCases;
-    std::vector<char> peopleState;
-    std::vector<int> peopleDay;
+    std::vector<std::tuple<int, int>> peopleState;
+    std::vector<int> stateSummations;
     std::default_random_engine generator;
     float MAX_RANDOM_VALUE;
   public:
     People();
     void SendVisitMessages(); 
-    void ReceiveInfections(int personIdx);
+    void ReceiveInfections(int personIdx, bool trigger_infection);
     void EndofDayStateUpdate();
 };
 

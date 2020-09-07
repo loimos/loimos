@@ -8,10 +8,12 @@
 #include "Main.h"
 #include "People.h"
 #include "Locations.h"
+#include "DiseaseModel.h"
 
 /* readonly */ CProxy_Main mainProxy;
 /* readonly */ CProxy_People peopleArray;
 /* readonly */ CProxy_Locations locationsArray;
+/* readonly */ CProxy_DiseaseModel globDiseaseModel;
 /* readonly */ int numPeople;
 /* readonly */ int numLocations;
 /* readonly */ int numPeoplePartitions;
@@ -39,7 +41,23 @@ Main::Main(CkArgMsg* msg) {
   // creating chare arrays
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
+
+  // Instantiate DiseaseModel nodegroup (One for each physical processor).
+  globDiseaseModel = CProxy_DiseaseModel::ckNew("disease_model/H5N1.textproto");
+
+  // run
   mainProxy.run();
+}
+
+void Main::ReceiveStats(CkReductionMsg *summary) {
+  CkPrintf("Summary of Day %d\n", day);
+  int *data = (int *) summary->getData();
+  DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
+
+  for (int i = 0; i < diseaseModel->getTotalStates(); i++) {
+    CkPrintf("%d in %s.\n", *data, diseaseModel->lookupStateName(i).c_str());
+    data++;
+  }
 }
 
 #include "loimos.def.h"
