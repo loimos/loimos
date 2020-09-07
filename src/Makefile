@@ -1,3 +1,4 @@
+.PHONY: diseaseModelProto
 CHARMC=$(HOME)/lib/charm/netlrts-darwin-x86_64/bin/charmc
 CXX=g++
 
@@ -15,7 +16,7 @@ loimos: $(OBJS) $(OBJS_DECL)
 main.decl.h: main.ci
 	$(CHARMC) main.ci
 
-Main.o: Main.C Main.h main.decl.h
+Main.o: diseaseModelProto Main.C Main.h main.decl.h
 	$(CHARMC) $(OPTS) $(INC) -o Main.o Main.C
 
 People.o: People.C People.h main.decl.h
@@ -27,6 +28,9 @@ Locations.o: Locations.C Locations.h main.decl.h
 DiseaseModel.o: DiseaseModel.h DiseaseModel.C 
 	$(CHARMC) $(OPTS) $(INC) -o DiseaseModel.o DiseaseModel.C
 
+diseaseModelProto: 
+	mv disease_model/*.proto ../src/ ; protoc --cpp_out=. disease.proto distribution.proto ; mv *.proto disease_model/
+
 distribution.pb.o: distribution.pb.cc distribution.pb.h
 	${CXX} ${CXXFLAGS} $< -c -o $@
 
@@ -37,7 +41,7 @@ Defs.o: Defs.h
 	$(CHARMC) $(OPTS) $(INC) -o Defs.o Defs.C
 
 clean:
-	rm -f *.decl.h *.def.h *.o charmrun loimos
+	rm -f *.decl.h *.def.h *.o charmrun loimos *.pb.cc *.pb.h
 
 test: loimos
 	./charmrun +p4 ./loimos 110 20 15 6 15 ++local	

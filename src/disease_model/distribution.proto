@@ -1,0 +1,36 @@
+// Copyright 2020 The Loimos Project Developers.
+// See the top-level LICENSE file for details.
+//
+// SPDX-License-Identifier: MIT
+
+syntax = "proto3";
+
+message Time_Def {
+  int32 hours = 1;
+  int32 minutes = 2;
+}
+
+message Dist_Uniform {
+  Time_Def tmin = 1; // lower bound, SimTime type
+  Time_Def tmax = 2; // upper bound, SimTime type
+}
+
+message Dist_Normal {
+  Time_Def tmean = 1;  // SimTime type
+  Time_Def tstdev = 2; // SimTime type
+}
+
+message Dist_Forever {}
+
+message Dist_Histogram {
+  message Bin {
+    Time_Def tval = 1; // lower bound of the values in the bin, SimTime type
+    double with_prob = 2; // probability/frequency of the bin
+  }
+  repeated Bin bin = 1;
+}
+
+message Dist_Fixed {
+  Time_Def time_in_state = 1;
+}
+
