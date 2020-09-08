@@ -71,6 +71,7 @@ void People::ReceiveInfections(int personIdx, bool trigger_infection) {
   DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
   int currState, timeLeftInState;
 
+  // TODO(iancostello): Don't make the state update here.
   std::tie(currState, timeLeftInState) = peopleState[localIdx];
   if (trigger_infection && currState == HEALTHY) {
     peopleState[localIdx] = diseaseModel->transitionFromState(currState, "untreated", generator);
@@ -91,11 +92,16 @@ void People::EndofDayStateUpdate() {
     std::tuple<int,int> current = peopleState[i];
     int currState, timeLeftInState;
     std::tie(currState, timeLeftInState) = current;
-    timeLeftInState -= (3600) * 24; // One day in seconds
 
+    // TODO(iancostello): Move into start of day for visits.
+    // Transition to new state or decrease time.
+    timeLeftInState -= (3600) * 24; // One day in seconds
     if (timeLeftInState <= 0) {
       peopleState[i] = diseaseModel->transitionFromState(currState, "untreated", generator);
+    } else {
+      peopleState[i] = std::make_tuple(currState, timeLeftInState);
     }
+    
 
     // counting infected people
     stateSummary[currState] += 1;
