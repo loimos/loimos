@@ -13,12 +13,13 @@
 class Locations : public CBase_Locations {
   private:
     int numLocalLocations;
-    std::vector<std::vector<int> > locState;
+    std::vector<std::vector<std::pair<int,char> > > locationPeople;
+    std::vector<char> locationState;
     std::default_random_engine generator;
     float MAX_RANDOM_VALUE;
   public:
     Locations();
-    void ReceiveVisitMessages(int personIdx, int locationIdx);
+    void ReceiveVisitMessages(int personIdx, char personState, int locationIdx);
     void ComputeInteractions(); // calls ReceiveInfections
 };
 

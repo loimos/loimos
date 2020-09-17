@@ -34,6 +34,7 @@ Main::Main(CkArgMsg* msg) {
   // setup main proxy
   CkPrintf("Running Loimos on %d PEs with %d people, %d locations, %d people subsets, %d location subsets, and %d days\n", CkNumPes(), numPeople, numLocations, numPeoplePartitions, numLocationPartitions, numDays);
   mainProxy = thisProxy;
+  accumulated = 0;
 
   // creating chare arrays
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);

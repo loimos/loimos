@@ -7,10 +7,17 @@
 #ifndef __DEFS_H__
 #define __DEFS_H__
 
-#define HEALTHY 0
-#define INFECTED 1
+#define SUSCEPTIBLE 0
+#define EXPOSED 1
+#define INFECTIOUS 2
+#define RECOVERED 3
+#define NUMBER_STATES 4
+
+#define INCUBATION_PERIOD 2
+#define INFECTION_PERIOD 4
 
 #define INFECTION_PROBABILITY 0.05
+#define INITIAL_INFECTIOUS_PROBABILITY 0.05
 
 extern /* readonly */ CProxy_Main mainProxy;
 extern /* readonly */ CProxy_People peopleArray;

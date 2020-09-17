@@ -38,7 +38,7 @@ mainmodule loimos {
           }
         }
         when ReceiveStats(int total) {
-          serial { CkPrintf("Day %d, infected %d\n", day, total); }
+          serial { accumulated += total; CkPrintf("Day %d, new cases %d, accumulated cases %d\n", day, total, accumulated); }
         }
       }
       serial { CkExit(); }
@@ -51,13 +51,13 @@ mainmodule loimos {
   array [1D] People {
     entry People();
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
-    entry void ReceiveInfections(int,char);
+    entry void ReceiveInfections(int);
     entry void EndofDayStateUpdate(); // contribute call to ReceiveStats
   };
 
   array [1D] Locations {
     entry Locations();
-    entry void ReceiveVisitMessages(int,int);
+    entry void ReceiveVisitMessages(int,char,int);
     entry void ComputeInteractions(); // calls ReceiveInfections
   };
 

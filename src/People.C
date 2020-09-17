@@ -9,11 +9,26 @@
 #include "Defs.h"
 
 People::People() {
+  float value;
+  int cont = 0;
+  newCases = 0;
   // getting number of people assigned to this chare
   numLocalPeople = getNumLocalElements(numPeople, numPeoplePartitions, thisIndex);
-  peopleState.resize(numLocalPeople, HEALTHY);
+  peopleState.resize(numLocalPeople, SUSCEPTIBLE);
+  peopleDay.resize(numLocalPeople, 0);
   generator.seed(thisIndex);
-  
+  MAX_RANDOM_VALUE = (float)generator.max();
+  // randomnly choosing people as infectious
+  for(std::vector<char>::iterator it = peopleState.begin(); it != peopleState.end(); ++it){
+    value = (float)generator();
+    if(value/MAX_RANDOM_VALUE < INITIAL_INFECTIOUS_PROBABILITY){
+      *it = INFECTIOUS;
+      peopleDay[cont] = INFECTION_PERIOD;
+      newCases++;
+    }
+    cont++;
+  }
+  day = 0;
   // CkPrintf("People chare %d with %d people\n",thisIndex,numLocalPeople);
 }
 
@@ -41,26 +56,47 @@ void People::SendVisitMessages() {
       locationSubset = getPartitionIndex(locationIdx, numLocations, numLocationPartitions);
 
       // sending message to location
-      locationsArray[locationSubset].ReceiveVisitMessages(personIdx, locationIdx);
+      locationsArray[locationSubset].ReceiveVisitMessages(personIdx, peopleState[i], locationIdx);
     }
   }
 }
 
-void People::ReceiveInfections(int personIdx, char state) {
+void People::ReceiveInfections(int personIdx) {
   // updating state of a person
   int localIdx = getLocalIndex(personIdx, numPeople, numPeoplePartitions);
-
-  if(state) peopleState[localIdx] = state;
+  peopleState[localIdx] = EXPOSED;
+  peopleDay[localIdx] = day + INCUBATION_PERIOD;
   //CkPrintf("Partition %d - Person %d state %d\n",thisIndex,personIdx,state);
 }
 
 void People::EndofDayStateUpdate() {
-  int total = 0;
+  int cont = 0;
   // counting infected people
-  for(std::vector<char>::iterator it = peopleState.begin() ; it != peopleState.end(); ++it)
-    if(*it == INFECTED) total++;
+  for(std::vector<char>::iterator it = peopleState.begin() ; it != peopleState.end(); ++it) {
+    switch(*it) {
+      case SUSCEPTIBLE:
+        break;
+      case EXPOSED:
+        if(day > peopleDay[cont]) {
+          newCases++;
+          peopleDay[cont] = day + INFECTION_PERIOD;
+          peopleState[cont] = INFECTIOUS;
+        }
+        break;
+      case INFECTIOUS:
+        if(day > peopleDay[cont]) {
+          peopleState[cont] = RECOVERED;
+        }
+        break;
+      case RECOVERED:
+        break;
+    }
+    cont++;
+  }
 
   // contributing to reduction
   CkCallback cb(CkReductionTarget(Main, ReceiveStats), mainProxy);
-  contribute(sizeof(int), &total, CkReduction::sum_int, cb);
+  contribute(sizeof(int), &newCases, CkReduction::sum_int, cb);
+  day++;
+  newCases = 0;
 }
