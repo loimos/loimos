@@ -12,7 +12,7 @@
 Locations::Locations() {
   // getting number of locations assigned to this chare
   numLocalLocations = getNumLocalElements(numLocations, numLocationPartitions, thisIndex);
-  locationPeople.resize(numLocalLocations);
+  visitors.resize(numLocalLocations);
   locationState.resize(numLocalLocations, SUSCEPTIBLE);
   generator.seed(thisIndex);
   MAX_RANDOM_VALUE = (float)generator.max();
@@ -21,7 +21,7 @@ Locations::Locations() {
 void Locations::ReceiveVisitMessages(int personIdx, char personState, int locationIdx) {
   // adding person to location visit list
   int localLocIdx = getLocalIndex(locationIdx, numLocations, numLocationPartitions);
-  locationPeople[localLocIdx].push_back(std::pair<int,char>(personIdx, personState));
+  visitors[localLocIdx].push_back(std::pair<int,char>(personIdx, personState));
   if(personState == INFECTIOUS) locationState[localLocIdx] = INFECTIOUS;
   // CkPrintf("Location %d localIdx %d visited by person %d\n", locationIdx, localLocIdx, personIdx);
 }
@@ -31,18 +31,18 @@ void Locations::ComputeInteractions() {
   int cont=0, globalIdx;
   float value;
   // traverses list of locations
-  for(std::vector<std::vector<std::pair<int,char> > >::iterator locIter = locationPeople.begin() ; locIter != locationPeople.end(); ++locIter) {
+  for(std::vector<std::vector<std::pair<int,char> > >::iterator locIter = visitors.begin() ; locIter != visitors.end(); ++locIter) {
     if(locationState[cont] == INFECTIOUS) {
       // sorting set of people to guarantee deterministic behavior
       sort(locIter->begin(), locIter->end());
       globalIdx = getGlobalIndex(cont, thisIndex, numLocations, numLocationPartitions);
-      for(std::vector<std::pair<int,char> >::iterator it = locIter->begin() ; it != locIter->end(); ++it) {
+      for(std::vector<std::pair<int,char> >::iterator visitor = locIter->begin() ; visitor != locIter->end(); ++visitor) {
         // randomly selecting people to get infected
         value = (float)generator();
-        // CkPrintf("Partition %d - Location %d - Person %d - Value %f\n", thisIndex, globalIdx, *it, value);
-        if(it->second == SUSCEPTIBLE && value/MAX_RANDOM_VALUE < INFECTION_PROBABILITY) {
-          peopleSubsetIdx = getPartitionIndex(it->first, numPeople, numPeoplePartitions);
-          peopleArray[peopleSubsetIdx].ReceiveInfections(it->first);
+        // CkPrintf("Partition %d - Location %d - Person %d - Value %f\n", thisIndex, globalIdx, *visitor, value);
+        if(visitor->second == SUSCEPTIBLE && value/MAX_RANDOM_VALUE < INFECTION_PROBABILITY) {
+          peopleSubsetIdx = getPartitionIndex(visitor->first, numPeople, numPeoplePartitions);
+          peopleArray[peopleSubsetIdx].ReceiveInfections(visitor->first);
         }
       }
     }

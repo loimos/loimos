@@ -13,7 +13,7 @@
 class Locations : public CBase_Locations {
   private:
     int numLocalLocations;
-    std::vector<std::vector<std::pair<int,char> > > locationPeople;
+    std::vector<std::vector<std::pair<int,char> > > visitors;
     std::vector<char> locationState;
     std::default_random_engine generator;
     float MAX_RANDOM_VALUE;
