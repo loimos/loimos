@@ -1,6 +1,7 @@
 CHARMC      = charmc
 
 OBJS		= Main.o DiseaseModel.o People.o Locations.o Defs.o \
+              Location.o Event.o \
 			  disease_model/disease.pb.o disease_model/distribution.pb.o
 OBJS_DECL	= loimos.decl.h
 BIN         = loimos

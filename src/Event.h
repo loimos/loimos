@@ -15,6 +15,8 @@ struct Event {
   char personState; // the person's curent state in the disease model
   int time;
   char type; // indicates whether they're arriving or leaving
+  int time;
+  EventType type;
 
   bool operator>(const Event& rhs) const;
 };

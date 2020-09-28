@@ -9,6 +9,8 @@
 #include "Location.h"
 #include "Event.h"
 #include "DiseaseModel.h"
+#include "Location.h"
+#include "Event.h"
 #include "Defs.h"
 
 #include <algorithm>
@@ -79,6 +81,9 @@ void Locations::ComputeInteractions() {
     }
     justInfected.empty();
   }
+  
+  // cleaning state of all locations
+  //locationState.resize(numLocalLocations, SUSCEPTIBLE);
 }
 
 // Simple helper function which infects a given person with a given
