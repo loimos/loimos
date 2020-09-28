@@ -7,15 +7,14 @@
 #ifndef __EVENT_H__
 #define __EVENT_H__
 
-enum EventType {arrive, leave};
-
 // This is just a bundle of information that we don't need to
 // guarentee any constraints on, hence why this is a stuct rather than
 // a class
 struct Event {
   int personIdx; // the index of the person arriving or leaving
+  char personState; // the person's curent state in the disease model
   int time;
-  EventType type;
+  char type; // indicates whether they're arriving or leaving
 
   bool operator>(const Event& rhs) const;
 };

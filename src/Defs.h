@@ -7,6 +7,7 @@
 #ifndef __DEFS_H__
 #define __DEFS_H__
 
+// Disease states
 #define SUSCEPTIBLE 0
 #define EXPOSED 1
 #define INFECTIOUS 2
@@ -18,6 +19,10 @@
 
 #define INFECTION_PROBABILITY 0.05
 #define INITIAL_INFECTIOUS_PROBABILITY 0.05
+
+// Event types
+#define ARRIVAL 0
+#define DEPARTURE 1
 
 extern /* readonly */ CProxy_Main mainProxy;
 extern /* readonly */ CProxy_People peopleArray;

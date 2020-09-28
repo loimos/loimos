@@ -73,7 +73,7 @@ mainmodule loimos {
 
   array [1D] Locations {
     entry Locations();
-    entry void ReceiveVisitMessages(int,char,int,int,int);
+    entry void ReceiveVisitMessages(int,int,char,int,int);
     entry void ComputeInteractions(); // calls ReceiveInfections
   };
 
