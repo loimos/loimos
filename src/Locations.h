@@ -21,7 +21,13 @@ class Locations : public CBase_Locations {
     DiseaseModel *diseaseModel;
   public:
     Locations();
-    void ReceiveVisitMessages(int personIdx, int personState, int locationIdx);
+    void ReceiveVisitMessages(
+      int personIdx,
+      char personState,
+      int locationIdx,
+      int visitStart,
+      int visitEnd
+    );
     void ComputeInteractions(); // calls ReceiveInfections
 };
 
