@@ -12,11 +12,9 @@
 #include <queue>
 #include <vector>
 #include <functional>
-<<<<<<< HEAD
 #include <random>
 #include <set>
-=======
->>>>>>> cherry-pick of actually adding in Location class and Event struct
+#include <random>
 
 // Represents a single location where people can interact
 // Not to be confused with Locations, which represents a group of
@@ -26,7 +24,6 @@ class Location {
     // Represents all of the arrivals and departures of people
     // from this location on a given day
     std::priority_queue<Event, std::vector<Event>, std::greater<Event> > events;
-<<<<<<< HEAD
     // Each Event one of these containers is the arrival event for a
     // a person currently at this location
     std::vector<Event> infectiousArrivals;
@@ -62,17 +59,6 @@ class Location {
     std::unordered_set<int> processEvents(
       std::default_random_engine generator
     );
-=======
-    // Each int in one of these containers represents the index of
-    // a person at this location
-    std::vector<int> infectiousPeople;
-    std::vector<int> susceptiblePeople;
-  public:
-    // just use default constructors
-    
-    void addEvent(Event e);
-    void processEvents();
->>>>>>> cherry-pick of actually adding in Location class and Event struct
 };
   
 #endif // __LOCATION_H__
