@@ -23,7 +23,10 @@ class Locations : public CBase_Locations {
     Locations();
     void ReceiveVisitMessages(
       int personIdx,
+<<<<<<< HEAD
       char personState,
+=======
+>>>>>>> eb53b66... now generating and sending start and end times for visits
       int locationIdx,
       int visitStart,
       int visitEnd
