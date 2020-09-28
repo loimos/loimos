@@ -5,7 +5,7 @@ CXX=g++
 PROTOBUF_DIR=/usr/local/bin/vcpkg/installed/x64-osx
 CXXFLAGS=-std=c++11 -Wall -I${PROTOBUF_DIR}/include
 
-OBJS		= Main.o People.o Locations.o Defs.o DiseaseModel.o disease.pb.o distribution.pb.o
+OBJS		= Main.o DiseaseModel.o People.o Locations.o Defs.o disease.pb.o distribution.pb.o
 OBJS_DECL	= loimos.decl.h
 
 loimos: $(OBJS) $(OBJS_DECL)

@@ -9,31 +9,37 @@
 #include "Defs.h"
 #include "DiseaseModel.h"
 #include <tuple>
+#include <limits>
+
 
 People::People() {
-  float value;
-  int cont = 0;
-  newCases = 0;
-  // getting number of people assigned to this chare
+  // Init default values.
   numLocalPeople = getNumLocalElements(numPeople, numPeoplePartitions, thisIndex);
-  peopleState.resize(numLocalPeople, std::make_tuple(HEALTHY, __INT_MAX__));
+  day = 0; 
+
+  // Initialize disease model and initial healthy states of all individuals.
+  diseaseModel = globDiseaseModel.ckLocalBranch();
+  int healthy_state = diseaseModel->getHealthyState();
+  peopleState.resize(numLocalPeople, std::make_tuple(healthy_state, std::numeric_limits<Time>::max()));
   
+  // Init random number generator.
   generator.seed(thisIndex);
   MAX_RANDOM_VALUE = (float)generator.max();
-  // randomnly choosing people as infectious
-  for(std::vector<char>::iterator it = peopleState.begin(); it != peopleState.end(); ++it){
-    value = (float)generator();
-    if(value/MAX_RANDOM_VALUE < INITIAL_INFECTIOUS_PROBABILITY){
-      *it = INFECTIOUS;
-      peopleDay[cont] = INFECTION_PERIOD;
-      newCases++;
+  float random_value;
+  
+  // Randomly initiate initial infections.
+  for(std::vector<std::tuple<int, Time>>::iterator it = peopleState.begin(); it != peopleState.end(); ++it){
+    random_value = (float) generator();
+    if(random_value / MAX_RANDOM_VALUE < INITIAL_INFECTIOUS_PROBABILITY) {
+      *it = diseaseModel->transitionFromState(healthy_state, "untreated", &generator);
     }
-    cont++;
   }
-  day = 0;
-  // CkPrintf("People chare %d with %d people\n",thisIndex,numLocalPeople);
 }
 
+/**
+ * Randomly generates an itinerary (number of visits to random locations)
+ * for each person and sends visit messages to locations.
+ */ 
 void People::SendVisitMessages() {
   int visits, personIdx, locationIdx, locationSubset;
 
@@ -58,35 +64,30 @@ void People::SendVisitMessages() {
       locationSubset = getPartitionIndex(locationIdx, numLocations, numLocationPartitions);
 
       // sending message to location
-      locationsArray[locationSubset].ReceiveVisitMessages(personIdx, peopleState[i], locationIdx);
+      locationsArray[locationSubset].ReceiveVisitMessages(personIdx, std::get<0>(peopleState[i]), locationIdx);
     }
   }
 }
 
-void People::ReceiveInfections(int personIdx, bool trigger_infection) {
+void People::ReceiveInfections(int personIdx) {
   // updating state of a person
   int localIdx = getLocalIndex(personIdx, numPeople, numPeoplePartitions);
 
   // Handle disease transition.
-  DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
   int currState, timeLeftInState;
 
   // TODO(iancostello): Don't make the state update here.
   std::tie(currState, timeLeftInState) = peopleState[localIdx];
-  if (trigger_infection && currState == HEALTHY) {
-    peopleState[localIdx] = diseaseModel->transitionFromState(currState, "untreated", generator);
+  if (currState == diseaseModel->getHealthyState()) {
+    peopleState[localIdx] = diseaseModel->transitionFromState(currState, "untreated", &generator);
   }
-  //CkPrintf("Partition %d - Person %d state %d\n",thisIndex,personIdx,state);
 }
 
 void People::EndofDayStateUpdate() {
   int total = 0;
-  // CProxy_DiseaseModel diseaseModelProxy = CProxy_DiseaseModel::ckNew("");
-  DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
-  // CkPrintf("Init State %d", diseaseModel->getUninfectedState());
 
-  // for(std::vector<std::tuple<int,int>>::iterator it = peopleState.begin() ; it != peopleState.end(); ++it) {
-  int totalStates = diseaseModel->getTotalStates();
+  // Handle state transitions at the end of the day.
+  int totalStates = diseaseModel->getNumberOfStates();
   std::vector<int> stateSummary(totalStates, 0);
   for(int i = 0; i < peopleState.size(); i++) {
     std::tuple<int,int> current = peopleState[i];
@@ -94,16 +95,15 @@ void People::EndofDayStateUpdate() {
     std::tie(currState, timeLeftInState) = current;
 
     // TODO(iancostello): Move into start of day for visits.
-    // Transition to new state or decrease time.
+    // Transition to newstate or decrease time.
     timeLeftInState -= (3600) * 24; // One day in seconds
     if (timeLeftInState <= 0) {
-      peopleState[i] = diseaseModel->transitionFromState(currState, "untreated", generator);
+      peopleState[i] = diseaseModel->transitionFromState(currState, "untreated", &generator);
     } else {
       peopleState[i] = std::make_tuple(currState, timeLeftInState);
     }
-    
 
-    // counting infected people
+    // Counting people by state.
     stateSummary[currState] += 1;
   }
 

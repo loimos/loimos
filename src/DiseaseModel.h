@@ -8,23 +8,29 @@
 
 #include "disease.pb.h"
 #include "distribution.pb.h"
+#include <random>
+using Time = int32_t;
 
 class DiseaseModel : public CBase_DiseaseModel {
     private:
         loimos::proto::DiseaseModel *model;
         // Map from state name to index of state in model.
-        std::map<std::string, int> *state_lookup;
+        // TODO(iancostello): Change these maps to be non-pointers.
+        std::unordered_map<std::string, int> *state_lookup;
         // For each state index, map from stategy name string to index of strategy labels.
-        std::vector<std::map<std::string, int> *> *stategy_lookup;  
-        int uninfectedState;
-        double getTimeInNextState(int nextState, std::default_random_engine generator);
-        double timeDefToSeconds(Time_Def time);
+        std::vector<std::unordered_map<std::string, int> *> *strategy_lookup;  
+        Time getTimeInNextState(int nextState, std::default_random_engine *generator);
+        Time timeDefToSeconds(Time_Def time);
+        int healthyState;
     public:
         DiseaseModel(std::string pathToModel);
         int getIndexOfState(std::string stateLabel);
-        std::tuple<int, int> transitionFromState(int fromState, std::string interventionStategy, std::default_random_engine generator);
-        int getTotalStates();
+        // TODO(iancostello): Change interventionStategies to index based.
+        std::tuple<int, int> transitionFromState(int fromState, std::string interventionStategy, std::default_random_engine *generator);
         std::string lookupStateName(int state);
+        int getNumberOfStates();
+        int getHealthyState();
+        bool isInfectious(int personState);
 };
 
 #endif // __DiseaseModel_H__ 

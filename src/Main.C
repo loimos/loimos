@@ -36,25 +36,27 @@ Main::Main(CkArgMsg* msg) {
   // setup main proxy
   CkPrintf("Running Loimos on %d PEs with %d people, %d locations, %d people subsets, %d location subsets, and %d days\n", CkNumPes(), numPeople, numLocations, numPeoplePartitions, numLocationPartitions, numDays);
   mainProxy = thisProxy;
-  accumulated = 0;
+
+  // Instantiate DiseaseModel nodegroup (One for each physical processor).
+  CkPrintf("Loading diseaseModel.\n");
+  globDiseaseModel = CProxy_DiseaseModel::ckNew("disease_model/H5N1.textproto");
 
   // creating chare arrays
+  CkPrintf("Loading otherrs.\n");
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
 
-  // Instantiate DiseaseModel nodegroup (One for each physical processor).
-  globDiseaseModel = CProxy_DiseaseModel::ckNew("disease_model/H5N1.textproto");
-
   // run
+  CkPrintf("Running.\n");
   mainProxy.run();
 }
 
 void Main::ReceiveStats(CkReductionMsg *summary) {
   CkPrintf("Summary of Day %d\n", day);
-  int *data = (int *) summary->getData();
+  int *data = reinterpret_cast<int *>(summary->getData());
   DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
 
-  for (int i = 0; i < diseaseModel->getTotalStates(); i++) {
+  for (int i = 0; i < diseaseModel->getNumberOfStates(); i++) {
     CkPrintf("%d in %s.\n", *data, diseaseModel->lookupStateName(i).c_str());
     data++;
   }

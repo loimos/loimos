@@ -6,6 +6,7 @@
 
 #include "loimos.decl.h"
 #include "Locations.h"
+#include "DiseaseModel.h"
 #include "Defs.h"
 #include <algorithm>
 
@@ -13,16 +14,20 @@ Locations::Locations() {
   // getting number of locations assigned to this chare
   numLocalLocations = getNumLocalElements(numLocations, numLocationPartitions, thisIndex);
   visitors.resize(numLocalLocations);
-  locationState.resize(numLocalLocations, SUSCEPTIBLE);
+  // Init disease states.
+  diseaseModel = globDiseaseModel.ckLocalBranch();
+  locationState.resize(numLocalLocations, diseaseModel->getHealthyState());
+  // Seed random number generator via branch ID for reproducibility.
   generator.seed(thisIndex);
   MAX_RANDOM_VALUE = (float)generator.max();
 }
 
-void Locations::ReceiveVisitMessages(int personIdx, char personState, int locationIdx) {
+void Locations::ReceiveVisitMessages(int personIdx, int personState, int locationIdx) {
   // adding person to location visit list
   int localLocIdx = getLocalIndex(locationIdx, numLocations, numLocationPartitions);
   visitors[localLocIdx].push_back(std::pair<int,char>(personIdx, personState));
-  if(personState == INFECTIOUS) locationState[localLocIdx] = INFECTIOUS;
+  if(diseaseModel->isInfectious(personState))
+    locationState[localLocIdx] = INFECTIOUS;
   // CkPrintf("Location %d localIdx %d visited by person %d\n", locationIdx, localLocIdx, personIdx);
 }
 
@@ -40,7 +45,7 @@ void Locations::ComputeInteractions() {
         // randomly selecting people to get infected
         value = (float)generator();
         // CkPrintf("Partition %d - Location %d - Person %d - Value %f\n", thisIndex, globalIdx, *visitor, value);
-        if(visitor->second == SUSCEPTIBLE && value/MAX_RANDOM_VALUE < INFECTION_PROBABILITY) {
+        if(visitor->second == diseaseModel->getHealthyState() && value/MAX_RANDOM_VALUE < INFECTION_PROBABILITY) {
           peopleSubsetIdx = getPartitionIndex(visitor->first, numPeople, numPeoplePartitions);
           peopleArray[peopleSubsetIdx].ReceiveInfections(visitor->first);
         }
@@ -51,6 +56,6 @@ void Locations::ComputeInteractions() {
     cont++;
   }
   // cleaning state of all locations
-  locationState.resize(numLocalLocations, SUSCEPTIBLE);
+  locationState.resize(numLocalLocations, diseaseModel->getHealthyState());
 }
 
