@@ -105,7 +105,7 @@ void People::SendVisitMessages() {
       locationsArray[locationSubset].ReceiveVisitMessages(
         locationIdx,
         personIdx,
-        personstate,
+        personState,
         visitStart,
         visitEnd
       );
