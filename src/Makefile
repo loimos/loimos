@@ -1,6 +1,6 @@
 CHARMC      = charmc
 
-OBJS		= Main.o People.o Locations.o Defs.o
+OBJS		= Main.o People.o Locations.o Location.o Event.o Defs.o
 OBJS_DECL	= loimos.decl.h
 BIN         = loimos
 
@@ -23,4 +23,4 @@ clean:
 	rm -f *.decl.h *.def.h *.o charmrun $(BIN)
 
 test: loimos
-	./charmrun +p4 ./$(BIN) 110 20 15 6 15 ++local	
+	/charmrun +p4 ./$(BIN) 110 20 15 6 15 ++local	

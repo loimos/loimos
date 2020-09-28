@@ -6,8 +6,13 @@
 
 #include "loimos.decl.h"
 #include "Locations.h"
+#include "Location.h"
+#include "Event.h"
 #include "Defs.h"
+
 #include <algorithm>
+#include <functional>
+#include <queue>
 
 Locations::Locations() {
   // getting number of locations assigned to this chare
@@ -16,8 +21,7 @@ Locations::Locations() {
     numLocationPartitions,
     thisIndex
   );
-  visitors.resize(numLocalLocations);
-  locationState.resize(numLocalLocations, SUSCEPTIBLE);
+  locations.resize(numLocalLocations);
 
   generator.seed(thisIndex);
   MAX_RANDOM_VALUE = (float) generator.max();
@@ -36,13 +40,13 @@ void Locations::ReceiveVisitMessages(
     numLocations,
     numLocationPartitions
   );
-  
-  if(personState == INFECTIOUS)
-    locationState[localLocIdx] = INFECTIOUS;
-  
-  visitors[localLocIdx].push_back(
-    std::pair<int,char>(personIdx, personState)
-  );
+
+  Event arrival { personIdx, visitStart, arrive };
+  Event departure { personIdx, visitEnd, leave };
+
+  locations[localLocIdx].addEvent(arrival);
+  locations[localLocIdx].addEvent(departure);
+
   //CkPrintf(
   //  "Location %d localIdx %d visited by person %d\n",
   //  locationIdx,
@@ -57,16 +61,17 @@ void Locations::ComputeInteractions() {
   char state;
   float value;
   // traverses list of locations
-  for (auto locIter : visitors) {
-    // sorting set of people to guarantee deterministic behavior
-    sort(locIter.begin(), locIter.end());
+  for (auto loc : locations) {
     //globalIdx = getGlobalIndex(
     //  cont,
     //  thisIndex,
     //  numLocations,
     //  numLocationPartitions
     //);
-
+    
+    loc.processEvents();
+  }
+  /*
     for (auto it : locIter) {
       // randomly selecting people to get infected
       value = (float) generator();
@@ -98,5 +103,6 @@ void Locations::ComputeInteractions() {
   
   // cleaning state of all locations
   locationState.resize(numLocalLocations, SUSCEPTIBLE);
+  */
 }
 
