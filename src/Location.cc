@@ -18,11 +18,32 @@ void Location::addEvent(Event e) {
 }
 
 void Location::processEvents() {
+  std::vector<int> people;
   Event curEvent;
   while (!events.empty()) {
     curEvent = events.top();
     events.pop();
 
-    // TODO: handle event
+    // TODO: implement a disease model to make this check properly
+    if (SUSCEPTIBLE == curEvent.personState) {
+      people = susceptiblePeople;
+    } else if (INFECTIOUS == curEvent.personState) {
+      people = infectiousPeople;
+    } else {
+      continue;
+    }
+
+    if (ARRIVAL == curEvent.type) {
+      people.push_back(curEvent.personIdx);
+
+    } else if (DEPARTURE == curEvent.type) {
+      people.erase(
+        std::remove(
+          people.begin(),
+          people.end(),
+          curEvent.personIdx
+        ), people.end()
+      );
+    }
   }
 }
