@@ -75,7 +75,7 @@ void Locations::ComputeInteractions() {
     //  numLocationPartitions
     //);
     
-    loc.processEvents();
+    loc.processEvents(generator);
   }
   /*
     for (auto it : locIter) {
