@@ -54,8 +54,12 @@ mainmodule loimos {
               int total_in_state = *data;
               int change_in_infected = total_in_state - accumulated[i];
               if (total_in_state != 0 || change_in_infected != 0) {
-                CkPrintf("%d in %s. (%d change from previous day)\n", total_in_state,
-                        diseaseModel->lookupStateName(i).c_str(), change_in_infected);
+                CkPrintf(
+                  "%d in %s. (%d change from previous day)\n",
+                  total_in_state,
+                  diseaseModel->lookupStateName(i).c_str(),
+                  change_in_infected
+                );
               }
               accumulated[i] = total_in_state; 
               data++;
