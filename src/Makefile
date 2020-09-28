@@ -1,27 +1,37 @@
-CHARMC = charmc
+CHARMC      = charmc
 
-OBJS   = Main.o People.o Locations.o Location.o Event.o Defs.o
-DEFS   = Defs.h loimos.def.h
-DECLS  = loimos.decl.h
-BIN    = loimos
+OBJS		= Main.o DiseaseModel.o People.o Locations.o Defs.o \
+			  disease_model/disease.pb.o disease_model/distribution.pb.o
+OBJS_DECL	= loimos.decl.h
+BIN         = loimos
 
-# Build the executable (and implicitly charmrun) from the object files
-$(BIN): $(OBJS) $(DECLS)
+.PHONY:all
+all: all-sub $(BIN)
+
+$(BIN): $(OBJS) $(OBJS_DECL)
 	$(CHARMC) -o $@ $(OBJS) -language charm++ \
-	-module CkMulticast $(OPTS)
+	-module CkMulticast $(OPTS) \
+	`pkg-config --cflags --libs protobuf`
 
 # Build .decl.h (and implicitly .def.h) files from the corresponding
 # .ci files
-$(DECLS): %.decl.h: %.ci
+$(OBJS_DECL): %.decl.h: %.ci
 	$(CHARMC) $<
 
 # Build .o files from the corresponding .C and .h files
-$(OBJS): %.o: %.C %.h $(DECLS) $(DEFS)
+$(OBJS): %.o: %.cc %.h $(OBJS_DECL)
 	$(CHARMC) $(OPTS) $(INC) -o $@ $<
 
-# These are utility rules that don't actually build anything
+# Subdirs will build the protobuf object files
+.PHONY: all-sub
+all-sub:
+	@for d in $(SUBDIRS); do \
+	cd $d; $(MAKE) $(MFLAGS) all; done
+
 .PHONY:clean test
 clean:
+	@for d in $(SUBDIRS); do \
+	cd $d; $(MAKE) $(MFLAGS) clean; done
 	rm -f *.decl.h *.def.h *.o charmrun $(BIN)
 
 test: loimos
