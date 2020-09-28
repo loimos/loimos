@@ -63,6 +63,7 @@ void People::SendVisitMessages() {
       numPeople,
       numPeoplePartitions
     );
+    char personState = peopleState[i];
 
     // getting random number of locations to visit
     numVisits = poisson_dist(generator);
@@ -97,9 +98,9 @@ void People::SendVisitMessages() {
 
       // sending message to location
       locationsArray[locationSubset].ReceiveVisitMessages(
-        personIdx,
-        peopleState[i],
         locationIdx,
+        personIdx,
+        personState,
         visitStart,
         visitEnd
       );

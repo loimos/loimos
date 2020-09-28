@@ -34,9 +34,9 @@ Locations::Locations() {
 }
 
 void Locations::ReceiveVisitMessages(
+  int locationIdx,
   int personIdx,
   char personState,
-  int locationIdx,
   int visitStart,
   int visitEnd
 ) {
@@ -47,8 +47,8 @@ void Locations::ReceiveVisitMessages(
     numLocationPartitions
   );
 
-  Event arrival { personIdx, visitStart, arrive };
-  Event departure { personIdx, visitEnd, leave };
+  Event arrival { personIdx, personState, visitStart, ARRIVAL };
+  Event departure { personIdx, personState, visitEnd, DEPARTURE };
 
   locations[localLocIdx].addEvent(arrival);
   locations[localLocIdx].addEvent(departure);

@@ -23,9 +23,9 @@ class Locations : public CBase_Locations {
   public:
     Locations();
     void ReceiveVisitMessages(
+      int locationIdx,
       int personIdx,
       char personState,
-      int locationIdx,
       int visitStart,
       int visitEnd
     );
