@@ -9,9 +9,10 @@
 #include "People.h"
 #include "Defs.h"
 #include "DiseaseModel.h"
+
 #include <tuple>
 #include <limits>
-
+#include <queue>
 
 #include <queue>
 
@@ -67,7 +68,7 @@ void People::SendVisitMessages() {
       numPeople,
       numPeoplePartitions
     );
-    char personstate = people[i].state;
+    int personstate = people[i].state;
 
     // getting random number of locations to visit
     numVisits = poisson_dist(generator);

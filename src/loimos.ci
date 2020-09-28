@@ -44,15 +44,26 @@ mainmodule loimos {
             peopleArray.EndofDayStateUpdate();
           }
         }
-        when ReceiveStats(int total) {
+        when ReceiveStats(CkReductionMsg *summary) {
           serial {
-            accumulated += total;
-            CkPrintf(
-              "Day %d, new cases %d, accumulated cases %d\n",
-              day,
-              total,
-              accumulated
-            ); 
+            CkPrintf("Summary of Day %d\n", day);
+            int *data = reinterpret_cast<int *>(summary->getData());
+            DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
+
+            for (int i = 0; i < diseaseModel->getNumberOfStates(); i++) {
+              int total_in_state = *data;
+              int change_in_infected = total_in_state - accumulated[i];
+              if (total_in_state != 0 || change_in_infected != 0) {
+                CkPrintf(
+                  "%d in %s. (%d change from previous day)\n",
+                  total_in_state,
+                  diseaseModel->lookupStateName(i).c_str(),
+                  change_in_infected
+                );
+              }
+              accumulated[i] = total_in_state; 
+              data++;
+            }
           }
         }
       }
