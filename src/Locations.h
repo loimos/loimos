@@ -8,14 +8,15 @@
 #define __LOCATIONS_H__
 
 #include "DiseaseModel.h"
+#include "Location.h" 
+
 #include <vector>
 #include <set>
 
 class Locations : public CBase_Locations {
   private:
     int numLocalLocations;
-    std::vector<std::vector<std::pair<int,char> > > visitors;
-    std::vector<char> locationState;
+    std::vector<Location> locations;
     std::default_random_engine generator;
     float MAX_RANDOM_VALUE;
     DiseaseModel *diseaseModel;
@@ -23,10 +24,7 @@ class Locations : public CBase_Locations {
     Locations();
     void ReceiveVisitMessages(
       int personIdx,
-<<<<<<< HEAD
       char personState,
-=======
->>>>>>> eb53b66... now generating and sending start and end times for visits
       int locationIdx,
       int visitStart,
       int visitEnd

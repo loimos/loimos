@@ -2,10 +2,7 @@
 CXX=g++
 CHARMC      = charmc
 
-PROTOBUF_DIR=/usr/local/bin/vcpkg/installed/x64-osx
-CXXFLAGS=-std=c++11 -Wall -I${PROTOBUF_DIR}/include
-
-OBJS		= Main.o DiseaseModel.o People.o Locations.o Defs.o disease.pb.o distribution.pb.o
+OBJS		= Main.o People.o Locations.o Location.o Event.o Defs.o
 OBJS_DECL	= loimos.decl.h
 BIN         = loimos
 
@@ -28,4 +25,4 @@ clean:
 	rm -f *.decl.h *.def.h *.o charmrun $(BIN)
 
 test: loimos
-	./charmrun +p4 ./$(BIN) 110 20 15 6 15 ++local	
+	/charmrun +p4 ./$(BIN) 110 20 15 6 15 ++local	
