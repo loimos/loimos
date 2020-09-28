@@ -8,18 +8,24 @@
 #include "People.h"
 #include "Defs.h"
 
+#include <queue>
+
 People::People() {
   float value;
   int cont = 0;
   newCases = 0;
   // getting number of people assigned to this chare
-  numLocalPeople = getNumLocalElements(numPeople, numPeoplePartitions, thisIndex);
+  numLocalPeople = getNumLocalElements(
+    numPeople,
+    numPeoplePartitions,
+    thisIndex
+  );
   peopleState.resize(numLocalPeople, SUSCEPTIBLE);
   peopleDay.resize(numLocalPeople, 0);
   generator.seed(thisIndex);
   MAX_RANDOM_VALUE = (float)generator.max();
   // randomnly choosing people as infectious
-  for(std::vector<char>::iterator it = peopleState.begin(); it != peopleState.end(); ++it){
+  for (std::vector<char>::iterator it = peopleState.begin(); it != peopleState.end(); ++it) {
     value = (float)generator();
     if(value/MAX_RANDOM_VALUE < INITIAL_INFECTIOUS_PROBABILITY){
       *it = INFECTIOUS;
@@ -33,39 +39,81 @@ People::People() {
 }
 
 void People::SendVisitMessages() {
-  int visits, personIdx, locationIdx, locationSubset;
+  int numVisits, personIdx, locationIdx, locationSubset;
 
   // initialize random number generator for a Poisson distribution
   std::poisson_distribution<int> poisson_dist(LOCATION_LAMBDA);
 
-  // initialize random number generator for a uniform distribution
-  std::uniform_int_distribution<int> uniform_dist(0,numLocations-1);
- 
+  // there should be an equal chance of visiting each location
+  // and selecting any given time
+  std::uniform_int_distribution<int> location_dist(0, numLocations - 1);
+  std::uniform_int_distribution<int> time_dist(0, 1440); // in minutes
+    
+  std::priority_queue<int, std::vector<int>, std::greater<int> > times;
+
   // generate itinerary for each person
-  for(int i=0; i<numLocalPeople; i++) {
-    personIdx = getGlobalIndex(i, thisIndex, numPeople, numPeoplePartitions);
+  for (int i = 0; i < numLocalPeople; i++) {
+    personIdx = getGlobalIndex(
+      i,
+      thisIndex,
+      numPeople,
+      numPeoplePartitions
+    );
 
     // getting random number of locations to visit
-    visits = poisson_dist(generator);
+    numVisits = poisson_dist(generator);
     //CkPrintf("Person %d with %d visits\n",personIdx,visits);
-    for(int j=0; j<visits; j++) {
+    
+    // randomly generate start and end times for each visit,
+    // using a priority queue ensures the times are in order
+    for (int j = 0; j < 2*numVisits; j++) {
+      times.push(time_dist(generator));
+    }
+
+    for (int j = 0; j < numVisits; j++) {
+      int visitStart = times.top();
+      times.pop();
+      int visitEnd = times.top();
+      times.pop();
+      
+      // we don't guarentee that these times aren't equal
+      // so this is a workaround
+      if (visitStart == visitEnd) {
+        continue;
+      }
 
       // generate random location to visit
-      locationIdx = uniform_dist(generator);
+      locationIdx = location_dist(generator);
       //CkPrintf("Person %d visits %d\n",personIdx,locationIdx);
-      locationSubset = getPartitionIndex(locationIdx, numLocations, numLocationPartitions);
+      locationSubset = getPartitionIndex(
+        locationIdx,
+        numLocations,
+        numLocationPartitions
+      );
 
       // sending message to location
-      locationsArray[locationSubset].ReceiveVisitMessages(personIdx, peopleState[i], locationIdx);
+      locationsArray[locationSubset].ReceiveVisitMessages(
+        personIdx,
+        peopleState[i],
+        locationIdx,
+        visitStart,
+        visitEnd
+      );
     }
   }
 }
 
 void People::ReceiveInfections(int personIdx) {
   // updating state of a person
-  int localIdx = getLocalIndex(personIdx, numPeople, numPeoplePartitions);
+  int localIdx = getLocalIndex(
+    personIdx,
+    numPeople,
+    numPeoplePartitions
+  );
   peopleState[localIdx] = EXPOSED;
   peopleDay[localIdx] = day + INCUBATION_PERIOD;
+
+  if(state) peopleState[localIdx] = state;
   //CkPrintf("Partition %d - Person %d state %d\n",thisIndex,personIdx,state);
 }
 

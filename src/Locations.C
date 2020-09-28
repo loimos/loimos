@@ -23,7 +23,13 @@ Locations::Locations() {
   MAX_RANDOM_VALUE = (float) generator.max();
 }
 
-void Locations::ReceiveVisitMessages(int personIdx, char personState, int locationIdx) {
+void Locations::ReceiveVisitMessages(
+  int personIdx,
+  char personState,
+  int locationIdx,
+  int visitStart,
+  int visitEnd
+) {
   // adding person to location visit list
   int localLocIdx = getLocalIndex(
     locationIdx,
@@ -47,7 +53,7 @@ void Locations::ReceiveVisitMessages(int personIdx, char personState, int locati
 
 void Locations::ComputeInteractions() {
   int peopleSubsetIdx;
-  int cont = 0, globalIdx;
+  //int cont = 0, globalIdx;
   char state;
   float value;
   // traverses list of locations
@@ -61,7 +67,7 @@ void Locations::ComputeInteractions() {
     //  numLocationPartitions
     //);
 
-    for(auto it : locIter) {
+    for (auto it : locIter) {
       // randomly selecting people to get infected
       value = (float) generator();
       
@@ -87,7 +93,7 @@ void Locations::ComputeInteractions() {
       peopleArray[peopleSubsetIdx].ReceiveInfections(it, state);
     }
 
-    cont++;
+    //cont++;
   }
   
   // cleaning state of all locations

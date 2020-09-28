@@ -21,14 +21,20 @@ mainmodule loimos {
           // CkPrintf("Sending Visit Messages\n");
           peopleArray.SendVisitMessages();
           // CkPrintf("QD Visit Messages\n");
-          CkStartQD(CkCallback(CkIndex_Main::StartComputingInteractions(), mainProxy));
+          CkStartQD(CkCallback(
+            CkIndex_Main::StartComputingInteractions(),
+            mainProxy
+          ));
         }
         when StartComputingInteractions() {
           serial {
             // CkPrintf("Compute Interactions\n");
             locationsArray.ComputeInteractions();
             // CkPrintf("QD Compute Interactions\n");
-            CkStartQD(CkCallback(CkIndex_Main::ComputedInteractions(), mainProxy));
+            CkStartQD(CkCallback(
+              CkIndex_Main::ComputedInteractions(),
+              mainProxy
+            ));
           }
         }
         when ComputedInteractions() {
@@ -38,7 +44,17 @@ mainmodule loimos {
           }
         }
         when ReceiveStats(int total) {
-          serial { accumulated += total; CkPrintf("Day %d, new cases %d, accumulated cases %d\n", day, total, accumulated); }
+          serial {
+            accumulated += total;
+            CkPrintf(
+              "Day %d,
+              new cases %d,
+              accumulated cases %d\n",
+              day,
+              total,
+              accumulated
+            ); 
+          }
         }
       }
       serial { CkExit(); }
@@ -57,7 +73,7 @@ mainmodule loimos {
 
   array [1D] Locations {
     entry Locations();
-    entry void ReceiveVisitMessages(int,char,int);
+    entry void ReceiveVisitMessages(int,char,int,int,int);
     entry void ComputeInteractions(); // calls ReceiveInfections
   };
 

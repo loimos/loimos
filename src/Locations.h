@@ -19,7 +19,13 @@ class Locations : public CBase_Locations {
     float MAX_RANDOM_VALUE;
   public:
     Locations();
-    void ReceiveVisitMessages(int personIdx, char personState, int locationIdx);
+    void ReceiveVisitMessages(
+      int personIdx,
+      char personState,
+      int locationIdx,
+      int visitStart,
+      int visitEnd
+    );
     void ComputeInteractions(); // calls ReceiveInfections
 };
 
