@@ -10,6 +10,8 @@
 #include "Location.h"
 #include "Event.h"
 #include "DiseaseModel.h"
+#include "Location.h"
+#include "Event.h"
 #include "Defs.h"
 
 #include <algorithm>
