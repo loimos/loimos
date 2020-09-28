@@ -12,6 +12,7 @@
 #include <queue>
 #include <vector>
 #include <functional>
+#include <random>
 
 // Represents a single location where people can interact
 // Not to be confused with Locations, which represents a group of
@@ -25,11 +26,21 @@ class Location {
     // a person at this location
     std::vector<int> infectiousPeople;
     std::vector<int> susceptiblePeople;
+
+    // Callbacks for when a person leaves this location
+    void onInfectiousDeparture(
+      int personIdx,
+      std::default_random_engine generator
+    );
+    void onSuspectibleDeparture(
+      int personIdx,
+      std::default_random_engine generator
+    );
   public:
     // just use default constructors
     
     void addEvent(Event e);
-    void processEvents();
+    void processEvents(std::default_random_engine generator);
 };
   
 #endif // __LOCATION_H__
