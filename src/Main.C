@@ -8,6 +8,7 @@
 #include "Main.h"
 #include "People.h"
 #include "Locations.h"
+#include "Defs.h"
 
 /* readonly */ CProxy_Main mainProxy;
 /* readonly */ CProxy_People peopleArray;

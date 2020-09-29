@@ -14,6 +14,7 @@ class Main : public CBase_Main {
   Main_SDAG_CODE
   int day;
   int accumulated;
+  double start_time;
 
   public:
     Main(CkArgMsg* msg);

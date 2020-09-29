@@ -56,7 +56,8 @@ void People::SendVisitMessages() {
       locationSubset = getPartitionIndex(locationIdx, numLocations, numLocationPartitions);
 
       // sending message to location
-      locationsArray[locationSubset].ReceiveVisitMessages(personIdx, peopleState[i], locationIdx);
+      VisitMessage* visit_msg = new VisitMessage(personIdx, peopleState[i], locationIdx);
+      locationsArray[locationSubset].ReceiveVisitMessages(visit_msg);
     }
   }
 }

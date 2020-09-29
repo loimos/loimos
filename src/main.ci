@@ -16,6 +16,10 @@ mainmodule loimos {
   mainchare Main {
     entry Main(CkArgMsg*);
     entry void run() {
+      serial {
+        start_time = CkWallTimer();
+      }
+
       for(day = 0; day < numDays; day++) {
         serial {
           // CkPrintf("Sending Visit Messages\n");
@@ -41,7 +45,12 @@ mainmodule loimos {
           serial { accumulated += total; CkPrintf("Day %d, new cases %d, accumulated cases %d\n", day, total, accumulated); }
         }
       }
-      serial { CkExit(); }
+
+      serial {
+        CkPrintf("Simulation ended after %.6lf seconds\n",
+            CkWallTimer() - start_time);
+        CkExit();
+      }
     };
     entry void StartComputingInteractions(); 
     entry void ComputedInteractions();
@@ -51,13 +60,15 @@ mainmodule loimos {
   array [1D] People {
     entry People();
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
-    entry void ReceiveInfections(int);
+    entry [aggregate (nodeLevel:0)] void ReceiveInfections(int);
     entry void EndofDayStateUpdate(); // contribute call to ReceiveStats
   };
 
+  message VisitMessage;
+
   array [1D] Locations {
     entry Locations();
-    entry void ReceiveVisitMessages(int,char,int);
+    entry void ReceiveVisitMessages(VisitMessage*);
     entry void ComputeInteractions(); // calls ReceiveInfections
   };
 
