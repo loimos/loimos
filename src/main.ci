@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: MIT
 
 mainmodule loimos {
+  include "Messages.h";
   readonly CProxy_Main mainProxy;
   readonly CProxy_People peopleArray;
   readonly CProxy_Locations locationsArray;
@@ -60,15 +61,13 @@ mainmodule loimos {
   array [1D] People {
     entry People();
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
-    entry [aggregate (nodeLevel:0)] void ReceiveInfections(int);
+    entry [aggregate] void ReceiveInfections(int);
     entry void EndofDayStateUpdate(); // contribute call to ReceiveStats
   };
 
-  message VisitMessage;
-
   array [1D] Locations {
     entry Locations();
-    entry void ReceiveVisitMessages(VisitMessage*);
+    entry [aggregate] void ReceiveVisitMessages(VisitMessage);
     entry void ComputeInteractions(); // calls ReceiveInfections
   };
 

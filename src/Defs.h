@@ -38,26 +38,4 @@ int getLocalIndex(int globalIndex, int numElements, int numPartitions);
 
 int getGlobalIndex(int localIndex, int partitionIndex, int numElements, int numPartitions);
 
-class VisitMessage : public CMessage_VisitMessage {
-public:
-  int personIdx;
-  char personState;
-  int locationIdx;
-
-  VisitMessage(int personIdx_, char personState_, int locationIdx_) :
-    personIdx(personIdx_), personState(personState_), locationIdx(locationIdx_) {}
-};
-
-/*
-template <>
-struct is_PUPbytes<int> {
-  static const bool value = true;
-};
-
-template <>
-struct is_PUPbytes<VisitMessage> {
-  static const bool value = true;
-};
-*/
-
 #endif // __DEFS_H__

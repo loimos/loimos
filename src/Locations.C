@@ -18,17 +18,16 @@ Locations::Locations() {
   MAX_RANDOM_VALUE = (float)generator.max();
 }
 
-void Locations::ReceiveVisitMessages(VisitMessage* visit_msg) {
+void Locations::ReceiveVisitMessages(VisitMessage visit_msg) {
   // adding person to location visit list
-  int localLocIdx = getLocalIndex(visit_msg->locationIdx, numLocations,
+  int localLocIdx = getLocalIndex(visit_msg.locationIdx, numLocations,
       numLocationPartitions);
-  visitors[localLocIdx].push_back(std::pair<int,char>(visit_msg->personIdx,
-        visit_msg->personState));
-  if (visit_msg->personState == INFECTIOUS) {
+  visitors[localLocIdx].push_back(std::pair<int,char>(visit_msg.personIdx,
+        visit_msg.personState));
+  if (visit_msg.personState == INFECTIOUS) {
     locationState[localLocIdx] = INFECTIOUS;
   }
   // CkPrintf("Location %d localIdx %d visited by person %d\n", locationIdx, localLocIdx, personIdx);
-  delete visit_msg;
 }
 
 void Locations::ComputeInteractions() {
