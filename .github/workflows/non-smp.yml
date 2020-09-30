@@ -1,0 +1,36 @@
+name: Non-SMP
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+
+    # Build Charm++
+    - name: build-charm++
+      run: |
+        git clone https://github.com/UIUC-PPL/charm.git
+        cd charm
+        git checkout v6.10.2
+        ./build charm++ netlrts-linux-x86_64 -g -j --with-production --enable-error-checking
+    # Build and test Loimos
+    - name: build-loimos
+      run: |
+        export CHARM_HOME=$GITHUB_WORKSPACE/charm
+        cd src
+        make -j
+        ./charmrun +p4 ./loimos 10000 20 100 6 30 +setcpuaffinity ++local
