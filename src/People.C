@@ -114,7 +114,8 @@ void People::ReceiveInfections(int personIdx) {
   peopleState[localIdx] = EXPOSED;
   peopleDay[localIdx] = day + INCUBATION_PERIOD;
 
-  if(state) peopleState[localIdx] = state;
+  // Not sure where this state is supposed to come from...
+  //if(state) peopleState[localIdx] = state;
   //CkPrintf("Partition %d - Person %d state %d\n",thisIndex,personIdx,state);
 }
 

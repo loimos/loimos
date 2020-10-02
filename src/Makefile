@@ -5,7 +5,7 @@ OBJS_DECL	= loimos.decl.h
 BIN         = loimos
 
 $(BIN): $(OBJS) $(OBJS_DECL)
-	$(CHARMC) -o $< $(OBJS) -language charm++ \
+	$(CHARMC) -o $@ $(OBJS) -language charm++ \
 	-module CkMulticast $(OPTS)
 
 # Build .decl.h (and implicitly .def.h) files from the corresponding

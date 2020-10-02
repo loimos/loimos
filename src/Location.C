@@ -23,10 +23,10 @@ void Location::processEvents(std::default_random_engine generator) {
     events.pop();
 
     // TODO: implement a disease model to make this check properly
-    if (HEALTHY == curEvent.personState) {
+    if (SUSCEPTIBLE == curEvent.personState) {
       people = susceptiblePeople;
 
-    } else if (INFECTED == curEvent.personState) {
+    } else if (INFECTIOUS == curEvent.personState) {
       people = infectiousPeople;
 
     } else {
@@ -45,10 +45,10 @@ void Location::processEvents(std::default_random_engine generator) {
         ), people.end()
       );
 
-      if (HEALTHY == curEvent.personState) {
+      if (SUSCEPTIBLE == curEvent.personState) {
         onInfectiousDeparture(curEvent.personIdx, generator);
 
-      } else if (INFECTED == curEvent.personState) {
+      } else if (INFECTIOUS == curEvent.personState) {
         onSuspectibleDeparture(curEvent.personIdx, generator);
 
       } 

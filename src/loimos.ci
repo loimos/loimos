@@ -47,9 +47,7 @@ mainmodule loimos {
           serial {
             accumulated += total;
             CkPrintf(
-              "Day %d,
-              new cases %d,
-              accumulated cases %d\n",
+              "Day %d, new cases %d, accumulated cases %d\n",
               day,
               total,
               accumulated
