@@ -1,6 +1,6 @@
 .PHONY: diseaseModelProto
-CHARMC=$(HOME)/lib/charm/netlrts-darwin-x86_64/bin/charmc
 CXX=g++
+CHARMC      = charmc
 
 PROTOBUF_DIR=/usr/local/bin/vcpkg/installed/x64-osx
 CXXFLAGS=-std=c++11 -Wall -I${PROTOBUF_DIR}/include
