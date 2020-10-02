@@ -111,6 +111,11 @@ void People::ReceiveInfections(int personIdx) {
     numPeople,
     numPeoplePartitions
   );
+  printf(
+    "recieved infection message for person %d in partition %d\r\n",
+    personIdx,
+    thisIndex
+  );
   peopleState[localIdx] = EXPOSED;
   peopleDay[localIdx] = day + INCUBATION_PERIOD;
 
