@@ -6,6 +6,7 @@ OBJS		= Main.o People.o Locations.o Location.o Event.o Defs.o
 OBJS_DECL	= loimos.decl.h
 BIN         = loimos
 
+# Build the executable (and implicitly charmrun) from the object files
 $(BIN): $(OBJS) $(OBJS_DECL)
 	$(CHARMC) -o $@ $(OBJS) -language charm++ \
 	-module CkMulticast $(OPTS)

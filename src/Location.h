@@ -13,6 +13,7 @@
 #include <vector>
 #include <functional>
 #include <random>
+#include <set>
 
 // Represents a single location where people can interact
 // Not to be confused with Locations, which represents a group of
@@ -26,8 +27,9 @@ class Location {
     // a person at this location
     std::vector<int> infectiousPeople;
     std::vector<int> susceptiblePeople;
+    std::unordered_set<int> justInfected;
 
-    // Callbacks for when a person leaves this location
+    // Helper functions to handle when a person leaves this location
     void onInfectiousDeparture(
       int personIdx,
       std::default_random_engine generator
@@ -38,9 +40,19 @@ class Location {
     );
   public:
     // just use default constructors
-    
+   
+    // This distribution shoul always be the same - not sure how well
+    // static variables work with Charm++, so this may need to be put
+    // on the stack somehwer later on
+    static std::uniform_real_distribution<> unitDistrib;
+    // Adds an event represnting a person either arriving or departing
+    // from this location
     void addEvent(Event e);
-    void processEvents(std::default_random_engine generator);
+    // Runs through all of the current events and return the indices of
+    // any people who have been infected
+    std::unordered_set<int> processEvents(
+      std::default_random_engine generator
+    );
 };
   
 #endif // __LOCATION_H__

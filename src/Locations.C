@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <functional>
 #include <queue>
+#include <stdio.h>
 
 Locations::Locations() {
   // getting number of locations assigned to this chare
@@ -66,6 +67,7 @@ void Locations::ComputeInteractions() {
   //int cont = 0, globalIdx;
   char state;
   float value;
+
   // traverses list of locations
   for (auto loc : locations) {
     //globalIdx = getGlobalIndex(
@@ -75,38 +77,30 @@ void Locations::ComputeInteractions() {
     //  numLocationPartitions
     //);
     
-    loc.processEvents(generator);
-  }
-  /*
-    for (auto it : locIter) {
-      // randomly selecting people to get infected
-      value = (float) generator();
-      
-      //CkPrintf(
-      //  "Partition %d - Location %d - Person %d - Value %f\n",
-      //  thisIndex,
-      //  globalIdx,
-      //  *it,
-      //  value
-      //);
-      
-      if (value/MAX_RANDOM_VALUE < INFECTION_PROBABILITY) {
-        state = INFECTED;
-      } else {
-        state = HEALTHY;
-      }
-      
-      peopleSubsetIdx = getPartitionIndex(
-        it,
-        numPeople,
-        numPeoplePartitions
-      );
-      peopleArray[peopleSubsetIdx].ReceiveInfections(it, state);
+    std::unordered_set<int> justInfected = loc.processEvents(generator);
+    for (int personIdx : justInfected) {
+      infect(personIdx);
     }
-
-    //cont++;
+    justInfected.empty();
   }
   
   // cleaning state of all locations
+}
+
+// Simple helper function which infects a given person with a given
+// probability
+inline void Locations::infect(int personIdx) {
+  int peoplePartitionIdx = getPartitionIndex(
+    personIdx,
+    numPeople,
+    numPeoplePartitions
+  );
+
+  peopleArray[peoplePartitionIdx].ReceiveInfections(personIdx);
+  printf(
+    "sending infection message to person %d in partition %d\r\n",
+    personIdx,
+    peoplePartitionIdx
+  );
 }
 

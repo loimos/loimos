@@ -20,6 +20,10 @@ class Locations : public CBase_Locations {
     std::default_random_engine generator;
     float MAX_RANDOM_VALUE;
     DiseaseModel *diseaseModel;
+    
+    // Simple helper function which infects a given person
+    inline void infect(int personIdx);
+  
   public:
     Locations();
     void ReceiveVisitMessages(
