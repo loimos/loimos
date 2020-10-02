@@ -67,7 +67,6 @@ void Locations::ReceiveVisitMessages(
 
 void Locations::ComputeInteractions() {
   int peopleSubsetIdx;
-  //int cont = 0, globalIdx;
   char state;
   float value;
 
