@@ -14,7 +14,6 @@
 #include <functional>
 #include <random>
 #include <set>
-#include <random>
 
 // Represents a single location where people can interact
 // Not to be confused with Locations, which represents a group of

@@ -129,7 +129,7 @@ void People::ReceiveInfections(int personIdx) {
   if (currState == diseaseModel->getHealthyState()) {
     peopleState[localIdx] = std::make_tuple(currState, -1); 
   }
-
+  
   // Not sure where this state is supposed to come from...
   //if(state) peopleState[localIdx] = state;
   //CkPrintf("Partition %d - Person %d state %d\n",thisIndex,personIdx,state);

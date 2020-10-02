@@ -81,9 +81,6 @@ void Locations::ComputeInteractions() {
     }
     justInfected.empty();
   }
-  
-  // cleaning state of all locations
-  //locationState.resize(numLocalLocations, SUSCEPTIBLE);
 }
 
 // Simple helper function which infects a given person with a given
