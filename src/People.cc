@@ -120,21 +120,18 @@ void People::ReceiveInfections(int personIdx) {
     numPeople,
     numPeoplePartitions
   );
-  /*
-  CkPrintf(
-    "recieved infection message for person %d in partition %d\r\n",
-    personIdx,
-    thisIndex
-  );
-  */
   
-  if (SUSCEPTIBLE == people[localIdx].state) {
-    people[localIdx].state = EXPOSED;
-    people[localIdx].nextStateDay = day + INCUBATION_PERIOD;
+  // Handle disease transition.
+  int currState, timeLeftInState;
+
+  // Mark that exposed healthy individual should make transition at end of day.
+  std::tie(currState, timeLeftInState) = peopleState[localIdx];
+  if (currState == diseaseModel->getHealthyState()) {
+    peopleState[localIdx] = std::make_tuple(currState, -1); 
   }
 
   // Not sure where this state is supposed to come from...
-  //if(state) people[localIdx].state = state;
+  //if(state) peopleState[localIdx] = state;
   //CkPrintf("Partition %d - Person %d state %d\n",thisIndex,personIdx,state);
 }
 
