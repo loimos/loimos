@@ -9,6 +9,7 @@ BIN         = loimos
 .PHONY:all
 all: all-sub $(BIN)
 
+# Build the executable (and implicitly charmrun) from the object files
 $(BIN): $(OBJS) $(OBJS_DECL)
 	$(CHARMC) -o $@ $(OBJS) -language charm++ \
 	-module CkMulticast $(OPTS) \

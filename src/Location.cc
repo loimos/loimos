@@ -6,10 +6,14 @@
 
 #include "loimos.decl.h"
 #include "Location.h"
+#include "People.h"
 #include "Event.h"
 #include "Defs.h"
 
 #include <random>
+#include <set>
+
+std::uniform_real_distribution<> Location::unitDistrib(0,1);
 
 void Location::addEvent(Event e) {
   events.push(e);
@@ -19,9 +23,13 @@ void Location::addEvent(Event e) {
   //  locationState[localLocIdx] = INFECTIOUS;
 }
 
-void Location::processEvents(std::default_random_engine generator) {
+std::unordered_set<int> Location::processEvents(
+  std::default_random_engine generator
+) {
   std::vector<int> people;
   Event curEvent;
+  justInfected.empty();
+
   while (!events.empty()) {
     curEvent = events.top();
     events.pop();
@@ -58,14 +66,19 @@ void Location::processEvents(std::default_random_engine generator) {
       } 
     }
   }
+
+  return justInfected;
 }
 
+// The infection probability amy eventually depend on traits of the
+// infectious or susceptible person, which is why we need the personIdx
 void Location::onInfectiousDeparture(
   int personIdx,
   std::default_random_engine generator
 ) { 
   for (int otherIdx: susceptiblePeople) {
-   
+    if (unitDistrib(generator) < INFECTION_PROBABILITY) 
+      justInfected.insert(personIdx);
   } 
 }
 
@@ -73,7 +86,11 @@ void Location::onSuspectibleDeparture(
   int personIdx,
   std::default_random_engine generator
 ) {
+  double probNotInfected = 1.0;
   for (int otherIdx: infectiousPeople) {
-    
+    probNotInfected *= 1.0 - INFECTION_PROBABILITY;
   }
+
+  if (unitDistrib(generator) < probNotInfected)
+    justInfected.insert(personIdx);
 }

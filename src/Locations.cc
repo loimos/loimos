@@ -87,8 +87,6 @@ void Locations::ComputeInteractions() {
     }
     justInfected.empty();
   }
-  
-  // cleaning state of all locations
 }
 
 // Simple helper function which infects a given person with a given
