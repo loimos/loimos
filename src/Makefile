@@ -1,4 +1,4 @@
-CHARMC      = $(HOME)/work/apps/charm/mpi-darwin-x86_64/bin/charmc
+CHARMC      = charmc
 
 OBJS		= Main.o People.o Locations.o Defs.o
 OBJS_DECL	= loimos.decl.h
