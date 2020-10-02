@@ -115,8 +115,12 @@ void People::SendVisitMessages() {
 
 void People::ReceiveInfections(int personIdx) {
   // updating state of a person
-  int localIdx = getLocalIndex(personIdx, numPeople, numPeoplePartitions);
-
+  int localIdx = getLocalIndex(
+    personIdx,
+    numPeople,
+    numPeoplePartitions
+  );
+  
   // Handle disease transition.
   int currState, timeLeftInState;
 
@@ -125,6 +129,10 @@ void People::ReceiveInfections(int personIdx) {
   if (currState == diseaseModel->getHealthyState()) {
     peopleState[localIdx] = std::make_tuple(currState, -1); 
   }
+
+  // Not sure where this state is supposed to come from...
+  //if(state) peopleState[localIdx] = state;
+  //CkPrintf("Partition %d - Person %d state %d\n",thisIndex,personIdx,state);
 }
 
 void People::EndofDayStateUpdate() {
