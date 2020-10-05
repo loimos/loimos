@@ -22,7 +22,7 @@ void Location::addEvent(Event e) {
 std::unordered_set<int> Location::processEvents(
   std::default_random_engine generator
 ) {
-  std::vector<int> people;
+  std::vector<int> *people;
   Event curEvent;
   justInfected.empty();
 
@@ -32,63 +32,73 @@ std::unordered_set<int> Location::processEvents(
 
     // TODO: implement a disease model to make this check properly
     if (SUSCEPTIBLE == curEvent.personState) {
-      people = susceptiblePeople;
+      people = &susceptiblePeople;
 
     } else if (INFECTIOUS == curEvent.personState) {
-      people = infectiousPeople;
+      people = &infectiousPeople;
 
     } else {
       continue;
     }
 
     if (ARRIVAL == curEvent.type) {
-      people.push_back(curEvent.personIdx);
+      people->push_back(curEvent.personIdx);
 
     } else if (DEPARTURE == curEvent.type) {
-      people.erase(
+      people->erase(
         std::remove(
-          people.begin(),
-          people.end(),
+          people->begin(),
+          people->end(),
           curEvent.personIdx
-        ), people.end()
+        ), people->end()
       );
 
-      if (SUSCEPTIBLE == curEvent.personState) {
-        onSusceptibleDeparture(curEvent.personIdx, generator);
-
-      } else if (INFECTIOUS == curEvent.personState) {
-        onInfectiousDeparture(curEvent.personIdx, generator);
-
-      } 
+      onDeparture(curEvent, generator);
     }
   }
 
   return justInfected;
 }
 
+inline void Location::onDeparture(
+  Event event,
+  std::default_random_engine generator
+) {
+  if (SUSCEPTIBLE == event.personState) {
+    onSusceptibleDeparture(event.personIdx, generator);
+
+  } else if (INFECTIOUS == event.personState) {
+    onInfectiousDeparture(event.personIdx, generator);
+
+  } 
+}
+
 // The infection probability amy eventually depend on traits of the
 // infectious or susceptible person, which is why we need the personIdx
 void Location::onInfectiousDeparture(
-  int personIdx,
+  int infectiousIdx,
   std::default_random_engine generator
-) { 
-  for (int otherIdx: susceptiblePeople) {
-    if (unitDistrib(generator) < INFECTION_PROBABILITY) 
-      justInfected.insert(otherIdx);
+) {
+  
+  for (int susceptibleIdx: susceptiblePeople) {
+    if (unitDistrib(generator) < INFECTION_PROBABILITY) { 
+      justInfected.insert(susceptibleIdx);
+    }
   } 
 }
 
 void Location::onSusceptibleDeparture(
-  int personIdx,
+  int susceptibleIdx,
   std::default_random_engine generator
 ) {
   double probNotInfected = 1.0;
-  for (int otherIdx: infectiousPeople) {
+  for (int infectiousIdx: infectiousPeople) {
     probNotInfected *= 1.0 - INFECTION_PROBABILITY;
   }
-
+  
   // We want the probability of infection, so we need to 
   // invert probNotInfected
-  if (unitDistrib(generator) > probNotInfected)
-    justInfected.insert(personIdx);
+  if (unitDistrib(generator) > probNotInfected) {
+    justInfected.insert(susceptibleIdx);
+  }
 }

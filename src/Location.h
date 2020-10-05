@@ -30,12 +30,17 @@ class Location {
     std::unordered_set<int> justInfected;
 
     // Helper functions to handle when a person leaves this location
+    // onDeparture branches to one of the two other functions
+    inline void onDeparture(
+      Event event,
+      std::default_random_engine generator
+    );
     void onInfectiousDeparture(
-      int personIdx,
+      int infectiousIdx,
       std::default_random_engine generator
     );
     void onSusceptibleDeparture(
-      int personIdx,
+      int susceptibleIdx,
       std::default_random_engine generator
     );
   public:

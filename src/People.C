@@ -5,15 +5,16 @@
  */
 
 #include "loimos.decl.h"
+#include "Person.h"
 #include "People.h"
 #include "Defs.h"
 
 #include <queue>
 
 People::People() {
-  float value;
-  int cont = 0;
   newCases = 0;
+  day = 0;
+  
   // getting number of people assigned to this chare
   numLocalPeople = getNumLocalElements(
     numPeople,
@@ -23,18 +24,16 @@ People::People() {
   peopleState.resize(numLocalPeople, SUSCEPTIBLE);
   peopleDay.resize(numLocalPeople, 0);
   generator.seed(thisIndex);
-  MAX_RANDOM_VALUE = (float)generator.max();
+  
   // randomnly choosing people as infectious
-  for (std::vector<char>::iterator it = peopleState.begin(); it != peopleState.end(); ++it) {
-    value = (float)generator();
-    if(value/MAX_RANDOM_VALUE < INITIAL_INFECTIOUS_PROBABILITY){
-      *it = INFECTIOUS;
-      peopleDay[cont] = INFECTION_PERIOD;
+  std::uniform_real_distribution<> unitDistrib(0,1);
+  for (int i = 0; i < peopleState.size(); ++i) {
+    if (unitDistrib(generator) < INITIAL_INFECTIOUS_PROBABILITY) {
+      peopleState[i] = INFECTIOUS;
+      peopleDay[i] = INFECTION_PERIOD;
       newCases++;
     }
-    cont++;
   }
-  day = 0;
 
   // CkPrintf("People chare %d with %d people\n",thisIndex,numLocalPeople);
 }
@@ -120,11 +119,10 @@ void People::ReceiveInfections(int personIdx) {
   );
   */
   
-  // This check hopefully shouldn't be neccessary
-  //if (SUSCEPTIBLE == peopleState[localIdx]) {
+  if (SUSCEPTIBLE == peopleState[localIdx]) {
     peopleState[localIdx] = EXPOSED;
     peopleDay[localIdx] = day + INCUBATION_PERIOD;
-  //}
+  }
 
   // Not sure where this state is supposed to come from...
   //if(state) peopleState[localIdx] = state;
@@ -157,7 +155,7 @@ void People::EndofDayStateUpdate() {
     }
   }
 
-  PrintStateCounts();
+  //PrintStateCounts();
 
   // contributing to reduction
   CkCallback cb(CkReductionTarget(Main, ReceiveStats), mainProxy);
