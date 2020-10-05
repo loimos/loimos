@@ -18,6 +18,7 @@
 People::People() {
   newCases = 0;
   day = 0;
+  generator.seed(thisIndex);
   
   // getting number of people assigned to this chare
   numLocalPeople = getNumLocalElements(
@@ -25,16 +26,15 @@ People::People() {
     numPeoplePartitions,
     thisIndex
   );
-  peopleState.resize(numLocalPeople, SUSCEPTIBLE);
-  peopleDay.resize(numLocalPeople, 0);
-  generator.seed(thisIndex);
+  Person tmp { SUSCEPTIBLE, 0 };
+  people.resize(numLocalPeople, tmp);
   
   // randomnly choosing people as infectious
   std::uniform_real_distribution<> unitDistrib(0,1);
-  for (int i = 0; i < peopleState.size(); ++i) {
+  for (int i = 0; i < people.size(); ++i) {
     if (unitDistrib(generator) < INITIAL_INFECTIOUS_PROBABILITY) {
-      peopleState[i] = INFECTIOUS;
-      peopleDay[i] = INFECTION_PERIOD;
+      people[i].state = INFECTIOUS;
+      people[i].nextStateDay = INFECTION_PERIOD;
       newCases++;
     }
   }
@@ -67,7 +67,7 @@ void People::SendVisitMessages() {
       numPeople,
       numPeoplePartitions
     );
-    char personState = peopleState[i];
+    char personstate = people[i].state;
 
     // getting random number of locations to visit
     numVisits = poisson_dist(generator);
@@ -104,7 +104,7 @@ void People::SendVisitMessages() {
       locationsArray[locationSubset].ReceiveVisitMessages(
         locationIdx,
         personIdx,
-        personState,
+        personstate,
         visitStart,
         visitEnd
       );

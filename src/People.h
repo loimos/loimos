@@ -7,6 +7,8 @@
 #ifndef __PEOPLE_H__
 #define __PEOPLE_H__
 
+#include "Person.h"
+
 #include <random>
 #include <vector>
 #include <tuple>
@@ -17,8 +19,9 @@
 class People : public CBase_People {
   private:
     int numLocalPeople;
-    std::vector<std::tuple<int, Time>> peopleState;
-    std::vector<int> stateSummations;
+    int day;
+    int newCases;
+    std::vector<Person> people;
     std::default_random_engine generator;
     DiseaseModel* diseaseModel;
   public:
