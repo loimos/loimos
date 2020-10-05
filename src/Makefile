@@ -1,27 +1,28 @@
-CHARMC      = charmc
+CHARMC = charmc
 
-OBJS		= Main.o DiseaseModel.o People.o Locations.o Defs.o \
-              Location.o Event.o \
-			  disease_model/disease.pb.o disease_model/distribution.pb.o
-OBJS_DECL	= loimos.decl.h
-BIN         = loimos
+OBJS   = Main.o DiseaseModel.o People.o Locations.o Defs.o \
+         Location.o Event.o \
+	     disease_model/disease.pb.o disease_model/distribution.pb.o
+DEFS   = Defs.h loimos.def.h
+DECLS  = loimos.decl.h
+BIN    = loimos
 
 .PHONY:all
 all: all-sub $(BIN)
 
 # Build the executable (and implicitly charmrun) from the object files
-$(BIN): $(OBJS) $(OBJS_DECL)
+$(BIN): $(OBJS) $(DECLS)
 	$(CHARMC) -o $@ $(OBJS) -language charm++ \
 	-module CkMulticast $(OPTS) \
 	`pkg-config --cflags --libs protobuf`
 
 # Build .decl.h (and implicitly .def.h) files from the corresponding
 # .ci files
-$(OBJS_DECL): %.decl.h: %.ci
+$(DECLS): %.decl.h: %.ci
 	$(CHARMC) $<
 
 # Build .o files from the corresponding .C and .h files
-$(OBJS): %.o: %.cc %.h $(OBJS_DECL)
+$(OBJS): %.o: %.cc %.h $(DECLS) $(DEFS)
 	$(CHARMC) $(OPTS) $(INC) -o $@ $<
 
 # Subdirs will build the protobuf object files
