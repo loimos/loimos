@@ -14,8 +14,6 @@
 #include <limits>
 #include <queue>
 
-#include <queue>
-
 People::People() {
   newCases = 0;
   day = 0;
