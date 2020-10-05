@@ -14,6 +14,7 @@
 People::People() {
   newCases = 0;
   day = 0;
+  generator.seed(thisIndex);
   
   // getting number of people assigned to this chare
   numLocalPeople = getNumLocalElements(
@@ -21,16 +22,15 @@ People::People() {
     numPeoplePartitions,
     thisIndex
   );
-  peopleState.resize(numLocalPeople, SUSCEPTIBLE);
-  peopleDay.resize(numLocalPeople, 0);
-  generator.seed(thisIndex);
+  Person tmp { SUSCEPTIBLE, 0 };
+  people.resize(numLocalPeople, tmp);
   
   // randomnly choosing people as infectious
   std::uniform_real_distribution<> unitDistrib(0,1);
-  for (int i = 0; i < peopleState.size(); ++i) {
+  for (int i = 0; i < people.size(); ++i) {
     if (unitDistrib(generator) < INITIAL_INFECTIOUS_PROBABILITY) {
-      peopleState[i] = INFECTIOUS;
-      peopleDay[i] = INFECTION_PERIOD;
+      people[i].state = INFECTIOUS;
+      people[i].nextStateDay = INFECTION_PERIOD;
       newCases++;
     }
   }
@@ -59,7 +59,7 @@ void People::SendVisitMessages() {
       numPeople,
       numPeoplePartitions
     );
-    char personState = peopleState[i];
+    char personstate = people[i].state;
 
     // getting random number of locations to visit
     numVisits = poisson_dist(generator);
@@ -96,7 +96,7 @@ void People::SendVisitMessages() {
       locationsArray[locationSubset].ReceiveVisitMessages(
         locationIdx,
         personIdx,
-        personState,
+        personstate,
         visitStart,
         visitEnd
       );
@@ -119,34 +119,34 @@ void People::ReceiveInfections(int personIdx) {
   );
   */
   
-  if (SUSCEPTIBLE == peopleState[localIdx]) {
-    peopleState[localIdx] = EXPOSED;
-    peopleDay[localIdx] = day + INCUBATION_PERIOD;
+  if (SUSCEPTIBLE == people[localIdx].state) {
+    people[localIdx].state = EXPOSED;
+    people[localIdx].nextStateDay = day + INCUBATION_PERIOD;
   }
 
   // Not sure where this state is supposed to come from...
-  //if(state) peopleState[localIdx] = state;
+  //if(state) people[localIdx].state = state;
   //CkPrintf("Partition %d - Person %d state %d\n",thisIndex,personIdx,state);
 }
 
 void People::EndofDayStateUpdate() {
   // counting infected people
-  for(int i = 0; i < peopleState.size(); ++i) {
-    switch(peopleState[i]) {
+  for(int i = 0; i < people.size(); ++i) {
+    switch(people[i].state) {
       case SUSCEPTIBLE:
         break;
       
       case EXPOSED:
-        if(day > peopleDay[i]) {
+        if(day > people[i].nextStateDay) {
           newCases++;
-          peopleDay[i] = day + INFECTION_PERIOD;
-          peopleState[i] = INFECTIOUS;
+          people[i].nextStateDay = day + INFECTION_PERIOD;
+          people[i].state = INFECTIOUS;
         }
         break;
       
       case INFECTIOUS:
-        if(day > peopleDay[i]) {
-          peopleState[i] = RECOVERED;
+        if(day > people[i].nextStateDay) {
+          people[i].state = RECOVERED;
         }
         break;
       
@@ -155,7 +155,7 @@ void People::EndofDayStateUpdate() {
     }
   }
 
-  //PrintStateCounts();
+  //PrintstateCounts();
 
   // contributing to reduction
   CkCallback cb(CkReductionTarget(Main, ReceiveStats), mainProxy);
@@ -166,8 +166,8 @@ void People::EndofDayStateUpdate() {
 
 void People::PrintStateCounts() {
   int counts[NUMBER_STATES] {0};
-  for(char state : peopleState)
-    counts[state]++;
+  for(Person p : people)
+    counts[p.state]++;
 
   CkPrintf(
     "partion %d has S=%d E=%d I=%d R=%d\r\n",

@@ -7,6 +7,8 @@
 #ifndef __PEOPLE_H__
 #define __PEOPLE_H__
 
+#include "Person.h"
+
 #include <random>
 #include <vector>
 
@@ -17,8 +19,7 @@ class People : public CBase_People {
     int numLocalPeople;
     int day;
     int newCases;
-    std::vector<char> peopleState;
-    std::vector<int> peopleDay;
+    std::vector<Person> people;
     std::default_random_engine generator;
     float MAX_RANDOM_VALUE;
   public:
