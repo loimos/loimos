@@ -1,21 +1,22 @@
-CHARMC      = charmc
+CHARMC = charmc
 
-OBJS		= Main.o People.o Locations.o Location.o Event.o Defs.o
-OBJS_DECL	= loimos.decl.h
-BIN         = loimos
+OBJS   = Main.o People.o Locations.o Location.o Event.o Defs.o
+DEFS   = Defs.h loimos.def.h
+DECLS  = loimos.decl.h
+BIN    = loimos
 
 # Build the executable (and implicitly charmrun) from the object files
-$(BIN): $(OBJS) $(OBJS_DECL)
+$(BIN): $(OBJS) $(DECLS)
 	$(CHARMC) -o $@ $(OBJS) -language charm++ \
 	-module CkMulticast $(OPTS)
 
 # Build .decl.h (and implicitly .def.h) files from the corresponding
 # .ci files
-$(OBJS_DECL): %.decl.h: %.ci
+$(DECLS): %.decl.h: %.ci
 	$(CHARMC) $<
 
 # Build .o files from the corresponding .C and .h files
-$(OBJS): %.o: %.C %.h $(OBJS_DECL)
+$(OBJS): %.o: %.C %.h $(DECLS) $(DEFS)
 	$(CHARMC) $(OPTS) $(INC) -o $@ $<
 
 # These are utility rules that don't actually build anything
