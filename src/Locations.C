@@ -89,10 +89,12 @@ inline void Locations::infect(int personIdx) {
   );
 
   peopleArray[peoplePartitionIdx].ReceiveInfections(personIdx);
-  printf(
+  /*
+  CkPrintf(
     "sending infection message to person %d in partition %d\r\n",
     personIdx,
     peoplePartitionIdx
   );
+  */
 }
 

@@ -35,11 +35,16 @@ People::People() {
     cont++;
   }
   day = 0;
+
+  PrintStateCounts();
+
   // CkPrintf("People chare %d with %d people\n",thisIndex,numLocalPeople);
 }
 
 void People::SendVisitMessages() {
   int numVisits, personIdx, locationIdx, locationSubset;
+
+  PrintStateCounts();
 
   // initialize random number generator for a Poisson distribution
   std::poisson_distribution<int> poisson_dist(LOCATION_LAMBDA);
@@ -111,11 +116,13 @@ void People::ReceiveInfections(int personIdx) {
     numPeople,
     numPeoplePartitions
   );
-  printf(
+  /*
+  CkPrintf(
     "recieved infection message for person %d in partition %d\r\n",
     personIdx,
     thisIndex
   );
+  */
   peopleState[localIdx] = EXPOSED;
   peopleDay[localIdx] = day + INCUBATION_PERIOD;
 
@@ -125,28 +132,35 @@ void People::ReceiveInfections(int personIdx) {
 }
 
 void People::EndofDayStateUpdate() {
-  int cont = 0;
   // counting infected people
-  for(std::vector<char>::iterator it = peopleState.begin() ; it != peopleState.end(); ++it) {
-    switch(*it) {
+  for(int i = 0; i < peopleState.size(); ++i) {
+    switch(peopleState[i]) {
       case SUSCEPTIBLE:
         break;
+      
       case EXPOSED:
-        if(day > peopleDay[cont]) {
+        if (0 == thisIndex) {
+          CkPrintf(
+            "exposed patient will be infectious on day %d\r\n",
+            peopleDay[i]
+          );
+        }
+        if(day > peopleDay[i]) {
           newCases++;
-          peopleDay[cont] = day + INFECTION_PERIOD;
-          peopleState[cont] = INFECTIOUS;
+          peopleDay[i] = day + INFECTION_PERIOD;
+          peopleState[i] = INFECTIOUS;
         }
         break;
+      
       case INFECTIOUS:
-        if(day > peopleDay[cont]) {
-          peopleState[cont] = RECOVERED;
+        if(day > peopleDay[i]) {
+          peopleState[i] = RECOVERED;
         }
         break;
+      
       case RECOVERED:
         break;
     }
-    cont++;
   }
 
   // contributing to reduction
@@ -154,4 +168,21 @@ void People::EndofDayStateUpdate() {
   contribute(sizeof(int), &newCases, CkReduction::sum_int, cb);
   day++;
   newCases = 0;
+}
+
+void People::PrintStateCounts() {
+  int counts[NUMBER_STATES] {0};
+  for(char state : peopleState)
+    counts[state]++;
+
+  if (0 == thisIndex) {
+    CkPrintf(
+      "partion %d has S=%d E=%d I=%d R=%d\r\n",
+      thisIndex,
+      counts[SUSCEPTIBLE],
+      counts[EXPOSED],
+      counts[INFECTIOUS],
+      counts[RECOVERED]
+    );
+  }
 }
