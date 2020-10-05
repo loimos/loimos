@@ -58,10 +58,10 @@ std::unordered_set<int> Location::processEvents(
       );
 
       if (SUSCEPTIBLE == curEvent.personState) {
-        onInfectiousDeparture(curEvent.personIdx, generator);
+        onSusceptibleDeparture(curEvent.personIdx, generator);
 
       } else if (INFECTIOUS == curEvent.personState) {
-        onSuspectibleDeparture(curEvent.personIdx, generator);
+        onInfectiousDeparture(curEvent.personIdx, generator);
 
       } 
     }
@@ -78,11 +78,11 @@ void Location::onInfectiousDeparture(
 ) { 
   for (int otherIdx: susceptiblePeople) {
     if (unitDistrib(generator) < INFECTION_PROBABILITY) 
-      justInfected.insert(personIdx);
+      justInfected.insert(otherIdx);
   } 
 }
 
-void Location::onSuspectibleDeparture(
+void Location::onSusceptibleDeparture(
   int personIdx,
   std::default_random_engine generator
 ) {
@@ -91,6 +91,8 @@ void Location::onSuspectibleDeparture(
     probNotInfected *= 1.0 - INFECTION_PROBABILITY;
   }
 
-  if (unitDistrib(generator) < probNotInfected)
+  // We want the probability of infection, so we need to 
+  // invert probNotInfected
+  if (unitDistrib(generator) > probNotInfected)
     justInfected.insert(personIdx);
 }
