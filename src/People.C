@@ -5,6 +5,7 @@
  */
 
 #include "loimos.decl.h"
+#include "Person.h"
 #include "People.h"
 #include "Defs.h"
 #include "DiseaseModel.h"
@@ -15,27 +16,30 @@
 #include <queue>
 
 People::People() {
-  // Init default values.
-  numLocalPeople = getNumLocalElements(numPeople, numPeoplePartitions, thisIndex);
-  day = 0; 
-
-  // Initialize disease model and initial healthy states of all individuals.
-  diseaseModel = globDiseaseModel.ckLocalBranch();
-  int healthy_state = diseaseModel->getHealthyState();
-  peopleState.resize(numLocalPeople, std::make_tuple(healthy_state, std::numeric_limits<Time>::max()));
+  newCases = 0;
+  day = 0;
   
-  // Init random number generator.
+  // getting number of people assigned to this chare
+  numLocalPeople = getNumLocalElements(
+    numPeople,
+    numPeoplePartitions,
+    thisIndex
+  );
+  peopleState.resize(numLocalPeople, SUSCEPTIBLE);
+  peopleDay.resize(numLocalPeople, 0);
   generator.seed(thisIndex);
-  MAX_RANDOM_VALUE = (float)generator.max();
-  float random_value;
   
-  // Randomly initiate initial infections.
-  for(std::vector<std::tuple<int, Time>>::iterator it = peopleState.begin(); it != peopleState.end(); ++it){
-    random_value = (float) generator();
-    if(random_value / MAX_RANDOM_VALUE < INITIAL_INFECTIOUS_PROBABILITY) {
-      *it = diseaseModel->transitionFromState(healthy_state, "untreated", &generator);
+  // randomnly choosing people as infectious
+  std::uniform_real_distribution<> unitDistrib(0,1);
+  for (int i = 0; i < peopleState.size(); ++i) {
+    if (unitDistrib(generator) < INITIAL_INFECTIOUS_PROBABILITY) {
+      peopleState[i] = INFECTIOUS;
+      peopleDay[i] = INFECTION_PERIOD;
+      newCases++;
     }
   }
+
+  // CkPrintf("People chare %d with %d people\n",thisIndex,numLocalPeople);
 }
 
 /**
