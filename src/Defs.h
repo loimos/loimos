@@ -7,6 +7,8 @@
 #ifndef __DEFS_H__
 #define __DEFS_H__
 
+#include <cstdint>
+
 // Disease states
 #define SUSCEPTIBLE 0
 #define EXPOSED 1
@@ -26,6 +28,10 @@
 // Event types
 #define ARRIVAL 0
 #define DEPARTURE 1
+
+// Time
+using Seconds = int32_t;
+const Seconds DAY_LENGTH = 3600 * 24;
 
 extern /* readonly */ CProxy_Main mainProxy;
 extern /* readonly */ CProxy_People peopleArray;

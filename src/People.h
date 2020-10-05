@@ -29,7 +29,6 @@ class People : public CBase_People {
     void SendVisitMessages(); 
     void ReceiveInfections(int personIdx);
     void EndofDayStateUpdate();
-    void PrintStateCounts();
 };
 
 #endif // __PEOPLE_H__

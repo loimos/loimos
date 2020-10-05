@@ -29,7 +29,7 @@ class Locations : public CBase_Locations {
     void ReceiveVisitMessages(
       int locationIdx,
       int personIdx,
-      char personState,
+      int personState,
       int visitStart,
       int visitEnd
     );

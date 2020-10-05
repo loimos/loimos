@@ -36,7 +36,7 @@ Locations::Locations() {
 void Locations::ReceiveVisitMessages(
   int locationIdx,
   int personIdx,
-  char personState,
+  int personState,
   int visitStart,
   int visitEnd
 ) {
@@ -63,7 +63,7 @@ void Locations::ReceiveVisitMessages(
 
 void Locations::ComputeInteractions() {
   int peopleSubsetIdx;
-  char state;
+  int state;
   float value;
 
   // traverses list of locations

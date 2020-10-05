@@ -11,10 +11,14 @@
 // guarentee any constraints on, hence why this is a stuct rather than
 // a class
 struct Event {
-  int personIdx; // the index of the person arriving or leaving
-  char personState; // the person's curent state in the disease model
+  // the index of the person arriving or leaving
+  int personIdx;
+  // the person's curent state in the disease model
+  int personState;
+  // the time when this event occurs, in seconds from the start of the day
   int time;
-  char type; // indicates whether they're arriving or leaving
+  // indicates whether they're arriving or leaving
+  char type;
 
   bool operator>(const Event& rhs) const;
 };
