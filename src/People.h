@@ -29,9 +29,6 @@ class People : public CBase_People {
     void SendVisitMessages(); 
     void ReceiveInfections(int personIdx);
     void EndofDayStateUpdate();
-    int day;
-    int newCases;
-    float MAX_RANDOM_VALUE;
 };
 
 #endif // __PEOPLE_H__

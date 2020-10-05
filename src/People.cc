@@ -18,14 +18,18 @@ People::People() {
   newCases = 0;
   day = 0;
   generator.seed(thisIndex);
-  
+
+  // Initialize disease model and initial healthy states of all individuals.
+  diseaseModel = globDiseaseModel.ckLocalBranch();
+  int healthy_state = diseaseModel->getHealthyState();
+
   // getting number of people assigned to this chare
   numLocalPeople = getNumLocalElements(
     numPeople,
     numPeoplePartitions,
     thisIndex
   );
-  Person tmp { SUSCEPTIBLE, 0 };
+  Person tmp { healthy_state, 0 };
   people.resize(numLocalPeople, tmp);
   
   // randomnly choosing people as infectious
@@ -33,7 +37,7 @@ People::People() {
   for (int i = 0; i < people.size(); ++i) {
     if (unitDistrib(generator) < INITIAL_INFECTIOUS_PROBABILITY) {
       people[i].state = INFECTIOUS;
-      people[i].nextStateDay = INFECTION_PERIOD;
+      people[i].secondsLeftInState = INFECTION_PERIOD;
       newCases++;
     }
   }
@@ -54,7 +58,7 @@ void People::SendVisitMessages() {
   // there should be an equal chance of visiting each location
   // and selecting any given time
   std::uniform_int_distribution<int> location_dist(0, numLocations - 1);
-  std::uniform_int_distribution<int> time_dist(0, 1440); // in minutes
+  std::uniform_int_distribution<int> time_dist(0, DAY_LENGTH); // in seconds
     
   std::priority_queue<int, std::vector<int>, std::greater<int> > times;
 
@@ -103,7 +107,7 @@ void People::SendVisitMessages() {
       locationsArray[locationSubset].ReceiveVisitMessages(
         locationIdx,
         personIdx,
-        personState,
+        personstate,
         visitStart,
         visitEnd
       );
@@ -120,16 +124,14 @@ void People::ReceiveInfections(int personIdx) {
   );
   
   // Handle disease transition.
-  int currState, timeLeftInState;
 
   // Mark that exposed healthy individual should make transition at end of day.
-  std::tie(currState, timeLeftInState) = peopleState[localIdx];
-  if (currState == diseaseModel->getHealthyState()) {
-    peopleState[localIdx] = std::make_tuple(currState, -1); 
+  if (people[localIdx].state == diseaseModel->getHealthyState()) {
+    people[localIdx].secondsLeftInState = -1; 
   }
   
   // Not sure where this state is supposed to come from...
-  //if(state) peopleState[localIdx] = state;
+  //if(state) people[localIdx].state = state;
   //CkPrintf("Partition %d - Person %d state %d\n",thisIndex,personIdx,state);
 }
 
@@ -139,18 +141,19 @@ void People::EndofDayStateUpdate() {
   // Handle state transitions at the end of the day.
   int totalStates = diseaseModel->getNumberOfStates();
   std::vector<int> stateSummary(totalStates, 0);
-  for(int i = 0; i < peopleState.size(); i++) {
-    std::tuple<int,int> current = peopleState[i];
-    int currState, timeLeftInState;
-    std::tie(currState, timeLeftInState) = current;
+  for(int i = 0; i < people.size(); i++) {
+    int currState = people[i].state;
+    int secondsLeftInState = people[i].secondsLeftInState; 
 
     // TODO(iancostello): Move into start of day for visits.
     // Transition to newstate or decrease time.
-    timeLeftInState -= (3600) * 24; // One day in seconds
-    if (timeLeftInState <= 0) {
-      peopleState[i] = diseaseModel->transitionFromState(currState, "untreated", &generator);
+    secondsLeftInState -= DAY_LENGTH;
+    if (secondsLeftInState <= 0) {
+      std::tie(people[i].state, people[i].secondsLeftInState) = 
+        diseaseModel->transitionFromState(currState, "untreated", &generator);
+
     } else {
-      peopleState[i] = std::make_tuple(currState, timeLeftInState);
+      people[i].secondsLeftInState = secondsLeftInState;
     }
 
     // Counting people by state.
@@ -160,4 +163,6 @@ void People::EndofDayStateUpdate() {
   // Contribute the result to the reductiontarget cb.
   CkCallback cb(CkReductionTarget(Main, ReceiveStats), mainProxy);
   contribute(stateSummary, CkReduction::sum_int, cb);
+  day++;
+  newCases = 0;
 }
