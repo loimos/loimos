@@ -45,8 +45,6 @@ People::People() {
 void People::SendVisitMessages() {
   int numVisits, personIdx, locationIdx, locationSubset;
 
-  PrintStateCounts();
-
   // initialize random number generator for a Poisson distribution
   std::poisson_distribution<int> poisson_dist(LOCATION_LAMBDA);
 
