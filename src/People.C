@@ -36,15 +36,11 @@ People::People() {
   }
   day = 0;
 
-  PrintStateCounts();
-
   // CkPrintf("People chare %d with %d people\n",thisIndex,numLocalPeople);
 }
 
 void People::SendVisitMessages() {
   int numVisits, personIdx, locationIdx, locationSubset;
-
-  PrintStateCounts();
 
   // initialize random number generator for a Poisson distribution
   std::poisson_distribution<int> poisson_dist(LOCATION_LAMBDA);
@@ -123,8 +119,12 @@ void People::ReceiveInfections(int personIdx) {
     thisIndex
   );
   */
-  peopleState[localIdx] = EXPOSED;
-  peopleDay[localIdx] = day + INCUBATION_PERIOD;
+  
+  // This check hopefully shouldn't be neccessary
+  //if (SUSCEPTIBLE == peopleState[localIdx]) {
+    peopleState[localIdx] = EXPOSED;
+    peopleDay[localIdx] = day + INCUBATION_PERIOD;
+  //}
 
   // Not sure where this state is supposed to come from...
   //if(state) peopleState[localIdx] = state;
@@ -139,12 +139,6 @@ void People::EndofDayStateUpdate() {
         break;
       
       case EXPOSED:
-        if (0 == thisIndex) {
-          CkPrintf(
-            "exposed patient will be infectious on day %d\r\n",
-            peopleDay[i]
-          );
-        }
         if(day > peopleDay[i]) {
           newCases++;
           peopleDay[i] = day + INFECTION_PERIOD;
@@ -163,6 +157,8 @@ void People::EndofDayStateUpdate() {
     }
   }
 
+  PrintStateCounts();
+
   // contributing to reduction
   CkCallback cb(CkReductionTarget(Main, ReceiveStats), mainProxy);
   contribute(sizeof(int), &newCases, CkReduction::sum_int, cb);
@@ -175,14 +171,12 @@ void People::PrintStateCounts() {
   for(char state : peopleState)
     counts[state]++;
 
-  if (0 == thisIndex) {
-    CkPrintf(
-      "partion %d has S=%d E=%d I=%d R=%d\r\n",
-      thisIndex,
-      counts[SUSCEPTIBLE],
-      counts[EXPOSED],
-      counts[INFECTIOUS],
-      counts[RECOVERED]
-    );
-  }
+  CkPrintf(
+    "partion %d has S=%d E=%d I=%d R=%d\r\n",
+    thisIndex,
+    counts[SUSCEPTIBLE],
+    counts[EXPOSED],
+    counts[INFECTIOUS],
+    counts[RECOVERED]
+  );
 }

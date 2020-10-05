@@ -34,7 +34,7 @@ class Location {
       int personIdx,
       std::default_random_engine generator
     );
-    void onSuspectibleDeparture(
+    void onSusceptibleDeparture(
       int personIdx,
       std::default_random_engine generator
     );
