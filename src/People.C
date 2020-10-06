@@ -76,10 +76,10 @@ void People::ReceiveInfections(int personIdx) {
   // Handle disease transition.
   int currState, timeLeftInState;
 
-  // TODO(iancostello): Don't make the state update here.
+  // Mark that exposed healthy individual should make transition at end of day.
   std::tie(currState, timeLeftInState) = peopleState[localIdx];
   if (currState == diseaseModel->getHealthyState()) {
-    peopleState[localIdx] = diseaseModel->transitionFromState(currState, "untreated", &generator);
+    peopleState[localIdx] = std::make_tuple(currState, -1); 
   }
 }
 

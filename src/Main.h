@@ -13,7 +13,7 @@
 class Main : public CBase_Main {
   Main_SDAG_CODE
   int day;
-  std::vector<int> accumulated>;
+  std::vector<int> accumulated;
   DiseaseModel* diseaseModel;
 
   public:

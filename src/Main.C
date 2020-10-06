@@ -60,7 +60,7 @@ void Main::ReceiveStats(CkReductionMsg *summary) {
 
   for (int i = 0; i < diseaseModel->getNumberOfStates(); i++) {
     int total_in_state = *data;
-    CkPrintf("%d in %s. (%d increase from previous day.\n", total_in_state,
+    CkPrintf("%d in %s. (%d increase from previous day)\n", total_in_state,
              diseaseModel->lookupStateName(i).c_str(), 
              (total_in_state - accumulated[i]));
     accumulated[i] = total_in_state; 
