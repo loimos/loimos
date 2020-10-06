@@ -40,6 +40,8 @@ Main::Main(CkArgMsg* msg) {
   // Instantiate DiseaseModel nodegroup (One for each physical processor).
   CkPrintf("Loading diseaseModel.\n");
   globDiseaseModel = CProxy_DiseaseModel::ckNew("disease_model/H5N1.textproto");
+  diseaseModel = globDiseaseModel.ckLocalBranch();
+  accumulated.resize(diseaseModel->getNumberOfStates(), 0);
 
   // creating chare arrays
   CkPrintf("Loading otherrs.\n");
@@ -57,7 +59,11 @@ void Main::ReceiveStats(CkReductionMsg *summary) {
   DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
 
   for (int i = 0; i < diseaseModel->getNumberOfStates(); i++) {
-    CkPrintf("%d in %s.\n", *data, diseaseModel->lookupStateName(i).c_str());
+    int total_in_state = *data;
+    CkPrintf("%d in %s. (%d increase from previous day.\n", total_in_state,
+             diseaseModel->lookupStateName(i).c_str(), 
+             (total_in_state - accumulated[i]));
+    accumulated[i] = total_in_state; 
     data++;
   }
 }
