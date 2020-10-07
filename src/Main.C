@@ -53,19 +53,4 @@ Main::Main(CkArgMsg* msg) {
   mainProxy.run();
 }
 
-void Main::ReceiveStats(CkReductionMsg *summary) {
-  CkPrintf("Summary of Day %d\n", day);
-  int *data = reinterpret_cast<int *>(summary->getData());
-  DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
-
-  for (int i = 0; i < diseaseModel->getNumberOfStates(); i++) {
-    int total_in_state = *data;
-    CkPrintf("%d in %s. (%d increase from previous day)\n", total_in_state,
-             diseaseModel->lookupStateName(i).c_str(), 
-             (total_in_state - accumulated[i]));
-    accumulated[i] = total_in_state; 
-    data++;
-  }
-}
-
 #include "loimos.def.h"
