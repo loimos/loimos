@@ -8,10 +8,12 @@
 #include "Main.h"
 #include "People.h"
 #include "Locations.h"
+#include "DiseaseModel.h"
 
 /* readonly */ CProxy_Main mainProxy;
 /* readonly */ CProxy_People peopleArray;
 /* readonly */ CProxy_Locations locationsArray;
+/* readonly */ CProxy_DiseaseModel globDiseaseModel;
 /* readonly */ int numPeople;
 /* readonly */ int numLocations;
 /* readonly */ int numPeoplePartitions;
@@ -34,11 +36,20 @@ Main::Main(CkArgMsg* msg) {
   // setup main proxy
   CkPrintf("Running Loimos on %d PEs with %d people, %d locations, %d people subsets, %d location subsets, and %d days\n", CkNumPes(), numPeople, numLocations, numPeoplePartitions, numLocationPartitions, numDays);
   mainProxy = thisProxy;
-  accumulated = 0;
+
+  // Instantiate DiseaseModel nodegroup (One for each physical processor).
+  CkPrintf("Loading diseaseModel.\n");
+  globDiseaseModel = CProxy_DiseaseModel::ckNew("disease_model/H5N1.textproto");
+  diseaseModel = globDiseaseModel.ckLocalBranch();
+  accumulated.resize(diseaseModel->getNumberOfStates(), 0);
 
   // creating chare arrays
+  CkPrintf("Loading otherrs.\n");
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
+
+  // run
+  CkPrintf("Running.\n");
   mainProxy.run();
 }
 

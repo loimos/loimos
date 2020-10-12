@@ -7,6 +7,7 @@ mainmodule loimos {
   readonly CProxy_Main mainProxy;
   readonly CProxy_People peopleArray;
   readonly CProxy_Locations locationsArray;
+  readonly CProxy_DiseaseModel globDiseaseModel;
   readonly int numPeople;
   readonly int numLocations;
   readonly int numPeoplePartitions;
@@ -37,15 +38,30 @@ mainmodule loimos {
             peopleArray.EndofDayStateUpdate();
           }
         }
-        when ReceiveStats(int total) {
-          serial { accumulated += total; CkPrintf("Day %d, new cases %d, accumulated cases %d\n", day, total, accumulated); }
+        when ReceiveStats(CkReductionMsg *summary) {
+          serial {
+            CkPrintf("Summary of Day %d\n", day);
+            int *data = reinterpret_cast<int *>(summary->getData());
+            DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
+
+            for (int i = 0; i < diseaseModel->getNumberOfStates(); i++) {
+              int total_in_state = *data;
+              int change_in_infected = total_in_state - accumulated[i];
+              if (total_in_state != 0 || change_in_infected != 0) {
+                CkPrintf("%d in %s. (%d change from previous day)\n", total_in_state,
+                        diseaseModel->lookupStateName(i).c_str(), change_in_infected);
+              }
+              accumulated[i] = total_in_state; 
+              data++;
+            }
+          }
         }
       }
       serial { CkExit(); }
     };
     entry void StartComputingInteractions(); 
     entry void ComputedInteractions();
-    entry [reductiontarget] void ReceiveStats(int);
+    entry [reductiontarget] void ReceiveStats(CkReductionMsg *summary);
   };
 
   array [1D] People {
@@ -57,8 +73,11 @@ mainmodule loimos {
 
   array [1D] Locations {
     entry Locations();
-    entry void ReceiveVisitMessages(int,char,int);
+    entry void ReceiveVisitMessages(int,int,int);
     entry void ComputeInteractions(); // calls ReceiveInfections
   };
 
+  nodegroup DiseaseModel {
+      entry DiseaseModel(std::string pathToModel);
+  };
 };

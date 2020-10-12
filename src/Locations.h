@@ -7,6 +7,7 @@
 #ifndef __LOCATIONS_H__
 #define __LOCATIONS_H__
 
+#include "DiseaseModel.h"
 #include <vector>
 #include <set>
 
@@ -17,9 +18,10 @@ class Locations : public CBase_Locations {
     std::vector<char> locationState;
     std::default_random_engine generator;
     float MAX_RANDOM_VALUE;
+    DiseaseModel *diseaseModel;
   public:
     Locations();
-    void ReceiveVisitMessages(int personIdx, char personState, int locationIdx);
+    void ReceiveVisitMessages(int personIdx, int personState, int locationIdx);
     void ComputeInteractions(); // calls ReceiveInfections
 };
 
