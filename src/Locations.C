@@ -9,6 +9,7 @@
 #include "DiseaseModel.h"
 #include "Location.h"
 #include "Event.h"
+#include "DiseaseModel.h"
 #include "Defs.h"
 
 #include <algorithm>
@@ -30,8 +31,10 @@ Locations::Locations() {
   // Seed random number generator via branch ID for reproducibility.
   locations.resize(numLocalLocations);
 
+  // Init disease states.
+  diseaseModel = globDiseaseModel.ckLocalBranch();
+  // Seed random number generator via branch ID for reproducibility.
   generator.seed(thisIndex);
-  MAX_RANDOM_VALUE = (float) generator.max();
 }
 
 void Locations::ReceiveVisitMessages(
@@ -105,4 +108,3 @@ inline void Locations::infect(int personIdx) {
   );
   */
 }
-
