@@ -7,6 +7,7 @@ mainmodule loimos {
   readonly CProxy_Main mainProxy;
   readonly CProxy_People peopleArray;
   readonly CProxy_Locations locationsArray;
+  readonly CProxy_DiseaseModel globDiseaseModel;
   readonly int numPeople;
   readonly int numLocations;
   readonly int numPeoplePartitions;
@@ -59,7 +60,7 @@ mainmodule loimos {
     };
     entry void StartComputingInteractions(); 
     entry void ComputedInteractions();
-    entry [reductiontarget] void ReceiveStats(int);
+    entry [reductiontarget] void ReceiveStats(CkReductionMsg *summary);
   };
 
   array [1D] People {
@@ -75,4 +76,7 @@ mainmodule loimos {
     entry void ComputeInteractions(); // calls ReceiveInfections
   };
 
+  nodegroup DiseaseModel {
+      entry DiseaseModel(std::string pathToModel);
+  };
 };

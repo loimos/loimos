@@ -1,6 +1,10 @@
 *.decl.h
 *.def.h
-
 *.o
 charmrun
 loimosita
+settings.json
+*.pb.cc
+*.pb.h
+.DS_Store
+loimos

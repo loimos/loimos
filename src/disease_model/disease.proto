@@ -1,0 +1,75 @@
+// Copyright 2020 The Loimos Project Developers.
+// See the top-level LICENSE file for details.
+//
+// SPDX-License-Identifier: MIT
+
+// This disease model defines a simple model without important features such
+// variable latencies, different symptom settings, and variable sets of edges. 
+// It serves as a simple to read example of the format. 
+
+syntax = "proto3";
+package loimos.proto;
+import "distribution.proto"; 
+
+// Note that we can use plugin insertion points to input code.
+// https://developers.google.com/protocol-buffers/docs/reference/cpp-generated#plugins
+
+// Defines the Probabilistic Timed Transition Systems (PTTS)
+// of the disease model.
+message DiseaseModel {
+    // Defines the unique disease identifier.
+    string label = 1;
+
+    // Defines a vertex in the graph and its outbound nodes.
+    message DiseaseState {
+        // Defines a state of the disease model.
+        string state_label = 1;
+        double infectivity = 2;
+        double susceptibility = 3;
+        // Incapacitation defines the level of restricted movement caused
+        // by the disease.
+        double incapacitation = 4;
+
+        // Level of non-disease-specific symptoms.
+        oneof prodrome_or_vulnerability {
+          int32 prodrome = 5;
+          int32 vulnerability = 6; 
+        }
+        
+        // TODO: Fill in this definition.
+        oneof symptomatic_or_tracing {
+          int32 symptomatic = 7;
+          int32 tracing = 8;
+        }
+    
+        // Defines the time transition model for the node.
+        oneof dwell_time_distribution {
+          Dist_Uniform   uniform   =  9;
+          Dist_Normal    normal    = 10;
+          Dist_Fixed     fixed    = 11;
+          Dist_Forever   forever   = 12;
+          Dist_Histogram histogram = 13;
+        }
+
+        // Defines a set of edges that should be used
+        // for a certain intervention. For example, a vaccinated patient
+        // may skip directly from uninfected to infected.
+        message StateTransitionSet {
+          // Describes the treatment that the edge set describes. 
+          string transition_label = 1;
+
+          // Defines a transition. For example (latent_1 -> symptom_1).
+          message StateTransition {
+            string next_state = 2;
+            double with_prob = 3;
+          }
+          // A transition state has one vertex and multiple edges.
+          repeated StateTransition transition = 6;
+        }
+
+        repeated StateTransitionSet transition_set = 14;
+    }
+
+    // A model is graph of state transitions.
+    repeated DiseaseState disease_state = 2;
+}

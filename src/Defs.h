@@ -30,6 +30,7 @@
 extern /* readonly */ CProxy_Main mainProxy;
 extern /* readonly */ CProxy_People peopleArray;
 extern /* readonly */ CProxy_Locations locationsArray;
+extern /* readonly */ CProxy_DiseaseModel globDiseaseModel;
 extern /* readonly */ int numPeople;
 extern /* readonly */ int numLocations;
 extern /* readonly */ int numPeoplePartitions;

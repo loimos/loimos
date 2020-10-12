@@ -11,6 +11,8 @@
 
 #include <random>
 #include <vector>
+#include <tuple>
+#include "DiseaseModel.h"
 
 #define LOCATION_LAMBDA 5.2
 
@@ -21,7 +23,7 @@ class People : public CBase_People {
     int newCases;
     std::vector<Person> people;
     std::default_random_engine generator;
-    float MAX_RANDOM_VALUE;
+    DiseaseModel* diseaseModel;
   public:
     People();
     void SendVisitMessages(); 

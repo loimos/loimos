@@ -8,6 +8,10 @@
 #include "Person.h"
 #include "People.h"
 #include "Defs.h"
+#include "DiseaseModel.h"
+#include <tuple>
+#include <limits>
+
 
 #include <queue>
 
@@ -38,6 +42,10 @@ People::People() {
   // CkPrintf("People chare %d with %d people\n",thisIndex,numLocalPeople);
 }
 
+/**
+ * Randomly generates an itinerary (number of visits to random locations)
+ * for each person and sends visit messages to locations.
+ */ 
 void People::SendVisitMessages() {
   int numVisits, personIdx, locationIdx, locationSubset;
 
@@ -159,9 +167,7 @@ void People::EndofDayStateUpdate() {
 
   // contributing to reduction
   CkCallback cb(CkReductionTarget(Main, ReceiveStats), mainProxy);
-  contribute(sizeof(int), &newCases, CkReduction::sum_int, cb);
-  day++;
-  newCases = 0;
+  contribute(stateSummary, CkReduction::sum_int, cb);
 }
 
 void People::PrintStateCounts() {
