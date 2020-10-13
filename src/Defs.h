@@ -17,7 +17,10 @@
 #define INCUBATION_PERIOD 2
 #define INFECTION_PERIOD 4
 
-#define INFECTION_PROBABILITY 0.05
+// This is currently the probability of a susceptible person being
+// infected after one minute of interaction with an infectious person
+// (which is why it's so small for the moment)
+#define INFECTION_PROBABILITY 0.0005
 #define INITIAL_INFECTIOUS_PROBABILITY 0.05
 
 // Event types
