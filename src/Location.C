@@ -12,6 +12,7 @@
 
 #include <random>
 #include <set>
+#include <cmath>
 
 std::uniform_real_distribution<> Location::unitDistrib(0,1);
 
@@ -22,7 +23,7 @@ void Location::addEvent(Event e) {
 std::unordered_set<int> Location::processEvents(
   std::default_random_engine generator
 ) {
-  std::vector<int> *people;
+  std::vector<Event> *arrivals;
   Event curEvent;
   justInfected.empty();
 
@@ -32,26 +33,34 @@ std::unordered_set<int> Location::processEvents(
 
     // TODO: implement a disease model to make this check properly
     if (SUSCEPTIBLE == curEvent.personState) {
-      people = &susceptiblePeople;
+      arrivals = &susceptibleArrivals;
 
     } else if (INFECTIOUS == curEvent.personState) {
-      people = &infectiousPeople;
+      arrivals = &infectiousArrivals;
 
     } else {
       continue;
     }
 
     if (ARRIVAL == curEvent.type) {
-      people->push_back(curEvent.personIdx);
+      arrivals->push_back(curEvent);
 
     } else if (DEPARTURE == curEvent.type) {
-      people->erase(
-        std::remove(
-          people->begin(),
-          people->end(),
-          curEvent.personIdx
-        ), people->end()
+      int curIdx = curEvent.personIdx;
+      arrivals->erase(
+        std::remove_if(
+          arrivals->begin(),
+          arrivals->end(),
+          [curIdx](Event e) {
+            return e.personIdx == curIdx;
+          }
+        ), arrivals->end()
       );
+      /*
+      std::erase_if(arrivals, [](Event e) {
+         return e.personIdx == curEvent.personIdx;
+      });
+      */
 
       onDeparture(curEvent, generator);
     }
@@ -61,44 +70,54 @@ std::unordered_set<int> Location::processEvents(
 }
 
 inline void Location::onDeparture(
-  Event event,
+  Event departure,
   std::default_random_engine generator
 ) {
-  if (SUSCEPTIBLE == event.personState) {
-    onSusceptibleDeparture(event.personIdx, generator);
+  if (SUSCEPTIBLE == departure.personState) {
+    onSusceptibleDeparture(departure, generator);
 
-  } else if (INFECTIOUS == event.personState) {
-    onInfectiousDeparture(event.personIdx, generator);
-
+  } else if (INFECTIOUS == departure.personState) {
+    onInfectiousDeparture(departure, generator);
   } 
+}
+
+// Put this in the disease model, once it exists
+// Also, this currently assumes the infection probability is constant,
+// so if we start having that depend on people's characteristics, this
+// will need to change
+double getLogProbNotInfected(Event arrival, Event departure) {
+  double baseProb = 1.0 - INFECTION_PROBABILITY;
+  return log(baseProb) * (departure.time - arrival.time);
 }
 
 // The infection probability amy eventually depend on traits of the
 // infectious or susceptible person, which is why we need the personIdx
 void Location::onInfectiousDeparture(
-  int infectiousIdx,
+  Event d,
   std::default_random_engine generator
 ) {
   
-  for (int susceptibleIdx: susceptiblePeople) {
-    if (unitDistrib(generator) < INFECTION_PROBABILITY) { 
-      justInfected.insert(susceptibleIdx);
+  for (Event a : susceptibleArrivals) {
+    // We want the probability of infection, so we need to 
+    // invert probNotInfected
+    if (unitDistrib(generator) > exp(getLogProbNotInfected(a, d))) { 
+      justInfected.insert(a.personIdx);
     }
   } 
 }
 
 void Location::onSusceptibleDeparture(
-  int susceptibleIdx,
+  Event d,
   std::default_random_engine generator
 ) {
-  double probNotInfected = 1.0;
-  for (int infectiousIdx: infectiousPeople) {
-    probNotInfected *= 1.0 - INFECTION_PROBABILITY;
+  double logProbNotInfected = 0.0;
+  for (Event a: infectiousArrivals) {
+    logProbNotInfected += getLogProbNotInfected(a, d);
   }
   
   // We want the probability of infection, so we need to 
   // invert probNotInfected
-  if (unitDistrib(generator) > probNotInfected) {
-    justInfected.insert(susceptibleIdx);
+  if (unitDistrib(generator) > exp(logProbNotInfected)) {
+    justInfected.insert(d.personIdx);
   }
 }

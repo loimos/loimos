@@ -23,24 +23,24 @@ class Location {
     // Represents all of the arrivals and departures of people
     // from this location on a given day
     std::priority_queue<Event, std::vector<Event>, std::greater<Event> > events;
-    // Each int in one of these containers represents the index of
-    // a person at this location
-    std::vector<int> infectiousPeople;
-    std::vector<int> susceptiblePeople;
+    // Each Event one of these containers is the arrival event for a
+    // a person currently at this location
+    std::vector<Event> infectiousArrivals;
+    std::vector<Event> susceptibleArrivals;
     std::unordered_set<int> justInfected;
 
     // Helper functions to handle when a person leaves this location
     // onDeparture branches to one of the two other functions
     inline void onDeparture(
-      Event event,
+      Event departure,
       std::default_random_engine generator
     );
     void onInfectiousDeparture(
-      int infectiousIdx,
+      Event departure,
       std::default_random_engine generator
     );
     void onSusceptibleDeparture(
-      int susceptibleIdx,
+      Event departure,
       std::default_random_engine generator
     );
   public:
