@@ -28,3 +28,4 @@ clean:
 
 test: loimos
 	./charmrun +p4 ./$(BIN) 110 20 15 6 15 ++local	
+	./charmrun +p4 ./loimos 110 20 15 6 15 disease_model/H5N1.textproto ++local	
