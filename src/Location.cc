@@ -9,10 +9,12 @@
 #include "People.h"
 #include "Event.h"
 #include "Defs.h"
+#include "DiseaseModel.h"
 
 #include <random>
 #include <set>
 #include <cmath>
+#include <stdio.h>
 
 std::uniform_real_distribution<> Location::unitDistrib(0,1);
 
@@ -25,7 +27,8 @@ void Location::addEvent(Event e) {
 }
 
 std::unordered_set<int> Location::processEvents(
-  std::default_random_engine generator
+  std::default_random_engine *generator,
+  DiseaseModel *diseaseModel
 ) {
   std::vector<Event> *arrivals;
   Event curEvent;
@@ -35,11 +38,22 @@ std::unordered_set<int> Location::processEvents(
     curEvent = events.top();
     events.pop();
 
-    // TODO: implement a disease model to make this check properly
-    if (SUSCEPTIBLE == curEvent.personState) {
+    if (diseaseModel->isSusceptible(curEvent.personState)) {
+      /*
+      printf(
+        "Handling susceptible arrival %s\n\r",
+        diseaseModel->getStateLabel(curEvent.personState)
+      );
+      */
       arrivals = &susceptibleArrivals;
 
-    } else if (INFECTIOUS == curEvent.personState) {
+    } else if (diseaseModel->isInfectious(curEvent.personState)) {
+      /*
+      printf(
+        "Handling infectious arrival %s\n\r",
+        diseaseModel->getStateLabel(curEvent.personState)
+      );
+      */
       arrivals = &infectiousArrivals;
 
     } else {
@@ -60,13 +74,8 @@ std::unordered_set<int> Location::processEvents(
           }
         ), arrivals->end()
       );
-      /*
-      std::erase_if(arrivals, [](Event e) {
-         return e.personIdx == curEvent.personIdx;
-      });
-      */
 
-      onDeparture(curEvent, generator);
+      onDeparture(generator, diseaseModel, curEvent);
     }
   }
 
@@ -74,54 +83,64 @@ std::unordered_set<int> Location::processEvents(
 }
 
 inline void Location::onDeparture(
-  Event departure,
-  std::default_random_engine generator
+  std::default_random_engine *generator,
+  DiseaseModel *diseaseModel,
+  Event departure
 ) {
-  if (SUSCEPTIBLE == departure.personState) {
-    onSusceptibleDeparture(departure, generator);
+  if (diseaseModel->isSusceptible(departure.personState)) {
+    onSusceptibleDeparture(generator, diseaseModel, departure);
 
-  } else if (INFECTIOUS == departure.personState) {
-    onInfectiousDeparture(departure, generator);
-  } 
-}
-
-// Put this in the disease model, once it exists
-// Also, this currently assumes the infection probability is constant,
-// so if we start having that depend on people's characteristics, this
-// will need to change
-double getLogProbNotInfected(Event arrival, Event departure) {
-  double baseProb = 1.0 - INFECTION_PROBABILITY;
-  return log(baseProb) * (departure.time - arrival.time);
-}
-
-// The infection probability amy eventually depend on traits of the
-// infectious or susceptible person, which is why we need the personIdx
-void Location::onInfectiousDeparture(
-  Event d,
-  std::default_random_engine generator
-) {
-  
-  for (Event a : susceptibleArrivals) {
-    // We want the probability of infection, so we need to 
-    // invert probNotInfected
-    if (unitDistrib(generator) > exp(getLogProbNotInfected(a, d))) { 
-      justInfected.insert(a.personIdx);
-    }
+  } else if (diseaseModel->isInfectious(departure.personState)) {
+    onInfectiousDeparture(generator, diseaseModel, departure);
   } 
 }
 
 void Location::onSusceptibleDeparture(
-  Event d,
-  std::default_random_engine generator
+  std::default_random_engine *generator,
+  DiseaseModel *diseaseModel,
+  Event susceptibleDeparture
 ) {
   double logProbNotInfected = 0.0;
-  for (Event a: infectiousArrivals) {
-    logProbNotInfected += getLogProbNotInfected(a, d);
+  for (Event infectiousArrival: infectiousArrivals) {
+    logProbNotInfected += diseaseModel->getLogProbNotInfected(
+      susceptibleDeparture, infectiousArrival
+    );
   }
-  
+
   // We want the probability of infection, so we need to 
   // invert probNotInfected
-  if (unitDistrib(generator) > exp(logProbNotInfected)) {
-    justInfected.insert(d.personIdx);
+  double prob = exp(logProbNotInfected);
+  double roll = unitDistrib(*generator);
+  /*
+  printf(
+    "Infection prob: %f (from %d contacts, rolled %f)\n\r",
+    1.0 - prob,
+    (int) infectiousArrivals.size(),
+    roll
+  );
+  */
+  if (roll > prob) {
+    justInfected.insert(susceptibleDeparture.personIdx);
   }
+}
+
+void Location::onInfectiousDeparture(
+  std::default_random_engine *generator,
+  DiseaseModel *diseaseModel,
+  Event infectiousDeparture
+) {
+  
+  for (Event susceptibleArrival : susceptibleArrivals) {
+    // We want the probability of infection, so we need to 
+    // invert probNotInfected
+    double prob = exp(diseaseModel->getLogProbNotInfected(
+      susceptibleArrival, infectiousDeparture
+    ));
+
+    double roll = unitDistrib(*generator);
+    //printf("Infection prob: %f (rolled %f)\n\r", 1.0 - prob, roll);
+    if (roll > prob) { 
+      justInfected.insert(susceptibleArrival.personIdx);
+    }
+  } 
 }

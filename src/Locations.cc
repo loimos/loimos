@@ -81,7 +81,8 @@ void Locations::ComputeInteractions() {
     //  numLocationPartitions
     //);
     
-    std::unordered_set<int> justInfected = loc.processEvents(generator);
+    std::unordered_set<int> justInfected =
+      loc.processEvents(&generator, diseaseModel);
     for (int personIdx : justInfected) {
       infect(personIdx);
     }

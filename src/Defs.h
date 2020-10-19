@@ -19,12 +19,6 @@
 #define INCUBATION_PERIOD 2
 #define INFECTION_PERIOD 4
 
-// This is currently the probability of a susceptible person being
-// infected after one minute of interaction with an infectious person
-// (which is why it's so small for the moment)
-#define INFECTION_PROBABILITY 0.0005
-#define INITIAL_INFECTIOUS_PROBABILITY 0.05
-
 // Event types
 #define ARRIVAL 0
 #define DEPARTURE 1
@@ -32,6 +26,8 @@
 // Time
 using Seconds = int32_t;
 const Seconds DAY_LENGTH = 3600 * 24;
+
+#define INITIAL_INFECTIOUS_PROBABILITY 0.05
 
 extern /* readonly */ CProxy_Main mainProxy;
 extern /* readonly */ CProxy_People peopleArray;

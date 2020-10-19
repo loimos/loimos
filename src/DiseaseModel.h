@@ -8,7 +8,9 @@
 
 #include "disease_model/disease.pb.h"
 #include "disease_model/distribution.pb.h"
+
 #include "Defs.h"
+#include "Event.h"
 
 #include <random>
 
@@ -32,6 +34,9 @@ class DiseaseModel : public CBase_DiseaseModel {
         int getNumberOfStates();
         int getHealthyState();
         bool isInfectious(int personState);
-};
+        bool isSusceptible(int personState);
+        const char * getStateLabel(int personState);
+        double getLogProbNotInfected(Event susceptibleEvent, Event infectiousEvent);
+  };
 
 #endif // __DiseaseModel_H__ 

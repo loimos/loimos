@@ -21,7 +21,7 @@ People::People() {
 
   // Initialize disease model and initial healthy states of all individuals.
   diseaseModel = globDiseaseModel.ckLocalBranch();
-  int healthy_state = diseaseModel->getHealthyState();
+  int healthyState = diseaseModel->getHealthyState();
 
   // getting number of people assigned to this chare
   numLocalPeople = getNumLocalElements(
@@ -29,7 +29,7 @@ People::People() {
     numPeoplePartitions,
     thisIndex
   );
-  Person tmp { healthy_state, 0 };
+  Person tmp { healthyState, std::numeric_limits<Seconds>::max() };
   people.resize(numLocalPeople, tmp);
   
   // randomnly choosing people as infectious
