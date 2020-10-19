@@ -28,11 +28,8 @@ Locations::Locations() {
   );
   // Init disease states.
   diseaseModel = globDiseaseModel.ckLocalBranch();
-  locationState.resize(numLocalLocations, diseaseModel->getHealthyState());
-  
-  // Seed random number generator via branch ID for reproducibility.
   locations.resize(numLocalLocations);
-
+  
   // Init disease states.
   diseaseModel = globDiseaseModel.ckLocalBranch();
   // Seed random number generator via branch ID for reproducibility.
