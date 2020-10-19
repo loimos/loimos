@@ -143,7 +143,7 @@ void People::EndofDayStateUpdate() {
   std::vector<int> stateSummary(totalStates, 0);
   for(int i = 0; i < people.size(); i++) {
     int currState = people[i].state;
-    int secondsLeftInState = people[i].secondsLeftInState; 
+    int secondsLeftInState = people[i].secondsLeftInState;
 
     // TODO(iancostello): Move into start of day for visits.
     // Transition to newstate or decrease time.
@@ -151,13 +151,12 @@ void People::EndofDayStateUpdate() {
     if (secondsLeftInState <= 0) {
       std::tie(people[i].state, people[i].secondsLeftInState) = 
         diseaseModel->transitionFromState(currState, "untreated", &generator);
-
+    
     } else {
       people[i].secondsLeftInState = secondsLeftInState;
     }
 
-    // Counting people by state.
-    stateSummary[currState] += 1;
+    stateSummary[currState]++;
   }
 
   // Contribute the result to the reductiontarget cb.
