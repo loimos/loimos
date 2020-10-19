@@ -8,6 +8,7 @@
 #define __LOCATION_H__
 
 #include "Event.h"
+#include "DiseaseModel.h"
 
 #include <queue>
 #include <vector>
@@ -32,16 +33,19 @@ class Location {
     // Helper functions to handle when a person leaves this location
     // onDeparture branches to one of the two other functions
     inline void onDeparture(
-      Event departure,
-      std::default_random_engine generator
-    );
-    void onInfectiousDeparture(
-      Event departure,
-      std::default_random_engine generator
+      std::default_random_engine *generator,
+      DiseaseModel *diseaseModel,
+      Event departure
     );
     void onSusceptibleDeparture(
-      Event departure,
-      std::default_random_engine generator
+      std::default_random_engine *generator,
+      DiseaseModel *diseaseModel,
+      Event departure
+    );
+    void onInfectiousDeparture(
+      std::default_random_engine *generator,
+      DiseaseModel *diseaseModel,
+      Event departure
     );
   public:
     // just use default constructors
@@ -56,7 +60,8 @@ class Location {
     // Runs through all of the current events and return the indices of
     // any people who have been infected
     std::unordered_set<int> processEvents(
-      std::default_random_engine generator
+      std::default_random_engine *generator,
+      DiseaseModel *diseaseModel
     );
 };
   
