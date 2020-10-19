@@ -143,7 +143,7 @@ void People::EndofDayStateUpdate() {
   std::vector<int> stateSummary(totalStates, 0);
   for(int i = 0; i < people.size(); i++) {
     int currState = people[i].state;
-    int secondsLeftInState = people[i].secondsLeftInState; 
+    int secondsLeftInState = people[i].secondsLeftInState;
 
     // TODO(iancostello): Move into start of day for visits.
     // Transition to newstate or decrease time.
@@ -151,32 +151,17 @@ void People::EndofDayStateUpdate() {
     if (secondsLeftInState <= 0) {
       std::tie(people[i].state, people[i].secondsLeftInState) = 
         diseaseModel->transitionFromState(currState, "untreated", &generator);
-
+    
     } else {
       people[i].secondsLeftInState = secondsLeftInState;
     }
-  }
 
-  //PrintstateCounts();
+    stateSummary[currState]++;
+  }
 
   // contributing to reduction
   CkCallback cb(CkReductionTarget(Main, ReceiveStats), mainProxy);
   contribute(stateSummary, CkReduction::sum_int, cb);
   day++;
   newCases = 0;
-}
-
-void People::PrintStateCounts() {
-  int counts[NUMBER_STATES] {0};
-  for(Person p : people)
-    counts[p.state]++;
-
-  CkPrintf(
-    "partion %d has S=%d E=%d I=%d R=%d\r\n",
-    thisIndex,
-    counts[SUSCEPTIBLE],
-    counts[EXPOSED],
-    counts[INFECTIOUS],
-    counts[RECOVERED]
-  );
 }
