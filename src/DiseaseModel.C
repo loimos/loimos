@@ -3,18 +3,27 @@
  *
  * SPDX-License-Identifier: MIT
  */
-#include "loimos.decl.h"
-#include "DiseaseModel.h"
+
 #include "disease.pb.h"
 #include "distribution.pb.h"
 
+#include "loimos.decl.h"
+#include "DiseaseModel.h"
+#include "Event.h"
+
+#include <stdio.h>
 #include <cstdio>
+#include <cmath>
 #include <fstream>
 #include <google/protobuf/text_format.h>
 #include <random>
 #include <limits>
 
 using NameIndexLookupType = std::unordered_map<std::string, int>;
+
+// This is currently used to adjust the infection probability so that
+// not everyone gets infected immediately given the small time units
+const double INFECTION_PROBABILITY = 1.0 / DAY_LENGTH;
 
 /**
  * Constructor which loads in disease file from text proto file.
@@ -111,7 +120,7 @@ std::tuple<int, int> DiseaseModel::transitionFromState(int fromState,
     cdfSoFar += transition->with_prob();
     if (randomCutoff <= cdfSoFar) {
       int nextState = state_lookup->at(transition->next_state());
-      int timeInNextState = getTimeInNextState(nextState, generator);
+      int timeInNextState = getSecondsInNextState(nextState, generator);
       return std::make_tuple(nextState, timeInNextState);
     }
   }
@@ -123,7 +132,7 @@ std::tuple<int, int> DiseaseModel::transitionFromState(int fromState,
 /**
  * Calculates the time to spend in the next state.
  */
-Time DiseaseModel::getTimeInNextState(int nextState,
+Seconds DiseaseModel::getSecondsInNextState(int nextState,
                                       std::default_random_engine *generator) {
   const loimos::proto::DiseaseModel_DiseaseState *diseaseState =
       &model->disease_state(nextState);
@@ -131,7 +140,7 @@ Time DiseaseModel::getTimeInNextState(int nextState,
     return timeDefToSeconds(diseaseState->fixed().time_in_state());
 
   } else if (diseaseState->has_forever()) {
-    return std::numeric_limits<Time>::max();
+    return std::numeric_limits<Seconds>::max();
 
   } else if (diseaseState->has_uniform()) {
     // TODO(iancostello): Avoid reinitializing the distribution each time.
@@ -145,7 +154,7 @@ Time DiseaseModel::getTimeInNextState(int nextState,
 }
 
 /** Converts a protobuf time definition into a seconds as an integer */
-Time DiseaseModel::timeDefToSeconds(Time_Def time) {
+Seconds DiseaseModel::timeDefToSeconds(Time_Def time) {
   return (time.days() * 24 + time.hours()) * 3600 + time.minutes() * 60;
 }
 
@@ -157,5 +166,49 @@ int DiseaseModel::getHealthyState() { return healthyState; }
 
 /** Returns if someone is infectious */
 bool DiseaseModel::isInfectious(int personState) { 
-  return model->disease_state(personState).infectivity() == 0;
+  return model->disease_state(personState).infectivity() != 0.0;
+}
+
+/** Returns if someone is susceptible */
+bool DiseaseModel::isSusceptible(int personState) { 
+  return model->disease_state(personState).susceptibility() != 0.0;
+}
+
+const char * DiseaseModel::getStateLabel(int personState) {
+  return model->disease_state(personState).state_label().c_str();
+}
+
+/** 
+ * Returns the natural log of the probability of a suspectible person being
+ * infected by an infectious person after a period of time
+ */
+double DiseaseModel::getLogProbNotInfected(Event susceptibleEvent, Event infectiousEvent) {
+  double susceptibility = model->disease_state(susceptibleEvent.personState)
+    .susceptibility();
+  double infectivity = model->disease_state(infectiousEvent.personState)
+    .infectivity();
+  
+  double baseProb = 1.0 -
+    // TODO: incorporate this global probability into the disease model
+    INFECTION_PROBABILITY
+    * susceptibility
+    * infectivity;
+  //double baseLogProb = log(1.0 - exp(baseLogProbNotInfected));
+  int dt = abs(susceptibleEvent.time - infectiousEvent.time);
+  /*
+  printf(
+    "S: %s I: %s\n\r",
+    getStateLabel(susceptibleEvent.personState),
+    getStateLabel(infectiousEvent.personState)
+  );
+  printf("%f * %f * %f = %f over %d seconds\n\r", 
+      INFECTION_PROBABILITY,
+      susceptibility,
+      infectivity,
+      baseProb,
+      dt
+  );
+  */
+  
+  return log(baseProb) * dt;
 }

@@ -7,6 +7,9 @@
 #ifndef __DEFS_H__
 #define __DEFS_H__
 
+#include <cstdint>
+
+// Disease states
 #define SUSCEPTIBLE 0
 #define EXPOSED 1
 #define INFECTIOUS 2
@@ -16,7 +19,14 @@
 #define INCUBATION_PERIOD 2
 #define INFECTION_PERIOD 4
 
-#define INFECTION_PROBABILITY 0.05
+// Event types
+#define ARRIVAL 0
+#define DEPARTURE 1
+
+// Time
+using Seconds = int32_t;
+const Seconds DAY_LENGTH = 3600 * 24;
+
 #define INITIAL_INFECTIOUS_PROBABILITY 0.05
 
 extern /* readonly */ CProxy_Main mainProxy;

@@ -8,8 +8,11 @@
 
 #include "disease.pb.h"
 #include "distribution.pb.h"
+
+#include "Defs.h"
+#include "Event.h"
+
 #include <random>
-using Time = int32_t;
 
 class DiseaseModel : public CBase_DiseaseModel {
     private:
@@ -19,8 +22,8 @@ class DiseaseModel : public CBase_DiseaseModel {
         std::unordered_map<std::string, int> *state_lookup;
         // For each state index, map from stategy name string to index of strategy labels.
         std::vector<std::unordered_map<std::string, int> *> *strategy_lookup;  
-        Time getTimeInNextState(int nextState, std::default_random_engine *generator);
-        Time timeDefToSeconds(Time_Def time);
+        Seconds getSecondsInNextState(int nextState, std::default_random_engine *generator);
+        Seconds timeDefToSeconds(Time_Def time);
         int healthyState;
     public:
         DiseaseModel(std::string pathToModel);
@@ -31,6 +34,9 @@ class DiseaseModel : public CBase_DiseaseModel {
         int getNumberOfStates();
         int getHealthyState();
         bool isInfectious(int personState);
-};
+        bool isSusceptible(int personState);
+        const char * getStateLabel(int personState);
+        double getLogProbNotInfected(Event susceptibleEvent, Event infectiousEvent);
+  };
 
 #endif // __DiseaseModel_H__ 

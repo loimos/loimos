@@ -6,56 +6,99 @@
 
 #include "loimos.decl.h"
 #include "Locations.h"
+#include "Location.h"
+#include "Event.h"
 #include "DiseaseModel.h"
+#include "Location.h"
+#include "Event.h"
 #include "Defs.h"
+
 #include <algorithm>
+#include <functional>
+#include <queue>
+#include <stdio.h>
 
 Locations::Locations() {
   // getting number of locations assigned to this chare
-  numLocalLocations = getNumLocalElements(numLocations, numLocationPartitions, thisIndex);
-  visitors.resize(numLocalLocations);
+  numLocalLocations = getNumLocalElements(
+    numLocations,
+    numLocationPartitions,
+    thisIndex
+  );
+  locations.resize(numLocalLocations);
+  
   // Init disease states.
   diseaseModel = globDiseaseModel.ckLocalBranch();
-  locationState.resize(numLocalLocations, diseaseModel->getHealthyState());
   // Seed random number generator via branch ID for reproducibility.
   generator.seed(thisIndex);
-  MAX_RANDOM_VALUE = (float)generator.max();
 }
 
-void Locations::ReceiveVisitMessages(int personIdx, int personState, int locationIdx) {
+void Locations::ReceiveVisitMessages(
+  int locationIdx,
+  int personIdx,
+  int personState,
+  int visitStart,
+  int visitEnd
+) {
   // adding person to location visit list
-  int localLocIdx = getLocalIndex(locationIdx, numLocations, numLocationPartitions);
-  visitors[localLocIdx].push_back(std::pair<int,char>(personIdx, personState));
-  if(diseaseModel->isInfectious(personState))
-    locationState[localLocIdx] = INFECTIOUS;
-  // CkPrintf("Location %d localIdx %d visited by person %d\n", locationIdx, localLocIdx, personIdx);
+  int localLocIdx = getLocalIndex(
+    locationIdx,
+    numLocations,
+    numLocationPartitions
+  );
+
+  Event arrival { personIdx, personState, visitStart, ARRIVAL };
+  Event departure { personIdx, personState, visitEnd, DEPARTURE };
+
+  locations[localLocIdx].addEvent(arrival);
+  locations[localLocIdx].addEvent(departure);
+
+  //CkPrintf(
+  //  "Location %d localIdx %d visited by person %d\n",
+  //  locationIdx,
+  //  localLocIdx,
+  //  personIdx
+  //);
 }
 
 void Locations::ComputeInteractions() {
   int peopleSubsetIdx;
-  int cont=0, globalIdx;
+  int state;
   float value;
+
   // traverses list of locations
-  for(std::vector<std::vector<std::pair<int,char> > >::iterator locIter = visitors.begin() ; locIter != visitors.end(); ++locIter) {
-    if(locationState[cont] == INFECTIOUS) {
-      // sorting set of people to guarantee deterministic behavior
-      sort(locIter->begin(), locIter->end());
-      globalIdx = getGlobalIndex(cont, thisIndex, numLocations, numLocationPartitions);
-      for(std::vector<std::pair<int,char> >::iterator visitor = locIter->begin() ; visitor != locIter->end(); ++visitor) {
-        // randomly selecting people to get infected
-        value = (float)generator();
-        // CkPrintf("Partition %d - Location %d - Person %d - Value %f\n", thisIndex, globalIdx, *visitor, value);
-        if(visitor->second == diseaseModel->getHealthyState() && value/MAX_RANDOM_VALUE < INFECTION_PROBABILITY) {
-          peopleSubsetIdx = getPartitionIndex(visitor->first, numPeople, numPeoplePartitions);
-          peopleArray[peopleSubsetIdx].ReceiveInfections(visitor->first);
-        }
-      }
+  for (auto loc : locations) {
+    //globalIdx = getGlobalIndex(
+    //  cont,
+    //  thisIndex,
+    //  numLocations,
+    //  numLocationPartitions
+    //);
+    
+    std::unordered_set<int> justInfected =
+      loc.processEvents(&generator, diseaseModel);
+    for (int personIdx : justInfected) {
+      infect(personIdx);
     }
-    // cleaning the visits to this location
-    locIter->clear();
-    cont++;
+    justInfected.empty();
   }
-  // cleaning state of all locations
-  locationState.resize(numLocalLocations, diseaseModel->getHealthyState());
 }
 
+// Simple helper function which infects a given person with a given
+// probability
+inline void Locations::infect(int personIdx) {
+  int peoplePartitionIdx = getPartitionIndex(
+    personIdx,
+    numPeople,
+    numPeoplePartitions
+  );
+
+  peopleArray[peoplePartitionIdx].ReceiveInfections(personIdx);
+  /*
+  CkPrintf(
+    "sending infection message to person %d in partition %d\r\n",
+    personIdx,
+    peoplePartitionIdx
+  );
+  */
+}
