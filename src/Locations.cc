@@ -6,7 +6,6 @@
 
 #include "loimos.decl.h"
 #include "Locations.h"
-#include "DiseaseModel.h"
 #include "Location.h"
 #include "Event.h"
 #include "DiseaseModel.h"
@@ -26,8 +25,6 @@ Locations::Locations() {
     numLocationPartitions,
     thisIndex
   );
-  // Init disease states.
-  diseaseModel = globDiseaseModel.ckLocalBranch();
   locations.resize(numLocalLocations);
   
   // Init disease states.

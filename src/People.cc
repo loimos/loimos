@@ -159,7 +159,7 @@ void People::EndofDayStateUpdate() {
     stateSummary[currState]++;
   }
 
-  // Contribute the result to the reductiontarget cb.
+  // contributing to reduction
   CkCallback cb(CkReductionTarget(Main, ReceiveStats), mainProxy);
   contribute(stateSummary, CkReduction::sum_int, cb);
   day++;

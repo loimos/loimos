@@ -7,7 +7,6 @@
 #ifndef __LOCATIONS_H__
 #define __LOCATIONS_H__
 
-#include "DiseaseModel.h"
 #include "Location.h" 
 #include "DiseaseModel.h"
 #include "Location.h" 
