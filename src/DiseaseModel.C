@@ -121,7 +121,7 @@ std::tuple<int, int> DiseaseModel::transitionFromState(int fromState,
     cdfSoFar += transition->with_prob();
     if (randomCutoff <= cdfSoFar) {
       int nextState = state_lookup->at(transition->next_state());
-      int timeInNextState = getTimeInNextState(nextState, generator);
+      int timeInNextState = getSecondsInNextState(nextState, generator);
       return std::make_tuple(nextState, timeInNextState);
     }
   }
@@ -133,7 +133,7 @@ std::tuple<int, int> DiseaseModel::transitionFromState(int fromState,
 /**
  * Calculates the time to spend in the next state.
  */
-Time DiseaseModel::getTimeInNextState(int nextState,
+Seconds DiseaseModel::getSecondsInNextState(int nextState,
                                       std::default_random_engine *generator) {
   const loimos::proto::DiseaseModel_DiseaseState *diseaseState =
       &model->disease_state(nextState);
@@ -141,7 +141,7 @@ Time DiseaseModel::getTimeInNextState(int nextState,
     return timeDefToSeconds(diseaseState->fixed().time_in_state());
 
   } else if (diseaseState->has_forever()) {
-    return std::numeric_limits<Time>::max();
+    return std::numeric_limits<Seconds>::max();
 
   } else if (diseaseState->has_uniform()) {
     // TODO(iancostello): Avoid reinitializing the distribution each time.
@@ -155,7 +155,7 @@ Time DiseaseModel::getTimeInNextState(int nextState,
 }
 
 /** Converts a protobuf time definition into a seconds as an integer */
-Time DiseaseModel::timeDefToSeconds(Time_Def time) {
+Seconds DiseaseModel::timeDefToSeconds(Time_Def time) {
   return (time.days() * 24 + time.hours()) * 3600 + time.minutes() * 60;
 }
 
@@ -199,5 +199,6 @@ double DiseaseModel::getLogProbNotInfected(Event susceptibleEvent, Event infecti
   // on a geometric probability distribution, with the lenght of time the two
   // people are in the same location serving as the number of trials
   int dt = abs(susceptibleEvent.scheduledTime - infectiousEvent.scheduledTime);
+  
   return log(baseProb) * dt;
 }

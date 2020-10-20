@@ -33,7 +33,7 @@ People::People() {
   Person tmp { healthyState, std::numeric_limits<Time>::max() };
   people.resize(numLocalPeople, tmp);
   
-  // Randomly infect people to seed the initial outbreak
+  // Randomnly choose intial infectious people
   std::uniform_real_distribution<> unitDistrib(0,1);
   for (int i = 0; i < people.size(); ++i) {
     if (unitDistrib(generator) < INITIAL_INFECTIOUS_PROBABILITY) {
@@ -129,6 +129,10 @@ void People::ReceiveInfections(int personIdx) {
   if (people[localIdx].state == diseaseModel->getHealthyState()) {
     people[localIdx].secondsLeftInState = -1; 
   }
+  
+  // Not sure where this state is supposed to come from...
+  //if(state) people[localIdx].state = state;
+  //CkPrintf("Partition %d - Person %d state %d\n",thisIndex,personIdx,state);
 }
 
 void People::EndofDayStateUpdate() {

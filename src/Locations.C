@@ -74,8 +74,7 @@ void Locations::ComputeInteractions() {
 }
 
 // Simple helper function which infects a given person with a given
-// probability (we handle this here rather since this is a chare class,
-// and so we have access to peopleArray and the like)
+// probability
 inline void Locations::infect(int personIdx) {
   int peoplePartitionIdx = getPartitionIndex(
     personIdx,

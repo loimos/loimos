@@ -71,7 +71,6 @@ std::unordered_set<int> Location::processEvents(
   return justInfected;
 }
 
-// Simple dispatch to the susceptible/infectious depature handlers
 inline void Location::onDeparture(
   std::default_random_engine *generator,
   DiseaseModel *diseaseModel,
@@ -94,15 +93,6 @@ void Location::onSusceptibleDeparture(
   for (Event infectiousArrival: infectiousArrivals) {
     // Every infectious person contributes to the change a susceptible person
     // is infected
-    logProbNotInfected += diseaseModel->getLogProbNotInfected(
-      susceptibleDeparture, infectiousArrival
-    );
-  }
-
-  // We want the probability of infection, so we need to 
-  // invert probNotInfected
-  double prob = exp(logProbNotInfected);
-  double roll = unitDistrib(*generator);
   if (roll > prob) {
     justInfected.insert(susceptibleDeparture.personIdx);
   }
