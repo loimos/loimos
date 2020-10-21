@@ -24,8 +24,8 @@
 #define DEPARTURE 1
 
 // Time
-using Seconds = int32_t;
-const Seconds DAY_LENGTH = 3600 * 24;
+using Time = int32_t;
+const Time DAY_LENGTH = 3600 * 24;
 
 #define INITIAL_INFECTIOUS_PROBABILITY 0.05
 
