@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "disease.pb.h"
-#include "distribution.pb.h"
-
 #include "loimos.decl.h"
 #include "DiseaseModel.h"
 #include "Event.h"
+
+#include "disease_model/disease.pb.h"
+#include "disease_model/distribution.pb.h"
 
 #include <cstdio>
 #include <cmath>
