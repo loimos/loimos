@@ -11,7 +11,6 @@
 #include "DiseaseModel.h"
 #include "Event.h"
 
-#include <stdio.h>
 #include <cstdio>
 #include <cmath>
 #include <fstream>
@@ -195,20 +194,6 @@ double DiseaseModel::getLogProbNotInfected(Event susceptibleEvent, Event infecti
     * infectivity;
   //double baseLogProb = log(1.0 - exp(baseLogProbNotInfected));
   int dt = abs(susceptibleEvent.time - infectiousEvent.time);
-  /*
-  printf(
-    "S: %s I: %s\n\r",
-    getStateLabel(susceptibleEvent.personState),
-    getStateLabel(infectiousEvent.personState)
-  );
-  printf("%f * %f * %f = %f over %d seconds\n\r", 
-      INFECTION_PROBABILITY,
-      susceptibility,
-      infectivity,
-      baseProb,
-      dt
-  );
-  */
   
   return log(baseProb) * dt;
 }

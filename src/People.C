@@ -28,7 +28,7 @@ People::People() {
     numPeoplePartitions,
     thisIndex
   );
-  Person tmp { healthyState, std::numeric_limits<Seconds>::max() };
+  Person tmp { healthyState, std::numeric_limits<Time>::max() };
   people.resize(numLocalPeople, tmp);
   
   // randomnly choosing people as infectious

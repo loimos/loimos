@@ -14,7 +14,6 @@
 #include <random>
 #include <set>
 #include <cmath>
-#include <stdio.h>
 
 std::uniform_real_distribution<> Location::unitDistrib(0,1);
 
@@ -39,21 +38,9 @@ std::unordered_set<int> Location::processEvents(
     events.pop();
 
     if (diseaseModel->isSusceptible(curEvent.personState)) {
-      /*
-      printf(
-        "Handling susceptible arrival %s\n\r",
-        diseaseModel->getStateLabel(curEvent.personState)
-      );
-      */
       arrivals = &susceptibleArrivals;
 
     } else if (diseaseModel->isInfectious(curEvent.personState)) {
-      /*
-      printf(
-        "Handling infectious arrival %s\n\r",
-        diseaseModel->getStateLabel(curEvent.personState)
-      );
-      */
       arrivals = &infectiousArrivals;
 
     } else {
@@ -111,14 +98,6 @@ void Location::onSusceptibleDeparture(
   // invert probNotInfected
   double prob = exp(logProbNotInfected);
   double roll = unitDistrib(*generator);
-  /*
-  printf(
-    "Infection prob: %f (from %d contacts, rolled %f)\n\r",
-    1.0 - prob,
-    (int) infectiousArrivals.size(),
-    roll
-  );
-  */
   if (roll > prob) {
     justInfected.insert(susceptibleDeparture.personIdx);
   }
@@ -138,7 +117,6 @@ void Location::onInfectiousDeparture(
     ));
 
     double roll = unitDistrib(*generator);
-    //printf("Infection prob: %f (rolled %f)\n\r", 1.0 - prob, roll);
     if (roll > prob) { 
       justInfected.insert(susceptibleArrival.personIdx);
     }
