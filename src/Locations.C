@@ -47,9 +47,11 @@ void Locations::ReceiveVisitMessages(
     numLocationPartitions
   );
 
+  // Wrap vist info...
   Event arrival { personIdx, personState, visitStart, ARRIVAL };
   Event departure { personIdx, personState, visitEnd, DEPARTURE };
 
+  // ...and queue it up at the appropriate location
   locations[localLocIdx].addEvent(arrival);
   locations[localLocIdx].addEvent(departure);
 
@@ -85,7 +87,8 @@ void Locations::ComputeInteractions() {
 }
 
 // Simple helper function which infects a given person with a given
-// probability
+// probability (we handle this here rather since this is a chare class,
+// and so we have access to peopleArray and the like)
 inline void Locations::infect(int personIdx) {
   int peoplePartitionIdx = getPartitionIndex(
     personIdx,

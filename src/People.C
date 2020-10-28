@@ -18,20 +18,22 @@ People::People() {
   day = 0;
   generator.seed(thisIndex);
 
-  // Initialize disease model and initial healthy states of all individuals.
+  // Initialize disease model and identify the healthy state
   diseaseModel = globDiseaseModel.ckLocalBranch();
   int healthyState = diseaseModel->getHealthyState();
 
-  // getting number of people assigned to this chare
+  // Get the number of people assigned to this chare
   numLocalPeople = getNumLocalElements(
     numPeople,
     numPeoplePartitions,
     thisIndex
   );
+  
+  // Make a default person and populate people with copies
   Person tmp { healthyState, std::numeric_limits<Time>::max() };
   people.resize(numLocalPeople, tmp);
   
-  // randomnly choosing people as infectious
+  // Randomly infect people to seed the initial outbreak
   std::uniform_real_distribution<> unitDistrib(0,1);
   for (int i = 0; i < people.size(); ++i) {
     if (unitDistrib(generator) < INITIAL_INFECTIOUS_PROBABILITY) {
@@ -122,9 +124,8 @@ void People::ReceiveInfections(int personIdx) {
     numPeoplePartitions
   );
   
-  // Handle disease transition.
-
-  // Mark that exposed healthy individual should make transition at end of day.
+  // Mark that exposed healthy individuals should make transition at the end
+  // of the day.
   if (people[localIdx].state == diseaseModel->getHealthyState()) {
     people[localIdx].secondsLeftInState = -1; 
   }
@@ -145,7 +146,7 @@ void People::EndofDayStateUpdate() {
     int secondsLeftInState = people[i].secondsLeftInState;
 
     // TODO(iancostello): Move into start of day for visits.
-    // Transition to newstate or decrease time.
+    // Transition to next state or mark the passage of time
     secondsLeftInState -= DAY_LENGTH;
     if (secondsLeftInState <= 0) {
       std::tie(people[i].state, people[i].secondsLeftInState) = 

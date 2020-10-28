@@ -20,6 +20,7 @@ struct Event {
   // indicates whether they're arriving or leaving
   char type;
 
+  // Lets us order events in the location queues
   bool operator>(const Event& rhs) const;
 };
 

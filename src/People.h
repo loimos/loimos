@@ -16,7 +16,7 @@
 
 // This is just a bundle of information that we don't need to
 // guarentee any constraints on, hence why this is a stuct rather than
-// a class
+// a class (move this to a seperate file if we ever need to add any methods)
 struct Person {
   // the person's curent state in the disease model
   int state;
@@ -31,7 +31,7 @@ class People : public CBase_People {
     int newCases;
     std::vector<Person> people;
     std::default_random_engine generator;
-    DiseaseModel* diseaseModel;
+    DiseaseModel *diseaseModel;
   public:
     People();
     void SendVisitMessages(); 

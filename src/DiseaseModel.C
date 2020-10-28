@@ -22,6 +22,8 @@ using NameIndexLookupType = std::unordered_map<std::string, int>;
 
 // This is currently used to adjust the infection probability so that
 // not everyone gets infected immediately given the small time units
+// (i.e. it normalizes for the size of the smallest time increment used
+// in the discrete event simulation and disease model)
 const double INFECTION_PROBABILITY = 1.0 / DAY_LENGTH;
 
 /**
@@ -173,27 +175,29 @@ bool DiseaseModel::isSusceptible(int personState) {
   return model->disease_state(personState).susceptibility() != 0.0;
 }
 
+/** Returns the name of the person's state, as a C-style string */
 const char * DiseaseModel::getStateLabel(int personState) {
   return model->disease_state(personState).state_label().c_str();
 }
 
 /** 
- * Returns the natural log of the probability of a suspectible person being
+ * Returns the natural log of the probability of a suspectible person not being
  * infected by an infectious person after a period of time
  */
 double DiseaseModel::getLogProbNotInfected(Event susceptibleEvent, Event infectiousEvent) {
-  double susceptibility = model->disease_state(susceptibleEvent.personState)
-    .susceptibility();
-  double infectivity = model->disease_state(infectiousEvent.personState)
-    .infectivity();
   
+  // The chance of being infected in a unit of time depends on...
   double baseProb = 1.0 -
-    // TODO: incorporate this global probability into the disease model
+    // ...a scaling factor (normalizes based on the unit of time)...
     INFECTION_PROBABILITY
-    * susceptibility
-    * infectivity;
-  //double baseLogProb = log(1.0 - exp(baseLogProbNotInfected));
-  int dt = abs(susceptibleEvent.time - infectiousEvent.time);
+    // ...the susceptibility of the susceptible person...
+    * model->disease_state(susceptibleEvent.personState).susceptibility()
+    // ...and the infectivity of the infectious person
+    * model->disease_state(infectiousEvent.personState).infectivity();
   
+  // The probability of not being infected in a period of time is decided based
+  // on a geometirc probability distribution, with the lenght of time the two
+  // people are in the same location serving as the number of trials
+  int dt = abs(susceptibleEvent.time - infectiousEvent.time);
   return log(baseProb) * dt;
 }
