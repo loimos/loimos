@@ -7,8 +7,6 @@
 #ifndef __DEFS_H__
 #define __DEFS_H__
 
-#include <cstdint>
-
 // Disease states
 #define SUSCEPTIBLE 0
 #define EXPOSED 1
