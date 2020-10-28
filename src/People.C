@@ -33,7 +33,7 @@ People::People() {
   Person tmp { healthyState, std::numeric_limits<Time>::max() };
   people.resize(numLocalPeople, tmp);
   
-  // Randomnly choose intial infectious people
+  // Randomly infect people to seed the initial outbreak
   std::uniform_real_distribution<> unitDistrib(0,1);
   for (int i = 0; i < people.size(); ++i) {
     if (unitDistrib(generator) < INITIAL_INFECTIOUS_PROBABILITY) {

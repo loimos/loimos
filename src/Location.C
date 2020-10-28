@@ -71,6 +71,7 @@ std::unordered_set<int> Location::processEvents(
   return justInfected;
 }
 
+// Simple dispatch to the susceptible/infectious depature handlers
 inline void Location::onDeparture(
   std::default_random_engine *generator,
   DiseaseModel *diseaseModel,
