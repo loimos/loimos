@@ -15,8 +15,9 @@ struct Event {
   int personIdx;
   // the person's curent state in the disease model
   int personState;
-  // the time when this event occurs, in seconds from the start of the day
-  int time;
+  // the time when this event is scheduled to occur, in seconds from the
+  // start of the day
+  int scheduledTime;
   // indicates whether they're arriving or leaving
   char type;
 

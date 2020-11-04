@@ -8,5 +8,17 @@
 
 // This is just so that we can order Events in the Location queues
 bool Event::operator>(const Event& rhs) const {
-  return time > rhs.time;
+  if (scheduledTime != rhs.scheduledTime) {
+    return scheduledTime > rhs.scheduledTime;
+  }
+
+  if (type != rhs.type) {
+    return type > rhs.type;
+  }
+
+  if (personIdx != rhs.personIdx) {
+    return personIdx > rhs.personIdx;
+  }
+
+  return personState > rhs.personState;
 }

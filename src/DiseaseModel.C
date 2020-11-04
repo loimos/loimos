@@ -198,6 +198,6 @@ double DiseaseModel::getLogProbNotInfected(Event susceptibleEvent, Event infecti
   // The probability of not being infected in a period of time is decided based
   // on a geometirc probability distribution, with the lenght of time the two
   // people are in the same location serving as the number of trials
-  int dt = abs(susceptibleEvent.time - infectiousEvent.time);
+  int dt = abs(susceptibleEvent.scheduledTime - infectiousEvent.scheduledTime);
   return log(baseProb) * dt;
 }
