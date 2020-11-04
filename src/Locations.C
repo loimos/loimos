@@ -54,13 +54,6 @@ void Locations::ReceiveVisitMessages(
   // ...and queue it up at the appropriate location
   locations[localLocIdx].addEvent(arrival);
   locations[localLocIdx].addEvent(departure);
-
-  //CkPrintf(
-  //  "Location %d localIdx %d visited by person %d\n",
-  //  locationIdx,
-  //  localLocIdx,
-  //  personIdx
-  //);
 }
 
 void Locations::ComputeInteractions() {
@@ -70,15 +63,9 @@ void Locations::ComputeInteractions() {
 
   // traverses list of locations
   for (auto loc : locations) {
-    //globalIdx = getGlobalIndex(
-    //  cont,
-    //  thisIndex,
-    //  numLocations,
-    //  numLocationPartitions
-    //);
-    
     std::unordered_set<int> justInfected =
       loc.processEvents(&generator, diseaseModel);
+    
     for (int personIdx : justInfected) {
       infect(personIdx);
     }

@@ -129,10 +129,6 @@ void People::ReceiveInfections(int personIdx) {
   if (people[localIdx].state == diseaseModel->getHealthyState()) {
     people[localIdx].secondsLeftInState = -1; 
   }
-  
-  // Not sure where this state is supposed to come from...
-  //if(state) people[localIdx].state = state;
-  //CkPrintf("Partition %d - Person %d state %d\n",thisIndex,personIdx,state);
 }
 
 void People::EndofDayStateUpdate() {
@@ -141,7 +137,7 @@ void People::EndofDayStateUpdate() {
   // Handle state transitions at the end of the day.
   int totalStates = diseaseModel->getNumberOfStates();
   std::vector<int> stateSummary(totalStates, 0);
-  for(int i = 0; i < people.size(); i++) {
+  for (int i = 0; i < people.size(); i++) {
     int currState = people[i].state;
     int secondsLeftInState = people[i].secondsLeftInState;
 
