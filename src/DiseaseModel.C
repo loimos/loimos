@@ -7,6 +7,7 @@
 #include "loimos.decl.h"
 #include "DiseaseModel.h"
 #include "Event.h"
+#include "Defs.h"
 
 #include "disease_model/disease.pb.h"
 #include "disease_model/distribution.pb.h"
@@ -210,6 +211,7 @@ double DiseaseModel::getLogProbNotInfected(
   int dt = abs(susceptibleEvent.scheduledTime - infectiousEvent.scheduledTime);
   return log(baseProb) * dt;
 }
+
 /**
  * Returns the propesity of a person in susceptibleState becoming infected 
  * after exposure to a person in infectiousState for the period from startTime

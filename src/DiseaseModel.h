@@ -6,6 +6,8 @@
 #ifndef __DiseaseModel_H__
 #define __DiseaseModel_H__
 
+#include "Event.h"
+
 #include "disease_model/disease.pb.h"
 #include "disease_model/distribution.pb.h"
 

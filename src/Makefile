@@ -1,5 +1,6 @@
-# charmc should be in the system PATH
-CHARMC = charmc
+# charmc should either be in the system PATH or have the full path set as the
+# CHARMC environment variable
+CHARMC ?= charmc
 
 # Set the environment variable PROTOBUF_HOME to hold the path to the
 # local installation of protobuf to overide this default
@@ -24,7 +25,7 @@ all: all-sub $(BIN)
 $(BIN): $(OBJS) $(DECLS)
 	$(CHARMC) -o $@ $(OBJS) -language charm++ \
 	-module CkMulticast $(OPTS) \
-	-pthread -I$(PROTOBUF_HOME)/include -L$(PROTOBUF_HOME)/lib -lprotobuf
+	-I$(PROTOBUF_HOME)/include -L$(PROTOBUF_HOME)/lib -lprotobuf
 
 # Build .decl.h (and implicitly .def.h) files from the corresponding
 # .ci files
@@ -44,10 +45,10 @@ all-sub:
 
 .PHONY:clean
 clean:
+	rm -f *.o charmrun $(BIN) *.decl.h *.def.h 
 	@for d in $(SUBDIRS); do \
 		cd $$d; $(MAKE) clean; \
 	done
-	rm -f *.decl.h *.def.h *.o charmrun $(BIN)
 
 .PHONY:test
 test: all

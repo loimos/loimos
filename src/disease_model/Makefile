@@ -1,7 +1,8 @@
 CXX         = g++
 
-PROTOBUF_DIR=/usr/local/bin/vcpkg/installed/x64-osx
-CXXFLAGS=-std=c++11 -Wall -I${PROTOBUF_DIR}/include
+# The environment variable PROTOBUF_HOME should be set to hold the path to the
+# local installation of protobuf
+CXXFLAGS=-std=c++11 -Wall -I$(PROTOBUF_HOME)/include
 
 PROTOS      = disease.proto distribution.proto
 TMP_SRCS    = $(subst .proto,.pb.cc,$(PROTOS)) 
