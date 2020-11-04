@@ -7,21 +7,32 @@
 #ifndef __LOCATIONS_H__
 #define __LOCATIONS_H__
 
+#include "Location.h" 
 #include "DiseaseModel.h"
+#include "Location.h" 
+
 #include <vector>
 #include <set>
 
 class Locations : public CBase_Locations {
   private:
     int numLocalLocations;
-    std::vector<std::vector<std::pair<int,char> > > visitors;
-    std::vector<char> locationState;
+    std::vector<Location> locations;
     std::default_random_engine generator;
-    float MAX_RANDOM_VALUE;
     DiseaseModel *diseaseModel;
+    
+    // Simple helper function which infects a given person
+    inline void infect(int personIdx);
+  
   public:
     Locations();
-    void ReceiveVisitMessages(int personIdx, int personState, int locationIdx);
+    void ReceiveVisitMessages(
+      int locationIdx,
+      int personIdx,
+      int personState,
+      int visitStart,
+      int visitEnd
+    );
     void ComputeInteractions(); // calls ReceiveInfections
 };
 

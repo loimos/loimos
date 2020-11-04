@@ -1,17 +1,18 @@
 .PHONY: diseaseModelProto
-CHARMC=$(HOME)/lib/charm/netlrts-darwin-x86_64/bin/charmc
+CHARMC=charmc
 CXX=g++
 
-PROTOBUF_DIR=/usr/local/bin/vcpkg/installed/x64-osx
-CXXFLAGS=-std=c++11 -Wall -I${PROTOBUF_DIR}/include
+#PROTOBUF_DIR=/usr/local/bin/vcpkg/installed/x64-osx
+PROTOBUF_DIR=/usr/local
+CXXFLAGS=-std=c++11 -Wall -I$(PROTOBUF_DIR)/include
 
-OBJS		= Main.o DiseaseModel.o People.o Locations.o Defs.o disease.pb.o distribution.pb.o
+OBJS		= Main.o DiseaseModel.o People.o Locations.o Defs.o disease.pb.o distribution.pb.o Location.o Event.o
 OBJS_DECL	= loimos.decl.h
 
 loimos: $(OBJS) $(OBJS_DECL)
 	$(CHARMC) -o loimos $(OBJS) -language charm++ \
 	-module CkMulticast $(OPTS) \
-	-L${PROTOBUF_DIR}/lib -lprotobuf
+	-pthread -I$(PROTOBUF_DIR)/include -L$(PROTOBUF_DIR)/lib -lprotobuf
 
 main.decl.h: main.ci
 	$(CHARMC) main.ci
@@ -24,6 +25,12 @@ People.o: People.C People.h main.decl.h
 
 Locations.o: Locations.C Locations.h main.decl.h
 	$(CHARMC) $(OPTS) $(INC) -o Locations.o Locations.C
+
+Location.o: Location.C Location.h main.decl.h
+	$(CHARMC) $(OPTS) $(INC) -o Location.o Location.C
+
+Event.o: Event.C Event.h main.decl.h
+	$(CHARMC) $(OPTS) $(INC) -o Event.o Event.C
 
 DiseaseModel.o: DiseaseModel.h DiseaseModel.C 
 	$(CHARMC) $(OPTS) $(INC) -o DiseaseModel.o DiseaseModel.C

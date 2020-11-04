@@ -14,21 +14,29 @@
 
 #define LOCATION_LAMBDA 5.2
 
+// This is just a bundle of information that we don't need to
+// guarentee any constraints on, hence why this is a stuct rather than
+// a class (move this to a seperate file if we ever need to add any methods)
+struct Person {
+  // the person's curent state in the disease model
+  int state;
+  // how long until the person transitions to their next state
+  int secondsLeftInState;
+};
+
 class People : public CBase_People {
   private:
     int numLocalPeople;
-    std::vector<std::tuple<int, Time>> peopleState;
-    std::vector<int> stateSummations;
+    int day;
+    int newCases;
+    std::vector<Person> people;
     std::default_random_engine generator;
-    DiseaseModel* diseaseModel;
+    DiseaseModel *diseaseModel;
   public:
     People();
     void SendVisitMessages(); 
     void ReceiveInfections(int personIdx);
     void EndofDayStateUpdate();
-    int day;
-    int newCases;
-    float MAX_RANDOM_VALUE;
 };
 
 #endif // __PEOPLE_H__

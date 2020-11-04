@@ -22,14 +22,20 @@ mainmodule loimos {
           // CkPrintf("Sending Visit Messages\n");
           peopleArray.SendVisitMessages();
           // CkPrintf("QD Visit Messages\n");
-          CkStartQD(CkCallback(CkIndex_Main::StartComputingInteractions(), mainProxy));
+          CkStartQD(CkCallback(
+            CkIndex_Main::StartComputingInteractions(),
+            mainProxy
+          ));
         }
         when StartComputingInteractions() {
           serial {
             // CkPrintf("Compute Interactions\n");
             locationsArray.ComputeInteractions();
             // CkPrintf("QD Compute Interactions\n");
-            CkStartQD(CkCallback(CkIndex_Main::ComputedInteractions(), mainProxy));
+            CkStartQD(CkCallback(
+              CkIndex_Main::ComputedInteractions(),
+              mainProxy
+            ));
           }
         }
         when ComputedInteractions() {
@@ -48,8 +54,12 @@ mainmodule loimos {
               int total_in_state = *data;
               int change_in_infected = total_in_state - accumulated[i];
               if (total_in_state != 0 || change_in_infected != 0) {
-                CkPrintf("%d in %s. (%d change from previous day)\n", total_in_state,
-                        diseaseModel->lookupStateName(i).c_str(), change_in_infected);
+                CkPrintf(
+                  "%d in %s. (%d change from previous day)\n",
+                  total_in_state,
+                  diseaseModel->lookupStateName(i).c_str(),
+                  change_in_infected
+                );
               }
               accumulated[i] = total_in_state; 
               data++;
@@ -73,7 +83,7 @@ mainmodule loimos {
 
   array [1D] Locations {
     entry Locations();
-    entry void ReceiveVisitMessages(int,int,int);
+    entry void ReceiveVisitMessages(int,int,int,int,int);
     entry void ComputeInteractions(); // calls ReceiveInfections
   };
 
