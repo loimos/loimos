@@ -19,10 +19,6 @@ std::uniform_real_distribution<> Location::unitDistrib(0,1);
 
 void Location::addEvent(Event e) {
   events.push(e);
-  
-  //TODO: implement location infectivity
-  //if (diseaseModel->isInfectious(personState))
-  //  locationState[localLocIdx] = INFECTIOUS;
 }
 
 std::unordered_set<int> Location::processEvents(
