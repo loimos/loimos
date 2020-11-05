@@ -25,7 +25,7 @@ all: all-sub $(BIN)
 $(BIN): $(OBJS) $(DECLS)
 	$(CHARMC) -o $@ $(OBJS) -language charm++ \
 	-module CkMulticast $(OPTS) \
-	-I$(PROTOBUF_HOME)/include -L$(PROTOBUF_HOME)/lib -lprotobuf
+	-lpthread -I$(PROTOBUF_HOME)/include -L$(PROTOBUF_HOME)/lib -lprotobuf
 
 # Build .decl.h (and implicitly .def.h) files from the corresponding
 # .ci files
