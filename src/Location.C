@@ -21,13 +21,12 @@ void Location::addEvent(Event e) {
   events.push(e);
 }
 
-std::unordered_set<int> Location::processEvents(
+void Location::processEvents(
   std::default_random_engine *generator,
   DiseaseModel *diseaseModel
 ) {
   std::vector<Event> *arrivals;
   Event curEvent;
-  justInfected.empty();
 
   while (!events.empty()) {
     curEvent = events.top();
@@ -64,11 +63,6 @@ std::unordered_set<int> Location::processEvents(
       onDeparture(generator, diseaseModel, curEvent);
     }
   }
-
-  // The caller should handle actually sending out infection messages, since,
-  // as a non-chare class, we don't have access to global chare arrays and the
-  // like here
-  return justInfected;
 }
 
 // Simple dispatch to the susceptible/infectious depature handlers
@@ -104,7 +98,7 @@ void Location::onSusceptibleDeparture(
   double prob = exp(logProbNotInfected);
   double roll = unitDistrib(*generator);
   if (roll > prob) {
-    justInfected.insert(susceptibleDeparture.personIdx);
+    infect(susceptibleDeparture.personIdx);
   }
 }
 
@@ -125,7 +119,27 @@ void Location::onInfectiousDeparture(
 
     double roll = unitDistrib(*generator);
     if (roll > prob) { 
-      justInfected.insert(susceptibleArrival.personIdx);
+      infect(susceptibleArrival.personIdx);
     }
   } 
+}
+
+// Simple helper function which infects a given person with a given
+// probability (we handle this here rather since this is a chare class,
+// and so we have access to peopleArray and the like)
+inline void Location::infect(int personIdx) {
+  int peoplePartitionIdx = getPartitionIndex(
+    personIdx,
+    numPeople,
+    numPeoplePartitions
+  );
+
+  peopleArray[peoplePartitionIdx].ReceiveInfections(personIdx);
+  /*
+  CkPrintf(
+    "sending infection message to person %d in partition %d\r\n",
+    personIdx,
+    peoplePartitionIdx
+  );
+  */
 }

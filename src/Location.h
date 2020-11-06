@@ -28,7 +28,6 @@ class Location {
     // a person currently at this location
     std::vector<Event> infectiousArrivals;
     std::vector<Event> susceptibleArrivals;
-    std::unordered_set<int> justInfected;
 
     // Helper functions to handle when a person leaves this location
     // onDeparture branches to one of the two other functions
@@ -47,6 +46,10 @@ class Location {
       DiseaseModel *diseaseModel,
       Event departure
     );
+    
+    // Simple helper function which infects a given person
+    inline void infect(int personIdx);
+  
   public:
     // just use default constructors
    
@@ -54,12 +57,14 @@ class Location {
     // static variables work with Charm++, so this may need to be put
     // on the stack somehwer later on
     static std::uniform_real_distribution<> unitDistrib;
+    
     // Adds an event represnting a person either arriving or departing
     // from this location
     void addEvent(Event e);
+    
     // Runs through all of the current events and return the indices of
     // any people who have been infected
-    std::unordered_set<int> processEvents(
+    void processEvents(
       std::default_random_engine *generator,
       DiseaseModel *diseaseModel
     );

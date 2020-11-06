@@ -20,9 +20,6 @@ class Locations : public CBase_Locations {
     std::vector<Location> locations;
     std::default_random_engine generator;
     DiseaseModel *diseaseModel;
-    
-    // Simple helper function which infects a given person
-    inline void infect(int personIdx);
   
   public:
     Locations();
