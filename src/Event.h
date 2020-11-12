@@ -20,9 +20,18 @@ struct Event {
   int scheduledTime;
   // indicates whether they're arriving or leaving
   char type;
+  // if this is an arrival, the corresponding departure, and vice versa
+  Event *partner;
 
   // Lets us order events in the location queues
   bool operator>(const Event& rhs) const;
+
+  // Compares events based on their partners, returning whether or not e0's
+  // partner is greater than e1's. Assumes both partnes are non-null
+  static bool greaterPartner(Event e0, Event e1);
+
+  // Makes two events each others' partners
+  static void pair(Event *e0, Event *e1);
 };
 
 #endif // __EVENT_H__

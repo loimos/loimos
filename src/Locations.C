@@ -50,6 +50,7 @@ void Locations::ReceiveVisitMessages(
   // Wrap vist info...
   Event arrival { personIdx, personState, visitStart, ARRIVAL };
   Event departure { personIdx, personState, visitEnd, DEPARTURE };
+  Event::pair(&arrival, &departure);
 
   // ...and queue it up at the appropriate location
   locations[localLocIdx].addEvent(arrival);

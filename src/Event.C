@@ -22,3 +22,12 @@ bool Event::operator>(const Event& rhs) const {
 
   return personState > rhs.personState;
 }
+
+bool Event::greaterPartner(Event e0, Event e1) {
+  return e0.partner > e1.partner;
+}
+
+void Event::pair(Event *e0, Event *e1) {
+  e0->partner = e1;
+  e1->partner = e0;
+}

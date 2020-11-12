@@ -14,6 +14,7 @@
 #include <random>
 #include <set>
 #include <cmath>
+#include <algorithm>
 
 std::uniform_real_distribution<> Location::unitDistrib(0,1);
 
@@ -46,19 +47,12 @@ void Location::processEvents(
 
     if (ARRIVAL == curEvent.type) {
       arrivals->push_back(curEvent);
+      std::push_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
 
     } else if (DEPARTURE == curEvent.type) {
       // Remove the arrival event corresponding to this departure 
-      int curIdx = curEvent.personIdx;
-      arrivals->erase(
-        std::remove_if(
-          arrivals->begin(),
-          arrivals->end(),
-          [curIdx](Event e) {
-            return e.personIdx == curIdx;
-          }
-        ), arrivals->end()
-      );
+      std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
+      arrivals->pop_back();
 
       onDeparture(generator, diseaseModel, curEvent);
     }
