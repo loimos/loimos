@@ -2,12 +2,13 @@
 CHARMC=charmc
 CXX=g++
 
-#PROTOBUF_DIR=/usr/local/bin/vcpkg/installed/x64-osx
-PROTOBUF_DIR=/usr/local
+PROTOBUF_DIR=/usr/local/bin/vcpkg/installed/x64-osx
+# PROTOBUF_DIR=/usr/local
 CXXFLAGS=-std=c++11 -Wall -I$(PROTOBUF_DIR)/include
 
-OBJS		= Main.o DiseaseModel.o People.o Locations.o Defs.o disease.pb.o distribution.pb.o Location.o Event.o
+OBJS		= Main.o DiseaseModel.o People.o Locations.o Defs.o disease.pb.o distribution.pb.o Location.o Event.o Attribute.o
 OBJS_DECL	= loimos.decl.h
+INC = -I$(PROTOBUF_DIR)/include -L$(PROTOBUF_DIR)/lib -lprotobuf
 
 loimos: $(OBJS) $(OBJS_DECL)
 	$(CHARMC) -o loimos $(OBJS) -language charm++ \
@@ -35,6 +36,9 @@ Event.o: Event.C Event.h main.decl.h
 DiseaseModel.o: DiseaseModel.h DiseaseModel.C 
 	$(CHARMC) $(OPTS) $(INC) -o DiseaseModel.o DiseaseModel.C
 
+Attribute.o: Attributes.C Attributes.h
+	$(CHARMC) $(OPTS) $(INC) -o Attribute.o Attributes.C 
+
 diseaseModelProto: 
 	mv disease_model/*.proto ../src/ ; protoc --cpp_out=. disease.proto distribution.proto ; mv *.proto disease_model/
 
@@ -50,5 +54,15 @@ Defs.o: Defs.h
 clean:
 	rm -f *.decl.h *.def.h *.o charmrun loimos *.pb.cc *.pb.h
 
+preprocessing: preprocessing/preprocess.C
+	${CXX} ${CXXFLAGS} preprocessing/preprocess.C -o preprocess
+
+preprocess: preprocessing
+	./preprocess
+
 test: loimos
-	./charmrun +p4 ./loimos 110 20 15 6 15 disease_model/H5N1.textproto ++local	
+	./charmrun +p4 ./loimos 40 16 1 4 7 disease_model/H5N1.textproto ++local
+
+
+# test: loimos
+# 	./charmrun +p4 ./loimos 40 16 1 4 15 disease_model/H5N1.textproto ++local

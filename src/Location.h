@@ -24,6 +24,7 @@ class Location {
     // Represents all of the arrivals and departures of people
     // from this location on a given day
     std::priority_queue<Event, std::vector<Event>, std::greater<Event> > events;
+
     // Each Event one of these containers is the arrival event for a
     // a person currently at this location
     std::vector<Event> infectiousArrivals;
@@ -54,6 +55,7 @@ class Location {
     // static variables work with Charm++, so this may need to be put
     // on the stack somehwer later on
     static std::uniform_real_distribution<> unitDistrib;
+    int unique_id;
     // Adds an event represnting a person either arriving or departing
     // from this location
     void addEvent(Event e);

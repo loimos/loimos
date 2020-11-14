@@ -167,7 +167,7 @@ int DiseaseModel::getHealthyState() { return healthyState; }
 
 /** Returns if someone is infectious */
 bool DiseaseModel::isInfectious(int personState) { 
-  return model->disease_state(personState).infectivity() != 0.0;
+  return model->disease_state(personState).infectivity() > 0;
 }
 
 /** Returns if someone is susceptible */

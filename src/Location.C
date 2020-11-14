@@ -28,6 +28,8 @@ std::unordered_set<int> Location::processEvents(
   std::vector<Event> *arrivals;
   Event curEvent;
   justInfected.empty();
+  // CkPrintf("Received %d events\n", events.size());
+  int debug_to_remove_infection_arrivals = 0;
 
   while (!events.empty()) {
     curEvent = events.top();
@@ -37,7 +39,9 @@ std::unordered_set<int> Location::processEvents(
       arrivals = &susceptibleArrivals;
 
     } else if (diseaseModel->isInfectious(curEvent.personState)) {
+      // CkPrintf("Infectious arrival!\n");
       arrivals = &infectiousArrivals;
+      debug_to_remove_infection_arrivals += 1;
 
     // If a person can niether infect other people nor be infected themself,
     // we can just ignore their comings and goings
@@ -64,6 +68,8 @@ std::unordered_set<int> Location::processEvents(
       onDeparture(generator, diseaseModel, curEvent);
     }
   }
+  // if (debug_to_remove_infection_arrivals)
+    // printf("Got %d infectious arrivals\n", debug_to_remove_infection_arrivals);
 
   // The caller should handle actually sending out infection messages, since,
   // as a non-chare class, we don't have access to global chare arrays and the
@@ -94,10 +100,14 @@ void Location::onSusceptibleDeparture(
   for (Event infectiousArrival: infectiousArrivals) {
     // Every infectious person contributes to the change a susceptible person
     // is infected
+    // CkPrintf("Uh\n");
     logProbNotInfected += diseaseModel->getLogProbNotInfected(
       susceptibleDeparture, infectiousArrival
     );
   }
+  // if (logProbNotInfected != 0) {
+  //   CkPrintf("Chance of infection\n");
+  // }
 
   // We want the probability of infection, so we need to 
   // invert probNotInfected

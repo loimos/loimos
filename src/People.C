@@ -8,15 +8,19 @@
 #include "People.h"
 #include "Defs.h"
 #include "DiseaseModel.h"
+#include "Attributes.h"
 
 #include <tuple>
 #include <limits>
 #include <queue>
+#include <string>
+#include <iostream>
+#include <fstream>
 
 People::People() {
   newCases = 0;
   day = 0;
-  generator.seed(thisIndex);
+  generator.seed(thisIndex + 5);
 
   // Initialize disease model and identify the healthy state
   diseaseModel = globDiseaseModel.ckLocalBranch();
@@ -28,10 +32,62 @@ People::People() {
     numPeoplePartitions,
     thisIndex
   );
-  
+
   // Make a default person and populate people with copies
-  Person tmp { healthyState, std::numeric_limits<Time>::max() };
+  Person tmp { 0, healthyState, std::numeric_limits<Time>::max(), std::vector<uint32_t>() };
   people.resize(numLocalPeople, tmp);
+
+  // Load in people data from file.
+  int startingLineIndex = getGlobalIndex(0, thisIndex, numPeople, numPeoplePartitions, PERSON_OFFSET) - PERSON_OFFSET;
+  int endingLineIndex = startingLineIndex + numLocalPeople;
+  
+  std::string line;
+  std::ifstream f("small_input/people.csv");
+  if (!f) {
+    CkAbort("Could not open person data input.");
+  }
+  
+  // TODO (iancostello): build an index at preprocessing and seek. 
+  for (int i = 0; i <= startingLineIndex; i++) {
+    std::getline(f, line);
+  }
+    
+  for (int i = 0; i < numLocalPeople; i++) {
+    std::getline(f, line);
+    loadPersonFromCSV(i, &line);
+  }
+
+  // Open
+  activity_stream = new std::ifstream("small_input/interactions.csv", std::ios::binary);
+  if (!activity_stream->is_open()) {
+    CkAbort("Could not open activity input.");
+  }
+
+  // Load preprocessing meta data.
+  std::ifstream data_stream("data_index_activity.csv");
+  for (int c = 0; c < numLocalPeople; c++) {
+    std::vector<uint32_t> *data_pos = &people[c].interactions_by_day;
+    int curr_id = people[c].unique_id;
+    
+    // Search for line.
+    getline(data_stream, line);
+    while (!data_stream.eof() && getIntAttribute(&line, 0) != curr_id) {
+      getline(data_stream, line);
+    }
+
+    // Extra rest of data
+    int curr_left = line.find(',') + 1;
+    for (int i = curr_left; i < line.size(); i++) {
+      if (line.at(i) == ' ') {
+        data_pos->push_back(std::stoi(line.substr(curr_left, i)));
+        curr_left = 0;
+      }
+    }
+  }
+
+  // Clear header.
+  std::getline(*activity_stream, line);
+
   
   // Randomly infect people to seed the initial outbreak
   std::uniform_real_distribution<> unitDistrib(0,1);
@@ -43,7 +99,35 @@ People::People() {
     }
   }
 
-  // CkPrintf("People chare %d with %d people\n",thisIndex,numLocalPeople);
+  CkPrintf("People chare %d with %d people\n",thisIndex,numLocalPeople);
+}
+
+void People::loadPersonFromCSV(int personIdx, std::string *data) {
+  int attr_index = 0;
+  int left_comma = 0;
+
+  // TODO general purpose processor.
+  for (int c = 0; c < data->length(); c++) {
+    if (data->at(c) == ',') {
+      // Completed attribute.
+      std::string sub_str = data->substr(left_comma, c);
+
+      //TODO HANDLE THESE ATTRIBUTES WITH PROTOBUF
+      if (attr_index == 1) {
+        // TODO remove debug
+        // if (personIdx == 0)
+        //   CkPrintf("ID %d\n", std::stoi(sub_str));
+        try {
+          people[personIdx].unique_id = std::stoi(sub_str);
+        } catch (const std::exception& e) {
+          CkPrintf("Could not unpack parse %s on id %d\n", sub_str.c_str(), personIdx);
+        }
+      }
+
+      left_comma = c + 1;
+      attr_index += 1;
+    }
+  }
 }
 
 /**
@@ -63,55 +147,51 @@ void People::SendVisitMessages() {
     
   std::priority_queue<int, std::vector<int>, std::greater<int> > times;
 
-  // generate itinerary for each person
-  for (int i = 0; i < numLocalPeople; i++) {
-    personIdx = getGlobalIndex(
-      i,
-      thisIndex,
-      numPeople,
-      numPeoplePartitions
-    );
-    int personstate = people[i].state;
+  // Load iterinary for each person.
+  std::string line;
+  int current_day_secs = day * (3600 * 24);
+  int next_day_secs = (day + 1) * (3600 * 24);
+  
+  // Send of activities for each person.
+  for (int localPersonId = 0; localPersonId < numLocalPeople; localPersonId++) {
+    // Seek to correct position in file.
+    uint32_t seek_pos = people[localPersonId].interactions_by_day[day];
+    if (seek_pos == 0xFFFFFFFF)
+      continue;
 
-    // getting random number of locations to visit
-    numVisits = poisson_dist(generator);
-    //CkPrintf("Person %d with %d visits\n",personIdx,visits);
-    
-    // randomly generate start and end times for each visit,
-    // using a priority queue ensures the times are in order
-    for (int j = 0; j < 2*numVisits; j++) {
-      times.push(time_dist(generator));
+    if (seek_pos == 0) {
+      printf("Issue!\n");
     }
 
-    for (int j = 0; j < numVisits; j++) {
-      int visitStart = times.top();
-      times.pop();
-      int visitEnd = times.top();
-      times.pop();
-      
-      // we don't guarentee that these times aren't equal
-      // so this is a workaround
-      if (visitStart == visitEnd) {
-        continue;
-      }
+    activity_stream->seekg(seek_pos, std::ios_base::beg);
+    std::getline(*activity_stream, line);
+ 
+    while (!activity_stream->eof() 
+        && getIntAttribute(&line, 4) < next_day_secs
+        && getIntAttribute(&line, 1) == people[localPersonId].unique_id) {
+      int person_id = getIntAttribute(&line, 1);
+      int location_id = getIntAttribute(&line, 2);
+      int start_time = getIntAttribute(&line, 4);
+      int duration = getIntAttribute(&line, 5);
 
-      // generate random location to visit
-      locationIdx = location_dist(generator);
-      //CkPrintf("Person %d visits %d\n",personIdx,locationIdx);
       locationSubset = getPartitionIndex(
-        locationIdx,
-        numLocations,
-        numLocationPartitions
+          location_id,
+          numLocations,
+          numLocationPartitions,
+          LOCATION_OFFSET
       );
 
-      // sending message to location
+      // CkPrintf("Person %d visited %d on %d at %d for %d\n", person_id, location_id, locationSubset, start_time, duration);
       locationsArray[locationSubset].ReceiveVisitMessages(
-        locationIdx,
-        personIdx,
-        personstate,
-        visitStart,
-        visitEnd
+        location_id,
+        person_id,
+        people[localPersonId].state,
+        start_time,
+        start_time + duration
       );
+
+      if (!activity_stream->eof())
+        std::getline(*activity_stream, line);
     }
   }
 }
@@ -121,7 +201,8 @@ void People::ReceiveInfections(int personIdx) {
   int localIdx = getLocalIndex(
     personIdx,
     numPeople,
-    numPeoplePartitions
+    numPeoplePartitions,
+    PERSON_OFFSET
   );
   
   // Mark that exposed healthy individuals should make transition at the end

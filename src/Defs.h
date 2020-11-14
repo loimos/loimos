@@ -21,11 +21,15 @@
 #define ARRIVAL 0
 #define DEPARTURE 1
 
+// TODO THIS NEED TO BE DYNAMIC (including in indexing)
+#define PERSON_OFFSET 5586585
+#define LOCATION_OFFSET 0
+
 // Time
 using Time = int32_t;
 const Time DAY_LENGTH = 3600 * 24;
 
-#define INITIAL_INFECTIOUS_PROBABILITY 0.05
+#define INITIAL_INFECTIOUS_PROBABILITY 0.10
 
 extern /* readonly */ CProxy_Main mainProxy;
 extern /* readonly */ CProxy_People peopleArray;
@@ -41,10 +45,10 @@ int getNumElementsPerPartition(int numElements, int numPartitions);
 
 int getNumLocalElements(int numElements, int numPartitions, int partitionIndex);
 
-int getPartitionIndex(int globalIndex, int numElements, int numPartitions);
+int getPartitionIndex(int globalIndex, int numElements, int numPartitions, int offset);
 
-int getLocalIndex(int globalIndex, int numElements, int numPartitions);
+int getLocalIndex(int globalIndex, int numElements, int numPartitions, int offset);
 
-int getGlobalIndex(int localIndex, int partitionIndex, int numElements, int numPartitions);
+int getGlobalIndex(int localIndex, int partitionIndex, int numElements, int numPartitions, int offset);
 
 #endif // __DEFS_H__
