@@ -13,10 +13,13 @@
 #include "Location.h"
 #include "Event.h"
 #include "Defs.h"
+#include "Attributes.h"
 
 #include <algorithm>
 #include <queue>
 #include <stdio.h>
+#include <iostream>
+#include <fstream>
 
 Locations::Locations() {
   // Getting number of locations assigned to this chare
@@ -29,6 +32,7 @@ Locations::Locations() {
   
   // Init disease states
   diseaseModel = globDiseaseModel.ckLocalBranch();
+
   // Seed random number generator via branch ID for reproducibility
   generator.seed(thisIndex);
   // Init contact model
@@ -47,8 +51,11 @@ void Locations::ReceiveVisitMessages(
   int localLocIdx = getLocalIndex(
     locationIdx,
     numLocations,
-    numLocationPartitions
+    numLocationPartitions,
+    LOCATION_OFFSET
   );
+
+  // CkPrintf("%d: Received visit to %d (loc %d) from person %d\n", thisIndex, locationIdx, localLocIdx, personIdx);
 
   // Wrap vist info...
   Event arrival { ARRIVAL, personIdx, personState, visitStart };

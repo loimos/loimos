@@ -13,20 +13,23 @@
 #include <random>
 #include <vector>
 #include <tuple>
-
 #define LOCATION_LAMBDA 5.2
 
 // This is just a bundle of information that we don't need to
 // guarentee any constraints on, hence why this is a stuct rather than
 // a class (move this to a seperate file if we ever need to add any methods)
 struct Person {
-  // The person's curent state in the disease model
+  // the person's curent state in the disease model
+  int unique_id;
   int state;
   // How long until the person transitions to their next state
   int secondsLeftInState;
   // If this is a susceptible person, this is a list of all of their
   // interactions with infectious people in the past day
   std::vector<Interaction> interactions;
+
+  // 
+  std::vector<uint32_t> interactionsByDay;
 };
 
 class People : public CBase_People {
@@ -34,6 +37,7 @@ class People : public CBase_People {
     int numLocalPeople;
     int day;
     int newCases;
+    std::ifstream *activity_stream;
     std::vector<Person> people;
     std::default_random_engine generator;
     DiseaseModel *diseaseModel;

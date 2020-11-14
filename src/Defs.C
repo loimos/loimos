@@ -4,6 +4,12 @@
  * SPDX-License-Identifier: MIT
  */
 
+
+/*** Questions for Abhinav
+ * How to create map from ID to Chare
+ * 
+ */ 
+
 #ifndef __DEFS_H__
 #define __DEFS_H__
 
@@ -21,22 +27,22 @@ int getNumLocalElements(int numElements, int numPartitions, int partitionIndex){
   return elementsPerPartition;
 }
 
-int getPartitionIndex(int globalIndex, int numElements, int numPartitions){
-  int partitionIndex = globalIndex/getNumElementsPerPartition(numElements,numPartitions);
+int getPartitionIndex(int globalIndex, int numElements, int numPartitions, int offset){
+  int partitionIndex = (globalIndex - offset) /getNumElementsPerPartition(numElements,numPartitions);
   if(partitionIndex >= numPartitions)
     return (numPartitions-1);
   return partitionIndex;
 }
 
-int getLocalIndex(int globalIndex, int numElements, int numPartitions){
-  int partitionIndex = getPartitionIndex(globalIndex,numElements,numPartitions);
+int getLocalIndex(int globalIndex, int numElements, int numPartitions, int offset){
+  int partitionIndex = getPartitionIndex(globalIndex,numElements,numPartitions, offset);
   int elementsPerPartition = getNumElementsPerPartition(numElements,numPartitions);
-  return globalIndex - partitionIndex*elementsPerPartition;
+  return (globalIndex - offset) - partitionIndex*elementsPerPartition;
 }
 
-int getGlobalIndex(int localIndex, int partitionIndex, int numElements, int numPartitions){
+int getGlobalIndex(int localIndex, int partitionIndex, int numElements, int numPartitions, int offset){
   int elementsPerPartition = getNumElementsPerPartition(numElements,numPartitions);
-  return partitionIndex*elementsPerPartition+localIndex;
+  return partitionIndex*elementsPerPartition+localIndex + offset;
 }
 
 #endif // __DEFS_H__
