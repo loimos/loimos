@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
      * Assumptions. 
      * Stream is sorted by start time per person.
      */ 
-    std::ifstream activity_stream("small_input/interactions.csv", std::ios_base::binary);
+    std::ifstream activity_stream("sample_input/interactions.csv", std::ios_base::binary);
     if (!activity_stream) {
         printf("Could not open person data input.\n");
         exit(0);
@@ -24,8 +24,8 @@ int main(int argc, char **argv) {
     int id_location = 1;
     int start_time = 4;
     int start_id = 5586585;
-    int num_people = 40;
-    // int num_people = 41120;
+    // int num_people = 40;
+    int num_people = 41120;
 
     std::vector< std::vector<uint32_t> > elements;
     elements.resize(num_people);
@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
             for (int j = 0; j < curr.size(); j++) {
                 output_stream << curr[j] << " ";
             }
-            if (i == elements.size() - 1)
+            if (i != elements.size() - 1)
                 output_stream << "\n";
         }
     }

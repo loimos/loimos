@@ -42,7 +42,7 @@ People::People() {
   int endingLineIndex = startingLineIndex + numLocalPeople;
   
   std::string line;
-  std::ifstream f("small_input/people.csv");
+  std::ifstream f("sample_input/people.csv");
   if (!f) {
     CkAbort("Could not open person data input.");
   }
@@ -58,7 +58,7 @@ People::People() {
   }
 
   // Open
-  activity_stream = new std::ifstream("small_input/interactions.csv", std::ios::binary);
+  activity_stream = new std::ifstream("sample_input/interactions.csv", std::ios::binary);
   if (!activity_stream->is_open()) {
     CkAbort("Could not open activity input.");
   }
@@ -80,7 +80,7 @@ People::People() {
     for (int i = curr_left; i < line.size(); i++) {
       if (line.at(i) == ' ') {
         data_pos->push_back(std::stoi(line.substr(curr_left, i)));
-        curr_left = 0;
+        curr_left = i;
       }
     }
   }
@@ -159,13 +159,9 @@ void People::SendVisitMessages() {
     if (seek_pos == 0xFFFFFFFF)
       continue;
 
-    if (seek_pos == 0) {
-      printf("Issue!\n");
-    }
-
     activity_stream->seekg(seek_pos, std::ios_base::beg);
     std::getline(*activity_stream, line);
- 
+  
     while (!activity_stream->eof() 
         && getIntAttribute(&line, 4) < next_day_secs
         && getIntAttribute(&line, 1) == people[localPersonId].unique_id) {
@@ -181,7 +177,9 @@ void People::SendVisitMessages() {
           LOCATION_OFFSET
       );
 
-      // CkPrintf("Person %d visited %d on %d at %d for %d\n", person_id, location_id, locationSubset, start_time, duration);
+      // if (thisIndex == 0 && localPersonId == 0)
+      //   CkPrintf("On day %d, Person %d visited %d on %d at %d for %d\n", day, person_id, location_id, locationSubset, start_time, duration);
+
       locationsArray[locationSubset].ReceiveVisitMessages(
         location_id,
         person_id,

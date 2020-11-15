@@ -60,9 +60,8 @@ preprocessing: preprocessing/preprocess.C
 preprocess: preprocessing
 	./preprocess
 
-test: loimos
-	./charmrun +p4 ./loimos 40 16 1 4 7 disease_model/H5N1.textproto ++local
-
-
 # test: loimos
-# 	./charmrun +p4 ./loimos 40 16 1 4 15 disease_model/H5N1.textproto ++local
+	# ./charmrun +p4 ./loimos 40 16 1 4 7 disease_model/H5N1.textproto ++local
+
+test: loimos
+	./charmrun +p16 ./loimos 41120 9166 200 100 7 disease_model/H5N1.textproto ++local

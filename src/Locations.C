@@ -38,7 +38,7 @@ Locations::Locations() {
   int endingLineIndex = startingLineIndex + numLocalLocations;
   std::string line;
 
-  std::ifstream f("small_input/locations.csv");
+  std::ifstream f("sample_input/locations.csv");
   if (!f) {
     CkAbort("Could not open person data input.");
   }

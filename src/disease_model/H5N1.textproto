@@ -3,7 +3,7 @@ label: "H5N1"
 disease_state: {
     state_label: "uninfected"
     infectivity: 0
-    susceptibility: 0.5
+    susceptibility: 0.2
 
     forever : {}
 
@@ -37,7 +37,7 @@ disease_state: {
 
 disease_state: {
     state_label: "latent_long"
-    infectivity: 0.6
+    infectivity: 0.25
     susceptibility: 0
 
     fixed {
@@ -59,7 +59,7 @@ disease_state: {
 
 disease_state: {
     state_label: "latent_short"
-    infectivity: 0.7
+    infectivity: 0.25
     susceptibility: 0
 
     fixed {
@@ -158,7 +158,7 @@ disease_state: {
 
 disease_state: {
     state_label: "symptom1_circulating"
-    infectivity: 0.6
+    infectivity: 0.2
     susceptibility: 0
 
     fixed {
@@ -180,7 +180,7 @@ disease_state: {
 
 disease_state: {
     state_label: "symptom2_circulating"
-    infectivity: 0.7
+    infectivity: 0.2
     susceptibility: 0
 
     fixed {
@@ -202,7 +202,7 @@ disease_state: {
 
 disease_state: {
     state_label: "symptom3_circulating"
-    infectivity: 0.7
+    infectivity: 0.2
     susceptibility: 0
 
     fixed {
@@ -224,7 +224,7 @@ disease_state: {
 
 disease_state: {
     state_label: "symptom1"
-    infectivity: 0.6
+    infectivity: 0.2
     susceptibility: 0
 
      uniform {
@@ -255,7 +255,7 @@ disease_state: {
 
 disease_state: {
     state_label: "symptom2"
-    infectivity: 0.5
+    infectivity: 0.2
     susceptibility: 0
 
     uniform {
@@ -286,7 +286,7 @@ disease_state: {
 
 disease_state: {
     state_label: "symptom3"
-    infectivity: 0.4
+    infectivity: 0.2
     susceptibility: 0
 
     uniform {
