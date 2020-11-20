@@ -24,10 +24,23 @@ bool Event::operator>(const Event& rhs) const {
 }
 
 bool Event::greaterPartner(Event e0, Event e1) {
-  return e0.partner > e1.partner;
+  if (e0.partnerTime != e1.partnerTime) {
+    return e0.partnerTime > e1.partnerTime;
+  }
+
+  if (e0.type != e1.type) {
+    // equivalent of comparing the opposite types
+    return e0.type < e1.type;
+  }
+
+  if (e0.personIdx != e1.personIdx) {
+    return e0.personIdx > e1.personIdx;
+  }
+
+  return e0.personState > e1.personState;
 }
 
 void Event::pair(Event *e0, Event *e1) {
-  e0->partner = e1;
-  e1->partner = e0;
+  e0->partnerTime = e1->scheduledTime;
+  e1->partnerTime = e0->scheduledTime;
 }

@@ -11,6 +11,8 @@
 // guarentee any constraints on, hence why this is a stuct rather than
 // a class
 struct Event {
+  // indicates whether they're arriving or leaving
+  char type;
   // the index of the person arriving or leaving
   int personIdx;
   // the person's curent state in the disease model
@@ -18,10 +20,9 @@ struct Event {
   // the time when this event is scheduled to occur, in seconds from the
   // start of the day
   int scheduledTime;
-  // indicates whether they're arriving or leaving
-  char type;
-  // if this is an arrival, the corresponding departure, and vice versa
-  Event *partner;
+  // if this is an arrival, the time of the corresponding departure,
+  // and vice versa
+  int partnerTime;
 
   // Lets us order events in the location queues
   bool operator>(const Event& rhs) const;
