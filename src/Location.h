@@ -8,6 +8,7 @@
 #define __LOCATION_H__
 
 #include "Event.h"
+#include "Interaction.h"
 #include "DiseaseModel.h"
 
 #include <queue>
@@ -16,27 +17,6 @@
 #include <random>
 #include <set>
 #include <unordered_map>
-
-// Simple package to hold data on an interfaction between with a susceptible
-// person which could lead to an infection
-struct PotentialInfection {
-  // Describes the chance of this interaction resulting in an infection
-  double propensity;
-  // Data on the person who could potentially infect the susceptible person in
-  // question
-  int infectorId;
-  int infectorState;
-  // The state the susceptible person will transition to if this results in
-  // a infection
-  // TODO: figure out how to extract these from an infectious/susceptible
-  // state pair
-  //int targetState; 
-  // We need to know when the interaction occured so that, if this interaction
-  // does in fact result in an infection, we can determine precisely when it
-  // occured
-  int startTime;
-  int endTime;
-};
 
 // Represents a single location where people can interact
 // Not to be confused with Locations, which represents a group of
@@ -53,7 +33,7 @@ class Location {
     
     // Maps each susceptible person's id to a list of interactions with people
     // who could have infected them
-    std::unordered_map<int, std::vector<PotentialInfection> > potentialInfections;
+    std::unordered_map<int, std::vector<Interaction> > interactions;
 
     // Helper functions to handle when a person leaves this location
     // onDeparture branches to one of the two other functions
@@ -71,15 +51,19 @@ class Location {
     );
 
     // Helper function which packages all the neccessary information about
-    // a potential infection and adds it the the list of potential infections
-    // for the susceptible person in question
-    inline void registerPotentialInfection(
+    // an interaction between a susceptible person and an infectious person
+    // and add it to the approriate list for the susceptible person
+    inline void registerInteraction(
       const DiseaseModel *diseaseModel,
       Event susceptibleEvent,
       Event infectiousEvent,
       int startTime,
       int endTime
     );
+    // Simple helper function which send the list of interactions with the
+    // specified person to the appropriate People chare
+    inline void sendInteractions(int personIdx);
+
   public:
     // just use default constructors
    

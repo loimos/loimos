@@ -12,7 +12,7 @@
 #include "DiseaseModel.h"
 
 #include <random>
-#include <set>
+#include <vector>
 #include <cmath>
 #include <algorithm>
 
@@ -53,7 +53,7 @@ void Location::processEvents(const DiseaseModel *diseaseModel) {
     }
   }
 
-  potentialInfections.clear();
+  interactions.clear();
 }
 
 // Simple dispatch to the susceptible/infectious depature handlers
@@ -75,7 +75,7 @@ void Location::onSusceptibleDeparture(
 ) {
   double logProbNotInfected = 0.0;
   for (Event infectiousArrival: infectiousArrivals) {
-    registerPotentialInfection(
+    registerInteraction(
       diseaseModel,
       susceptibleDeparture,
       infectiousArrival,
@@ -83,6 +83,8 @@ void Location::onSusceptibleDeparture(
       susceptibleDeparture.scheduledTime
     ); 
   }
+
+  sendInteractions(susceptibleDeparture.personIdx);
 }
 
 void Location::onInfectiousDeparture(
@@ -93,7 +95,7 @@ void Location::onInfectiousDeparture(
   // Each susceptible person has a chance of being infected by any given
   // infectious person
   for (Event susceptibleArrival : susceptibleArrivals) {
-    registerPotentialInfection(
+    registerInteraction(
       diseaseModel,
       susceptibleArrival,
       infectiousDeparture,
@@ -103,7 +105,7 @@ void Location::onInfectiousDeparture(
   } 
 }
 
-inline void Location::registerPotentialInfection(
+inline void Location::registerInteraction(
   const DiseaseModel *diseaseModel,
   Event susceptibleEvent,
   Event infectiousEvent,
@@ -116,7 +118,7 @@ inline void Location::registerPotentialInfection(
     startTime,
     endTime
   );
-  PotentialInfection infection {
+  Interaction infection {
     propensity,
     infectiousEvent.personIdx,
     infectiousEvent.personState,
@@ -126,5 +128,29 @@ inline void Location::registerPotentialInfection(
 
   // Note that this will create a new vector if this is the first potential
   // infection for the susceptible person in question
-  potentialInfections[susceptibleEvent.personIdx].push_back(infection);
+  interactions[susceptibleEvent.personIdx].push_back(infection);
+}
+
+// Simple helper function which send the list of interactions with the
+// specified person to the appropriate People chare
+inline void Location::sendInteractions(int personIdx) {
+  int peoplePartitionIdx = getPartitionIndex(
+    personIdx,
+    numPeople,
+    numPeoplePartitions
+  );
+
+  std::vector<Interaction> &personInteractions = interactions[personIdx];
+  peopleArray[peoplePartitionIdx].ReceiveInteractions(
+    personIdx,
+    (int) personInteractions.size(),
+    &personInteractions[0]
+  );
+  /*
+  CkPrintf(
+    "sending infection message to person %d in partition %d\r\n",
+    personIdx,
+    peoplePartitionIdx
+  );
+  */
 }

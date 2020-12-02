@@ -7,6 +7,7 @@
 #include "loimos.decl.h"
 #include "People.h"
 #include "Defs.h"
+#include "Interaction.h"
 #include "DiseaseModel.h"
 
 #include <tuple>
@@ -116,7 +117,11 @@ void People::SendVisitMessages() {
   }
 }
 
-void People::ReceiveInfections(int personIdx) {
+void People::ReceiveInteractions(
+  int personIdx,
+  int numInteractions,
+  Interaction *interactions
+) {
   // updating state of a person
   int localIdx = getLocalIndex(
     personIdx,
