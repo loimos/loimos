@@ -38,5 +38,12 @@ class DiseaseModel : public CBase_DiseaseModel {
         const char * getStateLabel(int personState) const;
         double getLogProbNotInfected(Event susceptibleEvent, Event infectiousEvent) const;
   };
+        double getPropensity(
+          int susceptibleState,
+          int infectiousState,
+          int startTime,
+          int endTime
+        ) const;
+};
 
 #endif // __DiseaseModel_H__
