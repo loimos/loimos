@@ -15,6 +15,28 @@
 #include <functional>
 #include <random>
 #include <set>
+#include <unordered_map>
+
+// Simple package to hold data on an interfaction between with a susceptible
+// person which could lead to an infection
+struct PotentialInfection {
+  // Describes the chance of this interaction resulting in an infection
+  double propensity;
+  // Data on the person who could potentially infect the susceptible person in
+  // question
+  int infectorId;
+  int infectorState;
+  // The state the susceptible person will transition to if this results in
+  // a infection
+  // TODO: figure out how to extract these from an infectious/susceptible
+  // state pair
+  //int targetState; 
+  // We need to know when the interaction occured so that, if this interaction
+  // does in fact result in an infection, we can determine precisely when it
+  // occured
+  int startTime;
+  int endTime;
+};
 
 // Represents a single location where people can interact
 // Not to be confused with Locations, which represents a group of
@@ -24,10 +46,14 @@ class Location {
     // Represents all of the arrivals and departures of people
     // from this location on a given day
     std::priority_queue<Event, std::vector<Event>, std::greater<Event> > events;
-    // Each Event one of these containers is the arrival event for a
+    // Each Event in one of these containers is the arrival event for a
     // a person currently at this location
     std::vector<Event> infectiousArrivals;
     std::vector<Event> susceptibleArrivals;
+    
+    // Maps each susceptible person's id to a list of interactions with people
+    // who could have infected them
+    std::unordered_map<int, std::vector<PotentialInfection> > potentialInfections;
 
     // Helper functions to handle when a person leaves this location
     // onDeparture branches to one of the two other functions
@@ -46,10 +72,17 @@ class Location {
       const DiseaseModel *diseaseModel,
       const Event& departure
     );
-    
-    // Simple helper function which infects a given person
-    inline void infect(int personIdx) const;
-  
+
+    // Helper function which packages all the neccessary information about
+    // a potential infection and adds it the the list of potential infections
+    // for the susceptible person in question
+    inline void registerPotentialInfection(
+      DiseaseModel *diseaseModel,
+      Event susceptibleEvent,
+      Event infectiousEvent,
+      int startTime,
+      int endTime
+    );
   public:
     // just use default constructors
    

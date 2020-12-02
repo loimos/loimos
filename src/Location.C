@@ -85,6 +85,14 @@ void Location::onSusceptibleDeparture(
     logProbNotInfected += diseaseModel->getLogProbNotInfected(
       susceptibleDeparture, infectiousArrival
     );
+
+    registerPotentialInfection(
+      diseaseModel,
+      susceptibleDeparture,
+      infectiousArrival,
+      infectiousArrival.scheduledTime,
+      susceptibleDeparture.scheduledTime
+    ); 
   }
 
   // We want the probability of infection, so we need to 
@@ -115,9 +123,18 @@ void Location::onInfectiousDeparture(
     if (roll > prob) { 
       infect(susceptibleArrival.personIdx);
     }
+    
+    registerPotentialInfection(
+      diseaseModel,
+      susceptibleArrival,
+      infectiousDeparture,
+      susceptibleArrival.scheduledTime,
+      infectiousDeparture.scheduledTime
+    ); 
   } 
 }
 
+<<<<<<< HEAD
 // Simple helper function which infects a given person with a given
 // probability (we handle this here rather since this is a chare class,
 // and so we have access to peopleArray and the like)
@@ -136,4 +153,30 @@ inline void Location::infect(int personIdx) const {
     peoplePartitionIdx
   );
   */
+=======
+inline void Location::registerPotentialInfection(
+  DiseaseModel *diseaseModel,
+  Event susceptibleEvent,
+  Event infectiousEvent,
+  int startTime,
+  int endTime
+) {
+  double propensity = diseaseModel->getPropensity(
+    susceptibleEvent.personState,
+    susceptibleEvent.personState,
+    startTime,
+    endTime
+  );
+  PotentialInfection infection {
+    propensity,
+    infectiousEvent.personIdx,
+    infectiousEvent.personState,
+    startTime,
+    endTime
+  };
+
+  // Note that this will create a new vector if this is the first potential
+  // infection for the susceptible person in question
+  potentialInfections[susceptibleEvent.personIdx].push_back(infection);
+>>>>>>> now building up list of all potential infections for each susceptible person
 }
