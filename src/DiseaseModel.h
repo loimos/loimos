@@ -37,7 +37,6 @@ class DiseaseModel : public CBase_DiseaseModel {
         bool isSusceptible(int personState) const;
         const char * getStateLabel(int personState) const;
         double getLogProbNotInfected(Event susceptibleEvent, Event infectiousEvent) const;
-  };
         double getPropensity(
           int susceptibleState,
           int infectiousState,

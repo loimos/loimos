@@ -16,16 +16,11 @@
 #include <cmath>
 #include <algorithm>
 
-std::uniform_real_distribution<> Location::unitDistrib(0,1);
-
 void Location::addEvent(Event e) {
   events.push(e);
 }
 
-void Location::processEvents(
-  std::default_random_engine *generator,
-  const DiseaseModel *diseaseModel
-) {
+void Location::processEvents(const DiseaseModel *diseaseModel) {
   std::vector<Event> *arrivals;
   Event curEvent;
 
@@ -54,38 +49,32 @@ void Location::processEvents(
       std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
       arrivals->pop_back();
 
-      onDeparture(generator, diseaseModel, curEvent);
+      onDeparture(diseaseModel, curEvent);
     }
   }
+
+  potentialInfections.clear();
 }
 
 // Simple dispatch to the susceptible/infectious depature handlers
 inline void Location::onDeparture(
-  std::default_random_engine *generator,
   const DiseaseModel *diseaseModel,
   const Event& departure
 ) {
   if (diseaseModel->isSusceptible(departure.personState)) {
-    onSusceptibleDeparture(generator, diseaseModel, departure);
+    onSusceptibleDeparture(diseaseModel, departure);
 
   } else if (diseaseModel->isInfectious(departure.personState)) {
-    onInfectiousDeparture(generator, diseaseModel, departure);
+    onInfectiousDeparture(diseaseModel, departure);
   } 
 }
 
 void Location::onSusceptibleDeparture(
-  std::default_random_engine *generator,
   const DiseaseModel *diseaseModel,
   const Event& susceptibleDeparture
 ) {
   double logProbNotInfected = 0.0;
   for (Event infectiousArrival: infectiousArrivals) {
-    // Every infectious person contributes to the change a susceptible person
-    // is infected
-    logProbNotInfected += diseaseModel->getLogProbNotInfected(
-      susceptibleDeparture, infectiousArrival
-    );
-
     registerPotentialInfection(
       diseaseModel,
       susceptibleDeparture,
@@ -94,18 +83,9 @@ void Location::onSusceptibleDeparture(
       susceptibleDeparture.scheduledTime
     ); 
   }
-
-  // We want the probability of infection, so we need to 
-  // invert probNotInfected
-  double prob = exp(logProbNotInfected);
-  double roll = unitDistrib(*generator);
-  if (roll > prob) {
-    infect(susceptibleDeparture.personIdx);
-  }
 }
 
 void Location::onInfectiousDeparture(
-  std::default_random_engine *generator,
   const DiseaseModel *diseaseModel,
   const Event& infectiousDeparture
 ) {
@@ -113,17 +93,6 @@ void Location::onInfectiousDeparture(
   // Each susceptible person has a chance of being infected by any given
   // infectious person
   for (Event susceptibleArrival : susceptibleArrivals) {
-    // We want the probability of infection, so we need to 
-    // invert probNotInfected
-    double prob = exp(diseaseModel->getLogProbNotInfected(
-      susceptibleArrival, infectiousDeparture
-    ));
-
-    double roll = unitDistrib(*generator);
-    if (roll > prob) { 
-      infect(susceptibleArrival.personIdx);
-    }
-    
     registerPotentialInfection(
       diseaseModel,
       susceptibleArrival,
@@ -134,28 +103,8 @@ void Location::onInfectiousDeparture(
   } 
 }
 
-<<<<<<< HEAD
-// Simple helper function which infects a given person with a given
-// probability (we handle this here rather since this is a chare class,
-// and so we have access to peopleArray and the like)
-inline void Location::infect(int personIdx) const {
-  int peoplePartitionIdx = getPartitionIndex(
-    personIdx,
-    numPeople,
-    numPeoplePartitions
-  );
-
-  peopleArray[peoplePartitionIdx].ReceiveInfections(personIdx);
-  /*
-  CkPrintf(
-    "sending infection message to person %d in partition %d\r\n",
-    personIdx,
-    peoplePartitionIdx
-  );
-  */
-=======
 inline void Location::registerPotentialInfection(
-  DiseaseModel *diseaseModel,
+  const DiseaseModel *diseaseModel,
   Event susceptibleEvent,
   Event infectiousEvent,
   int startTime,
@@ -178,5 +127,4 @@ inline void Location::registerPotentialInfection(
   // Note that this will create a new vector if this is the first potential
   // infection for the susceptible person in question
   potentialInfections[susceptibleEvent.personIdx].push_back(infection);
->>>>>>> now building up list of all potential infections for each susceptible person
 }

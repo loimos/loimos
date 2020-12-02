@@ -58,17 +58,14 @@ class Location {
     // Helper functions to handle when a person leaves this location
     // onDeparture branches to one of the two other functions
     inline void onDeparture(
-      std::default_random_engine *generator,
       const DiseaseModel *diseaseModel,
       const Event& departure
     );
     void onSusceptibleDeparture(
-      std::default_random_engine *generator,
       const DiseaseModel *diseaseModel,
       const Event& departure
     );
     void onInfectiousDeparture(
-      std::default_random_engine *generator,
       const DiseaseModel *diseaseModel,
       const Event& departure
     );
@@ -77,7 +74,7 @@ class Location {
     // a potential infection and adds it the the list of potential infections
     // for the susceptible person in question
     inline void registerPotentialInfection(
-      DiseaseModel *diseaseModel,
+      const DiseaseModel *diseaseModel,
       Event susceptibleEvent,
       Event infectiousEvent,
       int startTime,
@@ -97,10 +94,7 @@ class Location {
     
     // Runs through all of the current events and return the indices of
     // any people who have been infected
-    void processEvents(
-      std::default_random_engine *generator,
-      const DiseaseModel *diseaseModel
-    );
+    void processEvents(const DiseaseModel *diseaseModel);
 };
   
 #endif // __LOCATION_H__
