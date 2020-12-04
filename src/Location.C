@@ -114,7 +114,7 @@ inline void Location::registerInteraction(
 ) {
   double propensity = diseaseModel->getPropensity(
     susceptibleEvent.personState,
-    susceptibleEvent.personState,
+    infectiousEvent.personState,
     startTime,
     endTime
   );

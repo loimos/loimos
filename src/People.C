@@ -13,6 +13,9 @@
 #include <tuple>
 #include <limits>
 #include <queue>
+#include <cmath>
+
+std::uniform_real_distribution<> unitDistrib(0,1);
 
 People::People() {
   newCases = 0;
@@ -35,7 +38,6 @@ People::People() {
   people.resize(numLocalPeople, tmp);
   
   // Randomly infect people to seed the initial outbreak
-  std::uniform_real_distribution<> unitDistrib(0,1);
   for (int i = 0; i < people.size(); ++i) {
     if (unitDistrib(generator) < INITIAL_INFECTIOUS_PROBABILITY) {
       people[i].state = INFECTIOUS;
@@ -128,16 +130,22 @@ void People::ReceiveInteractions(
     numPeople,
     numPeoplePartitions
   );
-  
-  // Mark that exposed healthy individuals should make transition at the end
-  // of the day.
-  if (people[localIdx].state == diseaseModel->getHealthyState()) {
-    people[localIdx].secondsLeftInState = -1; 
+
+  Person &person = people[localIdx];
+  // Do a single allocation to adjust the capacity of the vector
+  person.interactions.reserve(person.interactions.size() + numInteractions);
+  for (int i = 0; i < numInteractions; ++i) {
+    person.interactions.push_back(interactions[i]);
   }
 }
 
 void People::EndofDayStateUpdate() {
   int total = 0;
+
+  for (Person &person: people) {
+    ProcessInteractions(person);
+  }
+  //ProcessInteractions();
 
   // Handle state transitions at the end of the day.
   int totalStates = diseaseModel->getNumberOfStates();
@@ -165,4 +173,61 @@ void People::EndofDayStateUpdate() {
   contribute(stateSummary, CkReduction::sum_int, cb);
   day++;
   newCases = 0;
+}
+
+void People::ProcessInteractions(Person &person) {
+  double totalPropensity = 0.0;
+  int numInteractions = (int) person.interactions.size();
+  for (int i = 0; i < numInteractions; ++i) {
+    totalPropensity += person.interactions[i].propensity;
+  }
+
+  // Detemine whether or not this person was infected...
+  double roll = -log(unitDistrib(generator)) / totalPropensity;
+  /*
+  if (0 == day) {
+    if (roll <= DAY_LENGTH) {
+      CkPrintf("roll %.3f <= %d (propensity %f, from %d interactions)\r\n",
+          roll,
+          DAY_LENGTH,
+          totalPropensity,
+          (int) person.interactions.size()
+      );
+    
+    } else {
+      CkPrintf("roll %.3f > %d (propensity %f, from %d interactions)\r\n",
+          roll,
+          DAY_LENGTH,
+          totalPropensity,
+          (int) person.interactions.size()
+      );
+    }
+  }
+  */
+  if (roll <= DAY_LENGTH) {
+    // ...if they were, determine which interaction was responsible, by
+    // chooseing an interaction, with a weight equal to the propensity
+    roll = std::uniform_real_distribution<>(0, totalPropensity)(generator);
+    double partialSum = 0.0;
+    int interactionIdx;
+    for (
+      interactionIdx = 0; interactionIdx < numInteractions; ++interactionIdx
+    ) {
+      partialSum += person.interactions[interactionIdx].propensity;
+      if (partialSum > roll) {
+        break;
+      }
+    }
+
+    // TODO: Save any useful information about the interaction which caused
+    // the infection
+
+    // Mark that exposed healthy individuals should make transition at the end
+    // of the day.
+    if (person.state == diseaseModel->getHealthyState()) {
+      person.secondsLeftInState = -1; 
+    }
+  }
+
+  person.interactions.clear();
 }

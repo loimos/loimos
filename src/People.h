@@ -7,10 +7,12 @@
 #ifndef __PEOPLE_H__
 #define __PEOPLE_H__
 
+#include "DiseaseModel.h"
+#include "Interaction.h"
+
 #include <random>
 #include <vector>
 #include <tuple>
-#include "DiseaseModel.h"
 
 #define LOCATION_LAMBDA 5.2
 
@@ -18,10 +20,13 @@
 // guarentee any constraints on, hence why this is a stuct rather than
 // a class (move this to a seperate file if we ever need to add any methods)
 struct Person {
-  // the person's curent state in the disease model
+  // The person's curent state in the disease model
   int state;
-  // how long until the person transitions to their next state
+  // How long until the person transitions to their next state
   int secondsLeftInState;
+  // If this is a susceptible person, this is a list of all of their
+  // interactions with infectious people in the past day
+  std::vector<Interaction> interactions;
 };
 
 class People : public CBase_People {
@@ -32,6 +37,8 @@ class People : public CBase_People {
     std::vector<Person> people;
     std::default_random_engine generator;
     DiseaseModel *diseaseModel;
+
+    void ProcessInteractions(Person &person);
   public:
     People();
     void SendVisitMessages(); 
