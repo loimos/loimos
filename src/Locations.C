@@ -15,7 +15,6 @@
 #include "Defs.h"
 
 #include <algorithm>
-#include <functional>
 #include <queue>
 #include <stdio.h>
 

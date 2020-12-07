@@ -14,7 +14,6 @@
 
 #include <vector>
 #include <set>
-#include <functional>
 
 class Locations : public CBase_Locations {
   private:
@@ -24,8 +23,6 @@ class Locations : public CBase_Locations {
     DiseaseModel *diseaseModel;
   
     ContactModel *contactModel;
-    // Determines whether two people at the same location make contact
-    std::function<void(std::default_random_engine,int,int)> madeContact;
 
   public:
     Locations();
