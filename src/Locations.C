@@ -68,6 +68,6 @@ void Locations::ComputeInteractions() {
 
   // traverses list of locations
   for (Location loc : locations) {
-    loc.processEvents(diseaseModel);
+    loc.processEvents(diseaseModel, contactModel);
   }
 }

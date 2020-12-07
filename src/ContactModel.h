@@ -6,6 +6,8 @@
 #ifndef __ContactModel_H__
 #define __ContactModel_H__
 
+#include "Event.h"
+
 #include <random>
 
 // Note that this is just an example implemntation, this should eventually be
@@ -20,7 +22,7 @@ class ContactModel {
     // Returns whether or not two people at the same location make contact
     // (will probably need to mess with the arguments once we start
     // implementing more complex models)
-    bool madeContact(int susceptibleIdx, int infectiousIdx);
+    bool madeContact(Event susceptibleEvent, Event infectiousEvent);
 };
 
 #endif //__ContactModel_H__

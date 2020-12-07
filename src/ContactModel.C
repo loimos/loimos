@@ -1,4 +1,6 @@
+#include "loimos.decl.h"
 #include "ContactModel.h"
+#include "Event.h"
 
 #include <random>
 
@@ -12,6 +14,6 @@ void ContactModel::setGenerator(std::default_random_engine *generator) {
   this->generator = generator;
 }
 
-bool ContactModel::madeContact(int susceptibleIdx, int infectiousIdx) {
+bool ContactModel::madeContact(Event susceptibleEvent, Event infectiousEvent) {
   return unitDistrib(*generator) < CONTACT_PROBABILITY;
 }
