@@ -24,7 +24,7 @@ void Location::addEvent(Event e) {
 
 void Location::processEvents(
   std::default_random_engine *generator,
-  DiseaseModel *diseaseModel
+  const DiseaseModel *diseaseModel
 ) {
   std::vector<Event> *arrivals;
   Event curEvent;
@@ -62,8 +62,8 @@ void Location::processEvents(
 // Simple dispatch to the susceptible/infectious depature handlers
 inline void Location::onDeparture(
   std::default_random_engine *generator,
-  DiseaseModel *diseaseModel,
-  Event departure
+  const DiseaseModel *diseaseModel,
+  const Event& departure
 ) {
   if (diseaseModel->isSusceptible(departure.personState)) {
     onSusceptibleDeparture(generator, diseaseModel, departure);
@@ -75,8 +75,8 @@ inline void Location::onDeparture(
 
 void Location::onSusceptibleDeparture(
   std::default_random_engine *generator,
-  DiseaseModel *diseaseModel,
-  Event susceptibleDeparture
+  const DiseaseModel *diseaseModel,
+  const Event& susceptibleDeparture
 ) {
   double logProbNotInfected = 0.0;
   for (Event infectiousArrival: infectiousArrivals) {
@@ -98,8 +98,8 @@ void Location::onSusceptibleDeparture(
 
 void Location::onInfectiousDeparture(
   std::default_random_engine *generator,
-  DiseaseModel *diseaseModel,
-  Event infectiousDeparture
+  const DiseaseModel *diseaseModel,
+  const Event& infectiousDeparture
 ) {
 
   // Each susceptible person has a chance of being infected by any given
@@ -121,7 +121,7 @@ void Location::onInfectiousDeparture(
 // Simple helper function which infects a given person with a given
 // probability (we handle this here rather since this is a chare class,
 // and so we have access to peopleArray and the like)
-inline void Location::infect(int personIdx) {
+inline void Location::infect(int personIdx) const {
   int peoplePartitionIdx = getPartitionIndex(
     personIdx,
     numPeople,

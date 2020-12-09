@@ -33,22 +33,22 @@ class Location {
     // onDeparture branches to one of the two other functions
     inline void onDeparture(
       std::default_random_engine *generator,
-      DiseaseModel *diseaseModel,
-      Event departure
+      const DiseaseModel *diseaseModel,
+      const Event& departure
     );
     void onSusceptibleDeparture(
       std::default_random_engine *generator,
-      DiseaseModel *diseaseModel,
-      Event departure
+      const DiseaseModel *diseaseModel,
+      const Event& departure
     );
     void onInfectiousDeparture(
       std::default_random_engine *generator,
-      DiseaseModel *diseaseModel,
-      Event departure
+      const DiseaseModel *diseaseModel,
+      const Event& departure
     );
     
     // Simple helper function which infects a given person
-    inline void infect(int personIdx);
+    inline void infect(int personIdx) const;
   
   public:
     // just use default constructors
@@ -66,7 +66,7 @@ class Location {
     // any people who have been infected
     void processEvents(
       std::default_random_engine *generator,
-      DiseaseModel *diseaseModel
+      const DiseaseModel *diseaseModel
     );
 };
   
