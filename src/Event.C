@@ -24,7 +24,7 @@ bool Event::operator>(const Event& rhs) const {
   return personState > rhs.personState;
 }
 
-bool Event::greaterPartner(Event e0, Event e1) {
+bool Event::greaterPartner(const Event& e0, const Event& e1) {
   if (e0.partnerTime != e1.partnerTime) {
     return e0.partnerTime > e1.partnerTime;
   }
