@@ -22,7 +22,9 @@ class ContactModel {
     // Returns whether or not two people at the same location make contact
     // (will probably need to mess with the arguments once we start
     // implementing more complex models)
-    bool madeContact(Event susceptibleEvent, Event infectiousEvent);
+    bool madeContact(
+      const Event& susceptibleEvent, const Event& infectiousEvent
+    );
 };
 
 #endif //__ContactModel_H__

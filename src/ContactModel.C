@@ -14,6 +14,9 @@ void ContactModel::setGenerator(std::default_random_engine *generator) {
   this->generator = generator;
 }
 
-bool ContactModel::madeContact(Event susceptibleEvent, Event infectiousEvent) {
+bool ContactModel::madeContact(
+  const Event& susceptibleEvent,
+  const Event& infectiousEvent
+) {
   return unitDistrib(*generator) < CONTACT_PROBABILITY;
 }
