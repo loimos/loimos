@@ -18,6 +18,7 @@
 #define INFECTION_PERIOD 4
 
 // Event types
+using EventType = char;
 #define ARRIVAL 0
 #define DEPARTURE 1
 

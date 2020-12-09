@@ -76,14 +76,14 @@ DiseaseModel::DiseaseModel(std::string pathToModel) {
  * Returns:
  *      Index of that state in the loaded disease model.
  */
-int DiseaseModel::getIndexOfState(std::string stateLabel) {
+int DiseaseModel::getIndexOfState(std::string stateLabel) const {
   return state_lookup->at(stateLabel);
 }
 
 /**
  * Returns the name of the state at a given index
  */
-std::string DiseaseModel::lookupStateName(int state) {
+std::string DiseaseModel::lookupStateName(int state) const {
   return model->disease_state(state).state_label();
 }
 
@@ -96,9 +96,11 @@ std::string DiseaseModel::lookupStateName(int state) {
  * Returns:
  *  The next state to transition to as an int.
  */
-std::tuple<int, int> DiseaseModel::transitionFromState(int fromState,
-                                  std::string interventionStategy,
-                                  std::default_random_engine *generator) {
+std::tuple<int, int> DiseaseModel::transitionFromState(
+  int fromState,
+  std::string interventionStategy,
+  std::default_random_engine *generator
+) const {
   // Get current state and next transition set to use.
   const loimos::proto::DiseaseModel_DiseaseState *curr_state =
       &model->disease_state(fromState);
@@ -133,8 +135,10 @@ std::tuple<int, int> DiseaseModel::transitionFromState(int fromState,
 /**
  * Calculates the time to spend in the next state.
  */
-Time DiseaseModel::getTimeInNextState(int nextState,
-                                      std::default_random_engine *generator) {
+Time DiseaseModel::getTimeInNextState(
+  int nextState,
+  std::default_random_engine *generator
+) const {
   const loimos::proto::DiseaseModel_DiseaseState *diseaseState =
       &model->disease_state(nextState);
   if (diseaseState->has_fixed()) {
@@ -155,28 +159,30 @@ Time DiseaseModel::getTimeInNextState(int nextState,
 }
 
 /** Converts a protobuf time definition into a seconds as an integer */
-Time DiseaseModel::timeDefToSeconds(Time_Def time) {
+Time DiseaseModel::timeDefToSeconds(Time_Def time) const {
   return (time.days() * 24 + time.hours()) * 3600 + time.minutes() * 60;
 }
 
 /** Returns the total number of disease states */
-int DiseaseModel::getNumberOfStates() { return model->disease_state_size(); }
+int DiseaseModel::getNumberOfStates() const {
+  return model->disease_state_size();
+}
 
 /** Returns the initial starting state */
-int DiseaseModel::getHealthyState() { return healthyState; }
+int DiseaseModel::getHealthyState() const { return healthyState; }
 
 /** Returns if someone is infectious */
-bool DiseaseModel::isInfectious(int personState) { 
+bool DiseaseModel::isInfectious(int personState) const { 
   return model->disease_state(personState).infectivity() != 0.0;
 }
 
 /** Returns if someone is susceptible */
-bool DiseaseModel::isSusceptible(int personState) { 
+bool DiseaseModel::isSusceptible(int personState) const {
   return model->disease_state(personState).susceptibility() != 0.0;
 }
 
 /** Returns the name of the person's state, as a C-style string */
-const char * DiseaseModel::getStateLabel(int personState) {
+const char * DiseaseModel::getStateLabel(int personState) const {
   return model->disease_state(personState).state_label().c_str();
 }
 
@@ -184,7 +190,10 @@ const char * DiseaseModel::getStateLabel(int personState) {
  * Returns the natural log of the probability of a suspectible person not being
  * infected by an infectious person after a period of time
  */
-double DiseaseModel::getLogProbNotInfected(Event susceptibleEvent, Event infectiousEvent) {
+double DiseaseModel::getLogProbNotInfected(
+  Event susceptibleEvent,
+  Event infectiousEvent
+) const {
   
   // The chance of being infected in a unit of time depends on...
   double baseProb = 1.0 -

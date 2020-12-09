@@ -48,8 +48,9 @@ void Locations::ReceiveVisitMessages(
   );
 
   // Wrap vist info...
-  Event arrival { personIdx, personState, visitStart, ARRIVAL };
-  Event departure { personIdx, personState, visitEnd, DEPARTURE };
+  Event arrival { ARRIVAL, personIdx, personState, visitStart };
+  Event departure { DEPARTURE, personIdx, personState, visitEnd };
+  Event::pair(&arrival, &departure);
 
   // ...and queue it up at the appropriate location
   locations[localLocIdx].addEvent(arrival);
@@ -63,32 +64,6 @@ void Locations::ComputeInteractions() {
 
   // traverses list of locations
   for (auto loc : locations) {
-    std::unordered_set<int> justInfected =
-      loc.processEvents(&generator, diseaseModel);
-    
-    for (int personIdx : justInfected) {
-      infect(personIdx);
-    }
-    justInfected.empty();
+    loc.processEvents(&generator, diseaseModel);
   }
-}
-
-// Simple helper function which infects a given person with a given
-// probability (we handle this here rather since this is a chare class,
-// and so we have access to peopleArray and the like)
-inline void Locations::infect(int personIdx) {
-  int peoplePartitionIdx = getPartitionIndex(
-    personIdx,
-    numPeople,
-    numPeoplePartitions
-  );
-
-  peopleArray[peoplePartitionIdx].ReceiveInfections(personIdx);
-  /*
-  CkPrintf(
-    "sending infection message to person %d in partition %d\r\n",
-    personIdx,
-    peoplePartitionIdx
-  );
-  */
 }

@@ -14,6 +14,7 @@
 #include <random>
 #include <set>
 #include <cmath>
+#include <algorithm>
 
 std::uniform_real_distribution<> Location::unitDistrib(0,1);
 
@@ -21,13 +22,12 @@ void Location::addEvent(Event e) {
   events.push(e);
 }
 
-std::unordered_set<int> Location::processEvents(
+void Location::processEvents(
   std::default_random_engine *generator,
-  DiseaseModel *diseaseModel
+  const DiseaseModel *diseaseModel
 ) {
   std::vector<Event> *arrivals;
   Event curEvent;
-  justInfected.empty();
 
   while (!events.empty()) {
     curEvent = events.top();
@@ -47,35 +47,23 @@ std::unordered_set<int> Location::processEvents(
 
     if (ARRIVAL == curEvent.type) {
       arrivals->push_back(curEvent);
+      std::push_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
 
     } else if (DEPARTURE == curEvent.type) {
       // Remove the arrival event corresponding to this departure 
-      int curIdx = curEvent.personIdx;
-      arrivals->erase(
-        std::remove_if(
-          arrivals->begin(),
-          arrivals->end(),
-          [curIdx](Event e) {
-            return e.personIdx == curIdx;
-          }
-        ), arrivals->end()
-      );
+      std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
+      arrivals->pop_back();
 
       onDeparture(generator, diseaseModel, curEvent);
     }
   }
-
-  // The caller should handle actually sending out infection messages, since,
-  // as a non-chare class, we don't have access to global chare arrays and the
-  // like here
-  return justInfected;
 }
 
 // Simple dispatch to the susceptible/infectious depature handlers
 inline void Location::onDeparture(
   std::default_random_engine *generator,
-  DiseaseModel *diseaseModel,
-  Event departure
+  const DiseaseModel *diseaseModel,
+  const Event& departure
 ) {
   if (diseaseModel->isSusceptible(departure.personState)) {
     onSusceptibleDeparture(generator, diseaseModel, departure);
@@ -87,8 +75,8 @@ inline void Location::onDeparture(
 
 void Location::onSusceptibleDeparture(
   std::default_random_engine *generator,
-  DiseaseModel *diseaseModel,
-  Event susceptibleDeparture
+  const DiseaseModel *diseaseModel,
+  const Event& susceptibleDeparture
 ) {
   double logProbNotInfected = 0.0;
   for (Event infectiousArrival: infectiousArrivals) {
@@ -104,14 +92,14 @@ void Location::onSusceptibleDeparture(
   double prob = exp(logProbNotInfected);
   double roll = unitDistrib(*generator);
   if (roll > prob) {
-    justInfected.insert(susceptibleDeparture.personIdx);
+    infect(susceptibleDeparture.personIdx);
   }
 }
 
 void Location::onInfectiousDeparture(
   std::default_random_engine *generator,
-  DiseaseModel *diseaseModel,
-  Event infectiousDeparture
+  const DiseaseModel *diseaseModel,
+  const Event& infectiousDeparture
 ) {
 
   // Each susceptible person has a chance of being infected by any given
@@ -125,7 +113,27 @@ void Location::onInfectiousDeparture(
 
     double roll = unitDistrib(*generator);
     if (roll > prob) { 
-      justInfected.insert(susceptibleArrival.personIdx);
+      infect(susceptibleArrival.personIdx);
     }
   } 
+}
+
+// Simple helper function which infects a given person with a given
+// probability (we handle this here rather since this is a chare class,
+// and so we have access to peopleArray and the like)
+inline void Location::infect(int personIdx) const {
+  int peoplePartitionIdx = getPartitionIndex(
+    personIdx,
+    numPeople,
+    numPeoplePartitions
+  );
+
+  peopleArray[peoplePartitionIdx].ReceiveInfections(personIdx);
+  /*
+  CkPrintf(
+    "sending infection message to person %d in partition %d\r\n",
+    personIdx,
+    peoplePartitionIdx
+  );
+  */
 }
