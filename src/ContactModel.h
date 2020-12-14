@@ -3,6 +3,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
+
 #ifndef __ContactModel_H__
 #define __ContactModel_H__
 
