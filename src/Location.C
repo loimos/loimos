@@ -148,17 +148,22 @@ inline void Location::sendInteractions(int personIdx) {
     numPeoplePartitions
   );
 
-  // try sending STL vector directly
   peopleArray[peoplePartitionIdx].ReceiveInteractions(
     personIdx,
     interactions[personIdx]
   );
 
-  /*
+  /*  
   CkPrintf(
-    "sending infection message to person %d in partition %d\r\n",
+    "sending %d interactions to person %d in partition %d\r\n",
+    (int) interactions[personIdx].size(),
     personIdx,
     peoplePartitionIdx
   );
   */
+  
+  // Free up space where we were storing interactions data. This also prevents
+  // interactions from being sent multiple times if this person has multiple
+  // visits to this location
+  interactions.erase(personIdx);
 }
