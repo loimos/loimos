@@ -6,6 +6,8 @@
 mainmodule loimos {
   include "Interaction.h";
 
+  include "vector";
+
   readonly CProxy_Main mainProxy;
   readonly CProxy_People peopleArray;
   readonly CProxy_Locations locationsArray;
@@ -81,8 +83,7 @@ mainmodule loimos {
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
     entry void ReceiveInteractions(
       int personIdx,
-      int numInteractions,
-      Interaction interactions[numInteractions]
+      const std::vector<Interaction> &interactions
     );
     entry void EndofDayStateUpdate(); // contribute call to ReceiveStats
   };

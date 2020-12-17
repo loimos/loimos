@@ -149,12 +149,11 @@ inline void Location::sendInteractions(int personIdx) {
   );
 
   // try sending STL vector directly
-  std::vector<Interaction> &personInteractions = interactions[personIdx];
   peopleArray[peoplePartitionIdx].ReceiveInteractions(
     personIdx,
-    (int) personInteractions.size(),
-    &personInteractions[0]
+    interactions[personIdx]
   );
+
   /*
   CkPrintf(
     "sending infection message to person %d in partition %d\r\n",

@@ -44,8 +44,7 @@ class People : public CBase_People {
     void SendVisitMessages(); 
     void ReceiveInteractions(
       int personIdx,
-      int numInteractions,
-      Interaction *interactions
+      const std::vector<Interaction> &interactions
     );
     void EndofDayStateUpdate();
 };

@@ -121,22 +121,22 @@ void People::SendVisitMessages() {
 
 void People::ReceiveInteractions(
   int personIdx,
-  int numInteractions,
-  Interaction *interactions
+  const std::vector<Interaction> &interactions
 ) {
-  // updating state of a person
   int localIdx = getLocalIndex(
     personIdx,
     numPeople,
     numPeoplePartitions
   );
 
+  // Just concatenate the interaction lists so that we can process all of the
+  // interactions at the end of the day
   Person &person = people[localIdx];
-  // Do a single allocation to adjust the capacity of the vector
-  person.interactions.reserve(person.interactions.size() + numInteractions);
-  for (int i = 0; i < numInteractions; ++i) {
-    person.interactions.push_back(interactions[i]);
-  }
+  person.interactions.insert(
+    person.interactions.end(),
+    interactions.begin(),
+    interactions.end()
+  );
 }
 
 void People::EndofDayStateUpdate() {
@@ -145,7 +145,6 @@ void People::EndofDayStateUpdate() {
   for (Person &person: people) {
     ProcessInteractions(person);
   }
-  //ProcessInteractions();
 
   // Handle state transitions at the end of the day.
   int totalStates = diseaseModel->getNumberOfStates();
