@@ -73,13 +73,18 @@ void Location::onSusceptibleDeparture(
   const DiseaseModel *diseaseModel,
   const Event& susceptibleDeparture
 ) {
-  double logProbNotInfected = 0.0;
+  // Each infectious person at this location might have infected this
+  // susceptible person
   for (Event infectiousArrival: infectiousArrivals) {
     registerInteraction(
       diseaseModel,
       susceptibleDeparture,
       infectiousArrival,
-      infectiousArrival.scheduledTime,
+      // The start time is whichever arrival happened later
+      std::max(
+        infectiousArrival.scheduledTime,
+        susceptibleDeparture.partnerTime
+      ),
       susceptibleDeparture.scheduledTime
     ); 
   }
@@ -91,15 +96,18 @@ void Location::onInfectiousDeparture(
   const DiseaseModel *diseaseModel,
   const Event& infectiousDeparture
 ) {
-
-  // Each susceptible person has a chance of being infected by any given
+  // Each susceptible person at this location might have been infected by this
   // infectious person
   for (Event susceptibleArrival : susceptibleArrivals) {
     registerInteraction(
       diseaseModel,
       susceptibleArrival,
       infectiousDeparture,
-      susceptibleArrival.scheduledTime,
+      // The start time is whichever arrival happened later
+      std::max(
+        susceptibleArrival.scheduledTime,
+        infectiousDeparture.partnerTime
+      ),
       infectiousDeparture.scheduledTime
     ); 
   } 
@@ -140,6 +148,7 @@ inline void Location::sendInteractions(int personIdx) {
     numPeoplePartitions
   );
 
+  // try sending STL vector directly
   std::vector<Interaction> &personInteractions = interactions[personIdx];
   peopleArray[peoplePartitionIdx].ReceiveInteractions(
     personIdx,
