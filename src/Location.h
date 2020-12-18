@@ -55,8 +55,8 @@ class Location {
     // and add it to the approriate list for the susceptible person
     inline void registerInteraction(
       const DiseaseModel *diseaseModel,
-      Event susceptibleEvent,
-      Event infectiousEvent,
+      const Event &susceptibleEvent,
+      const Event &infectiousEvent,
       int startTime,
       int endTime
     );

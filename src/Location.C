@@ -75,7 +75,7 @@ void Location::onSusceptibleDeparture(
 ) {
   // Each infectious person at this location might have infected this
   // susceptible person
-  for (Event infectiousArrival: infectiousArrivals) {
+  for (const Event &infectiousArrival: infectiousArrivals) {
     registerInteraction(
       diseaseModel,
       susceptibleDeparture,
@@ -98,7 +98,7 @@ void Location::onInfectiousDeparture(
 ) {
   // Each susceptible person at this location might have been infected by this
   // infectious person
-  for (Event susceptibleArrival : susceptibleArrivals) {
+  for (const Event &susceptibleArrival : susceptibleArrivals) {
     registerInteraction(
       diseaseModel,
       susceptibleArrival,
@@ -115,8 +115,8 @@ void Location::onInfectiousDeparture(
 
 inline void Location::registerInteraction(
   const DiseaseModel *diseaseModel,
-  Event susceptibleEvent,
-  Event infectiousEvent,
+  const Event &susceptibleEvent,
+  const Event &infectiousEvent,
   int startTime,
   int endTime
 ) {
