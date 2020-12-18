@@ -6,6 +6,22 @@
 
 #include "loimos.decl.h"
 #include "Interaction.h"
+  
+Interaction::Interaction(
+  double propensity,
+  int infectiousIdx,
+  int infectiousState,
+  int startTime,
+  int endTime
+) :
+  propensity(propensity),
+  infectiousIdx(infectiousIdx),
+  infectiousState(infectiousState),
+  startTime(startTime),
+  endTime(endTime)
+{}
+
+Interaction::Interaction() {}
 
 void Interaction::pup(PUP::er &p) {
   p|propensity;

@@ -29,6 +29,18 @@ struct Interaction {
   
   // Lets us send potential infections via charm++
   void pup(PUP::er &p);
+
+  // We need this in order to emplace Interactions...
+  Interaction(
+    double propensity,
+    int infectiousIdx,
+    int infectiousState,
+    int startTime,
+    int endTime
+  );
+  // ...and we need to do this explicitly this since we defined a non-default
+  // constructor
+  Interaction();
 };
 
 #endif // __INTERACTION_H__
