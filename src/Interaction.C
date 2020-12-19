@@ -21,8 +21,6 @@ Interaction::Interaction(
   endTime(endTime)
 {}
 
-Interaction::Interaction() {}
-
 void Interaction::pup(PUP::er &p) {
   p|propensity;
   p|infectiousIdx;

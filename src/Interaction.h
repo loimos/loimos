@@ -38,9 +38,12 @@ struct Interaction {
     int startTime,
     int endTime
   );
-  // ...and we need to do this explicitly this since we defined a non-default
-  // constructor
-  Interaction();
+  // ...and we need to define these explicitly since we added a constructor
+  Interaction() = default;
+  Interaction(const Interaction&) = default;
+  Interaction(Interaction&&) = default;
+  Interaction &operator = (const Interaction&) = default;
+  Interaction &operator = (Interaction&&) = default;
 };
 
 #endif // __INTERACTION_H__
