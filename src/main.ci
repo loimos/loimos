@@ -13,6 +13,7 @@ mainmodule loimos {
   readonly int numPeoplePartitions;
   readonly int numLocationPartitions;
   readonly int numDays;
+  readonly std::string scenarioPath;
 
   mainchare Main {
     entry Main(CkArgMsg*);
@@ -88,6 +89,6 @@ mainmodule loimos {
   };
 
   nodegroup DiseaseModel {
-      entry DiseaseModel(std::string pathToModel);
+      entry DiseaseModel();
   };
 };

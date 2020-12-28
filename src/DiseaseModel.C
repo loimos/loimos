@@ -18,6 +18,7 @@
 #include <random>
 #include <limits>
 
+// TODO: Implement using a trie
 using NameIndexLookupType = std::unordered_map<std::string, int>;
 
 // This is currently used to adjust the infection probability so that
@@ -30,11 +31,11 @@ const double INFECTION_PROBABILITY = 1.0 / DAY_LENGTH;
  * Constructor which loads in disease file from text proto file.
  * On failure, aborts the entire simulation.
  */
-DiseaseModel::DiseaseModel(std::string pathToModel) {
+DiseaseModel::DiseaseModel() {
   // Load in text proto definition.
   // TODO(iancostello): Load directly without string.
   model = new loimos::proto::DiseaseModel();
-  std::ifstream t(pathToModel);
+  std::ifstream t((scenarioPath + "disease.textproto").c_str());
   std::string str((std::istreambuf_iterator<char>(t)),
                   std::istreambuf_iterator<char>());
   if (!google::protobuf::TextFormat::ParseFromString(str, model)) {
@@ -67,6 +68,24 @@ DiseaseModel::DiseaseModel(std::string pathToModel) {
 
   // Init commonly used states.
   healthyState = getIndexOfState("uninfected");
+
+  // Setup other objects
+  personDef = new loimos::proto::CSVDefinition();
+  std::ifstream tPerson(scenarioPath + "people.textproto");
+  std::string strPerson((std::istreambuf_iterator<char>(tPerson)),
+                  std::istreambuf_iterator<char>());
+  if (!google::protobuf::TextFormat::ParseFromString(strPerson, personDef)) {
+    CkAbort("Could not parse protobuf!");
+  }
+  tPerson.close();
+  locationDef = new loimos::proto::CSVDefinition();
+  std::ifstream tLocation(scenarioPath + "locations.textproto");
+  std::string strLocation((std::istreambuf_iterator<char>(tLocation)),
+                  std::istreambuf_iterator<char>());
+  if (!google::protobuf::TextFormat::ParseFromString(strLocation, locationDef)) {
+    CkAbort("Could not parse protobuf!");
+  }
+  tLocation.close();
 }
 
 /**

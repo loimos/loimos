@@ -18,12 +18,13 @@
 /* readonly */ int numLocations;
 /* readonly */ int numPeoplePartitions;
 /* readonly */ int numLocationPartitions;
+/* readonly */ std::string scenarioPath;
 /* readonly */ int numDays;
 
 Main::Main(CkArgMsg* msg) {
   // parsing command line arguments
   if(msg->argc < 7){
-    CkPrintf("Error, usage %s <people> <locations> <people subsets> <location subsets> <days> <path_to_disease_model>\n", msg->argv[0]);
+    CkPrintf("Error, usage %s <people> <locations> <people subsets> <location subsets> <days> <scenario_folder>\n", msg->argv[0]);
     CkExit();
   }
   numPeople = atoi(msg->argv[1]);
@@ -31,7 +32,7 @@ Main::Main(CkArgMsg* msg) {
   numPeoplePartitions = atoi(msg->argv[3]);
   numLocationPartitions = atoi(msg->argv[4]);
   numDays = atoi(msg->argv[5]);
-  std::string pathToDiseaseModel = msg->argv[6];
+  scenarioPath = std::string(msg->argv[6]);
 
   // setup main proxy
   CkPrintf("Running Loimos on %d PEs with %d people, %d locations, %d people subsets, %d location subsets, and %d days\n", CkNumPes(), numPeople, numLocations, numPeoplePartitions, numLocationPartitions, numDays);
@@ -39,7 +40,7 @@ Main::Main(CkArgMsg* msg) {
 
   // Instantiate DiseaseModel nodegroup (One for each physical processor).
   CkPrintf("Loading diseaseModel.\n");
-  globDiseaseModel = CProxy_DiseaseModel::ckNew(pathToDiseaseModel);
+  globDiseaseModel = CProxy_DiseaseModel::ckNew();
   diseaseModel = globDiseaseModel.ckLocalBranch();
   accumulated.resize(diseaseModel->getNumberOfStates(), 0);
   delete msg;

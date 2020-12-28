@@ -28,17 +28,23 @@ Locations::Locations() {
     numLocationPartitions,
     thisIndex
   );
-  locations.resize(numLocalLocations);
   
   // Init disease states.
   diseaseModel = globDiseaseModel.ckLocalBranch();
+
+  // Init local 
+  int numAttributesPerLocation = 
+    DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
+  for (int p = 0; p < numLocalLocations; p++) {
+    locations.push_back(new Location(numAttributesPerLocation));
+  }
 
   // Load in location information
   int startingLineIndex = getGlobalIndex(0, thisIndex, numLocations, numLocationPartitions, LOCATION_OFFSET) - LOCATION_OFFSET;
   int endingLineIndex = startingLineIndex + numLocalLocations;
   std::string line;
 
-  std::ifstream f("sample_input/locations.csv");
+  std::ifstream f(scenarioPath + "locations.csv");
   if (!f) {
     CkAbort("Could not open person data input.");
   }
@@ -47,37 +53,12 @@ Locations::Locations() {
   for (int i = 0; i <= startingLineIndex; i++) {
     std::getline(f, line);
   }
-    
-  for (int i = 0; i < numLocalLocations; i++) {
-    std::getline(f, line);
-    loadLocationFromCSV(i, &line);
-  }
+  DataReader<Location *>::readData(&f, diseaseModel->locationDef, &locations);
+  f.close();
 
   // Seed random number generator via branch ID for reproducibility.
   generator.seed(thisIndex);
 }
-
-void Locations::loadLocationFromCSV(int locationIdx, std::string *data) {
-  int attr_index = 0;
-  int left_comma = 0;
-
-  // TODO general purpose processor.
-  for (int c = 0; c < data->length(); c++) {
-    if (data->at(c) == ',') {
-      // Completed attribute.
-      std::string sub_str = data->substr(left_comma, c);
-
-      //TODO HANDLE THESE ATTRIBUTES WITH PROTOBUF
-      if (attr_index == 0) {
-        locations[locationIdx].unique_id = std::stoi(sub_str);
-      }
-
-      left_comma = c + 1;
-      attr_index += 1;
-    }
-  }
-}
-
 
 void Locations::ReceiveVisitMessages(
   int locationIdx,
@@ -101,8 +82,8 @@ void Locations::ReceiveVisitMessages(
   Event departure { personIdx, personState, visitEnd, DEPARTURE };
 
   // ...and queue it up at the appropriate location
-  locations[localLocIdx].addEvent(arrival);
-  locations[localLocIdx].addEvent(departure);
+  locations[localLocIdx]->addEvent(arrival);
+  locations[localLocIdx]->addEvent(departure);
 }
 
 void Locations::ComputeInteractions() {
@@ -113,7 +94,7 @@ void Locations::ComputeInteractions() {
   // traverses list of locations
   for (auto loc : locations) {
     std::unordered_set<int> justInfected =
-      loc.processEvents(&generator, diseaseModel);
+      loc->processEvents(&generator, diseaseModel);
     
     for (int personIdx : justInfected) {
       infect(personIdx);

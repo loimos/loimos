@@ -17,6 +17,22 @@
 
 std::uniform_real_distribution<> Location::unitDistrib(0,1);
 
+Location::Location(int numAttributes) {
+  this->locationData = (union Data *) malloc(numAttributes * sizeof(union Data));
+}
+
+Location::~Location() {
+  free(this->locationData);
+}
+
+void Location::setUniqueId(int idx) {
+    this->uniqueId = idx;
+}
+
+union Data *Location::getDataField() {
+    return this->locationData;
+}
+
 void Location::addEvent(Event e) {
   events.push(e);
 }

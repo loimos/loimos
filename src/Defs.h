@@ -40,6 +40,7 @@ extern /* readonly */ int numLocations;
 extern /* readonly */ int numPeoplePartitions;
 extern /* readonly */ int numLocationPartitions;
 extern /* readonly */ int numDays;
+extern /* readonly */ std::string scenarioPath;
 
 int getNumElementsPerPartition(int numElements, int numPartitions);
 

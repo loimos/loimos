@@ -9,6 +9,7 @@ int getDay(int time_in_seconds);
 /** 
  * This file preprocesses a given input file.
  */ 
+// TODO change this.
 int main(int argc, char **argv) {
     /**
      * Assumptions. 

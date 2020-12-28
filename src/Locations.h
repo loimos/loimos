@@ -9,7 +9,6 @@
 
 #include "Location.h" 
 #include "DiseaseModel.h"
-#include "Location.h" 
 
 #include <vector>
 #include <set>
@@ -17,7 +16,7 @@
 class Locations : public CBase_Locations {
   private:
     int numLocalLocations;
-    std::vector<Location> locations;
+    std::vector<Location *> locations;
     std::default_random_engine generator;
     DiseaseModel *diseaseModel;
     
