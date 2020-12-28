@@ -1,0 +1,60 @@
+field {
+    field_name: "hid"
+    ignore {}
+}
+field {
+    field_name: "person_id"
+    uniqueId {}
+}
+field {
+    field_name: "serialno"
+    ignore {}
+}
+field {
+    field_name: "person_number"
+    ignore {}
+}
+field {
+    field_name: "rec_type"
+    ignore {}
+}
+field {
+    field_name: "age"
+    b10int {}
+}
+field {
+    field_name: "relationship"
+    ignore {}
+}
+field {
+    field_name: "sex"
+    b10int {}
+}
+field {
+    field_name: "school_enrollment"
+    ignore {}
+}
+field {
+    field_name: "grade_level_attending"
+    ignore {}
+}
+field {
+    field_name: "employment_status"
+    ignore {}
+}
+field {
+    field_name: "occupation_socp"
+    ignore {}
+}
+field {
+    field_name: "race"
+    ignore {}
+}
+field {
+    field_name: "hispanic"
+    ignore {}
+}
+field {
+    field_name: "designation"
+    ignore {}
+}

@@ -1,0 +1,20 @@
+field {
+    field_name: "person_id"
+    uniqueId {}
+}
+field {
+    field_name: "home_id"
+    foreignId {}
+}
+field {
+    field_name: "preexisting_condition"
+    bool {}
+}
+field {
+    field_name: "occupation"
+    ignore {}
+}
+field {
+    field_name: "age"
+    b10int {}
+}

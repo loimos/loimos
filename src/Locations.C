@@ -28,12 +28,35 @@ Locations::Locations() {
     numLocationPartitions,
     thisIndex
   );
-  locations.resize(numLocalLocations);
   
   // Init disease states
   diseaseModel = globDiseaseModel.ckLocalBranch();
 
-  // Seed random number generator via branch ID for reproducibility
+  // Init local 
+  int numAttributesPerLocation = 
+    DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
+  for (int p = 0; p < numLocalLocations; p++) {
+    locations.push_back(new Location(numAttributesPerLocation));
+  }
+
+  // Load in location information
+  int startingLineIndex = getGlobalIndex(0, thisIndex, numLocations, numLocationPartitions, LOCATION_OFFSET) - LOCATION_OFFSET;
+  int endingLineIndex = startingLineIndex + numLocalLocations;
+  std::string line;
+
+  std::ifstream f(scenarioPath + "locations.csv");
+  if (!f) {
+    CkAbort("Could not open person data input.");
+  }
+  
+  // TODO (iancostello): build an index at preprocessing and seek. 
+  for (int i = 0; i <= startingLineIndex; i++) {
+    std::getline(f, line);
+  }
+  DataReader<Location *>::readData(&f, diseaseModel->locationDef, &locations);
+  f.close();
+
+  // Seed random number generator via branch ID for reproducibility.
   generator.seed(thisIndex);
   // Init contact model
   contactModel = new ContactModel();
@@ -63,8 +86,8 @@ void Locations::ReceiveVisitMessages(
   Event::pair(&arrival, &departure);
 
   // ...and queue it up at the appropriate location
-  locations[localLocIdx].addEvent(arrival);
-  locations[localLocIdx].addEvent(departure);
+  locations[localLocIdx]->addEvent(arrival);
+  locations[localLocIdx]->addEvent(departure);
 }
 
 void Locations::ComputeInteractions() {

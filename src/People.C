@@ -9,6 +9,7 @@
 #include "Defs.h"
 #include "Interaction.h"
 #include "DiseaseModel.h"
+#include "Person.h"
 #include "Attributes.h"
 
 #include <tuple>
@@ -38,15 +39,20 @@ People::People() {
   );
 
   // Make a default person and populate people with copies
-  Person tmp { 0, healthyState, std::numeric_limits<Time>::max(), std::vector<uint32_t>() };
-  people.resize(numLocalPeople, tmp);
+  int numAttributesPerPerson = 
+    DataReader<Person>::getNonZeroAttributes(diseaseModel->personDef);
+  for (int p = 0; p < numLocalPeople; p++) {
+    people.push_back(new Person(numAttributesPerPerson,
+      healthyState, std::numeric_limits<Time>::max()
+    ));
+  }
 
   // Load in people data from file.
   int startingLineIndex = getGlobalIndex(0, thisIndex, numPeople, numPeoplePartitions, PERSON_OFFSET) - PERSON_OFFSET;
   int endingLineIndex = startingLineIndex + numLocalPeople;
   
   std::string line;
-  std::ifstream f("sample_input/people.csv");
+  std::ifstream f(scenarioPath + "people.csv");
   if (!f) {
     CkAbort("Could not open person data input.");
   }
@@ -55,14 +61,12 @@ People::People() {
   for (int i = 0; i <= startingLineIndex; i++) {
     std::getline(f, line);
   }
-    
-  for (int i = 0; i < numLocalPeople; i++) {
-    std::getline(f, line);
-    loadPersonFromCSV(i, &line);
-  }
+
+  // Read in from remote file.
+  DataReader<Person *>::readData(&f, diseaseModel->personDef, &people);
 
   // Open
-  activity_stream = new std::ifstream("sample_input/interactions.csv", std::ios::binary);
+  activity_stream = new std::ifstream(scenarioPath + "interactions.csv", std::ios::binary);
   if (!activity_stream->is_open()) {
     CkAbort("Could not open activity input.");
   }
@@ -70,8 +74,8 @@ People::People() {
   // Load preprocessing meta data.
   std::ifstream data_stream("data_index_activity.csv");
   for (int c = 0; c < numLocalPeople; c++) {
-    std::vector<uint32_t> *data_pos = &people[c].interactionsByDay;
-    int curr_id = people[c].unique_id;
+    std::vector<uint32_t> *data_pos = &people[c]->interactionsByDay;
+    int curr_id = people[c]->uniqueId;
     
     // Search for line.
     getline(data_stream, line);
@@ -96,41 +100,13 @@ People::People() {
   // Randomly infect people to seed the initial outbreak
   for (Person &person: people) {
     if (unitDistrib(generator) < INITIAL_INFECTIOUS_PROBABILITY) {
-      person.state = INFECTIOUS;
-      person.secondsLeftInState = INFECTION_PERIOD;
+      people[i]->state = INFECTIOUS;
+      people[i]->secondsLeftInState = INFECTION_PERIOD;
       newCases++;
     }
   }
 
   CkPrintf("People chare %d with %d people\n",thisIndex,numLocalPeople);
-}
-
-void People::loadPersonFromCSV(int personIdx, std::string *data) {
-  int attr_index = 0;
-  int left_comma = 0;
-
-  // TODO general purpose processor.
-  for (int c = 0; c < data->length(); c++) {
-    if (data->at(c) == ',') {
-      // Completed attribute.
-      std::string sub_str = data->substr(left_comma, c);
-
-      //TODO HANDLE THESE ATTRIBUTES WITH PROTOBUF
-      if (attr_index == 1) {
-        // TODO remove debug
-        // if (personIdx == 0)
-        //   CkPrintf("ID %d\n", std::stoi(sub_str));
-        try {
-          people[personIdx].unique_id = std::stoi(sub_str);
-        } catch (const std::exception& e) {
-          CkPrintf("Could not unpack parse %s on id %d\n", sub_str.c_str(), personIdx);
-        }
-      }
-
-      left_comma = c + 1;
-      attr_index += 1;
-    }
-  }
 }
 
 /**
@@ -158,7 +134,7 @@ void People::SendVisitMessages() {
   // Send of activities for each person.
   for (int localPersonId = 0; localPersonId < numLocalPeople; localPersonId++) {
     // Seek to correct position in file.
-    uint32_t seek_pos = people[localPersonId].interactionsByDay[day];
+    uint32_t seek_pos = people[localPersonId]->interactionsByDay[day];
     if (seek_pos == 0xFFFFFFFF)
       continue;
 
@@ -167,7 +143,7 @@ void People::SendVisitMessages() {
   
     while (!activity_stream->eof() 
         && getIntAttribute(&line, 4) < next_day_secs
-        && getIntAttribute(&line, 1) == people[localPersonId].unique_id) {
+        && getIntAttribute(&line, 1) == people[localPersonId]->uniqueId) {
       int person_id = getIntAttribute(&line, 1);
       int location_id = getIntAttribute(&line, 2);
       int start_time = getIntAttribute(&line, 4);
@@ -186,7 +162,7 @@ void People::SendVisitMessages() {
       locationsArray[locationSubset].ReceiveVisitMessages(
         location_id,
         person_id,
-        people[localPersonId].state,
+        people[localPersonId]->state,
         start_time,
         start_time + duration
       );
@@ -210,8 +186,8 @@ void People::ReceiveInteractions(
 
   // Just concatenate the interaction lists so that we can process all of the
   // interactions at the end of the day
-  Person &person = people[localIdx];
-  person.interactions.insert(
+  Person *person = people[localIdx];
+  person->interactions.insert(
     person.interactions.cend(),
     interactions.cbegin(),
     interactions.cend()
@@ -222,22 +198,22 @@ void People::EndofDayStateUpdate() {
   // Handle state transitions at the end of the day.
   int totalStates = diseaseModel->getNumberOfStates();
   std::vector<int> stateSummary(totalStates, 0);
-  for (Person &person: people) {
+  for (Person *person: people) {
     
     ProcessInteractions(person);
     
-    int currState = person.state;
-    int secondsLeftInState = person.secondsLeftInState;
+    int currState = person->state;
+    int secondsLeftInState = person->secondsLeftInState;
 
     // TODO(iancostello): Move into start of day for visits.
     // Transition to next state or mark the passage of time
     secondsLeftInState -= DAY_LENGTH;
     if (secondsLeftInState <= 0) {
-      std::tie(person.state, person.secondsLeftInState) = 
+      std::tie(person->state, person->secondsLeftInState) = 
         diseaseModel->transitionFromState(currState, "untreated", &generator);
     
     } else {
-      person.secondsLeftInState = secondsLeftInState;
+      person->secondsLeftInState = secondsLeftInState;
     }
 
     stateSummary[currState]++;

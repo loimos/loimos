@@ -13,6 +13,8 @@
 
 #include "Event.h"
 
+#include "data/data.pb.h"
+
 #include <random>
 
 using Time = int32_t;
@@ -29,7 +31,9 @@ class DiseaseModel : public CBase_DiseaseModel {
         Time timeDefToSeconds(Time_Def time) const;
         int healthyState;
     public:
-        DiseaseModel(std::string pathToModel);
+        DiseaseModel();
+        loimos::proto::CSVDefinition *personDef;
+        loimos::proto::CSVDefinition *locationDef;
         int getIndexOfState(std::string stateLabel) const;
         // TODO(iancostello): Change interventionStategies to index based.
         std::tuple<int, int> transitionFromState(int fromState, std::string interventionStategy, std::default_random_engine *generator) const;
