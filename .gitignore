@@ -9,3 +9,7 @@ loimos
 
 .DS_Store
 settings.json
+loimos
+.vscode
+scenarios/h5n1_large/
+*.dSYM
