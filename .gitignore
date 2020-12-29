@@ -8,3 +8,6 @@ settings.json
 *.pb.h
 .DS_Store
 loimos
+.vscode
+scenarios/h5n1_large/
+*.dSYM

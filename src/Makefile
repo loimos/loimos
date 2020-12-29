@@ -3,7 +3,7 @@ CXX=g++
 
 PROTOBUF_DIR=/usr/local/bin/vcpkg/installed/x64-osx
 # PROTOBUF_DIR=/usr/local
-CXXFLAGS=-std=c++11 -Wall -I$(PROTOBUF_DIR)/include -g
+CXXFLAGS=-std=c++11 -Wall -I$(PROTOBUF_DIR)/include -O2
 
 OBJS		= Main.o DiseaseModel.o People.o Person.o Locations.o Defs.o disease.pb.o distribution.pb.o Attributes.o Location.o Event.o data.pb.o preprocess.o
 OBJS_DECL	= loimos.decl.h
@@ -71,6 +71,7 @@ preprocess: preprocessing
 test: loimos
 	./charmrun +p4 ./loimos 40 16 1 4 7 ../scenarios/h5n1/ ++local
 
+# See loimos folder for this scneario.
 test_large: loimos
 	./charmrun +p16 ./loimos 41120 9166 200 100 7 ../scenarios/h5n1_large/ ++local
 

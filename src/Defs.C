@@ -4,12 +4,6 @@
  * SPDX-License-Identifier: MIT
  */
 
-
-/*** Questions for Abhinav
- * How to create map from ID to Chare
- * 
- */ 
-
 #ifndef __DEFS_H__
 #define __DEFS_H__
 

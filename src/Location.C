@@ -44,7 +44,6 @@ std::unordered_set<int> Location::processEvents(
   std::vector<Event> *arrivals;
   Event curEvent;
   justInfected.empty();
-  // CkPrintf("Received %d events\n", events.size());
   int debug_to_remove_infection_arrivals = 0;
 
   while (!events.empty()) {
@@ -116,14 +115,10 @@ void Location::onSusceptibleDeparture(
   for (Event infectiousArrival: infectiousArrivals) {
     // Every infectious person contributes to the change a susceptible person
     // is infected
-    // CkPrintf("Uh\n");
     logProbNotInfected += diseaseModel->getLogProbNotInfected(
       susceptibleDeparture, infectiousArrival
     );
   }
-  // if (logProbNotInfected != 0) {
-  //   CkPrintf("Chance of infection\n");
-  // }
 
   // We want the probability of infection, so we need to 
   // invert probNotInfected
