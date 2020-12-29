@@ -21,10 +21,6 @@
 #define ARRIVAL 0
 #define DEPARTURE 1
 
-// TODO THIS NEED TO BE DYNAMIC (including in indexing)
-#define PERSON_OFFSET 5586585
-#define LOCATION_OFFSET 0
-
 // Time
 using Time = int32_t;
 const Time DAY_LENGTH = 3600 * 24;

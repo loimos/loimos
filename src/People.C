@@ -45,7 +45,7 @@ People::People() {
   }
 
   // Load in people data from file.
-  int startingLineIndex = getGlobalIndex(0, thisIndex, numPeople, numPeoplePartitions, PERSON_OFFSET) - PERSON_OFFSET;
+  int startingLineIndex = getGlobalIndex(0, thisIndex, numPeople, numPeoplePartitions, firstPersonIdx) - firstPersonIdx;
   int endingLineIndex = startingLineIndex + numLocalPeople;
   
   std::string line;
@@ -142,7 +142,7 @@ void People::SendVisitMessages() {
           locationId,
           numLocations,
           numLocationPartitions,
-          LOCATION_OFFSET
+          firstLocationIdx
       );
       // Send off the visit message.
       locationsArray[locationSubset].ReceiveVisitMessages(
@@ -163,7 +163,7 @@ void People::ReceiveInfections(int personIdx) {
     personIdx,
     numPeople,
     numPeoplePartitions,
-    PERSON_OFFSET
+    firstPersonIdx
   );
   
   // Mark that exposed healthy individuals should make transition at the end
