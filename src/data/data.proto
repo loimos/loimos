@@ -11,8 +11,10 @@ message Data_Field {
     }
 
     oneof data_type {
-        Empty uniqueId = 4;
-        Empty foreignId = 5;
+        Empty uniqueId = 2;
+        Empty foreignId = 3;
+        Empty startTime = 4;
+        Empty duration = 5;
         Empty bool = 6;
         Empty b10int = 7;
         Empty int32 = 8;

@@ -44,17 +44,22 @@ Locations::Locations() {
   int endingLineIndex = startingLineIndex + numLocalLocations;
   std::string line;
 
-  std::ifstream f(scenarioPath + "locations.csv");
-  if (!f) {
+  std::ifstream locationData(scenarioPath + "locations.csv");
+  std::ifstream locationCache(scenarioPath + scenarioId + "_locations.cache");
+  if (!locationData || !locationCache) {
     CkAbort("Could not open person data input.");
   }
   
-  // TODO (iancostello): build an index at preprocessing and seek. 
-  for (int i = 0; i <= startingLineIndex; i++) {
-    std::getline(f, line);
-  }
-  DataReader<Location *>::readData(&f, diseaseModel->locationDef, &locations);
-  f.close();
+  // Find starting line for our data through location cache.
+  locationCache.seekg(thisIndex * sizeof(uint32_t));
+  uint32_t locationOffset;
+  locationCache.read((char *) &locationOffset, sizeof(uint32_t));
+  locationData.seekg(locationOffset);
+
+  // Read in our location data.
+  DataReader<Location *>::readData(&locationData, diseaseModel->locationDef, &locations);
+  locationData.close();
+  locationCache.close();
 
   // Seed random number generator via branch ID for reproducibility.
   generator.seed(thisIndex);

@@ -91,5 +91,61 @@ class DataReader {
             }
             return count;
         }
+
+        static std::tuple<int, int, int, int> parseActivityStream(std::ifstream *input, loimos::proto::CSVDefinition *dataFormat, union Data *attributes) {
+            int personId = -1;
+            int locationId = -1;
+            int startTime = -1;
+            int duration = -1;
+            // TODO don't reallocate this everytime.
+            char buf[MAX_INPUT_LINE_LENGTH];
+
+            // Get next line.
+            input->getline(buf, MAX_INPUT_LINE_LENGTH);
+
+            // Read over people data format.
+            int attr_index = 0;
+            int attr_nonzero_index = 0;
+            int left_comma = 0;
+
+            int line_length = input->gcount();
+            // printf("Got here %d\n", line_length);
+            for (int c = 0; c < line_length; c++) {
+                // Scan for the next attrbiutes - comma separted.
+                if (buf[c] == ',' || c + 1 == line_length) {
+                    // Get next attribute type.
+                    loimos::proto::Data_Field const *field = &dataFormat->field(attr_index);
+                    uint16_t data_len = c - left_comma;
+                    if (field->has_ignore() || data_len == 0) {
+                        // Skip
+                    } else if (attr_nonzero_index <= 3) {
+                        // Process data.
+                        char *start = buf + left_comma;
+                        if (c + 1 == line_length) {
+                            data_len += 1;
+                        }
+
+                        // Parse byte stream to the correct representation.
+                        if (field->has_uniqueid()) {
+                            personId = std::stoi(std::string(start, data_len));
+                        } else if (field->has_foreignid()) {
+                            locationId = std::stoi(std::string(start, data_len));
+                        } else if (field->has_starttime()) {
+                            startTime = std::stoi(std::string(start, data_len));
+                        } else if (field->has_duration()) {
+                            duration = std::stoi(std::string(start, data_len));
+                        } else {
+                            // TODO process.
+                            attr_nonzero_index++;
+                        }
+                        
+                    }
+                    left_comma = c + 1;
+                    attr_index++;
+                }
+            }
+            // printf("Lets see Person %d visited %d at %d for %d\n", personId, locationId, startTime, duration);
+            return std::make_tuple(personId, locationId, startTime, duration);
+        }
 };
 #endif

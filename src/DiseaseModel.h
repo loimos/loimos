@@ -50,6 +50,11 @@ class DiseaseModel : public CBase_DiseaseModel {
           int startTime,
           int endTime
         ) const;
+        // Non-disease model objects that we want one per PE.
+        // Might want to move these into their own chare.
+        loimos::proto::CSVDefinition *personDef;
+        loimos::proto::CSVDefinition *locationDef;
+        loimos::proto::CSVDefinition *activityDef;
 };
 
 #endif // __DiseaseModel_H__

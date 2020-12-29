@@ -11,6 +11,7 @@
 #include "DiseaseModel.h"
 #include "Person.h"
 #include "Attributes.h"
+#include "data/DataReader.h"
 
 #include <tuple>
 #include <limits>
@@ -52,50 +53,43 @@ People::People() {
   int endingLineIndex = startingLineIndex + numLocalPeople;
   
   std::string line;
-  std::ifstream f(scenarioPath + "people.csv");
-  if (!f) {
+  std::ifstream peopleData(scenarioPath + "people.csv");
+  std::ifstream peopleCache(scenarioPath + scenarioId + "_people.cache");
+  if (!peopleData || !peopleCache) {
     CkAbort("Could not open person data input.");
   }
-  
-  // TODO (iancostello): build an index at preprocessing and seek. 
-  for (int i = 0; i <= startingLineIndex; i++) {
-    std::getline(f, line);
-  }
+  // Find starting line for our data through people cache.
+  peopleCache.seekg(thisIndex * sizeof(uint32_t));
+  uint32_t peopleOffset;
+  peopleCache.read((char *) &peopleOffset, sizeof(uint32_t));
+  peopleData.seekg(peopleOffset);
 
   // Read in from remote file.
-  DataReader<Person *>::readData(&f, diseaseModel->personDef, &people);
+  DataReader<Person *>::readData(&peopleData, diseaseModel->personDef, &people);
+  peopleData.close();
+  peopleCache.close();
 
-  // Open
-  activity_stream = new std::ifstream(scenarioPath + "interactions.csv", std::ios::binary);
-  if (!activity_stream->is_open()) {
+  // Open activity data and cache. 
+  activityData = new std::ifstream(scenarioPath + "interactions.csv", std::ios::binary);
+  std::ifstream activityCache(scenarioPath + scenarioId + "_interactions.cache", std::ios::binary);
+  if (!activityData || !activityCache) {
     CkAbort("Could not open activity input.");
   }
 
   // Load preprocessing meta data.
-  std::ifstream data_stream("data_index_activity.csv");
+  uint32_t *buf = (uint32_t *) malloc(sizeof(uint32_t) * numDays);
   for (int c = 0; c < numLocalPeople; c++) {
     std::vector<uint32_t> *data_pos = &people[c]->interactionsByDay;
     int curr_id = people[c]->uniqueId;
-    
-    // Search for line.
-    getline(data_stream, line);
-    while (!data_stream.eof() && getIntAttribute(&line, 0) != curr_id) {
-      getline(data_stream, line);
-    }
 
-    // Extra rest of data
-    int curr_left = line.find(',') + 1;
-    for (int i = curr_left; i < line.size(); i++) {
-      if (line.at(i) == ' ') {
-        data_pos->push_back(std::stoi(line.substr(curr_left, i)));
-        curr_left = i;
-      }
+    // Read in their activity data offsets.
+    activityCache.seekg(sizeof(uint32_t) * numDays * (curr_id - firstPersonIdx));
+    activityCache.read((char *) buf, sizeof(uint32_t) * numDays);
+    for (int day = 0; day < numDays; day++) {
+      data_pos->push_back(buf[day]);
     }
   }
-
-  // Clear header.
-  std::getline(*activity_stream, line);
-
+  free(buf);
   
   // Randomly infect people to seed the initial outbreak
   for (Person &person: people) {
@@ -105,8 +99,6 @@ People::People() {
       newCases++;
     }
   }
-
-  CkPrintf("People chare %d with %d people\n",thisIndex,numLocalPeople);
 }
 
 /**
@@ -134,41 +126,36 @@ void People::SendVisitMessages() {
   // Send of activities for each person.
   for (int localPersonId = 0; localPersonId < numLocalPeople; localPersonId++) {
     // Seek to correct position in file.
-    uint32_t seek_pos = people[localPersonId]->interactionsByDay[day];
-    if (seek_pos == 0xFFFFFFFF)
+    uint32_t seekPos = people[localPersonId]->interactionsByDay[day];
+    if (seekPos == 0xFFFFFFFF)
       continue;
+    activityData->seekg(seekPos, std::ios_base::beg);
 
-    activity_stream->seekg(seek_pos, std::ios_base::beg);
-    std::getline(*activity_stream, line);
-  
-    while (!activity_stream->eof() 
-        && getIntAttribute(&line, 4) < next_day_secs
-        && getIntAttribute(&line, 1) == people[localPersonId]->uniqueId) {
-      int person_id = getIntAttribute(&line, 1);
-      int location_id = getIntAttribute(&line, 2);
-      int start_time = getIntAttribute(&line, 4);
-      int duration = getIntAttribute(&line, 5);
+    // Start reading
+    int personId = -1; 
+    int locationId = -1;
+    int start_time = -1;
+    int duration = -1;
+    std::tie(personId, locationId, start_time, duration) = DataReader<Person *>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
 
+    // Seek while same person on same day.
+    while(personId == people[localPersonId]->uniqueId && start_time < next_day_secs) {
+      // Find process that owns that location.
       locationSubset = getPartitionIndex(
-          location_id,
+          locationId,
           numLocations,
           numLocationPartitions,
           LOCATION_OFFSET
       );
-
-      // if (thisIndex == 0 && localPersonId == 0)
-      //   CkPrintf("On day %d, Person %d visited %d on %d at %d for %d\n", day, person_id, location_id, locationSubset, start_time, duration);
-
+      // Send off the visit message.
       locationsArray[locationSubset].ReceiveVisitMessages(
-        location_id,
-        person_id,
+        locationId,
+        personId,
         people[localPersonId]->state,
         start_time,
         start_time + duration
       );
-
-      if (!activity_stream->eof())
-        std::getline(*activity_stream, line);
+      std::tie(personId, locationId, start_time, duration) = DataReader<Person *>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
     }
   }
 }

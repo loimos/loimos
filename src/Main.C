@@ -9,6 +9,9 @@
 #include "People.h"
 #include "Locations.h"
 #include "DiseaseModel.h"
+#include "data/Preprocess.h"
+
+#include <tuple>
 
 /* readonly */ CProxy_Main mainProxy;
 /* readonly */ CProxy_People peopleArray;
@@ -19,7 +22,10 @@
 /* readonly */ int numPeoplePartitions;
 /* readonly */ int numLocationPartitions;
 /* readonly */ std::string scenarioPath;
+/* readonly */ std::string scenarioId;
 /* readonly */ int numDays;
+/* readonly */ int firstPersonIdx;
+/* readonly */ int firstLocationIdx;
 
 Main::Main(CkArgMsg* msg) {
   // parsing command line arguments
@@ -38,6 +44,9 @@ Main::Main(CkArgMsg* msg) {
   CkPrintf("Running Loimos on %d PEs with %d people, %d locations, %d people subsets, %d location subsets, and %d days\n", CkNumPes(), numPeople, numLocations, numPeoplePartitions, numLocationPartitions, numDays);
   mainProxy = thisProxy;
 
+  // Create data caches.
+  std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = build_cache(scenarioPath, numPeople, numPeoplePartitions, numLocations, numLocationPartitions, numDays);
+
   // Instantiate DiseaseModel nodegroup (One for each physical processor).
   CkPrintf("Loading diseaseModel.\n");
   globDiseaseModel = CProxy_DiseaseModel::ckNew();
@@ -46,7 +55,7 @@ Main::Main(CkArgMsg* msg) {
   delete msg;
 
   // creating chare arrays
-  CkPrintf("Loading otherrs.\n");
+  CkPrintf("Loading others.\n");
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
 

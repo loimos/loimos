@@ -2,116 +2,175 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <tuple>
+#include <sstream>
+#include <google/protobuf/text_format.h>
 
-int getIntAttribute(std::string *str, int index);
-int getDay(int time_in_seconds);
+#include "../Attributes.h"
+
+#define MAX_WRITE_SIZE 65536 // 2^16
+
+int getDay(int timeInSeconds);
+int build_obj_lookup_cache(std::string inputPath, std::string outputPath, int numObjs, int numChares, std::string pathToCsvDefinition);
+void build_activity_cache(std::string inputPath, std::string outputPath, int numPeople, int numDays, int firstPersonIdx, std::string pathToCsvDefinition);
 
 /** 
  * This file preprocesses a given input file.
  */ 
-// TODO change this.
-int main(int argc, char **argv) {
+// TODO: Replace getline with function that doesn't need to copy to string object.
+std::tuple<int, int, std::string> build_cache(std::string scenarioPath, int numPeople, int peopleChares, int numLocations, int numLocationChares, int numDays) {
+    // Build person and location cache.
+    std::ostringstream oss;
+    oss << numPeople << "-" << peopleChares << "_" << numLocations << "-" << numLocationChares;
+    std::string unique_scenario = oss.str();
+    int firstPersonIdx = build_obj_lookup_cache(scenarioPath + "people.csv", scenarioPath + unique_scenario + "_people.cache", numPeople, peopleChares, scenarioPath + "people.textproto");
+    int firstLocationIdx = build_obj_lookup_cache(scenarioPath + "locations.csv", scenarioPath + unique_scenario + "_locations.cache", numLocations, numLocationChares, scenarioPath + "locations.textproto");
+    build_activity_cache(scenarioPath + "interactions.csv", scenarioPath + unique_scenario + "_interactions.cache", numPeople, numDays, firstPersonIdx, scenarioPath + "interactions.textproto");
+    return std::make_tuple(firstPersonIdx, firstLocationIdx, unique_scenario);
+}
+
+int build_obj_lookup_cache(std::string inputPath, std::string outputPath, int numObjs, int numChares, std::string pathToCsvDefinition) {
+    /** 
+     * Assumptions: (about person file)
+     * -- Contigious block of IDs that are sorted.
+     * 
+     * Creates a mapping from char number to byte offset that the reading should
+     * commence from.
+     * 
+     * Returns:
+     *    int offset of lowest contigious block.
+     */
+    // Open activity stream..
+    std::ifstream activityStream(inputPath, std::ios_base::binary);
+    int objPerChare = numObjs / numChares;
+
+    // Read config file.
+    loimos::proto::CSVDefinition csvDefinition;
+    std::ifstream t(pathToCsvDefinition);
+    std::string strData((std::istreambuf_iterator<char>(t)),
+                    std::istreambuf_iterator<char>());
+    if (!google::protobuf::TextFormat::ParseFromString(strData, &csvDefinition)) {
+        CkAbort("Could not parse protobuf!");
+    }
+    t.close();
+    int csvLocationOfPid = -1;
+    for (int i = 0; i < csvDefinition.field_size(); i++) {
+        if (csvDefinition.field(i).has_uniqueid()) {
+            csvLocationOfPid = i;
+            break;
+        }
+    }
+    assert(csvLocationOfPid != -1);
+
+    std::string line;
+    // Clear header.
+    std::getline(activityStream, line);
+    uint32_t currentPosition = activityStream.tellg();;
+
+    // Special case to get lowest person ID first.
+    std::getline(activityStream, line);
+    int firstIdx = getIntAttribute(&line, csvLocationOfPid);
+    
+    // Check if file cache already created.
+    std::ifstream existenceCheck(outputPath, std::ios_base::binary);
+    if (existenceCheck.good()) {
+        printf("Using existing cache.\n");
+        existenceCheck.close();
+        return firstIdx;
+    } else {
+        existenceCheck.close();
+        std::ofstream outputSream(outputPath, std::ios_base::binary);
+        for (int chareNum = 0; chareNum < numChares; chareNum++) {
+            // Write current offset.
+            outputSream.write((char *) &currentPosition, sizeof(uint32_t));
+
+            // Skip next n lines.
+            for (int i = 0; i < objPerChare; i++) {
+                std::getline(activityStream, line);
+            }
+            currentPosition = activityStream.tellg();
+        }
+        outputSream.flush();
+        return firstIdx;
+    }
+}
+
+
+void build_activity_cache(std::string inputPath, std::string outputPath, int numPeople, int numDays, int firstPersonIdx, std::string pathToCsvDefinition) {
     /**
      * Assumptions. 
      * Stream is sorted by start time per person.
-     */ 
-    std::ifstream activity_stream("sample_input/interactions.csv", std::ios_base::binary);
-    if (!activity_stream) {
+     */
+    // Check if cache already created.
+    std::ifstream existenceCheck(outputPath, std::ios_base::binary);
+    if (existenceCheck.good()) {
+        printf("Activity cache already exists.");
+        return;
+    }
+
+    std::ifstream activityStream(inputPath, std::ios_base::binary);
+    if (!activityStream) {
         printf("Could not open person data input.\n");
         exit(0);
     }
 
-    // TOOD make this cmd line args.
-    int id_location = 1;
-    int start_time = 4;
-    int start_id = 5586585;
-    // int num_people = 40;
-    int num_people = 41120;
+    // Read config file.
+    int csvLocationOfPid = -1;
+    int _csv_location_of_start_time = -1;
+    loimos::proto::CSVDefinition csvDefinition;
+    std::ifstream t(pathToCsvDefinition);
+    std::string strData((std::istreambuf_iterator<char>(t)),
+                    std::istreambuf_iterator<char>());
+    if (!google::protobuf::TextFormat::ParseFromString(strData, &csvDefinition)) {
+        CkAbort("Could not parse protobuf!");
+    }
+    t.close();
 
-    std::vector< std::vector<uint32_t> > elements;
-    elements.resize(num_people);
+    // Create position vector for each person.
+    uint64_t totalDataSize = numPeople * numDays * sizeof(uint32_t);
+    uint8_t *elements = (uint8_t *) malloc(totalDataSize);
+    if (elements == NULL) {
+        printf("Failed to malloc enoough memory for preprocessing.\n");
+        exit(1);
+    }
+    memset(elements, 0xFF, totalDataSize);
 
+    // Various initialization.
     std::string line;
-    uint32_t current_position = activity_stream.tellg();
-    std::getline(activity_stream, line);
-    int last_person = -1;
-    int last_time = -1;
-    int num_processed = 0;
-    // printf("got here\n");
+    // Clear header.
+    std::getline(activityStream, line);
+    uint32_t current_position = activityStream.tellg();
+    int lastPerson = -1;
+    int lastTime = -1;
+    int nextPerson = 0;
+    int nextTime = 0;
+    int personId = -1;
+    int duration = -1;
+    // For better looping efficiency simulate one break of inner loop to start.
+    std::tie(nextPerson, personId, nextTime, duration) = DataReader<Person *>::parseActivityStream(&activityStream, &csvDefinition, NULL);
 
-    while (!activity_stream.eof()) {
-        // Skip until new day or new person.
-        int next_person = 0;
-        int next_time = 0;
-        do {
-            current_position = activity_stream.tellg();
-            std::getline(activity_stream, line);
-            next_person = getIntAttribute(&line, id_location);
-            next_time = getDay(getIntAttribute(&line, start_time));
-            
-        } while (!activity_stream.eof() && last_time == next_time && last_person == next_person);
-
-        // printf("got here %d\n", next_person);
-        if (activity_stream.eof()) {
-            break;
+    // Loop over the entire activity file and note boundaries on people and days
+    while (!activityStream.eof()) {
+        // Get details of new entry.
+        lastPerson = nextPerson;
+        lastTime = nextTime;
+        memcpy(elements + sizeof(uint32_t) * (numDays * (lastPerson - firstPersonIdx) + lastTime),
+               &current_position, sizeof(uint32_t));
+    
+        // Scan until the next boundary.
+        while (!activityStream.eof() && lastTime == nextTime && lastPerson == nextPerson) {
+            current_position = activityStream.tellg();
+            std::tie(nextPerson, personId, nextTime, duration) = DataReader<Person *>::parseActivityStream(&activityStream, &csvDefinition, NULL);
+            nextTime = getDay(nextTime);
         }
-        num_processed += 1;
-
-        std::vector<uint32_t> *curr = &elements[next_person - start_id];
-        for (int i = next_time; i < curr->size(); i++) {
-            curr->push_back(0xFFFFFFFF);
-        }
-        // Add current day
-        curr->push_back(current_position);
-
-        // Update
-        last_person = next_person;
-        last_time = next_time;
     }
 
     // Output
-    printf("Completed %d!\n", num_processed);
-    std::ofstream output_stream("data_index_activity.csv");
-    for (int i = 0; i < elements.size(); i++) {
-        std::vector<uint32_t> curr = elements[i];
-        if (curr.size() != 0) {
-            output_stream << start_id + i << ",";
-            for (int j = 0; j < curr.size(); j++) {
-                output_stream << curr[j] << " ";
-            }
-            if (i != elements.size() - 1)
-                output_stream << "\n";
-        }
-    }
-    output_stream.close();
-
+    std::ofstream outputSream(outputPath);
+    outputSream.write((char *) elements, totalDataSize);
+    outputSream.close();
 }
 
-int getDay(int time_in_seconds) {
-    return (time_in_seconds / (3600*24));
-}
-
-int getIntAttribute(std::string *str, int index) {
-    int attr_index = 0;
-    int left_comma = 0;
-    for (int c = 0; c < str->length(); c++) {
-        if (str->at(c) == ',') {
-        // Completed attribute.
-        std::string sub_str = str->substr(left_comma, c);
-
-        //TODO HANDLE THESE ATTRIBUTES WITH PROTOBUF
-        if (attr_index == index) {
-            try {
-                return std::stoi(sub_str);
-            } catch (const std::exception& e) {
-                printf("Could not parse %s\n", sub_str.c_str());
-                return 0;
-            }
-        }
-
-        left_comma = c + 1;
-        attr_index += 1;
-        }
-  }
-  return 0;
+int getDay(int timeInSeconds) {
+    return (timeInSeconds / (3600*24));
 }
