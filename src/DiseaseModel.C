@@ -86,6 +86,14 @@ DiseaseModel::DiseaseModel() {
     CkAbort("Could not parse protobuf!");
   }
   tLocation.close();
+  activityDef = new loimos::proto::CSVDefinition();
+  std::ifstream tActivity(scenarioPath + "interactions.textproto");
+  std::string strActivity((std::istreambuf_iterator<char>(tActivity)),
+                  std::istreambuf_iterator<char>());
+  if (!google::protobuf::TextFormat::ParseFromString(strActivity, activityDef)) {
+    CkAbort("Could not parse protobuf!");
+  }
+  tActivity.close();
 }
 
 /**

@@ -5,7 +5,7 @@ PROTOBUF_DIR=/usr/local/bin/vcpkg/installed/x64-osx
 # PROTOBUF_DIR=/usr/local
 CXXFLAGS=-std=c++11 -Wall -I$(PROTOBUF_DIR)/include -g
 
-OBJS		= Main.o DiseaseModel.o People.o Person.o Locations.o Defs.o disease.pb.o distribution.pb.o Attributes.o Location.o Event.o data.pb.o
+OBJS		= Main.o DiseaseModel.o People.o Person.o Locations.o Defs.o disease.pb.o distribution.pb.o Attributes.o Location.o Event.o data.pb.o preprocess.o
 OBJS_DECL	= loimos.decl.h
 INC = -I$(PROTOBUF_DIR)/include -L$(PROTOBUF_DIR)/lib -lprotobuf
 
@@ -41,6 +41,9 @@ DiseaseModel.o: DiseaseModel.h DiseaseModel.C
 Attributes.o: Attributes.h Attributes.C 
 	$(CHARMC) $(OPTS) $(INC) -o Attributes.o Attributes.C
 
+preprocess.o: data/preprocess.h data/preprocess.C Attributes.o
+	$(CHARMC) $(OPTS) $(INC) -o preprocess.o data/preprocess.C Attributes.o
+
 diseaseModelProto:
 	mv disease_model/*.proto ../src/ ; protoc --cpp_out=. disease.proto distribution.proto ; mv *.proto disease_model/
 
@@ -69,7 +72,10 @@ test: loimos
 	./charmrun +p4 ./loimos 40 16 1 4 7 ../scenarios/h5n1/ ++local
 
 test_large: loimos
-	./charmrun +p16 ./loimos 41120 9166 200 100 7 ../scenarios/h5n1/ ++local
+	./charmrun +p16 ./loimos 41120 9166 200 100 7 ../scenarios/h5n1_large/ ++local
+
+cache_wipe:
+	rm ../scenarios/h5n1/*.cache ../scenarios/h5n1_large/*.cache
 
 test_data: data/DataReader.C data/DataReadTest.C data/DataReader.h
 	# ${CXX} ${CXXFLAGS} $< -c -o test

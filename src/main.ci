@@ -13,7 +13,10 @@ mainmodule loimos {
   readonly int numPeoplePartitions;
   readonly int numLocationPartitions;
   readonly int numDays;
+  readonly int firstPersonIdx;
+  readonly int firstLocationIdx;
   readonly std::string scenarioPath;
+  readonly std::string scenarioId;
 
   mainchare Main {
     entry Main(CkArgMsg*);

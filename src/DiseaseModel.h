@@ -29,8 +29,6 @@ class DiseaseModel : public CBase_DiseaseModel {
         int healthyState;
     public:
         DiseaseModel();
-        loimos::proto::CSVDefinition *personDef;
-        loimos::proto::CSVDefinition *locationDef;
         int getIndexOfState(std::string stateLabel);
         // TODO(iancostello): Change interventionStategies to index based.
         std::tuple<int, int> transitionFromState(int fromState, std::string interventionStategy, std::default_random_engine *generator);
@@ -41,6 +39,11 @@ class DiseaseModel : public CBase_DiseaseModel {
         bool isSusceptible(int personState);
         const char * getStateLabel(int personState);
         double getLogProbNotInfected(Event susceptibleEvent, Event infectiousEvent);
+        // Non-disease model objects that we want one per PE.
+        // Might want to move these into their own chare.
+        loimos::proto::CSVDefinition *personDef;
+        loimos::proto::CSVDefinition *locationDef;
+        loimos::proto::CSVDefinition *activityDef;
   };
 
 #endif // __DiseaseModel_H__

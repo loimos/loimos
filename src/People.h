@@ -22,7 +22,7 @@ class People : public CBase_People {
     int numLocalPeople;
     int day;
     int newCases;
-    std::ifstream *activity_stream;
+    std::ifstream *activityData;
     std::vector<Person *> people;
     std::default_random_engine generator;
     DiseaseModel *diseaseModel;
