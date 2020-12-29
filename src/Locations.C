@@ -40,7 +40,7 @@ Locations::Locations() {
   }
 
   // Load in location information
-  int startingLineIndex = getGlobalIndex(0, thisIndex, numLocations, numLocationPartitions, LOCATION_OFFSET) - LOCATION_OFFSET;
+  int startingLineIndex = getGlobalIndex(0, thisIndex, numLocations, numLocationPartitions, firstLocationIdx) - firstLocationIdx;
   int endingLineIndex = startingLineIndex + numLocalLocations;
   std::string line;
 
@@ -80,7 +80,7 @@ void Locations::ReceiveVisitMessages(
     locationIdx,
     numLocations,
     numLocationPartitions,
-    LOCATION_OFFSET
+    firstLocationIdx
   );
 
   // CkPrintf("%d: Received visit to %d (loc %d) from person %d\n", thisIndex, locationIdx, localLocIdx, personIdx);

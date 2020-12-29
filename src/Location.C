@@ -52,9 +52,7 @@ void Location::processEvents(
       arrivals = &susceptibleArrivals;
 
     } else if (diseaseModel->isInfectious(curEvent.personState)) {
-      // CkPrintf("Infectious arrival!\n");
       arrivals = &infectiousArrivals;
-      debug_to_remove_infection_arrivals += 1;
 
     // If a person can niether infect other people nor be infected themself,
     // we can just ignore their comings and goings
@@ -74,8 +72,6 @@ void Location::processEvents(
       onDeparture(diseaseModel, contactModel, curEvent);
     }
   }
-  // if (debug_to_remove_infection_arrivals)
-    // printf("Got %d infectious arrivals\n", debug_to_remove_infection_arrivals);
 
   interactions.clear();
 }

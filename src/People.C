@@ -49,7 +49,7 @@ People::People() {
   }
 
   // Load in people data from file.
-  int startingLineIndex = getGlobalIndex(0, thisIndex, numPeople, numPeoplePartitions, PERSON_OFFSET) - PERSON_OFFSET;
+  int startingLineIndex = getGlobalIndex(0, thisIndex, numPeople, numPeoplePartitions, firstPersonIdx) - firstPersonIdx;
   int endingLineIndex = startingLineIndex + numLocalPeople;
   
   std::string line;
@@ -145,7 +145,7 @@ void People::SendVisitMessages() {
           locationId,
           numLocations,
           numLocationPartitions,
-          LOCATION_OFFSET
+          firstLocationIdx
       );
       // Send off the visit message.
       locationsArray[locationSubset].ReceiveVisitMessages(
@@ -168,7 +168,7 @@ void People::ReceiveInteractions(
     personIdx,
     numPeople,
     numPeoplePartitions,
-    PERSON_OFFSET
+    firstPersonIdx
   );
 
   // Just concatenate the interaction lists so that we can process all of the
