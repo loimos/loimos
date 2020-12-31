@@ -183,26 +183,7 @@ void People::ProcessInteractions(Person &person) {
 
   // Detemine whether or not this person was infected...
   double roll = -log(unitDistrib(generator)) / totalPropensity;
-  /*
-  if (0 == day) {
-    if (roll <= DAY_LENGTH) {
-      CkPrintf("roll %.3f <= %d (propensity %f, from %d interactions)\r\n",
-          roll,
-          DAY_LENGTH,
-          totalPropensity,
-          (int) person.interactions.size()
-      );
-    
-    } else {
-      CkPrintf("roll %.3f > %d (propensity %f, from %d interactions)\r\n",
-          roll,
-          DAY_LENGTH,
-          totalPropensity,
-          (int) person.interactions.size()
-      );
-    }
-  }
-  */
+
   if (roll <= DAY_LENGTH) {
     // ...if they were, determine which interaction was responsible, by
     // chooseing an interaction, with a weight equal to the propensity

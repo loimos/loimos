@@ -2,9 +2,10 @@
 CHARMC=charmc
 CXX=g++
 
-#PROTOBUF_DIR=/usr/local/bin/vcpkg/installed/x64-osx
 PROTOBUF_DIR=/usr/local
 CXXFLAGS=-std=c++11 -Wall -I$(PROTOBUF_DIR)/include
+
+OPTS = $(CXXFLAGS)
 
 OBJS		= Main.o DiseaseModel.o People.o Locations.o Defs.o disease.pb.o\
 				 	distribution.pb.o Location.o Event.o Interaction.o
