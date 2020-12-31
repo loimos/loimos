@@ -12,20 +12,15 @@
 #include "DiseaseModel.h"
 
 #include <random>
-#include <set>
+#include <vector>
 #include <cmath>
 #include <algorithm>
-
-std::uniform_real_distribution<> Location::unitDistrib(0,1);
 
 void Location::addEvent(Event e) {
   events.push(e);
 }
 
-void Location::processEvents(
-  std::default_random_engine *generator,
-  const DiseaseModel *diseaseModel
-) {
+void Location::processEvents(const DiseaseModel *diseaseModel) {
   std::vector<Event> *arrivals;
   Event curEvent;
 
@@ -54,86 +49,120 @@ void Location::processEvents(
       std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
       arrivals->pop_back();
 
-      onDeparture(generator, diseaseModel, curEvent);
+      onDeparture(diseaseModel, curEvent);
     }
   }
+
+  interactions.clear();
 }
 
 // Simple dispatch to the susceptible/infectious depature handlers
 inline void Location::onDeparture(
-  std::default_random_engine *generator,
   const DiseaseModel *diseaseModel,
   const Event& departure
 ) {
   if (diseaseModel->isSusceptible(departure.personState)) {
-    onSusceptibleDeparture(generator, diseaseModel, departure);
+    onSusceptibleDeparture(diseaseModel, departure);
 
   } else if (diseaseModel->isInfectious(departure.personState)) {
-    onInfectiousDeparture(generator, diseaseModel, departure);
+    onInfectiousDeparture(diseaseModel, departure);
   } 
 }
 
 void Location::onSusceptibleDeparture(
-  std::default_random_engine *generator,
   const DiseaseModel *diseaseModel,
   const Event& susceptibleDeparture
 ) {
-  double logProbNotInfected = 0.0;
-  for (Event infectiousArrival: infectiousArrivals) {
-    // Every infectious person contributes to the change a susceptible person
-    // is infected
-    logProbNotInfected += diseaseModel->getLogProbNotInfected(
-      susceptibleDeparture, infectiousArrival
-    );
+  // Each infectious person at this location might have infected this
+  // susceptible person
+  for (const Event &infectiousArrival: infectiousArrivals) {
+    registerInteraction(
+      diseaseModel,
+      susceptibleDeparture,
+      infectiousArrival,
+      // The start time is whichever arrival happened later
+      std::max(
+        infectiousArrival.scheduledTime,
+        susceptibleDeparture.partnerTime
+      ),
+      susceptibleDeparture.scheduledTime
+    ); 
   }
 
-  // We want the probability of infection, so we need to 
-  // invert probNotInfected
-  double prob = exp(logProbNotInfected);
-  double roll = unitDistrib(*generator);
-  if (roll > prob) {
-    infect(susceptibleDeparture.personIdx);
-  }
+  sendInteractions(susceptibleDeparture.personIdx);
 }
 
 void Location::onInfectiousDeparture(
-  std::default_random_engine *generator,
   const DiseaseModel *diseaseModel,
   const Event& infectiousDeparture
 ) {
-
-  // Each susceptible person has a chance of being infected by any given
+  // Each susceptible person at this location might have been infected by this
   // infectious person
-  for (Event susceptibleArrival : susceptibleArrivals) {
-    // We want the probability of infection, so we need to 
-    // invert probNotInfected
-    double prob = exp(diseaseModel->getLogProbNotInfected(
-      susceptibleArrival, infectiousDeparture
-    ));
-
-    double roll = unitDistrib(*generator);
-    if (roll > prob) { 
-      infect(susceptibleArrival.personIdx);
-    }
+  for (const Event &susceptibleArrival : susceptibleArrivals) {
+    registerInteraction(
+      diseaseModel,
+      susceptibleArrival,
+      infectiousDeparture,
+      // The start time is whichever arrival happened later
+      std::max(
+        susceptibleArrival.scheduledTime,
+        infectiousDeparture.partnerTime
+      ),
+      infectiousDeparture.scheduledTime
+    ); 
   } 
 }
 
-// Simple helper function which infects a given person with a given
-// probability (we handle this here rather since this is a chare class,
-// and so we have access to peopleArray and the like)
-inline void Location::infect(int personIdx) const {
+inline void Location::registerInteraction(
+  const DiseaseModel *diseaseModel,
+  const Event &susceptibleEvent,
+  const Event &infectiousEvent,
+  int startTime,
+  int endTime
+) {
+  double propensity = diseaseModel->getPropensity(
+    susceptibleEvent.personState,
+    infectiousEvent.personState,
+    startTime,
+    endTime
+  );
+
+  // Note that this will create a new vector if this is the first potential
+  // infection for the susceptible person in question
+  interactions[susceptibleEvent.personIdx].emplace_back(
+    propensity,
+    infectiousEvent.personIdx,
+    infectiousEvent.personState,
+    startTime,
+    endTime
+  );
+}
+
+// Simple helper function which send the list of interactions with the
+// specified person to the appropriate People chare
+inline void Location::sendInteractions(int personIdx) {
   int peoplePartitionIdx = getPartitionIndex(
     personIdx,
     numPeople,
     numPeoplePartitions
   );
 
-  peopleArray[peoplePartitionIdx].ReceiveInfections(personIdx);
-  /*
+  peopleArray[peoplePartitionIdx].ReceiveInteractions(
+    personIdx,
+    interactions[personIdx]
+  );
+
+  /*  
   CkPrintf(
-    "sending infection message to person %d in partition %d\r\n",
+    "sending %d interactions to person %d in partition %d\r\n",
+    (int) interactions[personIdx].size(),
     personIdx,
     peoplePartitionIdx
   );
   */
+  
+  // Free up space where we were storing interactions data. This also prevents
+  // interactions from being sent multiple times if this person has multiple
+  // visits to this location
+  interactions.erase(personIdx);
 }

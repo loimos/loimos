@@ -2,11 +2,13 @@
 CHARMC=charmc
 CXX=g++
 
-#PROTOBUF_DIR=/usr/local/bin/vcpkg/installed/x64-osx
 PROTOBUF_DIR=/usr/local
 CXXFLAGS=-std=c++11 -Wall -I$(PROTOBUF_DIR)/include
 
-OBJS		= Main.o DiseaseModel.o People.o Locations.o Defs.o disease.pb.o distribution.pb.o Location.o Event.o
+OPTS = $(CXXFLAGS)
+
+OBJS		= Main.o DiseaseModel.o People.o Locations.o Defs.o disease.pb.o\
+				 	distribution.pb.o Location.o Event.o Interaction.o
 OBJS_DECL	= loimos.decl.h
 
 loimos: $(OBJS) $(OBJS_DECL)
@@ -31,6 +33,9 @@ Location.o: Location.C Location.h main.decl.h
 
 Event.o: Event.C Event.h main.decl.h
 	$(CHARMC) $(OPTS) $(INC) -o Event.o Event.C
+
+Interaction.o: Interaction.C Interaction.h main.decl.h
+	$(CHARMC) $(OPTS) $(INC) -o Interaction.o Interaction.C
 
 DiseaseModel.o: DiseaseModel.h DiseaseModel.C 
 	$(CHARMC) $(OPTS) $(INC) -o DiseaseModel.o DiseaseModel.C

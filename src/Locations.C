@@ -63,7 +63,7 @@ void Locations::ComputeInteractions() {
   float value;
 
   // traverses list of locations
-  for (auto loc : locations) {
-    loc.processEvents(&generator, diseaseModel);
+  for (Location loc : locations) {
+    loc.processEvents(diseaseModel);
   }
 }
