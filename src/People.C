@@ -38,10 +38,10 @@ People::People() {
   people.resize(numLocalPeople, tmp);
   
   // Randomly infect people to seed the initial outbreak
-  for (int i = 0; i < people.size(); ++i) {
+  for (Person &person: people) {
     if (unitDistrib(generator) < INITIAL_INFECTIOUS_PROBABILITY) {
-      people[i].state = INFECTIOUS;
-      people[i].secondsLeftInState = INFECTION_PERIOD;
+      person.state = INFECTIOUS;
+      person.secondsLeftInState = INFECTION_PERIOD;
       newCases++;
     }
   }
@@ -140,28 +140,25 @@ void People::ReceiveInteractions(
 }
 
 void People::EndofDayStateUpdate() {
-  int total = 0;
-
-  for (Person &person: people) {
-    ProcessInteractions(person);
-  }
-
   // Handle state transitions at the end of the day.
   int totalStates = diseaseModel->getNumberOfStates();
   std::vector<int> stateSummary(totalStates, 0);
-  for (int i = 0; i < people.size(); i++) {
-    int currState = people[i].state;
-    int secondsLeftInState = people[i].secondsLeftInState;
+  for (Person &person: people) {
+    
+    ProcessInteractions(person);
+    
+    int currState = person.state;
+    int secondsLeftInState = person.secondsLeftInState;
 
     // TODO(iancostello): Move into start of day for visits.
     // Transition to next state or mark the passage of time
     secondsLeftInState -= DAY_LENGTH;
     if (secondsLeftInState <= 0) {
-      std::tie(people[i].state, people[i].secondsLeftInState) = 
+      std::tie(person.state, person.secondsLeftInState) = 
         diseaseModel->transitionFromState(currState, "untreated", &generator);
     
     } else {
-      people[i].secondsLeftInState = secondsLeftInState;
+      person.secondsLeftInState = secondsLeftInState;
     }
 
     stateSummary[currState]++;

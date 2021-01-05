@@ -61,10 +61,6 @@ void Locations::ReceiveVisitMessages(
 }
 
 void Locations::ComputeInteractions() {
-  int peopleSubsetIdx;
-  int state;
-  float value;
-
   // traverses list of locations
   for (Location loc : locations) {
     loc.processEvents(diseaseModel, contactModel);
