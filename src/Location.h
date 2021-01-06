@@ -10,6 +10,7 @@
 #include "Event.h"
 #include "Interaction.h"
 #include "DiseaseModel.h"
+#include "ContactModel.h"
 
 #include <queue>
 #include <vector>
@@ -39,14 +40,17 @@ class Location {
     // onDeparture branches to one of the two other functions
     inline void onDeparture(
       const DiseaseModel *diseaseModel,
+      ContactModel *contactModel,
       const Event& departure
     );
     void onSusceptibleDeparture(
       const DiseaseModel *diseaseModel,
+      ContactModel *contactModel,
       const Event& departure
     );
     void onInfectiousDeparture(
       const DiseaseModel *diseaseModel,
+      ContactModel *contactModel,
       const Event& departure
     );
 
@@ -55,6 +59,7 @@ class Location {
     // and add it to the approriate list for the susceptible person
     inline void registerInteraction(
       const DiseaseModel *diseaseModel,
+      ContactModel *contactModel,
       const Event &susceptibleEvent,
       const Event &infectiousEvent,
       int startTime,
@@ -78,7 +83,10 @@ class Location {
     
     // Runs through all of the current events and return the indices of
     // any people who have been infected
-    void processEvents(const DiseaseModel *diseaseModel);
+    void processEvents(
+      const DiseaseModel *diseaseModel,
+      ContactModel *contactModel
+    );
 };
   
 #endif // __LOCATION_H__

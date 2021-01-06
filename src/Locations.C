@@ -9,17 +9,17 @@
 #include "Location.h"
 #include "Event.h"
 #include "DiseaseModel.h"
+#include "ContactModel.h"
 #include "Location.h"
 #include "Event.h"
 #include "Defs.h"
 
 #include <algorithm>
-#include <functional>
 #include <queue>
 #include <stdio.h>
 
 Locations::Locations() {
-  // getting number of locations assigned to this chare
+  // Getting number of locations assigned to this chare
   numLocalLocations = getNumLocalElements(
     numLocations,
     numLocationPartitions,
@@ -27,10 +27,13 @@ Locations::Locations() {
   );
   locations.resize(numLocalLocations);
   
-  // Init disease states.
+  // Init disease states
   diseaseModel = globDiseaseModel.ckLocalBranch();
-  // Seed random number generator via branch ID for reproducibility.
+  // Seed random number generator via branch ID for reproducibility
   generator.seed(thisIndex);
+  // Init contact model
+  contactModel = new ContactModel();
+  contactModel->setGenerator(&generator);
 }
 
 void Locations::ReceiveVisitMessages(
@@ -58,12 +61,8 @@ void Locations::ReceiveVisitMessages(
 }
 
 void Locations::ComputeInteractions() {
-  int peopleSubsetIdx;
-  int state;
-  float value;
-
   // traverses list of locations
   for (Location loc : locations) {
-    loc.processEvents(diseaseModel);
+    loc.processEvents(diseaseModel, contactModel);
   }
 }

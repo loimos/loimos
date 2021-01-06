@@ -8,7 +8,7 @@ CXXFLAGS=-std=c++11 -Wall -I$(PROTOBUF_DIR)/include
 OPTS = $(CXXFLAGS)
 
 OBJS		= Main.o DiseaseModel.o People.o Locations.o Defs.o disease.pb.o\
-				 	distribution.pb.o Location.o Event.o Interaction.o
+				 	distribution.pb.o Location.o Event.o Interaction.o ContactModel.o
 OBJS_DECL	= loimos.decl.h
 
 loimos: $(OBJS) $(OBJS_DECL)
@@ -36,6 +36,9 @@ Event.o: Event.C Event.h main.decl.h
 
 Interaction.o: Interaction.C Interaction.h main.decl.h
 	$(CHARMC) $(OPTS) $(INC) -o Interaction.o Interaction.C
+
+ContactModel.o: ContactModel.h ContactModel.C 
+	$(CHARMC) $(OPTS) $(INC) -o ContactModel.o ContactModel.C
 
 DiseaseModel.o: DiseaseModel.h DiseaseModel.C 
 	$(CHARMC) $(OPTS) $(INC) -o DiseaseModel.o DiseaseModel.C

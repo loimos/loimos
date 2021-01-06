@@ -10,6 +10,7 @@
 #include "Location.h" 
 #include "DiseaseModel.h"
 #include "Location.h" 
+#include "ContactModel.h"
 
 #include <vector>
 #include <set>
@@ -21,6 +22,8 @@ class Locations : public CBase_Locations {
     std::default_random_engine generator;
     DiseaseModel *diseaseModel;
   
+    ContactModel *contactModel;
+
   public:
     Locations();
     void ReceiveVisitMessages(

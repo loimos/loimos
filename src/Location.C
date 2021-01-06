@@ -10,6 +10,7 @@
 #include "Event.h"
 #include "Defs.h"
 #include "DiseaseModel.h"
+#include "ContactModel.h"
 
 #include <random>
 #include <vector>
@@ -20,7 +21,10 @@ void Location::addEvent(Event e) {
   events.push(e);
 }
 
-void Location::processEvents(const DiseaseModel *diseaseModel) {
+void Location::processEvents(
+  const DiseaseModel *diseaseModel,
+  ContactModel *contactModel
+) {
   std::vector<Event> *arrivals;
   Event curEvent;
 
@@ -49,7 +53,7 @@ void Location::processEvents(const DiseaseModel *diseaseModel) {
       std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
       arrivals->pop_back();
 
-      onDeparture(diseaseModel, curEvent);
+      onDeparture(diseaseModel, contactModel, curEvent);
     }
   }
 
@@ -59,18 +63,20 @@ void Location::processEvents(const DiseaseModel *diseaseModel) {
 // Simple dispatch to the susceptible/infectious depature handlers
 inline void Location::onDeparture(
   const DiseaseModel *diseaseModel,
+  ContactModel *contactModel,
   const Event& departure
 ) {
   if (diseaseModel->isSusceptible(departure.personState)) {
-    onSusceptibleDeparture(diseaseModel, departure);
+    onSusceptibleDeparture(diseaseModel, contactModel, departure);
 
   } else if (diseaseModel->isInfectious(departure.personState)) {
-    onInfectiousDeparture(diseaseModel, departure);
+    onInfectiousDeparture(diseaseModel, contactModel, departure);
   } 
 }
 
 void Location::onSusceptibleDeparture(
   const DiseaseModel *diseaseModel,
+  ContactModel *contactModel,
   const Event& susceptibleDeparture
 ) {
   // Each infectious person at this location might have infected this
@@ -78,6 +84,7 @@ void Location::onSusceptibleDeparture(
   for (const Event &infectiousArrival: infectiousArrivals) {
     registerInteraction(
       diseaseModel,
+      contactModel,
       susceptibleDeparture,
       infectiousArrival,
       // The start time is whichever arrival happened later
@@ -94,6 +101,7 @@ void Location::onSusceptibleDeparture(
 
 void Location::onInfectiousDeparture(
   const DiseaseModel *diseaseModel,
+  ContactModel *contactModel,
   const Event& infectiousDeparture
 ) {
   // Each susceptible person at this location might have been infected by this
@@ -101,6 +109,7 @@ void Location::onInfectiousDeparture(
   for (const Event &susceptibleArrival : susceptibleArrivals) {
     registerInteraction(
       diseaseModel,
+      contactModel,
       susceptibleArrival,
       infectiousDeparture,
       // The start time is whichever arrival happened later
@@ -115,11 +124,16 @@ void Location::onInfectiousDeparture(
 
 inline void Location::registerInteraction(
   const DiseaseModel *diseaseModel,
+  ContactModel *contactModel,
   const Event &susceptibleEvent,
   const Event &infectiousEvent,
   int startTime,
   int endTime
 ) {
+  if (!contactModel->madeContact(susceptibleEvent, infectiousEvent)) {
+    return;
+  }
+
   double propensity = diseaseModel->getPropensity(
     susceptibleEvent.personState,
     infectiousEvent.personState,
