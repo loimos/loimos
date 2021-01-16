@@ -1,13 +1,4 @@
-# charmc should either be in the system PATH or have the full path set as the
-# CHARMC environment variable
-CHARMC ?= charmc
-
-# Set the environment variable PROTOBUF_HOME to hold the path to the
-# local installation of protobuf to overide this default
-PROTOBUF_HOME ?= /usr/local
-
-CXXFLAGS = -std=c++11 -Wall -I$(PROTOBUF_HOME)/include
-OPTS += $(CXXFLAGS)
+include Makefile.include
 
 OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Defs.o \
 				 Event.o Interaction.o ContactModel.o \
@@ -24,7 +15,7 @@ all: all-sub $(BIN)
 # Build the executable (and implicitly charmrun) from the object files
 $(BIN): $(OBJS) $(DECLS)
 	$(CHARMC) -o $@ $(OBJS) -language charm++ \
-	-module CkMulticast $(OPTS) \
+	-module CkMulticast \
 	-lpthread -I$(PROTOBUF_HOME)/include -L$(PROTOBUF_HOME)/lib -lprotobuf
 
 # Build .decl.h (and implicitly .def.h) files from the corresponding
@@ -34,7 +25,7 @@ $(DECLS): %.decl.h: %.ci
 
 # Build .o files from the corresponding .C and .h files
 $(OBJS): %.o: %.C %.h $(DECLS) $(DEFS)
-	$(CHARMC) $(OPTS) $(INC) -o $@ $<
+	$(CHARMC) $(CXXFLAGS) -o $@ $<
 
 # Subdirs will build the protobuf object files
 .PHONY: all-sub
