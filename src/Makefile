@@ -1,8 +1,8 @@
 include Makefile.include
 
 OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Defs.o \
-				 Event.o Interaction.o ContactModel.o \
-	       disease_model/disease.pb.o disease_model/distribution.pb.o
+         Event.o Interaction.o ContactModel.o \
+         disease_model/disease.pb.o disease_model/distribution.pb.o
 DEFS   = Defs.h loimos.def.h
 DECLS  = loimos.decl.h
 BIN    = loimos
@@ -15,8 +15,7 @@ all: all-sub $(BIN)
 # Build the executable (and implicitly charmrun) from the object files
 $(BIN): $(OBJS) $(DECLS)
 	$(CHARMC) -o $@ $(OBJS) -language charm++ \
-	-module CkMulticast \
-	-lpthread -I$(PROTOBUF_HOME)/include -L$(PROTOBUF_HOME)/lib -lprotobuf
+	-module CkMulticast -L$(PROTOBUF_HOME)/lib -lprotobuf
 
 # Build .decl.h (and implicitly .def.h) files from the corresponding
 # .ci files
