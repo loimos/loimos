@@ -14,8 +14,8 @@ all: all-sub $(BIN)
 
 # Build the executable (and implicitly charmrun) from the object files
 $(BIN): $(OBJS) $(DECLS)
-	$(CHARMC) -o $@ $(OBJS) -language charm++ \
-	-module CkMulticast -L$(PROTOBUF_HOME)/lib -lprotobuf
+	$(CHARMC) -o $@ $(OBJS) -language charm++ -module CkMulticast \
+	-lpthread -L$(PROTOBUF_HOME)/lib -lprotobuf
 
 # Build .decl.h (and implicitly .def.h) files from the corresponding
 # .ci files
