@@ -1,62 +1,45 @@
-.PHONY: diseaseModelProto
-CHARMC=charmc
-CXX=g++
+include Makefile.include
 
-PROTOBUF_DIR=/usr/local
-CXXFLAGS=-std=c++11 -Wall -I$(PROTOBUF_DIR)/include
+OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Defs.o \
+         Event.o Interaction.o ContactModel.o \
+         disease_model/disease.pb.o disease_model/distribution.pb.o
+DEFS   = Defs.h loimos.def.h
+DECLS  = loimos.decl.h
+BIN    = loimos
 
-OPTS = $(CXXFLAGS)
+SUBDIRS := $(wildcard */.)
 
-OBJS		= Main.o DiseaseModel.o People.o Locations.o Defs.o disease.pb.o\
-				 	distribution.pb.o Location.o Event.o Interaction.o ContactModel.o
-OBJS_DECL	= loimos.decl.h
+.PHONY:all
+all: all-sub $(BIN)
 
-loimos: $(OBJS) $(OBJS_DECL)
-	$(CHARMC) -o loimos $(OBJS) -language charm++ \
-	-module CkMulticast $(OPTS) \
-	-pthread -I$(PROTOBUF_DIR)/include -L$(PROTOBUF_DIR)/lib -lprotobuf
+# Build the executable (and implicitly charmrun) from the object files
+$(BIN): $(OBJS) $(DECLS)
+	$(CHARMC) -o $@ $(OBJS) -language charm++ -module CkMulticast \
+	-lpthread -L$(PROTOBUF_HOME)/lib -lprotobuf
 
-main.decl.h: main.ci
-	$(CHARMC) main.ci
+# Build .decl.h (and implicitly .def.h) files from the corresponding
+# .ci files
+$(DECLS): %.decl.h: %.ci
+	$(CHARMC) $<
 
-Main.o: diseaseModelProto Main.C Main.h main.decl.h
-	$(CHARMC) $(OPTS) $(INC) -o Main.o Main.C
+# Build .o files from the corresponding .C and .h files
+$(OBJS): %.o: %.C %.h $(DECLS) $(DEFS)
+	$(CHARMC) $(CXXFLAGS) -o $@ $<
 
-People.o: People.C People.h main.decl.h
-	$(CHARMC) $(OPTS) $(INC) -o People.o People.C
+# Subdirs will build the protobuf object files
+.PHONY: all-sub
+all-sub:
+	@for d in $(SUBDIRS); do \
+		cd $$d; $(MAKE) all; \
+	done
 
-Locations.o: Locations.C Locations.h main.decl.h
-	$(CHARMC) $(OPTS) $(INC) -o Locations.o Locations.C
-
-Location.o: Location.C Location.h main.decl.h
-	$(CHARMC) $(OPTS) $(INC) -o Location.o Location.C
-
-Event.o: Event.C Event.h main.decl.h
-	$(CHARMC) $(OPTS) $(INC) -o Event.o Event.C
-
-Interaction.o: Interaction.C Interaction.h main.decl.h
-	$(CHARMC) $(OPTS) $(INC) -o Interaction.o Interaction.C
-
-ContactModel.o: ContactModel.h ContactModel.C 
-	$(CHARMC) $(OPTS) $(INC) -o ContactModel.o ContactModel.C
-
-DiseaseModel.o: DiseaseModel.h DiseaseModel.C 
-	$(CHARMC) $(OPTS) $(INC) -o DiseaseModel.o DiseaseModel.C
-
-diseaseModelProto: 
-	mv disease_model/*.proto ../src/ ; protoc --cpp_out=. disease.proto distribution.proto ; mv *.proto disease_model/
-
-distribution.pb.o: distribution.pb.cc distribution.pb.h
-	${CXX} ${CXXFLAGS} $< -c -o $@
-
-disease.pb.o: disease.pb.cc disease.pb.h
-	${CXX} ${CXXFLAGS} $< -c -o $@
-
-Defs.o: Defs.h
-	$(CHARMC) $(OPTS) $(INC) -o Defs.o Defs.C
-
+.PHONY:clean
 clean:
-	rm -f *.decl.h *.def.h *.o charmrun loimos *.pb.cc *.pb.h
+	rm -f *.o charmrun $(BIN) *.decl.h *.def.h 
+	@for d in $(SUBDIRS); do \
+		cd $$d; $(MAKE) clean; \
+	done
 
-test: loimos
+.PHONY:test
+test: all
 	./charmrun +p4 ./loimos 110 20 15 6 15 disease_model/H5N1.textproto ++local	

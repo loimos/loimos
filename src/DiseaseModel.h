@@ -6,13 +6,16 @@
 #ifndef __DiseaseModel_H__
 #define __DiseaseModel_H__
 
-#include "disease.pb.h"
-#include "distribution.pb.h"
+#include "Event.h"
 
-#include "Defs.h"
+#include "disease_model/disease.pb.h"
+#include "disease_model/distribution.pb.h"
+
 #include "Event.h"
 
 #include <random>
+
+using Time = int32_t;
 
 class DiseaseModel : public CBase_DiseaseModel {
     private:
