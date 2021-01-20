@@ -32,6 +32,14 @@ Locations::Locations() {
   // Init disease states
   diseaseModel = globDiseaseModel.ckLocalBranch();
 
+  // Load application data
+  loadLocationData();
+
+  // Seed random number generator via branch ID for reproducibility.
+  generator.seed(thisIndex);
+}
+
+void Locations::loadLocationData() {
   // Init local 
   int numAttributesPerLocation = 
     DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);

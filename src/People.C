@@ -26,7 +26,7 @@ std::uniform_real_distribution<> unitDistrib(0,1);
 People::People() {
   newCases = 0;
   day = 0;
-  generator.seed(thisIndex + 5);
+  generator.seed(thisIndex);
 
   // Initialize disease model and identify the healthy state
   diseaseModel = globDiseaseModel.ckLocalBranch();
@@ -49,6 +49,23 @@ People::People() {
   }
 
   // Load in people data from file.
+  loadPeopleData()
+  
+  // Randomly infect people to seed the initial outbreak
+  std::uniform_real_distribution<> unitDistrib(0,1);
+  for (int i = 0; i < people.size(); ++i) {
+    if (unitDistrib(generator) < INITIAL_INFECTIOUS_PROBABILITY) {
+      people[i]->state = INFECTIOUS;
+      people[i]->secondsLeftInState = INFECTION_PERIOD;
+      newCases++;
+    }
+  }
+}
+
+/**
+ * Loads real people data from file.
+ */
+void People::loadPeopleData() {
   int startingLineIndex = getGlobalIndex(0, thisIndex, numPeople, numPeoplePartitions, firstPersonIdx) - firstPersonIdx;
   int endingLineIndex = startingLineIndex + numLocalPeople;
   
@@ -120,8 +137,7 @@ void People::SendVisitMessages() {
 
   // Load iterinary for each person.
   std::string line;
-  int current_day_secs = day * (3600 * 24);
-  int next_day_secs = (day + 1) * (3600 * 24);
+  int nextDaySecs = (day + 1) * (3600 * 24);
   
   // Send of activities for each person.
   for (int localPersonId = 0; localPersonId < numLocalPeople; localPersonId++) {
@@ -134,12 +150,12 @@ void People::SendVisitMessages() {
     // Start reading
     int personId = -1; 
     int locationId = -1;
-    int start_time = -1;
+    int startTime = -1;
     int duration = -1;
-    std::tie(personId, locationId, start_time, duration) = DataReader<Person *>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
+    std::tie(personId, locationId, startTime, duration) = DataReader<Person *>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
 
     // Seek while same person on same day.
-    while(personId == people[localPersonId]->uniqueId && start_time < next_day_secs) {
+    while(personId == people[localPersonId]->uniqueId && startTime < nextDaySecs) {
       // Find process that owns that location.
       locationSubset = getPartitionIndex(
           locationId,
@@ -152,10 +168,10 @@ void People::SendVisitMessages() {
         locationId,
         personId,
         people[localPersonId]->state,
-        start_time,
-        start_time + duration
+        startTime,
+        startTime + duration
       );
-      std::tie(personId, locationId, start_time, duration) = DataReader<Person *>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
+      std::tie(personId, locationId, startTime, duration) = DataReader<Person *>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
     }
   }
 }

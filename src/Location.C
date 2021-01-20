@@ -4,6 +4,10 @@
  * SPDX-License-Identifier: MIT
  */
 
+/**
+ * Defines a single physical location that a person may visit. 
+ */ 
+
 #include "loimos.decl.h"
 #include "Location.h"
 #include "People.h"
@@ -25,10 +29,10 @@ Location::~Location() {
   free(this->locationData);
 }
 
+// DataInterface overrides. 
 void Location::setUniqueId(int idx) {
     this->uniqueId = idx;
 }
-
 union Data *Location::getDataField() {
     return this->locationData;
 }

@@ -1,7 +1,17 @@
+/* Copyright 2020 The Loimos Project Developers.
+ * See the top-level LICENSE file for details.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #include "loimos.decl.h"
 
 #include "Person.h"
 #include "data/data.pb.h"
+
+/**
+ * Defines attributes of a single person.
+ */ 
 
 Person::Person(int numAttributes, int startingState, int timeLeftInState) {
     this->personData = (union Data *) malloc(numAttributes * sizeof(union Data));

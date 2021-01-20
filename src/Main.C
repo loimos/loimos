@@ -45,7 +45,7 @@ Main::Main(CkArgMsg* msg) {
   mainProxy = thisProxy;
 
   // Create data caches.
-  std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = build_cache(scenarioPath, numPeople, numPeoplePartitions, numLocations, numLocationPartitions, numDays);
+  std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(scenarioPath, numPeople, numPeoplePartitions, numLocations, numLocationPartitions, numDays);
 
   // Instantiate DiseaseModel nodegroup (One for each physical processor).
   CkPrintf("Loading diseaseModel.\n");
@@ -55,8 +55,9 @@ Main::Main(CkArgMsg* msg) {
   delete msg;
 
   // creating chare arrays
-  CkPrintf("Loading others.\n");
+  CkPrintf("Loading people.\n");
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
+  CkPrintf("Loading locations.\n");
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
 
   // run
