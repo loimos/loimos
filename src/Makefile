@@ -1,7 +1,7 @@
 include Makefile.include
 
 OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Defs.o \
-         Event.o Interaction.o ContactModel.o \
+         Event.o Interaction.o ContactModel.o data/Preprocess.o \
          disease_model/disease.pb.o disease_model/distribution.pb.o
 DEFS   = Defs.h loimos.def.h
 DECLS  = loimos.decl.h
@@ -40,6 +40,9 @@ clean:
 		cd $$d; $(MAKE) clean; \
 	done
 
-.PHONY:test
-test: all
-	./charmrun +p4 ./loimos 110 20 15 6 15 disease_model/H5N1.textproto ++local	
+.PHONY:test test_large
+test: loimos
+	./charmrun +p4 ./loimos 40 16 1 4 7 ../scenarios/h5n1/ ++local
+# See loimos folder for this scneario.
+test_large: loimos
+	./charmrun +p16 ./loimos 41120 9166 200 100 7 ../scenarios/h5n1_large/ ++local
