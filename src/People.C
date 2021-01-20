@@ -119,6 +119,53 @@ void People::loadPeopleData() {
 }
 
 /**
+ * Loads real people data from file.
+ */
+void People::loadPeopleData() {
+  int startingLineIndex = getGlobalIndex(0, thisIndex, numPeople, numPeoplePartitions, firstPersonIdx) - firstPersonIdx;
+  int endingLineIndex = startingLineIndex + numLocalPeople;
+  
+  std::string line;
+  std::ifstream peopleData(scenarioPath + "people.csv");
+  std::ifstream peopleCache(scenarioPath + scenarioId + "_people.cache");
+  if (!peopleData || !peopleCache) {
+    CkAbort("Could not open person data input.");
+  }
+  // Find starting line for our data through people cache.
+  peopleCache.seekg(thisIndex * sizeof(uint32_t));
+  uint32_t peopleOffset;
+  peopleCache.read((char *) &peopleOffset, sizeof(uint32_t));
+  peopleData.seekg(peopleOffset);
+
+  // Read in from remote file.
+  DataReader<Person *>::readData(&peopleData, diseaseModel->personDef, &people);
+  peopleData.close();
+  peopleCache.close();
+
+  // Open activity data and cache. 
+  activityData = new std::ifstream(scenarioPath + "interactions.csv", std::ios::binary);
+  std::ifstream activityCache(scenarioPath + scenarioId + "_interactions.cache", std::ios::binary);
+  if (!activityData || !activityCache) {
+    CkAbort("Could not open activity input.");
+  }
+
+  // Load preprocessing meta data.
+  uint32_t *buf = (uint32_t *) malloc(sizeof(uint32_t) * numDays);
+  for (int c = 0; c < numLocalPeople; c++) {
+    std::vector<uint32_t> *data_pos = &people[c]->interactionsByDay;
+    int curr_id = people[c]->uniqueId;
+
+    // Read in their activity data offsets.
+    activityCache.seekg(sizeof(uint32_t) * numDays * (curr_id - firstPersonIdx));
+    activityCache.read((char *) buf, sizeof(uint32_t) * numDays);
+    for (int day = 0; day < numDays; day++) {
+      data_pos->push_back(buf[day]);
+    }
+  }
+  free(buf);
+} 
+
+/**
  * Randomly generates an itinerary (number of visits to random locations)
  * for each person and sends visit messages to locations.
  */ 

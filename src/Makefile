@@ -46,3 +46,6 @@ test: loimos
 # See loimos folder for this scneario.
 test_large: loimos
 	./charmrun +p16 ./loimos 41120 9166 200 100 7 ../scenarios/h5n1_large/ ++local
+
+cache_wipe:
+	rm ../scenarios/h5n1/*.cache ../scenarios/h5n1_large/*.cache

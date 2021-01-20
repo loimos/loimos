@@ -14,6 +14,8 @@
 #include <random>
 #include <vector>
 #include <tuple>
+#include <iostream>
+#include <fstream>
 #define LOCATION_LAMBDA 5.2
 
 class People : public CBase_People {
