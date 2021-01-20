@@ -20,10 +20,11 @@ class Locations : public CBase_Locations {
     std::default_random_engine generator;
     DiseaseModel *diseaseModel;
     
+    // Load location data from CSV.
+    void loadLocationData();
+
     // Simple helper function which infects a given person
     inline void infect(int personIdx);
-    void loadLocationFromCSV(int locationIdx, std::string *data);
-
   
   public:
     Locations();

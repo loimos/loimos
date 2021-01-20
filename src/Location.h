@@ -53,11 +53,15 @@ class Location : public DataInterface {
     // Various attributes of the locations.
     union Data *locationData;
   public:
-    // just use default constructors
-    Location(int numAttributes);
-    ~Location();
+    // Provide default constructor operations.
+    Location() = default;
+    Location(const Location&) = default;
+    Location(Location&&) = default;
+    Location& operator=(const Location&) = default;
+    Location& operator=(Location&&) = default;
 
-    // Data interface constructors.
+
+    // Override abstract DataInterface getters and setters.
     void setUniqueId(int idx);
     union Data *getDataField();
 

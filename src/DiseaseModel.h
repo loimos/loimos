@@ -39,7 +39,7 @@ class DiseaseModel : public CBase_DiseaseModel {
         bool isSusceptible(int personState);
         const char * getStateLabel(int personState);
         double getLogProbNotInfected(Event susceptibleEvent, Event infectiousEvent);
-        // Non-disease model objects that we want one per PE.
+        // Non-disease model objects that we want one per physical processor.
         // Might want to move these into their own chare.
         loimos::proto::CSVDefinition *personDef;
         loimos::proto::CSVDefinition *locationDef;

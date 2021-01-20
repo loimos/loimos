@@ -22,11 +22,12 @@ class People : public CBase_People {
     int numLocalPeople;
     int day;
     int newCases;
+    
     std::ifstream *activityData;
     std::vector<Person *> people;
     std::default_random_engine generator;
     DiseaseModel *diseaseModel;
-    void loadPersonFromCSV(int personIdx, std::string *data);
+    void loadPeopleData();
   public:
     People();
     void SendVisitMessages(); 

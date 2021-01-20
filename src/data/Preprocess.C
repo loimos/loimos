@@ -1,3 +1,16 @@
+/* Copyright 2020 The Loimos Project Developers.
+ * See the top-level LICENSE file for details.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+/**
+ * This file is responsible for building a file cache pre-simulation to allow
+ * direct fseeking in files rather than slow iteration. Three caches are built
+ * for each of the people, locations, and activities file. The cache is dependent
+ * on the files given and the number of chares 
+ */ 
+
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -10,26 +23,22 @@
 
 #define MAX_WRITE_SIZE 65536 // 2^16
 
-int getDay(int timeInSeconds);
-int build_obj_lookup_cache(std::string inputPath, std::string outputPath, int numObjs, int numChares, std::string pathToCsvDefinition);
-void build_activity_cache(std::string inputPath, std::string outputPath, int numPeople, int numDays, int firstPersonIdx, std::string pathToCsvDefinition);
-
 /** 
  * This file preprocesses a given input file.
  */ 
 // TODO: Replace getline with function that doesn't need to copy to string object.
-std::tuple<int, int, std::string> build_cache(std::string scenarioPath, int numPeople, int peopleChares, int numLocations, int numLocationChares, int numDays) {
+std::tuple<int, int, std::string> buildCache(std::string scenarioPath, int numPeople, int peopleChares, int numLocations, int numLocationChares, int numDays) {
     // Build person and location cache.
     std::ostringstream oss;
     oss << numPeople << "-" << peopleChares << "_" << numLocations << "-" << numLocationChares;
     std::string unique_scenario = oss.str();
-    int firstPersonIdx = build_obj_lookup_cache(scenarioPath + "people.csv", scenarioPath + unique_scenario + "_people.cache", numPeople, peopleChares, scenarioPath + "people.textproto");
-    int firstLocationIdx = build_obj_lookup_cache(scenarioPath + "locations.csv", scenarioPath + unique_scenario + "_locations.cache", numLocations, numLocationChares, scenarioPath + "locations.textproto");
-    build_activity_cache(scenarioPath + "interactions.csv", scenarioPath + unique_scenario + "_interactions.cache", numPeople, numDays, firstPersonIdx, scenarioPath + "interactions.textproto");
+    int firstPersonIdx = buildObjectLookupCache(scenarioPath + "people.csv", scenarioPath + unique_scenario + "_people.cache", numPeople, peopleChares, scenarioPath + "people.textproto");
+    int firstLocationIdx = buildObjectLookupCache(scenarioPath + "locations.csv", scenarioPath + unique_scenario + "_locations.cache", numLocations, numLocationChares, scenarioPath + "locations.textproto");
+    buildActivityCache(scenarioPath + "interactions.csv", scenarioPath + unique_scenario + "_interactions.cache", numPeople, numDays, firstPersonIdx, scenarioPath + "interactions.textproto");
     return std::make_tuple(firstPersonIdx, firstLocationIdx, unique_scenario);
 }
 
-int build_obj_lookup_cache(std::string inputPath, std::string outputPath, int numObjs, int numChares, std::string pathToCsvDefinition) {
+int buildObjectLookupCache(std::string inputPath, std::string outputPath, int numObjs, int numChares, std::string pathToCsvDefinition) {
     /** 
      * Assumptions: (about person file)
      * -- Contigious block of IDs that are sorted.
@@ -69,7 +78,13 @@ int build_obj_lookup_cache(std::string inputPath, std::string outputPath, int nu
 
     // Special case to get lowest person ID first.
     std::getline(activityStream, line);
-    int firstIdx = getIntAttribute(&line, csvLocationOfPid);
+    char *str = line.c_str();
+    for (int i = 0; i < csvLocationOfPid; i++)
+        str = strtok(str, ",");
+    *strtok(str, ",") = "\0";
+    int firstIdx = std::stoi(str);
+    
+    getIntAttribute(&line, csvLocationOfPid);
     
     // Check if file cache already created.
     std::ifstream existenceCheck(outputPath, std::ios_base::binary);
@@ -96,7 +111,7 @@ int build_obj_lookup_cache(std::string inputPath, std::string outputPath, int nu
 }
 
 
-void build_activity_cache(std::string inputPath, std::string outputPath, int numPeople, int numDays, int firstPersonIdx, std::string pathToCsvDefinition) {
+void buildActivityCache(std::string inputPath, std::string outputPath, int numPeople, int numDays, int firstPersonIdx, std::string pathToCsvDefinition) {
     /**
      * Assumptions. 
      * Stream is sorted by start time per person.

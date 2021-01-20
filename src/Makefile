@@ -5,7 +5,7 @@ PROTOBUF_DIR=/usr/local/bin/vcpkg/installed/x64-osx
 # PROTOBUF_DIR=/usr/local
 CXXFLAGS=-std=c++11 -Wall -I$(PROTOBUF_DIR)/include -O2
 
-OBJS		= Main.o DiseaseModel.o People.o Person.o Locations.o Defs.o disease.pb.o distribution.pb.o Attributes.o Location.o Event.o data.pb.o preprocess.o
+OBJS		= Main.o DiseaseModel.o People.o Person.o Locations.o Defs.o disease.pb.o distribution.pb.o Attributes.o Location.o Event.o data.pb.o Preprocess.o
 OBJS_DECL	= loimos.decl.h
 INC = -I$(PROTOBUF_DIR)/include -L$(PROTOBUF_DIR)/lib -lprotobuf
 
@@ -41,8 +41,8 @@ DiseaseModel.o: DiseaseModel.h DiseaseModel.C
 Attributes.o: Attributes.h Attributes.C 
 	$(CHARMC) $(OPTS) $(INC) -o Attributes.o Attributes.C
 
-preprocess.o: data/preprocess.h data/preprocess.C Attributes.o
-	$(CHARMC) $(OPTS) $(INC) -o preprocess.o data/preprocess.C Attributes.o
+Preprocess.o: data/preprocess.h data/preprocess.C Attributes.o
+	$(CHARMC) $(OPTS) $(INC) -o Preprocess.o data/preprocess.C Attributes.o
 
 diseaseModelProto:
 	mv disease_model/*.proto ../src/ ; protoc --cpp_out=. disease.proto distribution.proto ; mv *.proto disease_model/
@@ -53,7 +53,10 @@ distribution.pb.o: distribution.pb.cc distribution.pb.h
 disease.pb.o: disease.pb.cc disease.pb.h
 	${CXX} ${CXXFLAGS} $< -c -o $@
 
-data.pb.o: data/data.pb.cc data/data.pb.h
+dataModelProto:
+	mv protoc --cpp_out=. data/data.proto
+
+data.pb.o: dataModelProto data/data.pb.cc data/data.pb.h
 	${CXX} ${CXXFLAGS} $< -c -o $@
 
 Defs.o: Defs.h
@@ -62,8 +65,8 @@ Defs.o: Defs.h
 clean:
 	rm -f *.decl.h *.def.h *.o charmrun loimos *.pb.cc *.pb.h
 
-preprocessing: preprocessing/preprocess.C
-	${CXX} ${CXXFLAGS} preprocessing/preprocess.C -o preprocess
+preprocessing: preprocessing/Preprocess.C
+	${CXX} ${CXXFLAGS} preprocessing/Preprocess.C -o preprocess
 
 preprocess: preprocessing
 	./preprocess

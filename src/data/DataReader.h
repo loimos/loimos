@@ -1,3 +1,9 @@
+/* Copyright 2020 The Loimos Project Developers.
+ * See the top-level LICENSE file for details.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #ifndef __DATA_READER_H__
 #define __DATA_READER_H__
 #include <vector>
@@ -22,6 +28,12 @@ union Data {
     uint16_t category; 
 };
 
+
+/**
+ * Defines a generic data reader for any child class of DataInterface.
+ * Array definition is child object dependent so this required that the
+ * code be defined in the .h file rather than in the .C.
+ */ 
 template <class T>
 class DataReader {
     public:
