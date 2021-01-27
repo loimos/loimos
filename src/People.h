@@ -29,7 +29,7 @@ class People : public CBase_People {
     std::default_random_engine generator;
     DiseaseModel *diseaseModel;
 
-    void ProcessInteractions(Person &person);
+    void ProcessInteractions(Person *person);
     void loadPeopleData();
   public:
     People();

@@ -19,7 +19,9 @@
 #include <sstream>
 #include <google/protobuf/text_format.h>
 
-#include "../Attributes.h"
+#include "../loimos.decl.h"
+#include "Preprocess.h"
+#include "../Person.h"
 
 #define MAX_WRITE_SIZE 65536 // 2^16
 
@@ -63,7 +65,7 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath, int nu
     }
     t.close();
     int csvLocationOfPid = -1;
-    for (int i = 0; i < csvDefinition.field_size(); i++) {
+    for (int i = 0; i < csvDefinition.field_size(); i += 1) {
         if (csvDefinition.field(i).has_uniqueid()) {
             csvLocationOfPid = i;
             break;
@@ -78,14 +80,14 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath, int nu
 
     // Special case to get lowest person ID first.
     std::getline(activityStream, line);
-    char *str = line.c_str();
-    for (int i = 0; i < csvLocationOfPid; i++)
-        str = strtok(str, ",");
-    *strtok(str, ",") = "\0";
-    int firstIdx = std::stoi(str);
-    
-    getIntAttribute(&line, csvLocationOfPid);
-    
+    char *str = strdup(line.c_str());
+    char *tok = strtok(str, ",");
+    for (int i = 0; i < csvLocationOfPid; i++) {
+        tok = strtok(NULL, ",");
+    }
+    int firstIdx = std::atoi(tok);
+    free(str);
+        
     // Check if file cache already created.
     std::ifstream existenceCheck(outputPath, std::ios_base::binary);
     if (existenceCheck.good()) {
@@ -94,10 +96,10 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath, int nu
         return firstIdx;
     } else {
         existenceCheck.close();
-        std::ofstream outputSream(outputPath, std::ios_base::binary);
+        std::ofstream outputStream(outputPath, std::ios_base::binary);
         for (int chareNum = 0; chareNum < numChares; chareNum++) {
             // Write current offset.
-            outputSream.write((char *) &currentPosition, sizeof(uint32_t));
+            outputStream.write((char *) &currentPosition, sizeof(uint32_t));
 
             // Skip next n lines.
             for (int i = 0; i < objPerChare; i++) {
@@ -105,7 +107,7 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath, int nu
             }
             currentPosition = activityStream.tellg();
         }
-        outputSream.flush();
+        outputStream.flush();
         return firstIdx;
     }
 }
@@ -126,12 +128,10 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
     std::ifstream activityStream(inputPath, std::ios_base::binary);
     if (!activityStream) {
         printf("Could not open person data input.\n");
-        exit(0);
+        exit(1);
     }
 
     // Read config file.
-    int csvLocationOfPid = -1;
-    int _csv_location_of_start_time = -1;
     loimos::proto::CSVDefinition csvDefinition;
     std::ifstream t(pathToCsvDefinition);
     std::string strData((std::istreambuf_iterator<char>(t)),
@@ -181,9 +181,9 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
     }
 
     // Output
-    std::ofstream outputSream(outputPath);
-    outputSream.write((char *) elements, totalDataSize);
-    outputSream.close();
+    std::ofstream outputStream(outputPath);
+    outputStream.write((char *) elements, totalDataSize);
+    outputStream.close();
 }
 
 int getDay(int timeInSeconds) {

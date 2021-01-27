@@ -20,6 +20,7 @@ mainmodule loimos {
   readonly int firstPersonIdx;
   readonly int firstLocationIdx;
   readonly std::string scenarioPath;
+  readonly std::string diseasePath;
   readonly std::string scenarioId;
 
   mainchare Main {

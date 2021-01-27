@@ -37,22 +37,6 @@ union Data *Location::getDataField() {
     return this->locationData;
 }
 
-Location::Location(int numAttributes) {
-  this->locationData = (union Data *) malloc(numAttributes * sizeof(union Data));
-}
-
-Location::~Location() {
-  free(this->locationData);
-}
-
-// DataInterface overrides. 
-void Location::setUniqueId(int idx) {
-    this->uniqueId = idx;
-}
-union Data *Location::getDataField() {
-    return this->locationData;
-}
-
 void Location::addEvent(Event e) {
   events.push(e);
 }
@@ -64,6 +48,7 @@ void Location::processEvents(
   std::vector<Event> *arrivals;
   Event curEvent;
 
+  printf("I have %d interactions\n", events.size());
   while (!events.empty()) {
     curEvent = events.top();
     events.pop();
@@ -194,22 +179,14 @@ inline void Location::sendInteractions(int personIdx) {
   int peoplePartitionIdx = getPartitionIndex(
     personIdx,
     numPeople,
-    numPeoplePartitions
+    numPeoplePartitions,
+    firstLocationIdx
   );
 
   peopleArray[peoplePartitionIdx].ReceiveInteractions(
     personIdx,
     interactions[personIdx]
   );
-
-  /*  
-  CkPrintf(
-    "sending %d interactions to person %d in partition %d\r\n",
-    (int) interactions[personIdx].size(),
-    personIdx,
-    peoplePartitionIdx
-  );
-  */
   
   // Free up space where we were storing interactions data. This also prevents
   // interactions from being sent multiple times if this person has multiple

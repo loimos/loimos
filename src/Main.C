@@ -22,6 +22,7 @@
 /* readonly */ int numPeoplePartitions;
 /* readonly */ int numLocationPartitions;
 /* readonly */ std::string scenarioPath;
+/* readonly */ std::string diseasePath;
 /* readonly */ std::string scenarioId;
 /* readonly */ int numDays;
 /* readonly */ int firstPersonIdx;
@@ -29,8 +30,8 @@
 
 Main::Main(CkArgMsg* msg) {
   // parsing command line arguments
-  if(msg->argc < 7){
-    CkPrintf("Error, usage %s <people> <locations> <people subsets> <location subsets> <days> <scenario_folder>\n", msg->argv[0]);
+  if(msg->argc < 8){
+    CkPrintf("Error, usage %s <people> <locations> <people subsets> <location subsets> <days> <scenario_folder> <disease_model_path>\n", msg->argv[0]);
     CkExit();
   }
   numPeople = atoi(msg->argv[1]);
@@ -39,6 +40,7 @@ Main::Main(CkArgMsg* msg) {
   numLocationPartitions = atoi(msg->argv[4]);
   numDays = atoi(msg->argv[5]);
   scenarioPath = std::string(msg->argv[6]);
+  diseasePath = std::string(msg->argv[7]);
 
   // setup main proxy
   CkPrintf("Running Loimos on %d PEs with %d people, %d locations, %d people subsets, %d location subsets, and %d days\n", CkNumPes(), numPeople, numLocations, numPeoplePartitions, numLocationPartitions, numDays);

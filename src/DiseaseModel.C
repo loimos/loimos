@@ -36,7 +36,7 @@ DiseaseModel::DiseaseModel() {
   // Load in text proto definition.
   // TODO(iancostello): Load directly without string.
   model = new loimos::proto::DiseaseModel();
-  std::ifstream t((scenarioPath + "disease.textproto").c_str());
+  std::ifstream t(diseasePath);
   std::string str((std::istreambuf_iterator<char>(t)),
                   std::istreambuf_iterator<char>());
   if (!google::protobuf::TextFormat::ParseFromString(str, model)) {

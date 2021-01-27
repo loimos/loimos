@@ -11,9 +11,10 @@
 #include "DiseaseModel.h"
 #include "ContactModel.h"
 #include "Location.h"
+#include "Person.h"
 #include "Event.h"
 #include "Defs.h"
-#include "Attributes.h"
+#include "data/DataReader.h"
 
 #include <algorithm>
 #include <queue>
@@ -40,14 +41,14 @@ Locations::Locations() {
 }
 
 void Locations::loadLocationData() {
-  // Init local 
+  // Init local.
   int numAttributesPerLocation = 
     DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
   for (int p = 0; p < numLocalLocations; p++) {
     locations.push_back(new Location(numAttributesPerLocation));
   }
 
-  // Load in location information
+  // Load in location information.
   int startingLineIndex = getGlobalIndex(0, thisIndex, numLocations, numLocationPartitions, firstLocationIdx) - firstLocationIdx;
   int endingLineIndex = startingLineIndex + numLocalLocations;
   std::string line;
@@ -91,7 +92,7 @@ void Locations::ReceiveVisitMessages(
     firstLocationIdx
   );
 
-  // CkPrintf("%d: Received visit to %d (loc %d) from person %d\n", thisIndex, locationIdx, localLocIdx, personIdx);
+  CkPrintf("%d: Received visit to %d (loc %d) from person %d (%d)\n", thisIndex, locationIdx, localLocIdx, personIdx, firstLocationIdx);
 
   // Wrap vist info...
   Event arrival { ARRIVAL, personIdx, personState, visitStart };
@@ -105,7 +106,7 @@ void Locations::ReceiveVisitMessages(
 
 void Locations::ComputeInteractions() {
   // traverses list of locations
-  for (Location loc : locations) {
-    loc.processEvents(diseaseModel, contactModel);
+  for (Location *loc : locations) {
+    loc->processEvents(diseaseModel, contactModel);
   }
 }

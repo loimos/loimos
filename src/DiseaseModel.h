@@ -32,8 +32,6 @@ class DiseaseModel : public CBase_DiseaseModel {
         int healthyState;
     public:
         DiseaseModel();
-        loimos::proto::CSVDefinition *personDef;
-        loimos::proto::CSVDefinition *locationDef;
         int getIndexOfState(std::string stateLabel) const;
         // TODO(iancostello): Change interventionStategies to index based.
         std::tuple<int, int> transitionFromState(int fromState, std::string interventionStategy, std::default_random_engine *generator) const;

@@ -112,7 +112,7 @@ class DataReader {
             // TODO don't reallocate this everytime.
             char buf[MAX_INPUT_LINE_LENGTH];
 
-            // Get next line.
+            // Get header line.
             input->getline(buf, MAX_INPUT_LINE_LENGTH);
 
             // Read over people data format.
@@ -121,7 +121,6 @@ class DataReader {
             int left_comma = 0;
 
             int line_length = input->gcount();
-            // printf("Got here %d\n", line_length);
             for (int c = 0; c < line_length; c++) {
                 // Scan for the next attrbiutes - comma separted.
                 if (buf[c] == ',' || c + 1 == line_length) {
@@ -135,17 +134,19 @@ class DataReader {
                         char *start = buf + left_comma;
                         if (c + 1 == line_length) {
                             data_len += 1;
+                        } else {
+                            start[data_len] = 0;
                         }
 
                         // Parse byte stream to the correct representation.
                         if (field->has_uniqueid()) {
-                            personId = std::stoi(std::string(start, data_len));
+                            personId = std::atoi(start);
                         } else if (field->has_foreignid()) {
-                            locationId = std::stoi(std::string(start, data_len));
+                            locationId = std::atoi(start);
                         } else if (field->has_starttime()) {
-                            startTime = std::stoi(std::string(start, data_len));
+                            startTime = std::atoi(start);
                         } else if (field->has_duration()) {
-                            duration = std::stoi(std::string(start, data_len));
+                            duration = std::atoi(start);
                         } else {
                             // TODO process.
                             attr_nonzero_index++;
@@ -156,7 +157,7 @@ class DataReader {
                     attr_index++;
                 }
             }
-            // printf("Lets see Person %d visited %d at %d for %d\n", personId, locationId, startTime, duration);
+            // printf("Person %d visited %d at %d for %d\n", personId, locationId, startTime, duration);
             return std::make_tuple(personId, locationId, startTime, duration);
         }
 };

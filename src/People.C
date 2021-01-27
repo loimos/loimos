@@ -10,7 +10,6 @@
 #include "Interaction.h"
 #include "DiseaseModel.h"
 #include "Person.h"
-#include "Attributes.h"
 #include "data/DataReader.h"
 
 #include <tuple>
@@ -49,7 +48,7 @@ People::People() {
   }
 
   // Load in people data from file.
-  loadPeopleData()
+  loadPeopleData();
   
   // Randomly infect people to seed the initial outbreak
   std::uniform_real_distribution<> unitDistrib(0,1);
@@ -67,63 +66,6 @@ People::People() {
  */
 void People::loadPeopleData() {
   int startingLineIndex = getGlobalIndex(0, thisIndex, numPeople, numPeoplePartitions, firstPersonIdx) - firstPersonIdx;
-  int endingLineIndex = startingLineIndex + numLocalPeople;
-  
-  std::string line;
-  std::ifstream peopleData(scenarioPath + "people.csv");
-  std::ifstream peopleCache(scenarioPath + scenarioId + "_people.cache");
-  if (!peopleData || !peopleCache) {
-    CkAbort("Could not open person data input.");
-  }
-  // Find starting line for our data through people cache.
-  peopleCache.seekg(thisIndex * sizeof(uint32_t));
-  uint32_t peopleOffset;
-  peopleCache.read((char *) &peopleOffset, sizeof(uint32_t));
-  peopleData.seekg(peopleOffset);
-
-  // Read in from remote file.
-  DataReader<Person *>::readData(&peopleData, diseaseModel->personDef, &people);
-  peopleData.close();
-  peopleCache.close();
-
-  // Open activity data and cache. 
-  activityData = new std::ifstream(scenarioPath + "interactions.csv", std::ios::binary);
-  std::ifstream activityCache(scenarioPath + scenarioId + "_interactions.cache", std::ios::binary);
-  if (!activityData || !activityCache) {
-    CkAbort("Could not open activity input.");
-  }
-
-  // Load preprocessing meta data.
-  uint32_t *buf = (uint32_t *) malloc(sizeof(uint32_t) * numDays);
-  for (int c = 0; c < numLocalPeople; c++) {
-    std::vector<uint32_t> *data_pos = &people[c]->interactionsByDay;
-    int curr_id = people[c]->uniqueId;
-
-    // Read in their activity data offsets.
-    activityCache.seekg(sizeof(uint32_t) * numDays * (curr_id - firstPersonIdx));
-    activityCache.read((char *) buf, sizeof(uint32_t) * numDays);
-    for (int day = 0; day < numDays; day++) {
-      data_pos->push_back(buf[day]);
-    }
-  }
-  free(buf);
-  
-  // Randomly infect people to seed the initial outbreak
-  for (Person &person: people) {
-    if (unitDistrib(generator) < INITIAL_INFECTIOUS_PROBABILITY) {
-      people[i]->state = INFECTIOUS;
-      people[i]->secondsLeftInState = INFECTION_PERIOD;
-      newCases++;
-    }
-  }
-}
-
-/**
- * Loads real people data from file.
- */
-void People::loadPeopleData() {
-  int startingLineIndex = getGlobalIndex(0, thisIndex, numPeople, numPeoplePartitions, firstPersonIdx) - firstPersonIdx;
-  int endingLineIndex = startingLineIndex + numLocalPeople;
   
   std::string line;
   std::ifstream peopleData(scenarioPath + "people.csv");
@@ -170,7 +112,7 @@ void People::loadPeopleData() {
  * for each person and sends visit messages to locations.
  */ 
 void People::SendVisitMessages() {
-  int numVisits, personIdx, locationIdx, locationSubset;
+  int locationSubset;
 
   // initialize random number generator for a Poisson distribution
   std::poisson_distribution<int> poisson_dist(LOCATION_LAMBDA);
@@ -236,9 +178,11 @@ void People::ReceiveInteractions(
 
   // Just concatenate the interaction lists so that we can process all of the
   // interactions at the end of the day
+  // printf("Accessing %d of %d\n", localIdx, people.size());
+  // printf("%d %d %d %d\n", personIdx, numPeople, numPeoplePartitions, firstPersonIdx);
   Person *person = people[localIdx];
   person->interactions.insert(
-    person.interactions.cend(),
+    person->interactions.cend(),
     interactions.cbegin(),
     interactions.cend()
   );
@@ -276,11 +220,11 @@ void People::EndofDayStateUpdate() {
   newCases = 0;
 }
 
-void People::ProcessInteractions(Person &person) {
+void People::ProcessInteractions(Person *person) {
   double totalPropensity = 0.0;
-  int numInteractions = (int) person.interactions.size();
+  int numInteractions = (int) person->interactions.size();
   for (int i = 0; i < numInteractions; ++i) {
-    totalPropensity += person.interactions[i].propensity;
+    totalPropensity += person->interactions[i].propensity;
   }
 
   // Detemine whether or not this person was infected...
@@ -295,7 +239,7 @@ void People::ProcessInteractions(Person &person) {
     for (
       interactionIdx = 0; interactionIdx < numInteractions; ++interactionIdx
     ) {
-      partialSum += person.interactions[interactionIdx].propensity;
+      partialSum += person->interactions[interactionIdx].propensity;
       if (partialSum > roll) {
         break;
       }
@@ -306,10 +250,10 @@ void People::ProcessInteractions(Person &person) {
 
     // Mark that exposed healthy individuals should make transition at the end
     // of the day.
-    if (person.state == diseaseModel->getHealthyState()) {
-      person.secondsLeftInState = -1; 
+    if (person->state == diseaseModel->getHealthyState()) {
+      person->secondsLeftInState = -1; 
     }
   }
 
-  person.interactions.clear();
+  person->interactions.clear();
 }
