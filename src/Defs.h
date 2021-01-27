@@ -7,6 +7,7 @@
 #ifndef __DEFS_H__
 #define __DEFS_H__
 
+// Disease states
 #define SUSCEPTIBLE 0
 #define EXPOSED 1
 #define INFECTIOUS 2
@@ -16,12 +17,21 @@
 #define INCUBATION_PERIOD 2
 #define INFECTION_PERIOD 4
 
-#define INFECTION_PROBABILITY 0.05
+// Event types
+using EventType = char;
+#define ARRIVAL 0
+#define DEPARTURE 1
+
+// Time
+using Time = int32_t;
+const Time DAY_LENGTH = 3600 * 24;
+
 #define INITIAL_INFECTIOUS_PROBABILITY 0.05
 
 extern /* readonly */ CProxy_Main mainProxy;
 extern /* readonly */ CProxy_People peopleArray;
 extern /* readonly */ CProxy_Locations locationsArray;
+extern /* readonly */ CProxy_DiseaseModel globDiseaseModel;
 extern /* readonly */ int numPeople;
 extern /* readonly */ int numLocations;
 extern /* readonly */ int numPeoplePartitions;

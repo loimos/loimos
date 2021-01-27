@@ -1,29 +1,45 @@
-CHARMC = $(HOME)/charm/bin/charmc
+include Makefile.include
 
-OBJS = Main.o People.o Locations.o Defs.o
-OBJS_DECL	= loimos.decl.h
+OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Defs.o \
+         Event.o Interaction.o ContactModel.o \
+         disease_model/disease.pb.o disease_model/distribution.pb.o
+DEFS   = Defs.h loimos.def.h
+DECLS  = loimos.decl.h
+BIN    = loimos
 
-loimos: $(OBJS) $(OBJS_DECL)
-	$(CHARMC) -o loimos $(OBJS) -language charm++ \
-	-module CkMulticast $(OPTS)
+SUBDIRS := $(wildcard */.)
 
-loimos.decl.h: main.ci
-	$(CHARMC) main.ci
+.PHONY:all
+all: all-sub $(BIN)
 
-Main.o: Main.C Main.h loimos.decl.h
-	$(CHARMC) $(OPTS) $(INC) -o Main.o Main.C
+# Build the executable (and implicitly charmrun) from the object files
+$(BIN): $(OBJS) $(DECLS)
+	$(CHARMC) -o $@ $(OBJS) -language charm++ -module CkMulticast \
+	-module NDMeshStreamer -lpthread -L$(PROTOBUF_HOME)/lib -lprotobuf
 
-People.o: People.C People.h loimos.decl.h
-	$(CHARMC) $(OPTS) $(INC) -o People.o People.C
+# Build .decl.h (and implicitly .def.h) files from the corresponding
+# .ci files
+$(DECLS): %.decl.h: %.ci
+	$(CHARMC) $<
 
-Locations.o: Locations.C Locations.h loimos.decl.h
-	$(CHARMC) $(OPTS) $(INC) -o Locations.o Locations.C
+# Build .o files from the corresponding .C and .h files
+$(OBJS): %.o: %.C %.h $(DECLS) $(DEFS)
+	$(CHARMC) $(CXXFLAGS) -o $@ $<
 
-Defs.o: Defs.h
-	$(CHARMC) $(OPTS) $(INC) -o Defs.o Defs.C
+# Subdirs will build the protobuf object files
+.PHONY: all-sub
+all-sub:
+	@for d in $(SUBDIRS); do \
+		cd $$d; $(MAKE) all; \
+	done
 
+.PHONY:clean
 clean:
-	rm -f *.decl.h *.def.h *.o charmrun loimos
+	rm -f *.o charmrun $(BIN) *.decl.h *.def.h 
+	@for d in $(SUBDIRS); do \
+		cd $$d; $(MAKE) clean; \
+	done
 
-test: loimos
-	./charmrun +p4 ./loimos 110 20 15 6 15 ++local
+.PHONY:test
+test: all
+	./charmrun +p4 ./loimos 110 20 15 6 15 disease_model/H5N1.textproto ++local	
