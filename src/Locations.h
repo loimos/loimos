@@ -34,6 +34,9 @@ class Locations : public CBase_Locations {
       int visitEnd
     );
     void ComputeInteractions(); // calls ReceiveInfections
+    
+    // Load location data from CSV.
+    void loadLocationData();
 };
 
 #endif // __LOCATIONS_H__

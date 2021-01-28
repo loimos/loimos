@@ -38,14 +38,20 @@ extern /* readonly */ int numPeoplePartitions;
 extern /* readonly */ int numLocationPartitions;
 extern /* readonly */ int numDays;
 
+extern /* readonly */ bool syntheticRun;
+extern /* readonly */ int firstPersonIdx;
+extern /* readonly */ int firstLocationIdx;
+extern /* readonly */ std::string scenarioPath;
+extern /* readonly */ std::string scenarioId;
+
 int getNumElementsPerPartition(int numElements, int numPartitions);
 
 int getNumLocalElements(int numElements, int numPartitions, int partitionIndex);
 
-int getPartitionIndex(int globalIndex, int numElements, int numPartitions);
+int getPartitionIndex(int globalIndex, int numElements, int numPartitions, int offset);
 
-int getLocalIndex(int globalIndex, int numElements, int numPartitions);
+int getLocalIndex(int globalIndex, int numElements, int numPartitions, int offset);
 
-int getGlobalIndex(int localIndex, int partitionIndex, int numElements, int numPartitions);
+int getGlobalIndex(int localIndex, int partitionIndex, int numElements, int numPartitions, int offset);
 
 #endif // __DEFS_H__

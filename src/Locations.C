@@ -13,10 +13,14 @@
 #include "Location.h"
 #include "Event.h"
 #include "Defs.h"
+#include "data/DataReader.h"
+#include "Person.h"
 
 #include <algorithm>
 #include <queue>
 #include <stdio.h>
+#include <iostream>
+#include <fstream>
 
 Locations::Locations() {
   // Getting number of locations assigned to this chare
@@ -29,7 +33,48 @@ Locations::Locations() {
   
   // Init disease states
   diseaseModel = globDiseaseModel.ckLocalBranch();
+
+  // Load application data
+  loadLocationData();
+
   // Seed random number generator via branch ID for reproducibility
+  generator.seed(thisIndex);
+  // Init contact model
+  contactModel = new ContactModel();
+  contactModel->setGenerator(&generator);
+}
+
+void Locations::loadLocationData() {
+  // Init local.
+  int numAttributesPerLocation = 
+    DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
+  for (int p = 0; p < numLocalLocations; p++) {
+    locations.emplace_back(Location(numAttributesPerLocation));
+  }
+
+  // Load in location information.
+  int startingLineIndex = getGlobalIndex(0, thisIndex, numLocations, numLocationPartitions, firstLocationIdx) - firstLocationIdx;
+  int endingLineIndex = startingLineIndex + numLocalLocations;
+  std::string line;
+
+  std::ifstream locationData(scenarioPath + "locations.csv");
+  std::ifstream locationCache(scenarioPath + scenarioId + "_locations.cache");
+  if (!locationData || !locationCache) {
+    CkAbort("Could not open person data input.");
+  }
+  
+  // Find starting line for our data through location cache.
+  locationCache.seekg(thisIndex * sizeof(uint32_t));
+  uint32_t locationOffset;
+  locationCache.read((char *) &locationOffset, sizeof(uint32_t));
+  locationData.seekg(locationOffset);
+
+  // Read in our location data.
+  DataReader<Location>::readData(&locationData, diseaseModel->locationDef, &locations);
+  locationData.close();
+  locationCache.close();
+
+  // Seed random number generator via branch ID for reproducibility.
   generator.seed(thisIndex);
   // Init contact model
   contactModel = new ContactModel();
@@ -47,7 +92,8 @@ void Locations::ReceiveVisitMessages(
   int localLocIdx = getLocalIndex(
     locationIdx,
     numLocations,
-    numLocationPartitions
+    numLocationPartitions,
+    firstLocationIdx
   );
 
   // Wrap vist info...

@@ -12,6 +12,7 @@
 #include "disease_model/distribution.pb.h"
 
 #include "Event.h"
+ #include "data/data.pb.h"
 
 #include <random>
 
@@ -46,6 +47,12 @@ class DiseaseModel : public CBase_DiseaseModel {
           int startTime,
           int endTime
         ) const;
+
+        // These objects are not related to the disease model but are
+        // per PE definitions so it makes sense to share them.
+        loimos::proto::CSVDefinition *personDef;
+        loimos::proto::CSVDefinition *locationDef;
+        loimos::proto::CSVDefinition *activityDef;
 };
 
 #endif // __DiseaseModel_H__

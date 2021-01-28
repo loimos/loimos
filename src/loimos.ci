@@ -18,6 +18,12 @@ mainmodule loimos {
   readonly int numLocationPartitions;
   readonly int numDays;
 
+  readonly bool syntheticRun;
+  readonly int firstPersonIdx;
+  readonly int firstLocationIdx;
+  readonly std::string scenarioPath;
+  readonly std::string scenarioId;
+
   mainchare Main {
     entry Main(CkArgMsg*);
     entry void run() {

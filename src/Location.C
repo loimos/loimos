@@ -17,6 +17,23 @@
 #include <cmath>
 #include <algorithm>
 
+Location::Location(int numAttributes) {
+  this->locationData = (union Data *) malloc(numAttributes * sizeof(union Data));
+}
+
+Location::~Location() {
+  free(this->locationData);
+}
+
+// DataInterface overrides. 
+void Location::setUniqueId(int idx) {
+    this->uniqueId = idx;
+}
+union Data *Location::getDataField() {
+    return this->locationData;
+}
+
+// Event processing.
 void Location::addEvent(Event e) {
   events.push(e);
 }

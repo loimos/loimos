@@ -68,6 +68,32 @@ DiseaseModel::DiseaseModel(std::string pathToModel) {
 
   // Init commonly used states.
   healthyState = getIndexOfState("uninfected");
+
+  // Setup other shared PE objects.
+  personDef = new loimos::proto::CSVDefinition();
+  std::ifstream tPerson(scenarioPath + "people.textproto");
+  std::string strPerson((std::istreambuf_iterator<char>(tPerson)),
+                  std::istreambuf_iterator<char>());
+  if (!google::protobuf::TextFormat::ParseFromString(strPerson, personDef)) {
+    CkAbort("Could not parse protobuf!");
+  }
+  tPerson.close();
+  locationDef = new loimos::proto::CSVDefinition();
+  std::ifstream tLocation(scenarioPath + "locations.textproto");
+  std::string strLocation((std::istreambuf_iterator<char>(tLocation)),
+                  std::istreambuf_iterator<char>());
+  if (!google::protobuf::TextFormat::ParseFromString(strLocation, locationDef)) {
+    CkAbort("Could not parse protobuf!");
+  }
+  tLocation.close();
+  activityDef = new loimos::proto::CSVDefinition();
+  std::ifstream tActivity(scenarioPath + "interactions.textproto");
+  std::string strActivity((std::istreambuf_iterator<char>(tActivity)),
+                  std::istreambuf_iterator<char>());
+  if (!google::protobuf::TextFormat::ParseFromString(strActivity, activityDef)) {
+    CkAbort("Could not parse protobuf!");
+  }
+  tActivity.close();
 }
 
 /**
