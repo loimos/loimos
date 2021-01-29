@@ -176,7 +176,7 @@ inline void Location::sendInteractions(int personIdx) {
     personIdx,
     numPeople,
     numPeoplePartitions,
-    //offset
+    firstPersonIdx
   );
 
   peopleArray[peoplePartitionIdx].ReceiveInteractions(
