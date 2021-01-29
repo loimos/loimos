@@ -74,7 +74,7 @@ void People::SendVisitMessages() {
       numPeople,
       numPeoplePartitions
     );
-    int personstate = people[i].state;
+    int personState = people[i].state;
 
     // getting random number of locations to visit
     numVisits = poisson_dist(generator);
