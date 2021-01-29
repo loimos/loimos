@@ -175,7 +175,8 @@ inline void Location::sendInteractions(int personIdx) {
   int peoplePartitionIdx = getPartitionIndex(
     personIdx,
     numPeople,
-    numPeoplePartitions
+    numPeoplePartitions,
+    //offset
   );
 
   peopleArray[peoplePartitionIdx].ReceiveInteractions(
