@@ -22,6 +22,7 @@
 /* readonly */ int numPeoplePartitions;
 /* readonly */ int numLocationPartitions;
 /* readonly */ int numDays;
+/* readonly */ bool syntheticRun;
 /* readonly */ std::string scenarioPath;
 /* readonly */ std::string scenarioId;
 /* readonly */ int firstPersonIdx;
