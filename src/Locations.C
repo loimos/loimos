@@ -29,7 +29,7 @@ Locations::Locations() {
     numLocationPartitions,
     thisIndex
   );
-  locations.resize(numLocalLocations);
+  locations.reserve(numLocalLocations);
   
   // Init disease states
   diseaseModel = globDiseaseModel.ckLocalBranch();
@@ -49,11 +49,17 @@ void Locations::loadLocationData() {
   int numAttributesPerLocation = 
     DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
   for (int p = 0; p < numLocalLocations; p++) {
-    locations.emplace_back(Location(numAttributesPerLocation));
+    locations.emplace_back(numAttributesPerLocation);
   }
 
   // Load in location information.
-  int startingLineIndex = getGlobalIndex(0, thisIndex, numLocations, numLocationPartitions, firstLocationIdx) - firstLocationIdx;
+  int startingLineIndex = getGlobalIndex(
+    0,
+    thisIndex,
+    numLocations,
+    numLocationPartitions,
+    firstLocationIdx
+  ) - firstLocationIdx;
   int endingLineIndex = startingLineIndex + numLocalLocations;
   std::string line;
 
