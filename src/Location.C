@@ -18,18 +18,17 @@
 #include <algorithm>
 
 Location::Location(int numAttributes) {
-  this->locationData = (union Data *) malloc(numAttributes * sizeof(union Data));
-}
-
-Location::~Location() {
-  free(this->locationData);
+  if (numAttributes != 0) {
+    this->locationData.resize(numAttributes);
+  }
 }
 
 // DataInterface overrides. 
 void Location::setUniqueId(int idx) {
     this->uniqueId = idx;
 }
-union Data *Location::getDataField() {
+
+std::vector<union Data> Location::getDataField() {
     return this->locationData;
 }
 

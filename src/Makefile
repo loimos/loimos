@@ -43,7 +43,10 @@ clean:
 
 .PHONY:test test_large
 test: loimos
-	./charmrun +p4 ./loimos 39 16 1 4 7 ../datafiles/scenarios/city_small/ ../datafiles/diseaseModels/h5n1.textproto ++local
+	./charmrun +p4 ./loimos 39 16 1 4 7 ../datafiles/diseaseModels/h5n1.textproto ../datafiles/scenarios/city_small/ ++local
+
+test_syn: loimos
+	./charmrun +p4 ./loimos 39 16 1 4 7 ../datafiles/diseaseModels/h5n1.textproto ++local
 
 test_large: loimos
-	./charmrun +p4 ./loimos 41119 9165 60 40 7 ../datafiles/scenarios/city_large/ ../datafiles/diseaseModels/h5n1.textproto ++local
+	./charmrun +p4 ./loimos 41119 9165 60 40 7 ../datafiles/diseaseModels/h5n1.textproto ../datafiles/scenarios/city_large/ ++local

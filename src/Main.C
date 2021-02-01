@@ -42,19 +42,24 @@ Main::Main(CkArgMsg* msg) {
   std::string pathToDiseaseModel = std::string(msg->argv[6]);
 
   // Handle both real data runs or runs using synthetic populations.
-  if(msg->argc == 7) {
-    scenarioPath = std::string(msg->argv[7]);
+  if(msg->argc == 8) {
     syntheticRun = false;
+    
+    // Create data caches.
+    printf("Got here1... %s\n", msg->argv[7]);
+    scenarioPath = std::string(msg->argv[7]);
+    std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(scenarioPath, numPeople, numPeoplePartitions, numLocations, numLocationPartitions, numDays);
   } else {
+    printf("Got here2... --- %d\n", msg->argc);
     syntheticRun = true;
+    firstPersonIdx = 0;
+    firstLocationIdx = 0;
   }
 
   // setup main proxy
   CkPrintf("Running Loimos on %d PEs with %d people, %d locations, %d people subsets, %d location subsets, and %d days\n", CkNumPes(), numPeople, numLocations, numPeoplePartitions, numLocationPartitions, numDays);
   mainProxy = thisProxy;
 
-  // Create data caches.
-  std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(scenarioPath, numPeople, numPeoplePartitions, numLocations, numLocationPartitions, numDays);
 
   // Instantiate DiseaseModel nodegroup (One for each physical processor).
   CkPrintf("Loading diseaseModel.\n");

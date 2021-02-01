@@ -32,7 +32,7 @@ People::People() {
   diseaseModel = globDiseaseModel.ckLocalBranch();
   int healthyState = diseaseModel->getHealthyState();
 
-  // Get the number of people assigned to this chare
+  // // Get the number of people assigned to this chare
   numLocalPeople = getNumLocalElements(
     numPeople,
     numPeoplePartitions,
@@ -45,6 +45,7 @@ People::People() {
     Person tmp { NO_ATTRS, healthyState, std::numeric_limits<Time>::max() };
     people.resize(numLocalPeople, tmp);
   } else {
+      printf("Got here 123... want to make %d\n", numLocalPeople);
       int numAttributesPerPerson = 
         DataReader<Person>::getNonZeroAttributes(diseaseModel->personDef);
       for (int p = 0; p < numLocalPeople; p++) {
@@ -52,6 +53,8 @@ People::People() {
           healthyState, std::numeric_limits<Time>::max()
         ));
       }
+
+      printf("No seg fault\n");
       // Load in people data from file.
       loadPeopleData();
   }
@@ -65,7 +68,7 @@ People::People() {
     }
   }
 
-  // CkPrintf("People chare %d with %d people\n",thisIndex,numLocalPeople);
+  CkPrintf("People chare %d with %d people\n",thisIndex,numLocalPeople);
 }
 
 /**

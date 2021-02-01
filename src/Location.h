@@ -71,7 +71,7 @@ class Location : public DataInterface {
     inline void sendInteractions(int personIdx);
 
     // Various attributes of the location.
-    union Data *locationData;
+    std::vector<union Data> locationData;
 
   public:
     // Provide default constructor operations.
@@ -80,11 +80,11 @@ class Location : public DataInterface {
     Location(Location&&) = default;
     Location& operator=(const Location&) = default;
     Location& operator=(Location&&) = default;
-    ~Location();
+    ~Location() = default;
 
     // Override abstract DataInterface getters and setters.
     void setUniqueId(int idx);
-    union Data *getDataField();
+    std::vector<union Data> getDataField();
     int uniqueId;
     
     // This distribution shoul always be the same - not sure how well

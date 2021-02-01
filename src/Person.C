@@ -14,21 +14,20 @@
  */ 
 
 Person::Person(int numAttributes, int startingState, int timeLeftInState) {
-    this->personData = (union Data *) malloc(numAttributes * sizeof(union Data));
+    if (numAttributes != 0) {
+        // this->personData.resize(numAttributes);
+    }
     this->state = startingState;
     this->secondsLeftInState = timeLeftInState;
     this->interactionsByDay = std::vector<uint32_t>();
-}
-
-Person::~Person() {
-    free(this->personData);
+    printf("Loaded okay\n");
 }
 
 void Person::setUniqueId(int idx) {
     this->uniqueId = idx;
 }
 
-union Data *Person::getDataField() {
+std::vector<union Data> Person::getDataField() {
     return this->personData;
 }
 
@@ -44,7 +43,7 @@ void Person::_print_information(loimos::proto::CSVDefinition *personDef) {
             if (field->has_uniqueid() || field->has_b10int() || field->has_foreignid()) {
                 printf("%d\n", this->personData[attr].int_b10);
             } else if (field->has_label()) {
-                printf("%s\n", this->personData[attr].str.c_str());
+                // printf("%s\n", this->personData[attr].str.c_str());
             } else if (field->has_bool_()) {
                 printf("%s\n", this->personData[attr].boolean ? "True" : "False");
             }

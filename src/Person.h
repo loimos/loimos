@@ -28,7 +28,7 @@ class Person : public DataInterface {
         std::vector<uint32_t> interactionsByDay;
         
         // Various attributes of the person.
-        union Data *personData;
+        std::vector<union Data> personData;
 
         // Methods
         Person(int numAttributes, int startingState, int timeLeftInState);
@@ -36,11 +36,11 @@ class Person : public DataInterface {
         Person(Person&&) = default;
         Person& operator=(const Person&) = default;
         Person& operator=(Person&&) = default;
-        ~Person();
+        ~Person() = default;
 
         // Override DataInterfect abstract methods
         void setUniqueId(int idx);
-        union Data *getDataField();
+        std::vector<union Data> getDataField();
 
         // Debugging.
         void _print_information(loimos::proto::CSVDefinition *personDef);

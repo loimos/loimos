@@ -24,7 +24,7 @@ union Data {
     int int_b10;
     bool boolean;
     uint32_t uint_32;
-    std::string str;
+    // std::string str;
     uint16_t category; 
 };
 
@@ -50,7 +50,7 @@ class DataReader {
                 int attr_index = 0;
                 int attr_nonzero_index = 0;
                 int left_comma = 0;
-                union Data *obj_data = obj.getDataField();
+                std::vector<union Data> obj_data = obj.getDataField();
 
                 int line_length = input->gcount();
                 for (int c = 0; c < line_length; c++) {
@@ -76,8 +76,8 @@ class DataReader {
                                 obj_data[attr_nonzero_index].int_b10 = 
                                     std::stoi(std::string(start, data_len));
                             } else if (field->has_label()) {
-                                obj_data[attr_nonzero_index].str = 
-                                    std::string(start, data_len);
+                                // obj_data[attr_nonzero_index].str = 
+                                //     std::string(start, data_len);
                             } else if (field->has_bool_()) {
                                 if (data_len == 1) {
                                     obj_data[attr_nonzero_index].boolean = 
@@ -104,7 +104,7 @@ class DataReader {
             return count;
         }
 
-        static std::tuple<int, int, int, int> parseActivityStream(std::ifstream *input, loimos::proto::CSVDefinition *dataFormat, union Data *attributes) {
+        static std::tuple<int, int, int, int> parseActivityStream(std::ifstream *input, loimos::proto::CSVDefinition *dataFormat, std::vector<union Data> attributes) {
             int personId = -1;
             int locationId = -1;
             int startTime = -1;

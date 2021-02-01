@@ -64,6 +64,7 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath, int nu
         CkAbort("Could not parse protobuf!");
     }
     t.close();
+
     int csvLocationOfPid = -1;
     for (int i = 0; i < csvDefinition.field_size(); i += 1) {
         if (csvDefinition.field(i).has_uniqueid()) {

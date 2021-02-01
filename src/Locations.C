@@ -29,13 +29,20 @@ Locations::Locations() {
     numLocationPartitions,
     thisIndex
   );
-  locations.reserve(numLocalLocations);
+  printf("I should have %d locations\n", numLocalLocations);
+  
   
   // Init disease states
   diseaseModel = globDiseaseModel.ckLocalBranch();
 
   // Load application data
-  loadLocationData();
+  if (syntheticRun) {
+    Location tmp { 0 };
+    locations.resize(numLocalLocations, tmp);
+  } else {
+    locations.reserve(numLocalLocations);
+    loadLocationData();
+  }
 
   // Seed random number generator via branch ID for reproducibility
   generator.seed(thisIndex);
