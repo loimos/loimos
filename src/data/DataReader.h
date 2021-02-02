@@ -104,7 +104,7 @@ class DataReader {
             return count;
         }
 
-        static std::tuple<int, int, int, int> parseActivityStream(std::ifstream *input, loimos::proto::CSVDefinition *dataFormat, std::vector<union Data> attributes) {
+        static std::tuple<int, int, int, int> parseActivityStream(std::ifstream *input, loimos::proto::CSVDefinition *dataFormat, std::vector<union Data> *attributes) {
             int personId = -1;
             int locationId = -1;
             int startTime = -1;

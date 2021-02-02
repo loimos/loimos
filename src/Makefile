@@ -8,7 +8,7 @@ DEFS   = Defs.h loimos.def.h
 DECLS  = loimos.decl.h
 BIN    = loimos
 
-SUBDIRS := $(wildcard */.)
+SUBDIRS := disease_model data
 
 .PHONY:all
 all: all-sub $(BIN)
@@ -42,11 +42,11 @@ clean:
 	done
 
 .PHONY:test test_large
-test: loimos
+test: all
 	./charmrun +p4 ./loimos 39 16 1 4 7 ../datafiles/diseaseModels/h5n1.textproto ../datafiles/scenarios/city_small/ ++local
 
-test_syn: loimos
+test_syn: all
 	./charmrun +p4 ./loimos 39 16 1 4 7 ../datafiles/diseaseModels/h5n1.textproto ++local
 
-test_large: loimos
+test_large: all
 	./charmrun +p4 ./loimos 41119 9165 60 40 7 ../datafiles/diseaseModels/h5n1.textproto ../datafiles/scenarios/city_large/ ++local
