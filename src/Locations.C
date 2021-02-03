@@ -36,17 +36,17 @@ Locations::Locations() {
   contactModel->setGenerator(&generator);
 }
 
-void Locations::ReceiveVisitMessages(VisitMessage visit_msg) {
+void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   // adding person to location visit list
   int localLocIdx = getLocalIndex(
-    visit_msg.locationIdx,
+    visitMsg.locationIdx,
     numLocations,
     numLocationPartitions
   );
 
   // Wrap vist info...
-  Event arrival { ARRIVAL, visit_msg.personIdx, visit_msg.personState, visit_msg.visitStart };
-  Event departure { DEPARTURE, visit_msg.personIdx, visit_msg.personState, visit_msg.visitEnd };
+  Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.personState, visitMsg.visitStart };
+  Event departure { DEPARTURE, visitMsg.personIdx, visitMsg.personState, visitMsg.visitEnd };
   Event::pair(&arrival, &departure);
 
   // ...and queue it up at the appropriate location

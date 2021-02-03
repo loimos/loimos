@@ -26,7 +26,7 @@ class Locations : public CBase_Locations {
 
   public:
     Locations();
-    void ReceiveVisitMessages(VisitMessage visit_msg);
+    void ReceiveVisitMessages(VisitMessage visitMsg);
     void ComputeInteractions(); // calls ReceiveInfections
 };
 
