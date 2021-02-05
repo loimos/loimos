@@ -12,4 +12,7 @@ settings.json
 .vscode
 *.dSYM
 
-scenarios/h5n1_large/
+data/populations/coc/locations.csv
+data/populations/coc/people.csv
+data/populations/coc/visits.csv
+*.cache
