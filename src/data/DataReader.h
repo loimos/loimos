@@ -42,15 +42,17 @@ class DataReader {
             // TODO make this 2^16 and support longer lines through multiple reads.
             char buf[MAX_INPUT_LINE_LENGTH];
             // Rows to read.
-            for(T obj : *dataObjs) {
+            // for(T obj : *dataObjs) {
+            for(auto obj = std::begin(*dataObjs); obj != std::end(*dataObjs); ++obj) {
                 // Get next line.
                 input->getline(buf, MAX_INPUT_LINE_LENGTH);
 
                 // Read over people data format.
                 int attr_index = 0;
+                // Tracks how many non-ignored fields there have been.
                 int attr_nonzero_index = 0;
                 int left_comma = 0;
-                std::vector<union Data> obj_data = obj.getDataField();
+                std::vector<union Data> obj_data = obj->getDataField();
 
                 int line_length = input->gcount();
                 for (int c = 0; c < line_length; c++) {
@@ -70,7 +72,7 @@ class DataReader {
 
                             // Parse byte stream to the correct representation.
                             if (field->has_uniqueid()) {
-                                obj.setUniqueId(std::stoi(std::string(start, data_len)));
+                                obj->setUniqueId(std::stoi(std::string(start, data_len)));
                             } else if (field->has_b10int() || field->has_foreignid()) {
                                 // TODO parse this directly.
                                 obj_data[attr_nonzero_index].int_b10 = 

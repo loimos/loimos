@@ -15,12 +15,11 @@
 
 Person::Person(int numAttributes, int startingState, int timeLeftInState) {
     if (numAttributes != 0) {
-        // this->personData.resize(numAttributes);
+        this->personData.resize(numAttributes);
     }
     this->state = startingState;
     this->secondsLeftInState = timeLeftInState;
     this->interactionsByDay = std::vector<uint32_t>();
-    printf("Loaded okay\n");
 }
 
 void Person::setUniqueId(int idx) {

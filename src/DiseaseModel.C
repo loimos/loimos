@@ -87,7 +87,7 @@ DiseaseModel::DiseaseModel(std::string pathToModel) {
   }
   tLocation.close();
   activityDef = new loimos::proto::CSVDefinition();
-  std::ifstream tActivity(scenarioPath + "interactions.textproto");
+  std::ifstream tActivity(scenarioPath + "visits.textproto");
   std::string strActivity((std::istreambuf_iterator<char>(tActivity)),
                   std::istreambuf_iterator<char>());
   if (!google::protobuf::TextFormat::ParseFromString(strActivity, activityDef)) {

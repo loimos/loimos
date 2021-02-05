@@ -29,8 +29,6 @@ Locations::Locations() {
     numLocationPartitions,
     thisIndex
   );
-  printf("I should have %d locations\n", numLocalLocations);
-  
   
   // Init disease states
   diseaseModel = globDiseaseModel.ckLocalBranch();
@@ -71,7 +69,7 @@ void Locations::loadLocationData() {
   std::string line;
 
   std::ifstream locationData(scenarioPath + "locations.csv");
-  std::ifstream locationCache(scenarioPath + scenarioId + "_locations.cache");
+  std::ifstream locationCache(scenarioPath + scenarioId + "_locations.cache", std::ios_base::binary);
   if (!locationData || !locationCache) {
     CkAbort("Could not open person data input.");
   }
@@ -83,12 +81,14 @@ void Locations::loadLocationData() {
   locationData.seekg(locationOffset);
 
   // Read in our location data.
-  DataReader<Location>::readData(&locationData, diseaseModel->locationDef, &locations);
+  DataReader<Location>::readData(&locationData, diseaseModel->locationDef,
+                                 &locations);
   locationData.close();
   locationCache.close();
 
   // Seed random number generator via branch ID for reproducibility.
   generator.seed(thisIndex);
+  
   // Init contact model
   contactModel = new ContactModel();
   contactModel->setGenerator(&generator);

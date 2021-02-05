@@ -45,7 +45,6 @@ People::People() {
     Person tmp { NO_ATTRS, healthyState, std::numeric_limits<Time>::max() };
     people.resize(numLocalPeople, tmp);
   } else {
-      printf("Got here 123... want to make %d\n", numLocalPeople);
       int numAttributesPerPerson = 
         DataReader<Person>::getNonZeroAttributes(diseaseModel->personDef);
       for (int p = 0; p < numLocalPeople; p++) {
@@ -54,7 +53,6 @@ People::People() {
         ));
       }
 
-      printf("No seg fault\n");
       // Load in people data from file.
       loadPeopleData();
   }
@@ -76,10 +74,11 @@ People::People() {
  */
 void People::loadPeopleData() {  
   std::ifstream peopleData(scenarioPath + "people.csv");
-  std::ifstream peopleCache(scenarioPath + scenarioId + "_people.cache");
+  std::ifstream peopleCache(scenarioPath + scenarioId + "_people.cache", std::ios_base::binary);
   if (!peopleData || !peopleCache) {
     CkAbort("Could not open person data input.");
   }
+
   // Find starting line for our data through people cache.
   peopleCache.seekg(thisIndex * sizeof(uint32_t));
   uint32_t peopleOffset;
@@ -92,8 +91,8 @@ void People::loadPeopleData() {
   peopleCache.close();
 
   // Open activity data and cache. 
-  activityData = new std::ifstream(scenarioPath + "interactions.csv", std::ios::binary);
-  std::ifstream activityCache(scenarioPath + scenarioId + "_interactions.cache", std::ios::binary);
+  activityData = new std::ifstream(scenarioPath + "visits.csv");
+  std::ifstream activityCache(scenarioPath + scenarioId + "_interactions.cache", std::ios_base::binary);
   if (!activityData || !activityCache) {
     CkAbort("Could not open activity input.");
   }
@@ -105,6 +104,7 @@ void People::loadPeopleData() {
     int curr_id = people[c].uniqueId;
 
     // Read in their activity data offsets.
+    // activityCache.seekg(0);
     activityCache.seekg(sizeof(uint32_t) * numDays * (curr_id - firstPersonIdx));
     activityCache.read((char *) buf, sizeof(uint32_t) * numDays);
     for (int day = 0; day < numDays; day++) {
@@ -198,12 +198,12 @@ void People::SendVisitMessages() {
       // Start reading
       int personId = -1; 
       int locationId = -1;
-      int startTime = -1;
-      int duration = -1;
-      std::tie(personId, locationId, startTime, duration) = DataReader<Person>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
+      int visitStart = -1;
+      int visitDuration = -1;
+      std::tie(personId, locationId, visitStart, visitDuration) = DataReader<Person>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
 
       // Seek while same person on same day.
-      while(personId == people[localPersonId].uniqueId && startTime < nextDaySecs) {
+      while(personId == people[localPersonId].uniqueId && visitStart < nextDaySecs) {
         // Find process that owns that location.
         locationSubset = getPartitionIndex(
             locationId,
@@ -211,15 +211,17 @@ void People::SendVisitMessages() {
             numLocationPartitions,
             firstLocationIdx
         );
+
+        // printf("Person %d visited %d at %d for %d. They have %d\n", personIdx, locationIdx, visitStart, visitDuration, people[localPersonId].state);
         // Send off the visit message.
         locationsArray[locationSubset].ReceiveVisitMessages(
           locationId,
           personId,
           people[localPersonId].state,
-          startTime,
-          startTime + duration
+          visitStart,
+          visitStart + visitDuration
         );
-        std::tie(personId, locationId, startTime, duration) = DataReader<Person>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
+        std::tie(personId, locationId, visitStart, visitDuration) = DataReader<Person>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
       }
     }
   }

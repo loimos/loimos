@@ -36,7 +36,7 @@ std::tuple<int, int, std::string> buildCache(std::string scenarioPath, int numPe
     std::string unique_scenario = oss.str();
     int firstPersonIdx = buildObjectLookupCache(scenarioPath + "people.csv", scenarioPath + unique_scenario + "_people.cache", numPeople, peopleChares, scenarioPath + "people.textproto");
     int firstLocationIdx = buildObjectLookupCache(scenarioPath + "locations.csv", scenarioPath + unique_scenario + "_locations.cache", numLocations, numLocationChares, scenarioPath + "locations.textproto");
-    buildActivityCache(scenarioPath + "interactions.csv", scenarioPath + unique_scenario + "_interactions.cache", numPeople, numDays, firstPersonIdx, scenarioPath + "interactions.textproto");
+    buildActivityCache(scenarioPath + "visits.csv", scenarioPath + unique_scenario + "_interactions.cache", numPeople, numDays, firstPersonIdx, scenarioPath + "visits.textproto");
     return std::make_tuple(firstPersonIdx, firstLocationIdx, unique_scenario);
 }
 
@@ -144,7 +144,7 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
 
     // Create position vector for each person.
     uint64_t totalDataSize = numPeople * numDays * sizeof(uint32_t);
-    uint8_t *elements = (uint8_t *) malloc(totalDataSize);
+    uint32_t *elements = (uint32_t *) malloc(totalDataSize);
     if (elements == NULL) {
         printf("Failed to malloc enoough memory for preprocessing.\n");
         exit(1);
@@ -170,8 +170,8 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
         // Get details of new entry.
         lastPerson = nextPerson;
         lastTime = nextTime;
-        memcpy(elements + sizeof(uint32_t) * (numDays * (lastPerson - firstPersonIdx) + lastTime),
-               &current_position, sizeof(uint32_t));
+
+        elements[numDays * (lastPerson - firstPersonIdx) + lastTime] = current_position;
     
         // Scan until the next boundary.
         while (!activityStream.eof() && lastTime == nextTime && lastPerson == nextPerson) {
@@ -182,8 +182,8 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
     }
 
     // Output
-    std::ofstream outputStream(outputPath);
-    outputStream.write((char *) elements, totalDataSize);
+    std::ofstream outputStream(outputPath, std::ios::out | std::ios::binary);
+    outputStream.write(reinterpret_cast<const char *>(elements), totalDataSize);
     outputStream.close();
 }
 

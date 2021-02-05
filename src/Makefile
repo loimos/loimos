@@ -4,7 +4,7 @@ OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o Defs.o \
          Event.o Interaction.o ContactModel.o data/Preprocess.o \
          disease_model/disease.pb.o disease_model/distribution.pb.o \
 		 data/data.pb.o
-DEFS   = Defs.h loimos.def.h
+DEFS   = Defs.h loimos.def.h data/DataReader.h
 DECLS  = loimos.decl.h
 BIN    = loimos
 
@@ -49,4 +49,4 @@ test_syn: all
 	./charmrun +p4 ./loimos 39 16 1 4 7 ../datafiles/diseaseModels/h5n1.textproto ++local
 
 test_large: all
-	./charmrun +p4 ./loimos 41119 9165 60 40 7 ../datafiles/diseaseModels/h5n1.textproto ../datafiles/scenarios/city_large/ ++local
+	./charmrun +p4 ./loimos 41119 19203 60 40 7 ../datafiles/diseaseModels/h5n1.textproto ../datafiles/scenarios/coc/ ++local

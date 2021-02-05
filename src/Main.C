@@ -46,11 +46,9 @@ Main::Main(CkArgMsg* msg) {
     syntheticRun = false;
     
     // Create data caches.
-    printf("Got here1... %s\n", msg->argv[7]);
     scenarioPath = std::string(msg->argv[7]);
     std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(scenarioPath, numPeople, numPeoplePartitions, numLocations, numLocationPartitions, numDays);
   } else {
-    printf("Got here2... --- %d\n", msg->argc);
     syntheticRun = true;
     firstPersonIdx = 0;
     firstLocationIdx = 0;
