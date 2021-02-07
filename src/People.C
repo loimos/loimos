@@ -114,12 +114,9 @@ void People::SendVisitMessages() {
   }
 }
 
-void People::ReceiveInteractions(
-  int personIdx,
-  const std::vector<Interaction> &interactions
-) {
+void People::ReceiveInteractions(InteractionMessage interMsg) {
   int localIdx = getLocalIndex(
-    personIdx,
+    interMsg.personIdx,
     numPeople,
     numPeoplePartitions
   );
@@ -129,8 +126,8 @@ void People::ReceiveInteractions(
   Person &person = people[localIdx];
   person.interactions.insert(
     person.interactions.cend(),
-    interactions.cbegin(),
-    interactions.cend()
+    interMsg.interactions.cbegin(),
+    interMsg.interactions.cend()
   );
 }
 

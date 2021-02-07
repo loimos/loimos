@@ -162,8 +162,7 @@ inline void Location::sendInteractions(int personIdx) {
   );
 
   peopleArray[peoplePartitionIdx].ReceiveInteractions(
-    personIdx,
-    interactions[personIdx]
+      InteractionMessage(personIdx, interactions[personIdx])
   );
 
   /*  

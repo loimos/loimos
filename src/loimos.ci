@@ -82,10 +82,7 @@ mainmodule loimos {
   array [1D] People {
     entry People();
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
-    entry void ReceiveInteractions(
-      int personIdx,
-      const std::vector<Interaction> &interactions
-    );
+    entry [aggregate] void ReceiveInteractions(InteractionMessage);
     entry void EndofDayStateUpdate(); // contribute call to ReceiveStats
   };
 

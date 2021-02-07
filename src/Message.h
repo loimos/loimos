@@ -7,6 +7,8 @@
 #ifndef __MESSAGE_H__
 #define __MESSAGE_H__
 
+#include "Interaction.h"
+
 struct VisitMessage {
   int locationIdx;
   int personIdx;
@@ -20,5 +22,15 @@ struct VisitMessage {
       personState(personState_), visitStart(visitStart_), visitEnd(visitEnd_) {}
 };
 PUPbytes(VisitMessage);
+
+struct InteractionMessage {
+  int personIdx;
+  std::vector<Interaction> interactions;
+
+  InteractionMessage() {}
+  InteractionMessage(int personIdx_, const std::vector<Interaction>& interactions_)
+    : personIdx(personIdx_), interactions(interactions_) {}
+};
+PUPbytes(InteractionMessage);
 
 #endif // __MESSAGE_H__
