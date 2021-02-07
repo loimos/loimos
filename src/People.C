@@ -125,7 +125,7 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
   // interactions at the end of the day
   Person &person = people[localIdx];
   person.interactions.insert(
-    person.interactions.cend(),
+    person.interactions.end(),
     interMsg.interactions.cbegin(),
     interMsg.interactions.cend()
   );
