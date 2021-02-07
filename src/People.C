@@ -108,8 +108,8 @@ void People::SendVisitMessages() {
       );
 
       // sending message to location
-      VisitMessage visit_msg(locationIdx, personIdx, personState, visitStart, visitEnd);
-      locationsArray[locationSubset].ReceiveVisitMessages(visit_msg);
+      VisitMessage visitMsg(locationIdx, personIdx, personState, visitStart, visitEnd);
+      locationsArray[locationSubset].ReceiveVisitMessages(visitMsg);
     }
   }
 }
