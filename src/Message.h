@@ -8,6 +8,7 @@
 #define __MESSAGE_H__
 
 #include "Interaction.h"
+#include "pup_stl.h"
 
 struct VisitMessage {
   int locationIdx;
@@ -30,7 +31,11 @@ struct InteractionMessage {
   InteractionMessage() {}
   InteractionMessage(int personIdx_, const std::vector<Interaction>& interactions_)
     : personIdx(personIdx_), interactions(interactions_) {}
+
+  void pup(PUP::er& p) {
+    p | personIdx;
+    p | interactions;
+  }
 };
-PUPbytes(InteractionMessage);
 
 #endif // __MESSAGE_H__
