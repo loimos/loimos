@@ -13,7 +13,7 @@
 #include "Location.h"
 #include "Event.h"
 #include "Defs.h"
-#include "data/DataReader.h"
+#include "readers/DataReader.h"
 #include "Person.h"
 
 #include <algorithm>

@@ -7,7 +7,7 @@
 #include "loimos.decl.h"
 
 #include "Person.h"
-#include "data/data.pb.h"
+#include "readers/data.pb.h"
 
 /**
  * Defines attributes of a single person.

@@ -7,8 +7,8 @@
 #ifndef __PERSON_H__
 #define __PERSON_H__
 
-#include "data/DataInterface.h"
-#include "data/DataReader.h"
+#include "readers/DataInterface.h"
+#include "readers/DataReader.h"
 
 class Person : public DataInterface {
     public:

@@ -10,7 +10,7 @@
 #include "Interaction.h"
 #include "DiseaseModel.h"
 #include "Person.h"
-#include "data/DataReader.h"
+#include "readers/DataReader.h"
 
 #include <tuple>
 #include <limits>

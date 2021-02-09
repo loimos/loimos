@@ -12,7 +12,7 @@
 #include "disease_model/distribution.pb.h"
 
 #include "Event.h"
- #include "data/data.pb.h"
+ #include "readers/data.pb.h"
 
 #include <random>
 

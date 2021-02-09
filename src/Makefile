@@ -1,14 +1,14 @@
 include Makefile.include
 
 OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o Defs.o \
-         Event.o Interaction.o ContactModel.o data/Preprocess.o \
+         Event.o Interaction.o ContactModel.o readers/Preprocess.o \
          disease_model/disease.pb.o disease_model/distribution.pb.o \
-		 data/data.pb.o
-DEFS   = Defs.h loimos.def.h data/DataReader.h
+		 readers/data.pb.o
+DEFS   = Defs.h loimos.def.h readers/DataReader.h
 DECLS  = loimos.decl.h
 BIN    = loimos
 
-SUBDIRS := disease_model data
+SUBDIRS := disease_model readers
 
 .PHONY:all
 all: all-sub $(BIN)

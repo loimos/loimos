@@ -11,7 +11,7 @@
 #include "Interaction.h"
 #include "DiseaseModel.h"
 #include "ContactModel.h"
-#include "data/DataInterface.h"
+#include "readers/DataInterface.h"
 
 #include <queue>
 #include <vector>
