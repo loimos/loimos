@@ -45,12 +45,19 @@ clean:
 		cd ..; \
 	done
 
-.PHONY:test test_large
-test: all
+# All test names start with "test-"
+TEST_NAMES= -small -syn -large
+TESTS=$(subst -,test-,$(TEST_NAMES))
+
+# Run all tests with test rule
+.PHONY:test $(TESTS)
+test: $(TESTS)
+
+test-small: all
 	./charmrun +p4 ./loimos 39 16 1 4 7 ../data/disease_models/h5n1.textproto ../data/populations/synthetic_small_city/ ++local
 
-test_syn: all
+test-syn: all
 	./charmrun +p4 ./loimos 39 16 1 4 7 ../data/disease_models/h5n1.textproto ++local
 
-test_large: all
+test-large: all
 	./charmrun +p4 ./loimos 41119 19203 60 40 7 ../data/disease_models/h5n1.textproto ../data/populations/coc/ ++local
