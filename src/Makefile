@@ -31,14 +31,18 @@ $(OBJS): %.o: %.C %.h $(DECLS) $(DEFS)
 .PHONY: all-sub
 all-sub:
 	@for d in $(SUBDIRS); do \
-		cd $$d; $(MAKE) all; \
+		cd $$d; \
+		$(MAKE) all; \
+		cd ..; \
 	done
 
 .PHONY:clean
 clean:
 	rm -f *.o charmrun $(BIN) *.decl.h *.def.h 
 	@for d in $(SUBDIRS); do \
-		cd $$d; $(MAKE) clean; \
+		cd $$d; \
+		$(MAKE) clean; \
+		cd ..; \
 	done
 
 .PHONY:test test_large
