@@ -82,13 +82,21 @@ mainmodule loimos {
   array [1D] People {
     entry People();
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
+#ifdef USE_TRAM
     entry [aggregate] void ReceiveInteractions(InteractionMessage);
+#else
+    entry void ReceiveInteractions(InteractionMessage);
+#endif
     entry void EndofDayStateUpdate(); // contribute call to ReceiveStats
   };
 
   array [1D] Locations {
     entry Locations();
+#ifdef USE_TRAM
     entry [aggregate] void ReceiveVisitMessages(VisitMessage);
+#else
+    entry void ReceiveVisitMessages(VisitMessage);
+#endif
     entry void ComputeInteractions(); // calls ReceiveInteractions
   };
 
