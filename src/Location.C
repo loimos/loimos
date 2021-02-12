@@ -161,10 +161,8 @@ inline void Location::sendInteractions(int personIdx) {
     numPeoplePartitions
   );
 
-  peopleArray[peoplePartitionIdx].ReceiveInteractions(
-    personIdx,
-    interactions[personIdx]
-  );
+  InteractionMessage interMsg(personIdx, interactions[personIdx]);
+  peopleArray[peoplePartitionIdx].ReceiveInteractions(interMsg);
 
   /*  
   CkPrintf(

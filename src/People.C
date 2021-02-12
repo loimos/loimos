@@ -74,7 +74,7 @@ void People::SendVisitMessages() {
       numPeople,
       numPeoplePartitions
     );
-    int personstate = people[i].state;
+    int personState = people[i].state;
 
     // getting random number of locations to visit
     numVisits = poisson_dist(generator);
@@ -108,23 +108,15 @@ void People::SendVisitMessages() {
       );
 
       // sending message to location
-      locationsArray[locationSubset].ReceiveVisitMessages(
-        locationIdx,
-        personIdx,
-        personstate,
-        visitStart,
-        visitEnd
-      );
+      VisitMessage visitMsg(locationIdx, personIdx, personState, visitStart, visitEnd);
+      locationsArray[locationSubset].ReceiveVisitMessages(visitMsg);
     }
   }
 }
 
-void People::ReceiveInteractions(
-  int personIdx,
-  const std::vector<Interaction> &interactions
-) {
+void People::ReceiveInteractions(InteractionMessage interMsg) {
   int localIdx = getLocalIndex(
-    personIdx,
+    interMsg.personIdx,
     numPeople,
     numPeoplePartitions
   );
@@ -133,9 +125,9 @@ void People::ReceiveInteractions(
   // interactions at the end of the day
   Person &person = people[localIdx];
   person.interactions.insert(
-    person.interactions.cend(),
-    interactions.cbegin(),
-    interactions.cend()
+    person.interactions.end(),
+    interMsg.interactions.cbegin(),
+    interMsg.interactions.cend()
   );
 }
 
