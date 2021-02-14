@@ -24,7 +24,7 @@ union Data {
     int int_b10;
     bool boolean;
     uint32_t uint_32;
-    // std::string str;
+    std::string *str;
     uint16_t category; 
 };
 
@@ -42,8 +42,7 @@ class DataReader {
             // TODO make this 2^16 and support longer lines through multiple reads.
             char buf[MAX_INPUT_LINE_LENGTH];
             // Rows to read.
-            // for(T obj : *dataObjs) {
-            for(auto obj = std::begin(*dataObjs); obj != std::end(*dataObjs); ++obj) {
+            for (auto obj = std::begin(*dataObjs); obj != std::end(*dataObjs); ++obj) {
                 // Get next line.
                 input->getline(buf, MAX_INPUT_LINE_LENGTH);
 
@@ -57,7 +56,7 @@ class DataReader {
                 int line_length = input->gcount();
                 for (int c = 0; c < line_length; c++) {
                     // Scan for the next attrbiutes - comma separted.
-                    if (buf[c] == ',' || c + 1 == line_length) {
+                    if (buf[c] == CSV_DELIM || c + 1 == line_length) {
                         // Get next attribute type.
                         loimos::proto::Data_Field const *field = &dataFormat->field(attr_index);
                         uint16_t data_len = c - left_comma;
@@ -78,8 +77,8 @@ class DataReader {
                                 obj_data[attr_nonzero_index].int_b10 = 
                                     std::stoi(std::string(start, data_len));
                             } else if (field->has_label()) {
-                                // obj_data[attr_nonzero_index].str = 
-                                //     std::string(start, data_len);
+                                obj_data[attr_nonzero_index].str = 
+                                    new std::string(start, data_len);
                             } else if (field->has_bool_()) {
                                 if (data_len == 1) {
                                     obj_data[attr_nonzero_index].boolean = 
@@ -125,7 +124,7 @@ class DataReader {
             int line_length = input->gcount();
             for (int c = 0; c < line_length; c++) {
                 // Scan for the next attrbiutes - comma separted.
-                if (buf[c] == ',' || c + 1 == line_length) {
+                if (buf[c] == CSV_DELIM || c + 1 == line_length) {
                     // Get next attribute type.
                     loimos::proto::Data_Field const *field = &dataFormat->field(attr_index);
                     uint16_t data_len = c - left_comma;

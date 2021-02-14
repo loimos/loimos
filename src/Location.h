@@ -78,9 +78,10 @@ class Location : public DataInterface {
     Location(int numAttributes);
     Location(const Location&) = default;
     Location(Location&&) = default;
+    ~Location() = default;
+    // Default assignment operators.
     Location& operator=(const Location&) = default;
     Location& operator=(Location&&) = default;
-    ~Location() = default;
 
     // Override abstract DataInterface getters and setters.
     void setUniqueId(int idx);

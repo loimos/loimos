@@ -27,6 +27,7 @@
 /* readonly */ std::string scenarioId;
 /* readonly */ int firstPersonIdx;
 /* readonly */ int firstLocationIdx;
+/* readonly */ double simulationStartTime;
 
 Main::Main(CkArgMsg* msg) {
   // parsing command line arguments
@@ -73,6 +74,7 @@ Main::Main(CkArgMsg* msg) {
 
   // run
   CkPrintf("Running.\n");
+  simulationStartTime = CkWallTimer();
   mainProxy.run();
 }
 

@@ -35,6 +35,8 @@ class People : public CBase_People {
   public:
     People();
     void SendVisitMessages(); 
+    void SyntheticSendVisitMessages();
+    void RealDataSendVisitMessages();
     void ReceiveInteractions(
       int personIdx,
       const std::vector<Interaction> &interactions

@@ -35,12 +35,13 @@ DiseaseModel::DiseaseModel(std::string pathToModel) {
   // Load in text proto definition.
   // TODO(iancostello): Load directly without string.
   model = new loimos::proto::DiseaseModel();
-  std::ifstream t(pathToModel);
-  std::string str((std::istreambuf_iterator<char>(t)),
+  std::ifstream diseaseModelStream(pathToModel);
+  std::string str((std::istreambuf_iterator<char>(diseaseModelStream)),
                   std::istreambuf_iterator<char>());
   if (!google::protobuf::TextFormat::ParseFromString(str, model)) {
     CkAbort("Could not parse protobuf!");
   }
+  diseaseModelStream.close();
 
   // Create an intervention strategy mapping for fast lookup.
   // TODO(iancostello): Remove manual allocation in the future.
@@ -71,29 +72,29 @@ DiseaseModel::DiseaseModel(std::string pathToModel) {
 
   // Setup other shared PE objects.
   personDef = new loimos::proto::CSVDefinition();
-  std::ifstream tPerson(scenarioPath + "people.textproto");
-  std::string strPerson((std::istreambuf_iterator<char>(tPerson)),
+  std::ifstream personInputStream(scenarioPath + "people.textproto");
+  std::string strPerson((std::istreambuf_iterator<char>(personInputStream)),
                   std::istreambuf_iterator<char>());
   if (!google::protobuf::TextFormat::ParseFromString(strPerson, personDef)) {
     CkAbort("Could not parse protobuf!");
   }
-  tPerson.close();
+  personInputStream.close();
   locationDef = new loimos::proto::CSVDefinition();
-  std::ifstream tLocation(scenarioPath + "locations.textproto");
-  std::string strLocation((std::istreambuf_iterator<char>(tLocation)),
+  std::ifstream locationInputStream(scenarioPath + "locations.textproto");
+  std::string strLocation((std::istreambuf_iterator<char>(locationInputStream)),
                   std::istreambuf_iterator<char>());
   if (!google::protobuf::TextFormat::ParseFromString(strLocation, locationDef)) {
     CkAbort("Could not parse protobuf!");
   }
-  tLocation.close();
+  locationInputStream.close();
   activityDef = new loimos::proto::CSVDefinition();
-  std::ifstream tActivity(scenarioPath + "visits.textproto");
-  std::string strActivity((std::istreambuf_iterator<char>(tActivity)),
+  std::ifstream activityInputStream(scenarioPath + "visits.textproto");
+  std::string strActivity((std::istreambuf_iterator<char>(activityInputStream)),
                   std::istreambuf_iterator<char>());
   if (!google::protobuf::TextFormat::ParseFromString(strActivity, activityDef)) {
     CkAbort("Could not parse protobuf!");
   }
-  tActivity.close();
+  activityInputStream.close();
 }
 
 /**

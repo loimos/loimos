@@ -27,10 +27,10 @@ class Person : public DataInterface {
         // of this persons interactions on day 3.
         std::vector<uint32_t> interactionsByDay;
         
-        // Various attributes of the person.
+        // Various dynamic attributes of the person
         std::vector<union Data> personData;
 
-        // Methods
+        // Constructors and assignment operators
         Person(int numAttributes, int startingState, int timeLeftInState);
         Person(const Person&) = default;
         Person(Person&&) = default;

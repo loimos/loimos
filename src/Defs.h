@@ -26,6 +26,10 @@ using EventType = char;
 using Time = int32_t;
 const Time DAY_LENGTH = 3600 * 24;
 
+// Data loading
+#define EMPTY_VISIT_SCHEDULE 0xFFFFFFFF
+#define CSV_DELIM ','
+
 #define INITIAL_INFECTIOUS_PROBABILITY 0.05
 
 extern /* readonly */ CProxy_Main mainProxy;
@@ -42,6 +46,7 @@ extern /* readonly */ int firstPersonIdx;
 extern /* readonly */ int firstLocationIdx;
 extern /* readonly */ std::string scenarioPath;
 extern /* readonly */ std::string scenarioId;
+extern /* readonly */ double simulationStartTime;
 
 int getNumElementsPerPartition(int numElements, int numPartitions);
 

@@ -28,7 +28,7 @@
 /** 
  * This file preprocesses a given input file.
  */ 
-// TODO: Replace getline with function that doesn't need to copy to string object.
+// TODO: Replace getline with function that doesn't need to copy to string object in subfunctions.
 std::tuple<int, int, std::string> buildCache(std::string scenarioPath, int numPeople, int peopleChares, int numLocations, int numLocationChares, int numDays) {
     // Build person and location cache.
     std::ostringstream oss;
@@ -57,13 +57,13 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath, int nu
 
     // Read config file.
     loimos::proto::CSVDefinition csvDefinition;
-    std::ifstream t(pathToCsvDefinition);
-    std::string strData((std::istreambuf_iterator<char>(t)),
+    std::ifstream csvConfigDefStream(pathToCsvDefinition);
+    std::string strData((std::istreambuf_iterator<char>(csvConfigDefStream)),
                     std::istreambuf_iterator<char>());
     if (!google::protobuf::TextFormat::ParseFromString(strData, &csvDefinition)) {
         CkAbort("Could not parse protobuf!");
     }
-    t.close();
+    csvConfigDefStream.close();
 
     int csvLocationOfPid = -1;
     for (int i = 0; i < csvDefinition.field_size(); i += 1) {
@@ -134,16 +134,16 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
 
     // Read config file.
     loimos::proto::CSVDefinition csvDefinition;
-    std::ifstream t(pathToCsvDefinition);
-    std::string strData((std::istreambuf_iterator<char>(t)),
+    std::ifstream csvConfigDefStream(pathToCsvDefinition);
+    std::string strData((std::istreambuf_iterator<char>(csvConfigDefStream)),
                     std::istreambuf_iterator<char>());
     if (!google::protobuf::TextFormat::ParseFromString(strData, &csvDefinition)) {
         CkAbort("Could not parse protobuf!");
     }
-    t.close();
+    csvConfigDefStream.close();
 
     // Create position vector for each person.
-    uint64_t totalDataSize = numPeople * numDays * sizeof(uint32_t);
+    std::size_t totalDataSize = numPeople * numDays * sizeof(uint32_t);
     uint32_t *elements = (uint32_t *) malloc(totalDataSize);
     if (elements == NULL) {
         printf("Failed to malloc enoough memory for preprocessing.\n");
