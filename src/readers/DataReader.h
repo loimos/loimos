@@ -14,7 +14,7 @@
 #include "data.pb.h"
 #include "DataInterface.h"
 
-#define MAX_INPUT_LINE_LENGTH (std::streamsize) 262144 // 2^18
+#define MAX_INPUT_lineLength (std::streamsize) 262144 // 2^18
 
 namespace DataTypes {
     enum DataType { int_b10, uint_32, string, category }; 
@@ -40,57 +40,57 @@ class DataReader {
         static void readData(std::ifstream *input, loimos::proto::CSVDefinition *dataFormat,
                     std::vector<T> *dataObjs) {
             // TODO make this 2^16 and support longer lines through multiple reads.
-            char buf[MAX_INPUT_LINE_LENGTH];
+            char buf[MAX_INPUT_lineLength];
             // Rows to read.
             for (auto obj = std::begin(*dataObjs); obj != std::end(*dataObjs); ++obj) {
                 // Get next line.
-                input->getline(buf, MAX_INPUT_LINE_LENGTH);
+                input->getline(buf, MAX_INPUT_lineLength);
 
                 // Read over people data format.
-                int attr_index = 0;
+                int attrIndex = 0;
                 // Tracks how many non-ignored fields there have been.
-                int attr_nonzero_index = 0;
-                int left_comma = 0;
-                std::vector<union Data> obj_data = obj->getDataField();
+                int numNonIgnoredFields = 0;
+                int leftCommaLocation = 0;
+                std::vector<union Data> objData = obj->getDataField();
 
-                int line_length = input->gcount();
-                for (int c = 0; c < line_length; c++) {
+                int lineLength = input->gcount();
+                for (int c = 0; c < lineLength; c++) {
                     // Scan for the next attrbiutes - comma separted.
-                    if (buf[c] == CSV_DELIM || c + 1 == line_length) {
+                    if (buf[c] == CSV_DELIM || c + 1 == lineLength) {
                         // Get next attribute type.
-                        loimos::proto::Data_Field const *field = &dataFormat->field(attr_index);
-                        uint16_t data_len = c - left_comma;
-                        if (field->has_ignore() || data_len == 0) {
+                        loimos::proto::Data_Field const *field = &dataFormat->field(attrIndex);
+                        uint16_t dataLen = c - leftCommaLocation;
+                        if (field->has_ignore() || dataLen == 0) {
                             // Skip
-                        } else if (attr_nonzero_index <= 3) {
+                        } else if (numNonIgnoredFields <= 3) {
                             // Process data.
-                            char *start = buf + left_comma;
-                            if (c + 1 == line_length) {
-                                data_len += 1;
+                            char *start = buf + leftCommaLocation;
+                            if (c + 1 == lineLength) {
+                                dataLen += 1;
                             }
 
                             // Parse byte stream to the correct representation.
                             if (field->has_uniqueid()) {
-                                obj->setUniqueId(std::stoi(std::string(start, data_len)));
+                                obj->setUniqueId(std::stoi(std::string(start, dataLen)));
                             } else if (field->has_b10int() || field->has_foreignid()) {
                                 // TODO parse this directly.
-                                obj_data[attr_nonzero_index].int_b10 = 
-                                    std::stoi(std::string(start, data_len));
+                                objData[numNonIgnoredFields].int_b10 = 
+                                    std::stoi(std::string(start, dataLen));
                             } else if (field->has_label()) {
-                                obj_data[attr_nonzero_index].str = 
-                                    new std::string(start, data_len);
+                                objData[numNonIgnoredFields].str = 
+                                    new std::string(start, dataLen);
                             } else if (field->has_bool_()) {
-                                if (data_len == 1) {
-                                    obj_data[attr_nonzero_index].boolean = 
+                                if (dataLen == 1) {
+                                    objData[numNonIgnoredFields].boolean = 
                                     (start[0] == 't' || start[0] == '1');
                                 } else {
-                                    obj_data[attr_nonzero_index].boolean = false;
+                                    objData[numNonIgnoredFields].boolean = false;
                                 }
                             }
-                            attr_nonzero_index++;
+                            numNonIgnoredFields++;
                         }
-                        left_comma = c + 1;
-                        attr_index++;
+                        leftCommaLocation = c + 1;
+                        attrIndex++;
                     }
                 }
             }
@@ -111,32 +111,32 @@ class DataReader {
             int startTime = -1;
             int duration = -1;
             // TODO don't reallocate this everytime.
-            char buf[MAX_INPUT_LINE_LENGTH];
+            char buf[MAX_INPUT_lineLength];
 
             // Get header line.
-            input->getline(buf, MAX_INPUT_LINE_LENGTH);
+            input->getline(buf, MAX_INPUT_lineLength);
 
             // Read over people data format.
-            int attr_index = 0;
-            int attr_nonzero_index = 0;
-            int left_comma = 0;
+            int attrIndex = 0;
+            int numNonIgnoredFields = 0;
+            int leftCommaLocation = 0;
 
-            int line_length = input->gcount();
-            for (int c = 0; c < line_length; c++) {
+            int lineLength = input->gcount();
+            for (int c = 0; c < lineLength; c++) {
                 // Scan for the next attrbiutes - comma separted.
-                if (buf[c] == CSV_DELIM || c + 1 == line_length) {
+                if (buf[c] == CSV_DELIM || c + 1 == lineLength) {
                     // Get next attribute type.
-                    loimos::proto::Data_Field const *field = &dataFormat->field(attr_index);
-                    uint16_t data_len = c - left_comma;
-                    if (field->has_ignore() || data_len == 0) {
+                    loimos::proto::Data_Field const *field = &dataFormat->field(attrIndex);
+                    uint16_t dataLen = c - leftCommaLocation;
+                    if (field->has_ignore() || dataLen == 0) {
                         // Skip
-                    } else if (attr_nonzero_index <= 3) {
+                    } else if (numNonIgnoredFields <= 3) {
                         // Process data.
-                        char *start = buf + left_comma;
-                        if (c + 1 == line_length) {
-                            data_len += 1;
+                        char *start = buf + leftCommaLocation;
+                        if (c + 1 == lineLength) {
+                            dataLen += 1;
                         } else {
-                            start[data_len] = 0;
+                            start[dataLen] = 0;
                         }
 
                         // Parse byte stream to the correct representation.
@@ -150,12 +150,12 @@ class DataReader {
                             duration = std::atoi(start);
                         } else {
                             // TODO process.
-                            attr_nonzero_index++;
+                            numNonIgnoredFields++;
                         }
                         
                     }
-                    left_comma = c + 1;
-                    attr_index++;
+                    leftCommaLocation = c + 1;
+                    attrIndex++;
                 }
             }
             // printf("Person %d visited %d at %d for %d\n", personId, locationId, startTime, duration);
