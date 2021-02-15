@@ -7,6 +7,7 @@
 #ifndef __PERSON_H__
 #define __PERSON_H__
 
+#include "Defs.h"
 #include "readers/DataInterface.h"
 #include "readers/DataReader.h"
 

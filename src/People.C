@@ -216,13 +216,8 @@ void People::RealDataSendVisitMessages() {
 
       // printf("Person %d visited %d at %d for %d. They have %d\n", personIdx, locationIdx, visitStart, visitDuration, people[localPersonId].state);
       // Send off the visit message.
-      locationsArray[locationSubset].ReceiveVisitMessages(
-        locationId,
-        personId,
-        people[localPersonId].state,
-        visitStart,
-        visitStart + visitDuration
-      );
+      VisitMessage visitMsg(locationId, personId, people[localPersonId].state, visitStart, visitStart + visitDuration);
+      locationsArray[locationSubset].ReceiveVisitMessages(visitMsg);
       std::tie(personId, locationId, visitStart, visitDuration) = DataReader<Person>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
     }
   }
