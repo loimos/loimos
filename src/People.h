@@ -10,6 +10,7 @@
 #include "DiseaseModel.h"
 #include "Interaction.h"
 #include "Person.h"
+#include "Message.h"
 
 #include <random>
 #include <vector>
@@ -37,10 +38,7 @@ class People : public CBase_People {
     void SendVisitMessages(); 
     void SyntheticSendVisitMessages();
     void RealDataSendVisitMessages();
-    void ReceiveInteractions(
-      int personIdx,
-      const std::vector<Interaction> &interactions
-    );
+    void ReceiveInteractions(InteractionMessage interMsg);
     void EndofDayStateUpdate();
 };
 

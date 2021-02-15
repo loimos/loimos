@@ -26,13 +26,7 @@ class Locations : public CBase_Locations {
 
   public:
     Locations();
-    void ReceiveVisitMessages(
-      int locationIdx,
-      int personIdx,
-      int personState,
-      int visitStart,
-      int visitEnd
-    );
+    void ReceiveVisitMessages(VisitMessage visitMsg);
     void ComputeInteractions(); // calls ReceiveInfections
     
     // Load location data from CSV.

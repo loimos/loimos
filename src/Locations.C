@@ -94,24 +94,18 @@ void Locations::loadLocationData() {
   contactModel->setGenerator(&generator);
 }
 
-void Locations::ReceiveVisitMessages(
-  int locationIdx,
-  int personIdx,
-  int personState,
-  int visitStart,
-  int visitEnd
-) {
+void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   // adding person to location visit list
   int localLocIdx = getLocalIndex(
-    locationIdx,
+    visitMsg.locationIdx,
     numLocations,
     numLocationPartitions,
     firstLocationIdx
   );
 
   // Wrap vist info...
-  Event arrival { ARRIVAL, personIdx, personState, visitStart };
-  Event departure { DEPARTURE, personIdx, personState, visitEnd };
+  Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.personState, visitMsg.visitStart };
+  Event departure { DEPARTURE, visitMsg.personIdx, visitMsg.personState, visitMsg.visitEnd };
   Event::pair(&arrival, &departure);
 
   // ...and queue it up at the appropriate location
