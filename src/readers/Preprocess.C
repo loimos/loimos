@@ -1,4 +1,4 @@
-/* Copyright 2020 The Loimos Project Developers.
+/* Copyright 2021 The Loimos Project Developers.
  * See the top-level LICENSE file for details.
  *
  * SPDX-License-Identifier: MIT
@@ -7,8 +7,8 @@
 /**
  * This file is responsible for building a file cache pre-simulation to allow
  * direct fseeking in files rather than slow iteration. Three caches are built
- * for each of the people, locations, and activities file. The cache is dependent
- * on the files given and the number of chares 
+ * for each of the people, locations, and activities file. The cache is
+ * dependent on the files given and the number of chares 
  */ 
 
 #include <string>
