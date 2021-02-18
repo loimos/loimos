@@ -21,7 +21,7 @@ def combine_residences_and_activities(activity_locations, residence_locations):
     residence_locations["home"] = 1
     activity_locations["home"] = 0
     
-    return activity_locations.append(residence_locations)
+    return activity_locations.append(residence_locations).reset_index().drop("index", axis=1)
 
 def id_remapper(people, locations, visits):
     groups = [
@@ -75,7 +75,7 @@ if __name__ == "__main__":
     combined = combine_residences_and_activities(locations, residences)
 
     # Remap all ids
-    people, locations, visits = id_remapper(people, combined, visits)
+    people, combined, visits = id_remapper(people, combined, visits)
 
     # Cleanup
     os.remove(f"{path_to_coc}/coc_person.csv")
