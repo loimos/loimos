@@ -1,9 +1,0 @@
-The (large) datafiles are intentionally left out of the repo.  You then need to 
-run the following script in the scripts/ folder.
-Below are instructions to download the data. 
-
-1) Download the raw datafiles from the Loimos Team Drive/nssac_population_data/coc. 
-2) Preprocess the files by running the python script in the scripts/ folder
-python3 coc_pipeline.py ../data/populations/coc
-3) Enter the confirmation.
-4) Run make test_large to make sure that it is working as intended.
