@@ -1,3 +1,8 @@
+# Copyright 2021 The Loimos Project Developers.
+# See the top-level LICENSE file for details.
+#
+# SPDX-License-Identifier: MIT
+
 """
 Remaps city-of-charlotville dataset to use a 
 """
