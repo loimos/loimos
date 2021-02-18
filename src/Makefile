@@ -1,13 +1,19 @@
+# Copyright 2020 The Loimos Project Developers.
+# See the top-level LICENSE file for details.
+#
+# SPDX-License-Identifier: MIT
+
 include Makefile.include
 
-OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Defs.o \
-         Event.o Interaction.o ContactModel.o \
-         disease_model/disease.pb.o disease_model/distribution.pb.o
-DEFS   = Defs.h loimos.def.h
+OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o Defs.o \
+         Event.o Interaction.o ContactModel.o readers/Preprocess.o \
+         disease_model/disease.pb.o disease_model/distribution.pb.o \
+		 readers/data.pb.o
+DEFS   = Defs.h loimos.def.h readers/DataReader.h
 DECLS  = loimos.decl.h
 BIN    = loimos
 
-SUBDIRS := $(wildcard */.)
+SUBDIRS := disease_model readers
 
 .PHONY:all
 all: all-sub $(BIN)
@@ -30,16 +36,33 @@ $(OBJS): %.o: %.C %.h $(DECLS) $(DEFS)
 .PHONY: all-sub
 all-sub:
 	@for d in $(SUBDIRS); do \
-		cd $$d; $(MAKE) all; \
+		cd $$d; \
+		$(MAKE) all; \
+		cd ..; \
 	done
 
 .PHONY:clean
 clean:
 	rm -f *.o charmrun $(BIN) *.decl.h *.def.h 
 	@for d in $(SUBDIRS); do \
-		cd $$d; $(MAKE) clean; \
+		cd $$d; \
+		$(MAKE) clean; \
+		cd ..; \
 	done
 
-.PHONY:test
-test: all
-	./charmrun +p4 ./loimos 110 20 15 6 15 disease_model/H5N1.textproto ++local	
+# All test names start with "test-"
+TEST_NAMES= -small -syn -large
+TESTS=$(subst -,test-,$(TEST_NAMES))
+
+# Run all tests with test rule
+.PHONY:test $(TESTS)
+test: $(TESTS)
+
+test-small: all
+	./charmrun +p4 ./loimos 39 16 1 4 7 ../data/disease_models/h5n1.textproto ../data/populations/synthetic_small_city/ ++local
+
+test-syn: all
+	./charmrun +p4 ./loimos 39 16 1 4 7 ../data/disease_models/h5n1.textproto ++local
+
+test-large: all
+	./charmrun +p4 ./loimos 41119 19203 60 40 7 ../data/disease_models/h5n1.textproto ../data/populations/coc/ ++local

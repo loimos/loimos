@@ -11,6 +11,7 @@
 #include "Interaction.h"
 #include "DiseaseModel.h"
 #include "ContactModel.h"
+#include "readers/DataInterface.h"
 
 #include <queue>
 #include <vector>
@@ -22,7 +23,7 @@
 // Represents a single location where people can interact
 // Not to be confused with Locations, which represents a group of
 // intances of this class
-class Location {
+class Location : public DataInterface {
   private:
     // Represents all of the arrivals and departures of people
     // from this location on a given day
@@ -69,9 +70,24 @@ class Location {
     // specified person to the appropriate People chare
     inline void sendInteractions(int personIdx);
 
+    // Various attributes of the location.
+    std::vector<union Data> locationData;
+
   public:
-    // just use default constructors
-   
+    // Provide default constructor operations.
+    Location(int numAttributes);
+    Location(const Location&) = default;
+    Location(Location&&) = default;
+    ~Location() = default;
+    // Default assignment operators.
+    Location& operator=(const Location&) = default;
+    Location& operator=(Location&&) = default;
+
+    // Override abstract DataInterface getters and setters.
+    void setUniqueId(int idx);
+    std::vector<union Data> getDataField();
+    int uniqueId;
+    
     // This distribution shoul always be the same - not sure how well
     // static variables work with Charm++, so this may need to be put
     // on the stack somehwer later on

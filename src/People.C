@@ -9,13 +9,19 @@
 #include "Defs.h"
 #include "Interaction.h"
 #include "DiseaseModel.h"
+#include "Person.h"
+#include "readers/DataReader.h"
 
 #include <tuple>
 #include <limits>
 #include <queue>
 #include <cmath>
+#include <string>
+#include <iostream>
+#include <fstream>
 
 std::uniform_real_distribution<> unitDistrib(0,1);
+#define NO_ATTRS 0
 
 People::People() {
   newCases = 0;
@@ -33,9 +39,23 @@ People::People() {
     thisIndex
   );
   
-  // Make a default person and populate people with copies
-  Person tmp { healthyState, std::numeric_limits<Time>::max() };
-  people.resize(numLocalPeople, tmp);
+  // Create real or fake people
+  if (syntheticRun) {
+    // Make a default person and populate people with copies
+    Person tmp { NO_ATTRS, healthyState, std::numeric_limits<Time>::max() };
+    people.resize(numLocalPeople, tmp);
+  } else {
+      int numAttributesPerPerson = 
+        DataReader<Person>::getNonZeroAttributes(diseaseModel->personDef);
+      for (int p = 0; p < numLocalPeople; p++) {
+        people.emplace_back(Person(numAttributesPerPerson,
+          healthyState, std::numeric_limits<Time>::max()
+        ));
+      }
+
+      // Load in people data from file.
+      loadPeopleData();
+  }
   
   // Randomly infect people to seed the initial outbreak
   for (Person &person: people) {
@@ -45,17 +65,67 @@ People::People() {
       newCases++;
     }
   }
-
-  // CkPrintf("People chare %d with %d people\n",thisIndex,numLocalPeople);
 }
+
+/**
+ * Loads real people data from file.
+ */
+void People::loadPeopleData() {  
+  std::ifstream peopleData(scenarioPath + "people.csv");
+  std::ifstream peopleCache(scenarioPath + scenarioId + "_people.cache", std::ios_base::binary);
+  if (!peopleData || !peopleCache) {
+    CkAbort("Could not open person data input.");
+  }
+
+  // Find starting line for our data through people cache.
+  peopleCache.seekg(thisIndex * sizeof(uint32_t));
+  uint32_t peopleOffset;
+  peopleCache.read((char *) &peopleOffset, sizeof(uint32_t));
+  peopleData.seekg(peopleOffset);
+
+  // Read in from remote file.
+  DataReader<Person>::readData(&peopleData, diseaseModel->personDef, &people);
+  peopleData.close();
+  peopleCache.close();
+
+  // Open activity data and cache. 
+  activityData = new std::ifstream(scenarioPath + "visits.csv");
+  std::ifstream activityCache(scenarioPath + scenarioId + "_interactions.cache", std::ios_base::binary);
+  if (!activityData || !activityCache) {
+    CkAbort("Could not open activity input.");
+  }
+
+  // Load preprocessing meta data.
+  uint32_t *buf = (uint32_t *) malloc(sizeof(uint32_t) * numDays);
+  for (int c = 0; c < numLocalPeople; c++) {
+    std::vector<uint32_t> *data_pos = &people[c].interactionsByDay;
+    int curr_id = people[c].uniqueId;
+
+    // Read in their activity data offsets.
+    // activityCache.seekg(0);
+    activityCache.seekg(sizeof(uint32_t) * numDays * (curr_id - firstPersonIdx));
+    activityCache.read((char *) buf, sizeof(uint32_t) * numDays);
+    for (int day = 0; day < numDays; day++) {
+      data_pos->push_back(buf[day]);
+    }
+  }
+  free(buf);
+} 
 
 /**
  * Randomly generates an itinerary (number of visits to random locations)
  * for each person and sends visit messages to locations.
  */ 
 void People::SendVisitMessages() {
-  int numVisits, personIdx, locationIdx, locationSubset;
+  if (syntheticRun) {
+    SyntheticSendVisitMessages();
+  } else {
+    RealDataSendVisitMessages();
+  }
+}
 
+void People::SyntheticSendVisitMessages() {
+  int numVisits, personIdx, locationIdx, locationSubset;
   // initialize random number generator for a Poisson distribution
   std::poisson_distribution<int> poisson_dist(LOCATION_LAMBDA);
 
@@ -72,7 +142,8 @@ void People::SendVisitMessages() {
       i,
       thisIndex,
       numPeople,
-      numPeoplePartitions
+      numPeoplePartitions,
+      firstPersonIdx
     );
     int personState = people[i].state;
 
@@ -104,7 +175,8 @@ void People::SendVisitMessages() {
       locationSubset = getPartitionIndex(
         locationIdx,
         numLocations,
-        numLocationPartitions
+        numLocationPartitions,
+        firstLocationIdx
       );
 
       // sending message to location
@@ -114,11 +186,49 @@ void People::SendVisitMessages() {
   }
 }
 
+void People::RealDataSendVisitMessages() {
+  int numVisits, personIdx, locationIdx, locationSubset;
+  // Send of activities for each person.
+  int nextDaySecs = (day + 1) * DAY_LENGTH;
+  for (int localPersonId = 0; localPersonId < numLocalPeople; localPersonId++) {
+    // Seek to correct position in file.
+    uint32_t seekPos = people[localPersonId].interactionsByDay[day];
+    if (seekPos == EMPTY_VISIT_SCHEDULE)
+      continue;
+    activityData->seekg(seekPos, std::ios_base::beg);
+
+    // Start reading
+    int personId = -1; 
+    int locationId = -1;
+    int visitStart = -1;
+    int visitDuration = -1;
+    std::tie(personId, locationId, visitStart, visitDuration) = DataReader<Person>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
+
+    // Seek while same person on same day.
+    while(personId == people[localPersonId].uniqueId && visitStart < nextDaySecs) {
+      // Find process that owns that location.
+      locationSubset = getPartitionIndex(
+          locationId,
+          numLocations,
+          numLocationPartitions,
+          firstLocationIdx
+      );
+
+      // printf("Person %d visited %d at %d for %d. They have %d\n", personIdx, locationIdx, visitStart, visitDuration, people[localPersonId].state);
+      // Send off the visit message.
+      VisitMessage visitMsg(locationId, personId, people[localPersonId].state, visitStart, visitStart + visitDuration);
+      locationsArray[locationSubset].ReceiveVisitMessages(visitMsg);
+      std::tie(personId, locationId, visitStart, visitDuration) = DataReader<Person>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
+    }
+  }
+}
+
 void People::ReceiveInteractions(InteractionMessage interMsg) {
   int localIdx = getLocalIndex(
     interMsg.personIdx,
     numPeople,
-    numPeoplePartitions
+    numPeoplePartitions,
+    firstPersonIdx
   );
 
   // Just concatenate the interaction lists so that we can process all of the

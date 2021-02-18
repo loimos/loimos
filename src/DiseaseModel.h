@@ -12,6 +12,7 @@
 #include "disease_model/distribution.pb.h"
 
 #include "Event.h"
+ #include "readers/data.pb.h"
 
 #include <random>
 
@@ -22,9 +23,9 @@ class DiseaseModel : public CBase_DiseaseModel {
         loimos::proto::DiseaseModel *model;
         // Map from state name to index of state in model.
         // TODO(iancostello): Change these maps to be non-pointers.
-        std::unordered_map<std::string, int> *state_lookup;
+        std::unordered_map<std::string, int> *stateLookup;
         // For each state index, map from stategy name string to index of strategy labels.
-        std::vector<std::unordered_map<std::string, int> *> *strategy_lookup;  
+        std::vector<std::unordered_map<std::string, int> *> *strategyLookup;  
         Time getTimeInNextState(int nextState, std::default_random_engine *generator) const;
         Time timeDefToSeconds(Time_Def time) const;
         int healthyState;
@@ -46,6 +47,12 @@ class DiseaseModel : public CBase_DiseaseModel {
           int startTime,
           int endTime
         ) const;
+
+        // These objects are not related to the disease model but are
+        // per PE definitions so it makes sense to share them.
+        loimos::proto::CSVDefinition *personDef;
+        loimos::proto::CSVDefinition *locationDef;
+        loimos::proto::CSVDefinition *activityDef;
 };
 
 #endif // __DiseaseModel_H__

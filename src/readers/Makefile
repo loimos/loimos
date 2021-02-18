@@ -1,11 +1,11 @@
-# Copyright 2020 The Loimos Project Developers.
+# Copyright 2021 The Loimos Project Developers.
 # See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
 
 include ../Makefile.include
 
-PROTOS      = disease.proto distribution.proto
+PROTOS      = data.proto
 TMP_SRCS    = $(subst .proto,.pb.cc,$(PROTOS)) 
 SRCS        = $(subst .proto,.pb.C,$(PROTOS)) 
 OBJS        = $(subst .proto,.pb.o,$(PROTOS)) 

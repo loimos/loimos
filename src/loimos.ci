@@ -19,6 +19,14 @@ mainmodule loimos {
   readonly int numLocationPartitions;
   readonly int numDays;
 
+  readonly bool syntheticRun;
+  readonly int firstPersonIdx;
+  readonly int firstLocationIdx;
+  readonly std::string scenarioPath;
+  readonly std::string scenarioId;
+  
+  readonly double simulationStartTime;
+
   mainchare Main {
     entry Main(CkArgMsg*);
     entry void run() {
@@ -72,7 +80,11 @@ mainmodule loimos {
           }
         }
       }
-      serial { CkExit(); }
+      serial { 
+        printf("Finished data loading in %lf seconds.\n", simulationStartTime);
+        printf("Finished simulation in %lf seconds.\n", (CkWallTimer() - simulationStartTime));
+        CkExit(); 
+      }
     };
     entry void StartComputingInteractions(); 
     entry void ComputedInteractions();

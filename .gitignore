@@ -9,3 +9,10 @@ loimos
 
 .DS_Store
 settings.json
+.vscode
+*.dSYM
+
+data/populations/coc/locations.csv
+data/populations/coc/people.csv
+data/populations/coc/visits.csv
+*.cache

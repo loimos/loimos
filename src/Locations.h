@@ -28,6 +28,9 @@ class Locations : public CBase_Locations {
     Locations();
     void ReceiveVisitMessages(VisitMessage visitMsg);
     void ComputeInteractions(); // calls ReceiveInfections
+    
+    // Load location data from CSV.
+    void loadLocationData();
 };
 
 #endif // __LOCATIONS_H__

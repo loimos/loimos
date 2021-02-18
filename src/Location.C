@@ -17,6 +17,22 @@
 #include <cmath>
 #include <algorithm>
 
+Location::Location(int numAttributes) {
+  if (numAttributes != 0) {
+    this->locationData.resize(numAttributes);
+  }
+}
+
+// DataInterface overrides. 
+void Location::setUniqueId(int idx) {
+    this->uniqueId = idx;
+}
+
+std::vector<union Data> Location::getDataField() {
+    return this->locationData;
+}
+
+// Event processing.
 void Location::addEvent(Event e) {
   events.push(e);
 }
@@ -158,7 +174,8 @@ inline void Location::sendInteractions(int personIdx) {
   int peoplePartitionIdx = getPartitionIndex(
     personIdx,
     numPeople,
-    numPeoplePartitions
+    numPeoplePartitions,
+    firstPersonIdx
   );
 
   InteractionMessage interMsg(personIdx, interactions[personIdx]);

@@ -9,6 +9,9 @@
 #include "People.h"
 #include "Locations.h"
 #include "DiseaseModel.h"
+#include "readers/Preprocess.h"
+
+#include <tuple>
 
 /* readonly */ CProxy_Main mainProxy;
 /* readonly */ CProxy_People peopleArray;
@@ -19,11 +22,17 @@
 /* readonly */ int numPeoplePartitions;
 /* readonly */ int numLocationPartitions;
 /* readonly */ int numDays;
+/* readonly */ bool syntheticRun;
+/* readonly */ std::string scenarioPath;
+/* readonly */ std::string scenarioId;
+/* readonly */ int firstPersonIdx;
+/* readonly */ int firstLocationIdx;
+/* readonly */ double simulationStartTime;
 
 Main::Main(CkArgMsg* msg) {
   // parsing command line arguments
   if(msg->argc < 7){
-    CkPrintf("Error, usage %s <people> <locations> <people subsets> <location subsets> <days> <path_to_disease_model>\n", msg->argv[0]);
+    CkPrintf("Error, usage %s <people> <locations> <people subsets> <location subsets> <days> <disease_model_path> <scenario_folder (optional)>\n", msg->argv[0]);
     CkExit();
   }
   numPeople = atoi(msg->argv[1]);
@@ -31,11 +40,25 @@ Main::Main(CkArgMsg* msg) {
   numPeoplePartitions = atoi(msg->argv[3]);
   numLocationPartitions = atoi(msg->argv[4]);
   numDays = atoi(msg->argv[5]);
-  std::string pathToDiseaseModel = msg->argv[6];
+  std::string pathToDiseaseModel = std::string(msg->argv[6]);
+
+  // Handle both real data runs or runs using synthetic populations.
+  if(msg->argc == 8) {
+    syntheticRun = false;
+    
+    // Create data caches.
+    scenarioPath = std::string(msg->argv[7]);
+    std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(scenarioPath, numPeople, numPeoplePartitions, numLocations, numLocationPartitions, numDays);
+  } else {
+    syntheticRun = true;
+    firstPersonIdx = 0;
+    firstLocationIdx = 0;
+  }
 
   // setup main proxy
   CkPrintf("Running Loimos on %d PEs with %d people, %d locations, %d people subsets, %d location subsets, and %d days\n", CkNumPes(), numPeople, numLocations, numPeoplePartitions, numLocationPartitions, numDays);
   mainProxy = thisProxy;
+
 
   // Instantiate DiseaseModel nodegroup (One for each physical processor).
   CkPrintf("Loading diseaseModel.\n");
@@ -45,12 +68,13 @@ Main::Main(CkArgMsg* msg) {
   delete msg;
 
   // creating chare arrays
-  CkPrintf("Loading otherrs.\n");
+  CkPrintf("Loading people and locations.\n");
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
 
   // run
   CkPrintf("Running.\n");
+  simulationStartTime = CkWallTimer();
   mainProxy.run();
 }
 

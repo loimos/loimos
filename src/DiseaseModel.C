@@ -35,39 +35,66 @@ DiseaseModel::DiseaseModel(std::string pathToModel) {
   // Load in text proto definition.
   // TODO(iancostello): Load directly without string.
   model = new loimos::proto::DiseaseModel();
-  std::ifstream t(pathToModel);
-  std::string str((std::istreambuf_iterator<char>(t)),
+  std::ifstream diseaseModelStream(pathToModel);
+  std::string str((std::istreambuf_iterator<char>(diseaseModelStream)),
                   std::istreambuf_iterator<char>());
   if (!google::protobuf::TextFormat::ParseFromString(str, model)) {
     CkAbort("Could not parse protobuf!");
   }
+  diseaseModelStream.close();
 
   // Create an intervention strategy mapping for fast lookup.
   // TODO(iancostello): Remove manual allocation in the future.
   // TODO(iancostello): ADD deconstructor.
-  strategy_lookup = new std::vector<NameIndexLookupType *>;
-  state_lookup = new NameIndexLookupType;
+  strategyLookup = new std::vector<NameIndexLookupType *>;
+  stateLookup = new NameIndexLookupType;
   for (int stateIndex = 0; stateIndex < model->disease_state_size();
        stateIndex++) {
     // Get next state.
-    const loimos::proto::DiseaseModel_DiseaseState *curr_state =
+    const loimos::proto::DiseaseModel_DiseaseState *currState =
         &model->disease_state(stateIndex);
 
     // Add to lookup map.
-    NameIndexLookupType *treatment_map = new NameIndexLookupType();
-    state_lookup->insert({curr_state->state_label(), stateIndex});
+    NameIndexLookupType *treatmentMap = new NameIndexLookupType();
+    stateLookup->insert({currState->state_label(), stateIndex});
     for (int transitionIndex = 0;
-         transitionIndex < curr_state->transition_set_size();
+         transitionIndex < currState->transition_set_size();
          transitionIndex++) {
-      treatment_map->insert(
-          {curr_state->transition_set(transitionIndex).transition_label(),
+      treatmentMap->insert(
+          {currState->transition_set(transitionIndex).transition_label(),
            transitionIndex});
     }
-    strategy_lookup->push_back(treatment_map);
+    strategyLookup->push_back(treatmentMap);
   }
 
   // Init commonly used states.
   healthyState = getIndexOfState("uninfected");
+
+  // Setup other shared PE objects.
+  personDef = new loimos::proto::CSVDefinition();
+  std::ifstream personInputStream(scenarioPath + "people.textproto");
+  std::string strPerson((std::istreambuf_iterator<char>(personInputStream)),
+                  std::istreambuf_iterator<char>());
+  if (!google::protobuf::TextFormat::ParseFromString(strPerson, personDef)) {
+    CkAbort("Could not parse protobuf!");
+  }
+  personInputStream.close();
+  locationDef = new loimos::proto::CSVDefinition();
+  std::ifstream locationInputStream(scenarioPath + "locations.textproto");
+  std::string strLocation((std::istreambuf_iterator<char>(locationInputStream)),
+                  std::istreambuf_iterator<char>());
+  if (!google::protobuf::TextFormat::ParseFromString(strLocation, locationDef)) {
+    CkAbort("Could not parse protobuf!");
+  }
+  locationInputStream.close();
+  activityDef = new loimos::proto::CSVDefinition();
+  std::ifstream activityInputStream(scenarioPath + "visits.textproto");
+  std::string strActivity((std::istreambuf_iterator<char>(activityInputStream)),
+                  std::istreambuf_iterator<char>());
+  if (!google::protobuf::TextFormat::ParseFromString(strActivity, activityDef)) {
+    CkAbort("Could not parse protobuf!");
+  }
+  activityInputStream.close();
 }
 
 /**
@@ -78,7 +105,7 @@ DiseaseModel::DiseaseModel(std::string pathToModel) {
  *      Index of that state in the loaded disease model.
  */
 int DiseaseModel::getIndexOfState(std::string stateLabel) const {
-  return state_lookup->at(stateLabel);
+  return stateLookup->at(stateLabel);
 }
 
 /**
@@ -103,13 +130,13 @@ std::tuple<int, int> DiseaseModel::transitionFromState(
   std::default_random_engine *generator
 ) const {
   // Get current state and next transition set to use.
-  const loimos::proto::DiseaseModel_DiseaseState *curr_state =
+  const loimos::proto::DiseaseModel_DiseaseState *currState =
       &model->disease_state(fromState);
 
   // Get the next transition set to use.
   const loimos::proto::DiseaseModel_DiseaseState_StateTransitionSet
-      *transition_set = &(curr_state->transition_set(
-          strategy_lookup->at(fromState)->at(interventionStategy)));
+      *transition_set = &(currState->transition_set(
+          strategyLookup->at(fromState)->at(interventionStategy)));
 
   // Randomly choose a state transition from the set and return the next state.
   float cdfSoFar = 0;
@@ -123,7 +150,7 @@ std::tuple<int, int> DiseaseModel::transitionFromState(
     // TODO: Create a CDF vector in initialization.
     cdfSoFar += transition->with_prob();
     if (randomCutoff <= cdfSoFar) {
-      int nextState = state_lookup->at(transition->next_state());
+      int nextState = stateLookup->at(transition->next_state());
       int timeInNextState = getTimeInNextState(nextState, generator);
       return std::make_tuple(nextState, timeInNextState);
     }
