@@ -1,0 +1,118 @@
+// Copyright 2020 The Loimos Project Developers.
+// See the top-level LICENSE file for details.
+//
+// SPDX-License-Identifier: MIT
+
+mainmodule loimos {
+  include "Interaction.h";
+  include "Message.h";
+
+  include "vector";
+
+  readonly CProxy_Main mainProxy;
+  readonly CProxy_People peopleArray;
+  readonly CProxy_Locations locationsArray;
+  readonly CProxy_DiseaseModel globDiseaseModel;
+  readonly int numPeople;
+  readonly int numLocations;
+  readonly int numPeoplePartitions;
+  readonly int numLocationPartitions;
+  readonly int numDays;
+
+  readonly bool syntheticRun;
+  readonly int firstPersonIdx;
+  readonly int firstLocationIdx;
+  readonly std::string scenarioPath;
+  readonly std::string scenarioId;
+  
+  readonly double simulationStartTime;
+
+  mainchare Main {
+    entry Main(CkArgMsg*);
+    entry void run() {
+      for(day = 0; day < numDays; day++) {
+        serial {
+          // CkPrintf("Sending Visit Messages\n");
+          peopleArray.SendVisitMessages();
+          // CkPrintf("QD Visit Messages\n");
+          CkStartQD(CkCallback(
+            CkIndex_Main::StartComputingInteractions(),
+            mainProxy
+          ));
+        }
+        when StartComputingInteractions() {
+          serial {
+            // CkPrintf("Compute Interactions\n");
+            locationsArray.ComputeInteractions();
+            // CkPrintf("QD Compute Interactions\n");
+            CkStartQD(CkCallback(
+              CkIndex_Main::ComputedInteractions(),
+              mainProxy
+            ));
+          }
+        }
+        when ComputedInteractions() {
+          serial {
+            // CkPrintf("Reporting Stats\n");
+            peopleArray.EndofDayStateUpdate();
+          }
+        }
+        when ReceiveStats(CkReductionMsg *summary) {
+          serial {
+            CkPrintf("Summary of Day %d\n", day);
+            int *data = reinterpret_cast<int *>(summary->getData());
+            DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
+
+            for (int i = 0; i < diseaseModel->getNumberOfStates(); i++) {
+              int total_in_state = *data;
+              int change_in_infected = total_in_state - accumulated[i];
+              if (total_in_state != 0 || change_in_infected != 0) {
+                CkPrintf(
+                  "%d in %s. (%d change from previous day)\n",
+                  total_in_state,
+                  diseaseModel->lookupStateName(i).c_str(),
+                  change_in_infected
+                );
+              }
+              accumulated[i] = total_in_state; 
+              data++;
+            }
+          }
+        }
+      }
+      serial { 
+        printf("Finished data loading in %lf seconds.\n", simulationStartTime);
+        printf("Finished simulation in %lf seconds.\n", (CkWallTimer() - simulationStartTime));
+        CkExit(); 
+      }
+    };
+    entry void StartComputingInteractions(); 
+    entry void ComputedInteractions();
+    entry [reductiontarget] void ReceiveStats(CkReductionMsg *summary);
+  };
+
+  array [1D] People {
+    entry People();
+    entry void SendVisitMessages(); // calls ReceiveVisitMessages
+#ifdef USE_TRAM
+    entry [aggregate] void ReceiveInteractions(InteractionMessage);
+#else
+    entry void ReceiveInteractions(InteractionMessage);
+#endif
+    entry void EndofDayStateUpdate(); // contribute call to ReceiveStats
+  };
+
+  array [1D] Locations {
+    entry Locations();
+#ifdef USE_TRAM
+    entry [aggregate] void ReceiveVisitMessages(VisitMessage);
+#else
+    entry void ReceiveVisitMessages(VisitMessage);
+#endif
+    entry void ComputeInteractions(); // calls ReceiveInteractions
+  };
+
+  nodegroup DiseaseModel {
+      entry DiseaseModel(std::string pathToModel);
+  };
+};

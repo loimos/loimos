@@ -1,29 +1,68 @@
-CHARMC = $(HOME)/charm/bin/charmc
+# Copyright 2020 The Loimos Project Developers.
+# See the top-level LICENSE file for details.
+#
+# SPDX-License-Identifier: MIT
 
-OBJS = Main.o People.o Locations.o Defs.o
-OBJS_DECL	= loimos.decl.h
+include Makefile.include
 
-loimos: $(OBJS) $(OBJS_DECL)
-	$(CHARMC) -o loimos $(OBJS) -language charm++ \
-	-module CkMulticast $(OPTS)
+OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o Defs.o \
+         Event.o Interaction.o ContactModel.o readers/Preprocess.o \
+         disease_model/disease.pb.o disease_model/distribution.pb.o \
+		 readers/data.pb.o
+DEFS   = Defs.h loimos.def.h readers/DataReader.h
+DECLS  = loimos.decl.h
+BIN    = loimos
 
-loimos.decl.h: main.ci
-	$(CHARMC) main.ci
+SUBDIRS := disease_model readers
 
-Main.o: Main.C Main.h loimos.decl.h
-	$(CHARMC) $(OPTS) $(INC) -o Main.o Main.C
+.PHONY:all
+all: all-sub $(BIN)
 
-People.o: People.C People.h loimos.decl.h
-	$(CHARMC) $(OPTS) $(INC) -o People.o People.C
+# Build the executable (and implicitly charmrun) from the object files
+$(BIN): $(OBJS) $(DECLS)
+	$(CHARMC) -o $@ $(OBJS) -language charm++ -module CkMulticast \
+	-module NDMeshStreamer -lpthread -L$(PROTOBUF_HOME)/lib -lprotobuf
 
-Locations.o: Locations.C Locations.h loimos.decl.h
-	$(CHARMC) $(OPTS) $(INC) -o Locations.o Locations.C
+# Build .decl.h (and implicitly .def.h) files from the corresponding
+# .ci files
+$(DECLS): %.decl.h: %.ci
+	$(CHARMC) $<
 
-Defs.o: Defs.h
-	$(CHARMC) $(OPTS) $(INC) -o Defs.o Defs.C
+# Build .o files from the corresponding .C and .h files
+$(OBJS): %.o: %.C %.h $(DECLS) $(DEFS)
+	$(CHARMC) $(CXXFLAGS) -o $@ $<
 
+# Subdirs will build the protobuf object files
+.PHONY: all-sub
+all-sub:
+	@for d in $(SUBDIRS); do \
+		cd $$d; \
+		$(MAKE) all; \
+		cd ..; \
+	done
+
+.PHONY:clean
 clean:
-	rm -f *.decl.h *.def.h *.o charmrun loimos
+	rm -f *.o charmrun $(BIN) *.decl.h *.def.h 
+	@for d in $(SUBDIRS); do \
+		cd $$d; \
+		$(MAKE) clean; \
+		cd ..; \
+	done
 
-test: loimos
-	./charmrun +p4 ./loimos 110 20 15 6 15 ++local
+# All test names start with "test-"
+TEST_NAMES= -small -syn -large
+TESTS=$(subst -,test-,$(TEST_NAMES))
+
+# Run all tests with test rule
+.PHONY:test $(TESTS)
+test: $(TESTS)
+
+test-small: all
+	./charmrun +p4 ./loimos 39 16 1 4 7 ../data/disease_models/h5n1.textproto ../data/populations/synthetic_small_city/ ++local
+
+test-syn: all
+	./charmrun +p4 ./loimos 39 16 1 4 7 ../data/disease_models/h5n1.textproto ++local
+
+test-large: all
+	./charmrun +p4 ./loimos 41119 19203 60 40 7 ../data/disease_models/h5n1.textproto ../data/populations/coc/ ++local

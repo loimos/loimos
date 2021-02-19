@@ -7,8 +7,16 @@
 #ifndef __PEOPLE_H__
 #define __PEOPLE_H__
 
+#include "DiseaseModel.h"
+#include "Interaction.h"
+#include "Person.h"
+#include "Message.h"
+
 #include <random>
 #include <vector>
+#include <tuple>
+#include <iostream>
+#include <fstream>
 
 #define LOCATION_LAMBDA 5.2
 
@@ -17,14 +25,20 @@ class People : public CBase_People {
     int numLocalPeople;
     int day;
     int newCases;
-    std::vector<char> peopleState;
-    std::vector<int> peopleDay;
+
+    std::ifstream *activityData;
+    std::vector<Person> people;
     std::default_random_engine generator;
-    float MAX_RANDOM_VALUE;
+    DiseaseModel *diseaseModel;
+
+    void ProcessInteractions(Person &person);
+    void loadPeopleData();
   public:
     People();
     void SendVisitMessages(); 
-    void ReceiveInfections(int personIdx);
+    void SyntheticSendVisitMessages();
+    void RealDataSendVisitMessages();
+    void ReceiveInteractions(InteractionMessage interMsg);
     void EndofDayStateUpdate();
 };
 

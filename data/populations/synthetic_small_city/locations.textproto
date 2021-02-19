@@ -1,0 +1,60 @@
+field {
+    field_name: "alid"
+    uniqueId {}
+}
+field {
+    field_name: "longitude"
+    ignore {}
+}
+field {
+    field_name: "latitude"
+    ignore {}
+}
+field {
+    field_name: "altitude"
+    ignore {}
+}
+field {
+    field_name: "admin1"
+    ignore {}
+}
+field {
+    field_name: "admin2"
+    ignore {}
+}
+field {
+    field_name: "admin3"
+    ignore {}
+}
+field {
+    field_name: "admin4"
+    ignore {}
+}
+field {
+    field_name: "work"
+    ignore {}
+}
+field {
+    field_name: "shopping"
+    ignore {}
+}
+field {
+    field_name: "school"
+    ignore {}
+}
+field {
+    field_name: "other"
+    ignore {}
+}
+field {
+    field_name: "college"
+    ignore {}
+}
+field {
+    field_name: "religion"
+    ignore {}
+}
+field {
+    field_name: "designation"
+    ignore {}
+}

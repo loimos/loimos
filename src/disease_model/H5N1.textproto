@@ -1,0 +1,328 @@
+label: "H5N1"
+
+disease_state: {
+    state_label: "uninfected"
+    infectivity: 0
+    susceptibility: 0.05
+
+    forever : {}
+
+    transition_set: {
+        transition_label: "untreated"
+        transition: {
+            next_state: "latent_short"
+            with_prob: 0.8
+        }
+        transition: {
+            next_state: "latent_long"
+            with_prob: 0.2
+        }
+    }
+    transition_set: {
+        transition_label: "antiviral"
+        transition: {
+            next_state: "recovered"
+            with_prob: 0.3
+        }
+        transition: {
+            next_state: "latent_short"
+            with_prob: 0.56
+        }
+        transition: {
+            next_state: "latent_long"
+            with_prob: 0.14
+        }
+    }
+}
+
+disease_state: {
+    state_label: "latent_long"
+    infectivity: 0.2
+    susceptibility: 0
+
+    fixed {
+        time_in_state: {
+            days: 0
+            hours: 48
+            minutes: 0
+        }
+    }
+
+    transition_set: {
+        transition_label: "untreated"
+        transition: {
+            next_state: "incubating"
+            with_prob: 1
+        }
+    }
+}
+
+disease_state: {
+    state_label: "latent_short"
+    infectivity: 0.1
+    susceptibility: 0
+
+    fixed {
+        time_in_state: {
+            days: 0
+            hours: 24
+            minutes: 0
+        }
+    }
+
+    transition_set: {
+        transition_label: "untreated"
+        transition: {
+            next_state: "incubating"
+            with_prob: 0.625
+        }
+        transition: {
+            next_state: "symptom1_circulating"
+            with_prob: 0.05025
+        }
+        transition: {
+            next_state: "symptom2_circulating"
+            with_prob: 0.05025
+        }
+        transition: {
+            next_state: "symptom3_circulating"
+            with_prob: 0.15075
+        }
+        transition: {
+            next_state: "asympt"
+            with_prob: 0.12375
+        }
+    }
+}
+
+disease_state: {
+    state_label: "incubating"
+    infectivity: 0.1
+    susceptibility: 0
+
+    fixed {
+        time_in_state: {
+            days: 0
+            hours: 24
+            minutes: 0
+        }
+    }
+
+    transition_set: {
+        transition_label: "untreated"
+        transition: {
+            next_state: "symptom1_circulating"
+            with_prob: 0.134
+        }
+        transition: {
+            next_state: "symptom2_circulating"
+            with_prob: 0.134
+        }
+        transition: {
+            next_state: "symptom3_circulating"
+            with_prob: 0.402
+        }
+        transition: {
+            next_state: "asympt"
+            with_prob: 0.33
+        }
+    }
+}
+
+disease_state: {
+    state_label: "asympt"
+    infectivity: 0.2
+    susceptibility: 0
+
+    uniform {
+        tmin: {
+            days: 0
+            hours: 36
+            minutes: 0
+        }
+        tmax: {
+            days: 0
+            hours: 72
+            minutes: 0
+        }
+    }
+
+    transition_set: {
+        transition_label: "untreated"
+        transition: {
+            next_state: "recovered"
+            with_prob: 1
+        }
+    }
+}
+
+disease_state: {
+    state_label: "symptom1_circulating"
+    infectivity: 0.2
+    susceptibility: 0
+
+    fixed {
+        time_in_state: {
+            days: 0
+            hours: 24
+            minutes: 0
+        }
+    }
+
+    transition_set: {
+        transition_label: "untreated"
+        transition: {
+            next_state: "symptom1"
+            with_prob: 1
+        }
+    }
+}
+
+disease_state: {
+    state_label: "symptom2_circulating"
+    infectivity: 0.2
+    susceptibility: 0
+
+    fixed {
+        time_in_state: {
+            days: 0
+            hours: 24
+            minutes: 0
+        }
+    }
+
+    transition_set: {
+        transition_label: "untreated"
+        transition: {
+            next_state: "symptom2"
+            with_prob: 1
+        }
+    }
+}
+
+disease_state: {
+    state_label: "symptom3_circulating"
+    infectivity: 0.2
+    susceptibility: 0
+
+    fixed {
+        time_in_state: {
+            days: 0
+            hours: 24
+            minutes: 0
+        }
+    }
+
+    transition_set: {
+        transition_label: "untreated"
+        transition: {
+            next_state: "symptom3"
+            with_prob: 1
+        }
+    }
+}
+
+disease_state: {
+    state_label: "symptom1"
+    infectivity: 0.2
+    susceptibility: 0
+
+     uniform {
+        tmin: {
+            days: 0
+            hours: 36
+            minutes: 0
+        }
+        tmax: {
+            days: 0
+            hours: 72
+            minutes: 0
+        }
+    }
+
+    transition_set: {
+        transition_label: "untreated"
+        transition: {
+            next_state: "recovered"
+            with_prob: 0.95
+        }
+        transition: {
+            next_state: "incapacitated"
+            with_prob: 0.05
+        }
+    }
+}
+
+disease_state: {
+    state_label: "symptom2"
+    infectivity: 0.2
+    susceptibility: 0
+
+    uniform {
+        tmin: {
+            days: 0
+            hours: 36
+            minutes: 0
+        }
+        tmax: {
+            days: 0
+            hours: 72
+            minutes: 0
+        }
+    }
+
+    transition_set: {
+        transition_label: "untreated"
+        transition: {
+            next_state: "recovered"
+            with_prob: 0.99
+        }
+        transition: {
+            next_state: "incapacitated"
+            with_prob: 0.01
+        }
+    }
+}
+
+disease_state: {
+    state_label: "symptom3"
+    infectivity: 0.2
+    susceptibility: 0
+
+    uniform {
+        tmin: {
+            days: 0
+            hours: 48
+            minutes: 0
+        }
+        tmax: {
+            days: 0
+            hours: 60
+            minutes: 0
+        }
+    }
+
+    transition_set: {
+        transition_label: "untreated"
+        transition: {
+            next_state: "recovered"
+            with_prob: 1
+        }
+    }
+}
+
+disease_state: {
+    state_label: "recovered"
+    infectivity: 0
+    susceptibility: 0
+
+    forever {}
+}
+
+disease_state: {
+    state_label: "incapacitated"
+    infectivity: 0
+    susceptibility: 0
+
+    forever {}
+}

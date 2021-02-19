@@ -1,0 +1,31 @@
+syntax = "proto3";
+package loimos.proto;
+
+message Data_Field {
+    string field_name = 1;
+
+    message Empty {}
+    
+    message Category {
+        repeated int32 int32 = 1;
+    }
+
+    oneof data_type {
+        Empty uniqueId = 2;
+        Empty foreignId = 3;
+        Empty startTime = 4;
+        Empty duration = 5;
+        Empty bool = 6;
+        Empty b10int = 7;
+        Empty int32 = 8;
+        Empty double = 9;
+        Empty b10double = 10;
+        Empty ignore = 11;
+        Empty label = 12;
+        Category category = 13;
+      } 
+}
+
+message CSVDefinition {
+    repeated Data_Field field = 1;
+}

@@ -6,54 +6,116 @@
 
 #include "loimos.decl.h"
 #include "Locations.h"
+#include "Location.h"
+#include "Event.h"
+#include "DiseaseModel.h"
+#include "ContactModel.h"
+#include "Location.h"
+#include "Event.h"
 #include "Defs.h"
+#include "readers/DataReader.h"
+#include "Person.h"
+
 #include <algorithm>
+#include <queue>
+#include <stdio.h>
+#include <iostream>
+#include <fstream>
 
 Locations::Locations() {
-  // getting number of locations assigned to this chare
-  numLocalLocations = getNumLocalElements(numLocations, numLocationPartitions, thisIndex);
-  visitors.resize(numLocalLocations);
-  locationState.resize(numLocalLocations, SUSCEPTIBLE);
+  // Getting number of locations assigned to this chare
+  numLocalLocations = getNumLocalElements(
+    numLocations,
+    numLocationPartitions,
+    thisIndex
+  );
+  
+  // Init disease states
+  diseaseModel = globDiseaseModel.ckLocalBranch();
+
+  // Load application data
+  if (syntheticRun) {
+    Location tmp { 0 };
+    locations.resize(numLocalLocations, tmp);
+  } else {
+    locations.reserve(numLocalLocations);
+    loadLocationData();
+  }
+
+  // Seed random number generator via branch ID for reproducibility
   generator.seed(thisIndex);
-  MAX_RANDOM_VALUE = (float)generator.max();
+  // Init contact model
+  contactModel = new ContactModel();
+  contactModel->setGenerator(&generator);
 }
 
-void Locations::ReceiveVisitMessages(VisitMessage visit_msg) {
-  // adding person to location visit list
-  int localLocIdx = getLocalIndex(visit_msg.locationIdx, numLocations,
-      numLocationPartitions);
-  visitors[localLocIdx].push_back(std::pair<int,char>(visit_msg.personIdx,
-        visit_msg.personState));
-  if (visit_msg.personState == INFECTIOUS) {
-    locationState[localLocIdx] = INFECTIOUS;
+void Locations::loadLocationData() {
+  // Init local.
+  int numAttributesPerLocation = 
+    DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
+  for (int p = 0; p < numLocalLocations; p++) {
+    locations.emplace_back(numAttributesPerLocation);
   }
-  // CkPrintf("Location %d localIdx %d visited by person %d\n", locationIdx, localLocIdx, personIdx);
+
+  // Load in location information.
+  int startingLineIndex = getGlobalIndex(
+    0,
+    thisIndex,
+    numLocations,
+    numLocationPartitions,
+    firstLocationIdx
+  ) - firstLocationIdx;
+  int endingLineIndex = startingLineIndex + numLocalLocations;
+  std::string line;
+
+  std::ifstream locationData(scenarioPath + "locations.csv");
+  std::ifstream locationCache(scenarioPath + scenarioId + "_locations.cache", std::ios_base::binary);
+  if (!locationData || !locationCache) {
+    CkAbort("Could not open person data input.");
+  }
+  
+  // Find starting line for our data through location cache.
+  locationCache.seekg(thisIndex * sizeof(uint32_t));
+  uint32_t locationOffset;
+  locationCache.read((char *) &locationOffset, sizeof(uint32_t));
+  locationData.seekg(locationOffset);
+
+  // Read in our location data.
+  DataReader<Location>::readData(&locationData, diseaseModel->locationDef,
+                                 &locations);
+  locationData.close();
+  locationCache.close();
+
+  // Seed random number generator via branch ID for reproducibility.
+  generator.seed(thisIndex);
+  
+  // Init contact model
+  contactModel = new ContactModel();
+  contactModel->setGenerator(&generator);
+}
+
+void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
+  // adding person to location visit list
+  int localLocIdx = getLocalIndex(
+    visitMsg.locationIdx,
+    numLocations,
+    numLocationPartitions,
+    firstLocationIdx
+  );
+
+  // Wrap vist info...
+  Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.personState, visitMsg.visitStart };
+  Event departure { DEPARTURE, visitMsg.personIdx, visitMsg.personState, visitMsg.visitEnd };
+  Event::pair(&arrival, &departure);
+
+  // ...and queue it up at the appropriate location
+  locations[localLocIdx].addEvent(arrival);
+  locations[localLocIdx].addEvent(departure);
 }
 
 void Locations::ComputeInteractions() {
-  int peopleSubsetIdx;
-  int cont=0, globalIdx;
-  float value;
   // traverses list of locations
-  for(std::vector<std::vector<std::pair<int,char> > >::iterator locIter = visitors.begin() ; locIter != visitors.end(); ++locIter) {
-    if(locationState[cont] == INFECTIOUS) {
-      // sorting set of people to guarantee deterministic behavior
-      sort(locIter->begin(), locIter->end());
-      globalIdx = getGlobalIndex(cont, thisIndex, numLocations, numLocationPartitions);
-      for(std::vector<std::pair<int,char> >::iterator visitor = locIter->begin() ; visitor != locIter->end(); ++visitor) {
-        // randomly selecting people to get infected
-        value = (float)generator();
-        // CkPrintf("Partition %d - Location %d - Person %d - Value %f\n", thisIndex, globalIdx, *visitor, value);
-        if(visitor->second == SUSCEPTIBLE && value/MAX_RANDOM_VALUE < INFECTION_PROBABILITY) {
-          peopleSubsetIdx = getPartitionIndex(visitor->first, numPeople, numPeoplePartitions);
-          peopleArray[peopleSubsetIdx].ReceiveInfections(visitor->first);
-        }
-      }
-    }
-    // cleaning the visits to this location
-    locIter->clear();
-    cont++;
+  for (Location loc : locations) {
+    loc.processEvents(diseaseModel, contactModel);
   }
-  // cleaning state of all locations
-  locationState.resize(numLocalLocations, SUSCEPTIBLE);
 }
