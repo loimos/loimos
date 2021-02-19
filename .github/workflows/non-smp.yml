@@ -14,6 +14,9 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    env:
+      CHARM_HOME: $GITHUB_WORKSPACE/charm
+      PROTOBUF_HOME: $GITHUB_WORKSPACE/protobuf
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -27,8 +30,6 @@ jobs:
         cd charm
         git checkout v6.10.2
         ./build charm++ netlrts-linux-x86_64 -g -j4 --with-production --enable-error-checking
-        export CHARM_HOME=$GITHUB_WORKSPACE/charm
-        export PATH=$CHARM_HOME/bin:$PATH
     # Build protobuf
     - name: build-protobuf
       run: |
@@ -40,12 +41,11 @@ jobs:
         cd build
         ../configure --prefix=$GITHUB_WORKSPACE/protobuf/install
         make -j4 && make install
-        export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
-        export PATH=$PROTOBUF_HOME/bin:$PATH
-        export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
     # Build and test Loimos
     - name: build-loimos
       run: |
+        export PATH=$CHARM_HOME/bin:$PROTOBUF_HOME/bin:$PATH
+        export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
         cd src
         make
         ./charmrun +p4 ./loimos 39 16 1 4 7 ../data/disease_models/h5n1.textproto +setcpuaffinity ++local
