@@ -4,9 +4,9 @@ name: Non-SMP
 # events but only for the master branch
 on:
   push:
-    branches: [ master ]
+    branches: [ develop ]
   pull_request:
-    branches: [ master ]
+    branches: [ develop ]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -27,10 +27,25 @@ jobs:
         cd charm
         git checkout v6.10.2
         ./build charm++ netlrts-linux-x86_64 -g -j --with-production --enable-error-checking
+        export CHARM_HOME=$GITHUB_WORKSPACE/charm
+        export PATH=$CHARM_HOME/bin:$PATH
+    # Build protobuf
+    - name: build-protobuf
+      run: |
+        git clone https://github.com/protocolbuffers/protobuf.git
+        cd protobuf
+        git checkout v3.15.0
+        ./autogen.sh
+        mkdir build install
+        cd build
+        ../configure --prefix=$GITHUB_WORKSPACE/protobuf/install
+        make -j && make install
+        export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
+        export PATH=$PROTOBUF_HOME/bin:$PATH
+        export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
     # Build and test Loimos
     - name: build-loimos
       run: |
-        export CHARM_HOME=$GITHUB_WORKSPACE/charm
         cd src
-        make -j
-        ./charmrun +p4 ./loimos 10000 20 100 6 30 +setcpuaffinity ++local
+        make
+        ./charmrun +p2 ./loimos 39 16 1 4 7 ../data/disease_models/h5n1.textproto +setcpuaffinity ++local
