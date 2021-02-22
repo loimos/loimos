@@ -53,18 +53,22 @@ if __name__ == "__main__":
     # Calculate the maximum simulatenous visits.
     max_visits['max_simultaneous_visits'] = 0
     max_in_visit = 0
-    endtimes = []
+    end_times = []
     for lid, row in max_visits.iterrows():
         for _, row in visits[visits[LOCATION_ID_COLUMN_NAME] == lid][['start_time','end_time']].iterrows():
-            # Filter out endtimes not in range.
+            # Filter out end_times not in range.
             start_time = row['start_time']
-            while len(endtimes) and endtimes[0] <= start_time:
-                heapq.heappop(endtimes)
+            while len(end_times) and end_times[0] <= start_time:
+                heapq.heappop(end_times)
 
             # Append in sorted order.
-            heapq.heappush(endtimes, row['end_time'])
-            max_in_visit = max(max_in_visit, len(endtimes))
-        max_visits.at[lid, "max_simultaneous_visits"] = max_in_visit 
+            heapq.heappush(end_times, row['end_time'])
+            max_in_visit = max(max_in_visit, len(end_times))
+        max_visits.at[lid, "max_simultaneous_visits"] = max_in_visit
+        
+        # Reset counts for next row/location
+        max_in_visit = 0
+        end_times.clear()
 
     # Output with index column which is the lids.
     max_visits.to_csv(output_file)
