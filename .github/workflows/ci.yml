@@ -1,4 +1,4 @@
-name: Non-SMP
+name: CI
 
 # Controls when the action will run. Triggers the workflow on push or pull
 # request events but only for the develop branch
@@ -24,13 +24,22 @@ jobs:
     # access it
     - uses: actions/checkout@v2
 
-    # Build Charm++
-    - name: build-charm++
+    # Build Charm++ Non-SMP
+    - name: build-charm-nonsmp
       run: |
-        git clone https://github.com/UIUC-PPL/charm.git
-        cd charm
+        git clone https://github.com/UIUC-PPL/charm.git charm-nonsmp
+        cd charm-nonsmp
         git checkout v6.10.2
         ./build charm++ netlrts-linux-x86_64 -g -j4 --with-production --enable-error-checking
+
+    # Build Charm++ SMP
+    - name: build-charm-smp
+      run: |
+        git clone https://github.com/UIUC-PPL/charm.git charm-smp
+        cd charm-smp
+        git checkout v6.10.2
+        ./build charm++ netlrts-linux-x86_64 smp -g -j4 --with-production --enable-error-checking
+
     # Build protobuf
     - name: build-protobuf
       run: |
@@ -42,13 +51,23 @@ jobs:
         cd build
         ../configure --prefix=$GITHUB_WORKSPACE/protobuf/install
         make -j4 && make install
+
     # Build and test Loimos
     - name: build-loimos
       run: |
-        export CHARM_HOME=$GITHUB_WORKSPACE/charm
-        export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
-        export PATH=$CHARM_HOME/bin:$PROTOBUF_HOME/bin:$PATH
-        export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
         cd src
+        export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
+        export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
+        export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
+        # Test non-SMP
+        export CHARM_HOME=$GITHUB_WORKSPACE/charm-nonsmp
+        export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
         make
         ./charmrun +p4 ./loimos 39 16 1 4 7 ../data/disease_models/h5n1.textproto +setcpuaffinity ++local
+        make clean
+        # Test SMP
+        export CHARM_HOME=$GITHUB_WORKSPACE/charm-smp
+        export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
+        make
+        ./charmrun +p4 ./loimos 39 16 1 4 7 ../data/disease_models/h5n1.textproto +ppn 2 +setcpuaffinity ++local
+        make clean
