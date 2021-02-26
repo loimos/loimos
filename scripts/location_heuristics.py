@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright 2021 The Loimos Project Developers.
 # See the top-level LICENSE file for details.
 #
@@ -22,23 +23,23 @@ LOCATION_ID_COLUMN_NAME = "lid"
 # Any other column in the dataset that is fully populated.
 OTHER_COLUMN = "start_time"
 
-import sys
 import pandas as pd
 import heapq
+import argparse
 
 if __name__ == "__main__":
     # Required argument is the path to the visit schedule and optional output file.
-    if len(sys.argv) not in [2,3]:
-        print("Usage location_heuristics.py <path_to_visit_file> <(opt) output_file>")
-        exit(1)
+    parser = argparse.ArgumentParser(
+        description='Calculates summary statistics for a given visit file.')
+    parser.add_argument("path_to_visit_file")
+    parser.add_argument("output_file", nargs='?')
+    args = parser.parse_args()
 
-    # Get command line arguments.
-    path_to_visits = sys.argv[1]
-    # Output file defaults to given path with .heuristic file extension.
-    output_file = path_to_visits[ : path_to_visits.rfind(".")] + ".heuristic"
-    # User may manually specify an output path as well.
-    if len(sys.argv) == 3:
-        output_file = sys.argv[2]
+    # Get command line arguments.a
+    path_to_visits = args.path_to_visit_file
+    # Output file defaults to given path with .heuristic.csv file extension.
+    output_file = (args.output_file if args.output_file else 
+        path_to_visits[ : path_to_visits.rfind(".")] + ".heuristic.csv")
 
     # Load dataset.
     visits = pd.read_csv(path_to_visits)
@@ -49,6 +50,20 @@ if __name__ == "__main__":
             .groupby(LOCATION_ID_COLUMN_NAME).count()
             .rename({OTHER_COLUMN: "total_visits"}, axis=1)
     )
+
+    # Calculate total visits for each day per location.
+    daily_summaries = visits[['lid','daynum','start_time']].groupby(["lid","daynum"]).count().unstack().fillna(0)
+    # Rename columns.
+    renaming = []
+    for column in daily_summaries.columns:
+        renaming.append(f"max_on_day_{column[1]}")
+    daily_summaries.columns = renaming
+    # Calculate some additional statistics.
+    daily_summaries['average_daily_total'] = daily_summaries.mean(axis=1)
+    daily_summaries['median_daily_total'] = daily_summaries.median(axis=1)
+    daily_summaries['max_daily_total'] = daily_summaries.max(axis=1)
+    # Merge in.
+    max_visits = max_visits.merge(daily_summaries, left_index=True, right_index=True)
 
     # Calculate the maximum simulatenous visits.
     max_visits['max_simultaneous_visits'] = 0
