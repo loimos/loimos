@@ -4,7 +4,8 @@
 # SPDX-License-Identifier: MIT
 
 """
-Remaps city-of-charlotville dataset to use a 
+Remaps city-of-charlottseville dataset to use a dense id format and combines
+residence and activity locations into a single file.
 """
 import os
 import sys
