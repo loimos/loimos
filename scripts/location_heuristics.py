@@ -56,7 +56,7 @@ if __name__ == "__main__":
     # Rename columns.
     renaming = []
     for column in daily_summaries.columns:
-        renaming.append(f"max_on_day_{column[1]}")
+        renaming.append(f"total_on_day_{column[1]}")
     daily_summaries.columns = renaming
     # Calculate some additional statistics.
     daily_summaries['average_daily_total'] = daily_summaries.mean(axis=1)
