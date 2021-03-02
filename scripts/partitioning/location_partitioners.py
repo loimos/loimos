@@ -8,7 +8,7 @@ from collections import defaultdict, deque
 from sklearn.metrics.pairwise import cosine_similarity
 from scipy import sparse
 
-from .. import clustering_helpers as ch
+import clustering_helpers as ch
 
 def geo_cluster_recursive(locations_to_group, c_depth, max_in_cluster, MAX_DEPTH=3):
     """ Recursive helper for geo partitioning scheme. """
@@ -42,7 +42,7 @@ def geo_clustering(locations, admin_levels,  total_partitions):
 
     # Make recursive call to generate clusters.
     locations_per_partition = math.ceil(locations.shape[0] / total_partitions)
-    clusters_with_admin = geo_cluster_recursive(locations_to_group, 0, locations_per_partition, admin_levels)
+    clusters_with_admin = geo_cluster_recursive(locations_to_group, 1, locations_per_partition, admin_levels - 1)
 
     # Strip admin codes from clusters and return as a set.
     clusters = []

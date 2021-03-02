@@ -2,12 +2,15 @@ import numpy as np
 import pandas as pd
 import argparse
 
-from .. import location_partitioners as lp
-from .. import people_partitions as pp
+import location_partitioners as lp
+import people_partitioners as pp
 
 import sys
-sys.path.append("../")
-from helpers import id_remapper
+import os
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.append(parentdir)
+from utils import id_remapper
 
 LOCATION_SCHEMES = ["VISIT", "GEO"]
 PEOPLE_SCHEMES = ["GREEDY"]
@@ -25,9 +28,9 @@ if __name__ == "__main__":
     assert(args.people_method in PEOPLE_SCHEMES)
     
     # Read datafiles.
-    people = pd.read_csv(f"{parser.data_path}/people.csv")
-    locations = pd.read_csv(f"{parser.data_path}/locations.csv")
-    visits = pd.read_csv(f"{parser.data_path}/visits.csv")
+    people = pd.read_csv(f"{args.data_path}/people.csv")
+    locations = pd.read_csv(f"{args.data_path}/locations.csv")
+    visits = pd.read_csv(f"{args.data_path}/visits.csv")
 
     # Build PeopleXLocation visit graph. Rows represent locations, columns are people
     # and the values are the number of times that person visits the location.
@@ -38,12 +41,12 @@ if __name__ == "__main__":
     # Create location clusters.
     location_clusters = None
     if args.location_method == "VISIT":
-        location_clusters = lp.graph_partioning_clustering(locations, args.num_location_partitions, people_location_visit_graph)
+        location_clusters = lp.graph_partioning_clustering(locations, int(args.num_location_partitions), people_location_visit_graph)
     else:
-        location_clusters = lp.geo_clustering(locations, 4,  args.num_location_partitions)
+        location_clusters = lp.geo_clustering(locations, 4,  int(args.num_location_partitions))
 
     # Create people clusters.
-    people_clusters = pp.greedy_affinity_to_clusters(location_clusters, args.num_people_partitions, people_location_visit_graph)
+    people_clusters = pp.greedy_affinity_to_clusters(location_clusters, int(args.num_people_partitions), people_location_visit_graph)
 
     # Remap all ids to new scheme.  
     people_remapped_ids = []

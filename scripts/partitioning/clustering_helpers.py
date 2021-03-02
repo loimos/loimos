@@ -53,3 +53,14 @@ def recombine_clusters(clusters, max_in_cluster):
                 clusters[keys[c_front]].append(clusters[keys[c_back]].pop(0))
             c_front += 1
     return clusters
+
+# Clustering helper.
+def get_max_in_set(row, unassigned):
+    cur_max = None
+    cur_index = None
+    for pid in range(row.shape[0]):
+        val = row[pid]
+        if (cur_max is None or val > cur_max) and pid in unassigned:
+            cur_max = val
+            cur_index = pid
+    return cur_max, int(cur_index)
