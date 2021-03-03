@@ -68,7 +68,8 @@ DiseaseModel::DiseaseModel(std::string pathToModel) {
   }
 
   // Init commonly used states.
-  healthyState = getIndexOfState("uninfected");
+  healthyState = getIndexOfState(model->starting_state());
+  exposedState = getIndexOfState(model->starting_exposed_state());
 
   // Setup other shared PE objects.
   personDef = new loimos::proto::CSVDefinition();
@@ -138,12 +139,18 @@ std::tuple<int, int> DiseaseModel::transitionFromState(
       *transition_set = &(currState->transition_set(
           strategyLookup->at(fromState)->at(interventionStategy)));
 
+  // Check if any transitions to be made.
+  int transitionSetSize = transition_set->transition_size();
+  if (transitionSetSize == 0) {
+    return std::make_tuple(fromState, std::numeric_limits<Time>::max());
+  }
+
   // Randomly choose a state transition from the set and return the next state.
   float cdfSoFar = 0;
   std::uniform_real_distribution<float> uniform_dist(0, 1);
   float randomCutoff = uniform_dist(*generator);
 
-  for (int i = 0; i < transition_set->transition_size(); i++) {
+  for (int i = 0; i < transitionSetSize; i++) {
     const loimos::proto::
         DiseaseModel_DiseaseState_StateTransitionSet_StateTransition
             *transition = &transition_set->transition(i);
@@ -151,44 +158,60 @@ std::tuple<int, int> DiseaseModel::transitionFromState(
     cdfSoFar += transition->with_prob();
     if (randomCutoff <= cdfSoFar) {
       int nextState = stateLookup->at(transition->next_state());
-      int timeInNextState = getTimeInNextState(nextState, generator);
+      int timeInNextState = getTimeInNextState(transition, generator);
       return std::make_tuple(nextState, timeInNextState);
     }
   }
 
   // A state transition should be made.
-  CkAbort("No state transition made!");
+  CkAbort("No state transition made! From state %d.", fromState);
 }
 
 /**
  * Calculates the time to spend in the next state.
  */
 Time DiseaseModel::getTimeInNextState(
-  int nextState,
+  const loimos::proto::DiseaseModel_DiseaseState_StateTransitionSet_StateTransition *transitionSet,
   std::default_random_engine *generator
 ) const {
-  const loimos::proto::DiseaseModel_DiseaseState *diseaseState =
-      &model->disease_state(nextState);
-  if (diseaseState->has_fixed()) {
-    return timeDefToSeconds(diseaseState->fixed().time_in_state());
+  if (transitionSet->has_fixed()) {
+    return timeDefToSeconds(transitionSet->fixed().time_in_state());
 
-  } else if (diseaseState->has_forever()) {
+  } else if (transitionSet->has_forever()) {
     return std::numeric_limits<Time>::max();
 
-  } else if (diseaseState->has_uniform()) {
+  } else if (transitionSet->has_uniform()) {
     // TODO(iancostello): Avoid reinitializing the distribution each time.
-    double lower = timeDefToSeconds(diseaseState->uniform().tmin());
-    double upper = timeDefToSeconds(diseaseState->uniform().tmax());
-    std::uniform_real_distribution<double> uniform_dist(lower, upper);
+    std::uniform_real_distribution<double> uniform_dist(
+      timeDefToSeconds(transitionSet->uniform().tmin()),
+      timeDefToSeconds(transitionSet->uniform().tmax())
+    );
     return uniform_dist(*generator);
+  } else if (transitionSet->has_normal()) {
+    std::normal_distribution<double> normal_dist(
+      timeDefToSeconds(transitionSet->normal().tmean()),
+      timeDefToSeconds(transitionSet->normal().tvariance())
+    );
+    return normal_dist(*generator);
+  } else if (transitionSet->has_discrete()) {
+    std::uniform_real_distribution<float> uniform_dist(0, 1);
+    float randomCutoff = uniform_dist(*generator);
+    float cdfSoFar = 0;
+    for (int i = 0; i < transitionSet->discrete().bin_size(); i++) {
+      cdfSoFar += transitionSet->discrete().bin(i).with_prob();
+      if (randomCutoff < cdfSoFar) {
+        return timeDefToSeconds(transitionSet->discrete().bin(i).tval());
+      }
+    }
   }
-  // TODO(iancostello): Implement other strategies
   return 0;
 }
 
 /** Converts a protobuf time definition into a seconds as an integer */
 Time DiseaseModel::timeDefToSeconds(Time_Def time) const {
-  return (time.days() * 24 + time.hours()) * 3600 + time.minutes() * 60;
+  return static_cast<Time>(time.days() * DAY_LENGTH +
+         time.hours() * HOUR_LENGTH + 
+         time.minutes() * MINUTE_LENGTH);
 }
 
 /** Returns the total number of disease states */
@@ -196,8 +219,11 @@ int DiseaseModel::getNumberOfStates() const {
   return model->disease_state_size();
 }
 
-/** Returns the initial starting state */
+/** Returns the initial starting healthy and exposed state */
 int DiseaseModel::getHealthyState() const { return healthyState; }
+std::tuple<int,int>  DiseaseModel::getExposedState() const { 
+  return std::make_tuple(exposedState, 0); 
+}
 
 /** Returns if someone is infectious */
 bool DiseaseModel::isInfectious(int personState) const { 

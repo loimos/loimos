@@ -1,21 +1,22 @@
 label: "H5N1"
+starting_state: "uninfected"
 
 disease_state: {
     state_label: "uninfected"
     infectivity: 0
     susceptibility: 0.2
 
-    forever : {}
-
     transition_set: {
         transition_label: "untreated"
         transition: {
             next_state: "latent_short"
             with_prob: 0.8
+            forever : {}
         }
         transition: {
             next_state: "latent_long"
             with_prob: 0.2
+            forever : {}
         }
     }
     transition_set: {
@@ -23,14 +24,17 @@ disease_state: {
         transition: {
             next_state: "recovered"
             with_prob: 0.3
+            forever : {}
         }
         transition: {
             next_state: "latent_short"
             with_prob: 0.56
+            forever : {}
         }
         transition: {
             next_state: "latent_long"
             with_prob: 0.14
+            forever : {}
         }
     }
 }
@@ -40,19 +44,16 @@ disease_state: {
     infectivity: 0.25
     susceptibility: 0
 
-    fixed {
-        time_in_state: {
-            days: 0
-            hours: 48
-            minutes: 0
-        }
-    }
-
     transition_set: {
         transition_label: "untreated"
         transition: {
             next_state: "incubating"
             with_prob: 1
+            fixed {
+                time_in_state: {
+                    hours: 48
+                }
+            }
         }
     }
 }
@@ -62,35 +63,52 @@ disease_state: {
     infectivity: 0.25
     susceptibility: 0
 
-    fixed {
-        time_in_state: {
-            days: 0
-            hours: 24
-            minutes: 0
-        }
-    }
-
     transition_set: {
         transition_label: "untreated"
         transition: {
             next_state: "incubating"
             with_prob: 0.625
+            fixed {
+                time_in_state: {
+                    hours: 24
+                }
+            }
         }
         transition: {
             next_state: "symptom1_circulating"
             with_prob: 0.05025
+            fixed {
+                time_in_state: {
+                    hours: 24
+                }
+            }
         }
         transition: {
             next_state: "symptom2_circulating"
             with_prob: 0.05025
+            fixed {
+                time_in_state: {
+                    hours: 24
+                }
+            }
         }
         transition: {
             next_state: "symptom3_circulating"
             with_prob: 0.15075
+            fixed {
+                time_in_state: {
+                    hours: 24
+                }
+            }
         }
         transition: {
             next_state: "asympt"
             with_prob: 0.12375
+            fixed {
+                time_in_state: {
+                    hours: 24
+                }
+            }
         }
     }
 }
@@ -100,31 +118,43 @@ disease_state: {
     infectivity: 0.1
     susceptibility: 0
 
-    fixed {
-        time_in_state: {
-            days: 0
-            hours: 24
-            minutes: 0
-        }
-    }
-
     transition_set: {
         transition_label: "untreated"
         transition: {
             next_state: "symptom1_circulating"
             with_prob: 0.134
+            fixed {
+                time_in_state: {
+                    hours: 24
+                }
+            }
         }
         transition: {
             next_state: "symptom2_circulating"
             with_prob: 0.134
+            fixed {
+                time_in_state: {
+                    hours: 24
+                }
+            }
         }
         transition: {
             next_state: "symptom3_circulating"
-            with_prob: 0.402
+            with_prob: 0.403
+            fixed {
+                time_in_state: {
+                    hours: 24
+                }
+            }
         }
         transition: {
             next_state: "asympt"
             with_prob: 0.33
+            fixed {
+                time_in_state: {
+                    hours: 24
+                }
+            }
         }
     }
 }
@@ -134,24 +164,19 @@ disease_state: {
     infectivity: 0.2
     susceptibility: 0
 
-    uniform {
-        tmin: {
-            days: 0
-            hours: 36
-            minutes: 0
-        }
-        tmax: {
-            days: 0
-            hours: 72
-            minutes: 0
-        }
-    }
-
     transition_set: {
         transition_label: "untreated"
         transition: {
             next_state: "recovered"
             with_prob: 1
+            uniform {
+                tmin: {
+                    hours: 36
+                }
+                tmax: {
+                    hours: 72
+                }
+            }
         }
     }
 }
@@ -161,19 +186,16 @@ disease_state: {
     infectivity: 0.2
     susceptibility: 0
 
-    fixed {
-        time_in_state: {
-            days: 0
-            hours: 24
-            minutes: 0
-        }
-    }
-
     transition_set: {
         transition_label: "untreated"
         transition: {
             next_state: "symptom1"
             with_prob: 1
+            fixed {
+                time_in_state: {
+                    hours: 24
+                }
+            }
         }
     }
 }
@@ -183,19 +205,16 @@ disease_state: {
     infectivity: 0.2
     susceptibility: 0
 
-    fixed {
-        time_in_state: {
-            days: 0
-            hours: 24
-            minutes: 0
-        }
-    }
-
     transition_set: {
         transition_label: "untreated"
         transition: {
             next_state: "symptom2"
             with_prob: 1
+            fixed {
+                time_in_state: {
+                    hours: 24
+                }
+            }
         }
     }
 }
@@ -205,19 +224,16 @@ disease_state: {
     infectivity: 0.2
     susceptibility: 0
 
-    fixed {
-        time_in_state: {
-            days: 0
-            hours: 24
-            minutes: 0
-        }
-    }
-
     transition_set: {
         transition_label: "untreated"
         transition: {
             next_state: "symptom3"
             with_prob: 1
+            fixed {
+                time_in_state: {
+                    hours: 24
+                }
+            }
         }
     }
 }
@@ -227,28 +243,38 @@ disease_state: {
     infectivity: 0.2
     susceptibility: 0
 
-     uniform {
-        tmin: {
-            days: 0
-            hours: 36
-            minutes: 0
-        }
-        tmax: {
-            days: 0
-            hours: 72
-            minutes: 0
-        }
-    }
-
     transition_set: {
         transition_label: "untreated"
         transition: {
             next_state: "recovered"
             with_prob: 0.95
+            uniform {
+                tmin: {
+                    hours: 36
+                }
+                tmax: {
+                    hours: 72
+                }
+            }
         }
         transition: {
             next_state: "incapacitated"
             with_prob: 0.05
+            discrete {
+                bin: {
+                    tval : {
+                        hours: 36
+                    }
+                    with_prob: 0.7
+                }
+                bin: {
+                    tval : {
+                        hours: 72
+                    }
+                    with_prob: 0.3
+                }
+
+            }
         }
     }
 }
@@ -258,28 +284,31 @@ disease_state: {
     infectivity: 0.2
     susceptibility: 0
 
-    uniform {
-        tmin: {
-            days: 0
-            hours: 36
-            minutes: 0
-        }
-        tmax: {
-            days: 0
-            hours: 72
-            minutes: 0
-        }
-    }
-
     transition_set: {
         transition_label: "untreated"
         transition: {
             next_state: "recovered"
             with_prob: 0.99
+            uniform {
+                tmin: {
+                    hours: 36
+                }
+                tmax: {
+                    hours: 72
+                }
+            }
         }
         transition: {
             next_state: "incapacitated"
             with_prob: 0.01
+            uniform {
+                tmin: {
+                    hours: 36
+                }
+                tmax: {
+                    hours: 72
+                }
+            }
         }
     }
 }
@@ -289,24 +318,19 @@ disease_state: {
     infectivity: 0.2
     susceptibility: 0
 
-    uniform {
-        tmin: {
-            days: 0
-            hours: 48
-            minutes: 0
-        }
-        tmax: {
-            days: 0
-            hours: 60
-            minutes: 0
-        }
-    }
-
     transition_set: {
         transition_label: "untreated"
         transition: {
             next_state: "recovered"
             with_prob: 1
+            uniform {
+                tmin: {
+                    hours: 48
+                }
+                tmax: {
+                    hours: 60
+                }
+            }
         }
     }
 }
@@ -316,7 +340,14 @@ disease_state: {
     infectivity: 0
     susceptibility: 0
 
-    forever {}
+    transition_set: {
+        transition_label: "untreated"
+        transition: {
+            next_state: "recovered"
+            with_prob: 1
+            forever {}
+        }
+    }
 }
 
 disease_state: {
@@ -324,5 +355,12 @@ disease_state: {
     infectivity: 0
     susceptibility: 0
 
-    forever {}
+    transition_set: {
+        transition_label: "untreated"
+        transition: {
+            next_state: "incapacitated"
+            with_prob: 1
+            forever {}
+        }
+    }
 }
