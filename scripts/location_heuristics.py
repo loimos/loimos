@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     # Output file defaults to given path with .heuristic.csv file extension.
     output_file = args.output_file.format(
-        name=path_to_visits[ : path_to_visits.rfind('.')]
+        name=path_to_locations[ : path_to_locations.rfind('.')]
     )
     # If the override flag is set, save output to locations_file instead
     if args.override:
