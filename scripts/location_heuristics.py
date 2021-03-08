@@ -7,15 +7,6 @@
 """
 Given a visit schedule, this script calculates the total visits and maximum
 simultaneous visits for all locations in the dataset. 
-
-Inputs:
-    path_to_visit_file: Path to visit schedule CSV. Must have a column 'lid'
-        that describes the location id.
-    output_file (optional): Where to output calculated csv. 
-    
-Outputs:
-    CSV to file with three columns - lid, total_visits, max_simultaneous_visits.
-    Locations without any visits will not have an entry.
 """
 
 # Column name that describes the location id being visited.
