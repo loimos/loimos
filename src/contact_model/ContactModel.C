@@ -4,11 +4,12 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "loimos.decl.h"
+#include "../loimos.decl.h"
+#include "../Location.h"
+#include "../Event.h"
+#include "../readers/DataReader.h"
+#include "../Event.h"
 #include "ContactModel.h"
-#include "Location.h"
-#include "Event.h"
-#include "readers/DataReader.h"
 
 #include <vector>
 #include <random>

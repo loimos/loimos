@@ -10,7 +10,7 @@
 #include "Event.h"
 #include "Defs.h"
 #include "DiseaseModel.h"
-#include "ContactModel.h"
+#include "contact_model/ContactModel.h"
 
 #include <random>
 #include <vector>

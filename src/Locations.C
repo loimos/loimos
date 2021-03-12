@@ -9,7 +9,7 @@
 #include "Location.h"
 #include "Event.h"
 #include "DiseaseModel.h"
-#include "ContactModel.h"
+#include "contact_model/ContactModel.h"
 #include "Location.h"
 #include "Event.h"
 #include "Defs.h"

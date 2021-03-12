@@ -10,8 +10,8 @@
 // Forward declaration to help with includes
 class ContactModel;
 
-#include "Event.h"
-#include "Location.h"
+#include "../Location.h"
+#include "../Event.h"
 
 #include <random>
 

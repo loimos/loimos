@@ -9,7 +9,7 @@
 #include "People.h"
 #include "Locations.h"
 #include "DiseaseModel.h"
-#include "ContactModel.h"
+#include "contact_model/ContactModel.h"
 #include "readers/Preprocess.h"
 
 #include <tuple>

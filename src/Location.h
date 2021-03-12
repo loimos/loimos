@@ -13,7 +13,7 @@ class Location;
 #include "Event.h"
 #include "Interaction.h"
 #include "DiseaseModel.h"
-#include "ContactModel.h"
+#include "contact_model/ContactModel.h"
 #include "readers/DataInterface.h"
 
 #include <queue>

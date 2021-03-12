@@ -6,14 +6,14 @@
 include Makefile.include
 
 OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o Defs.o \
-         Event.o Interaction.o ContactModel.o readers/Preprocess.o \
+         Event.o Interaction.o readers/Preprocess.o \
          disease_model/disease.pb.o disease_model/distribution.pb.o \
-		 readers/data.pb.o
+		     readers/data.pb.o contact_model/ContactModel.o
 DEFS   = Defs.h loimos.def.h readers/DataReader.h
 DECLS  = loimos.decl.h
 BIN    = loimos
 
-SUBDIRS := disease_model readers
+SUBDIRS := disease_model contact_model readers
 
 .PHONY:all
 all: all-sub $(BIN)
