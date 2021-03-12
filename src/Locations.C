@@ -54,6 +54,7 @@ void Locations::loadLocationData() {
   // Init local.
   int numAttributesPerLocation = 
     DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
+  locations.reserve(numLocalLocations);
   for (int p = 0; p < numLocalLocations; p++) {
     locations.emplace_back(numAttributesPerLocation);
   }
