@@ -85,7 +85,7 @@ class Location : public DataInterface {
 
     // Override abstract DataInterface getters and setters.
     void setUniqueId(int idx);
-    std::vector<union Data> getDataField();
+    std::vector<union Data> &getDataField();
     int uniqueId;
     
     // This distribution shoul always be the same - not sure how well

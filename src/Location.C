@@ -28,7 +28,7 @@ void Location::setUniqueId(int idx) {
     this->uniqueId = idx;
 }
 
-std::vector<union Data> Location::getDataField() {
+std::vector<union Data> &Location::getDataField() {
     return this->locationData;
 }
 
