@@ -107,4 +107,4 @@ if __name__ == '__main__':
     output_df = locations.join(max_visits, on='lid')
 
     # Output with index column which is the lids.
-    output_df.to_csv(output_file)
+    output_df.to_csv(output_file, index=False)
