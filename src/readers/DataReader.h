@@ -25,6 +25,7 @@ union Data {
     bool boolean;
     uint32_t uint_32;
     std::string *str;
+    double probability;
     uint16_t category; 
 };
 

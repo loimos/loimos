@@ -146,7 +146,7 @@ inline void Location::registerInteraction(
   int startTime,
   int endTime
 ) {
-  if (!contactModel->madeContact(susceptibleEvent, infectiousEvent)) {
+  if (!contactModel->madeContact(susceptibleEvent, infectiousEvent, *this)) {
     return;
   }
 

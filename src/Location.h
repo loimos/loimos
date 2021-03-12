@@ -7,6 +7,9 @@
 #ifndef __LOCATION_H__
 #define __LOCATION_H__
 
+// Foreward declaration to help with includes
+class Location;
+
 #include "Event.h"
 #include "Interaction.h"
 #include "DiseaseModel.h"

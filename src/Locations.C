@@ -83,8 +83,11 @@ void Locations::loadLocationData() {
   locationData.seekg(locationOffset);
 
   // Read in our location data.
-  DataReader<Location>::readData(&locationData, diseaseModel->locationDef,
-                                 &locations);
+  DataReader<Location>::readData(
+      &locationData,
+      diseaseModel->locationDef,
+      &locations
+  );
   locationData.close();
   locationCache.close();
 
@@ -94,6 +97,11 @@ void Locations::loadLocationData() {
   // Init contact model
   contactModel = new ContactModel();
   contactModel->setGenerator(&generator);
+
+  // Let contact model add any attributes it needs to the locations
+  for (Location &location: locations) {
+    contactModel->computeLocationValues(location);
+  }
 }
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
