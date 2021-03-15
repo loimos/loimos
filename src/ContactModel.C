@@ -13,9 +13,9 @@
 #include <vector>
 #include <random>
 
-const unsigned int A = 1;
-const unsigned int B = 2;
-const unsigned int ALPHA = 1;
+const unsigned int MIN = 5;
+const unsigned int MAX = 40;
+const unsigned int ALPHA = 1000;
 
 ContactModel::ContactModel() {
   unitDistrib = std::uniform_real_distribution<>(0.0, 1.0);
@@ -37,7 +37,7 @@ void ContactModel::computeLocationValues(Location& location) {
   union Data contactProbability;
   contactProbability.probability = fmin(
     1,
-    (A + (B - A) * (1.0 - exp(-max_visits / ALPHA))) / (max_visits - 1)
+    (MIN + (MAX - MIN) * (1.0 - exp(-max_visits / ALPHA))) / (max_visits - 1)
   );
   data.push_back(contactProbability);
 }
