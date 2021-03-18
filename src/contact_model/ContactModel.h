@@ -15,20 +15,29 @@ class ContactModel;
 
 #include <random>
 
-// May add more eventually, or split them into different classes; for now,
-// though, we only need one class since 
-enum class ContactModelType { constant_probability, min_max_alpha };
+// This enum provides an easy way of specifying which contact model to use.
+// Each enum value should be named after a class which extends ContactModel
+enum class ContactModelType { min_max_alpha, constant_probability };
 
-// Note that this is just an example implemntation, this should eventually be
-// split into an abstract class and an implementation of that API
+// This is the default implmenetation, which uses a constant contact
+// probability for every pair of people at every location. Other implmentations
+// should extend this class
 class ContactModel {
 
-  private:
+  // These are protected rather than private so child classes can use them
+  protected:
     std::default_random_engine *generator;
     std::uniform_real_distribution<> unitDistrib;
     int contactProbabilityIndex;
+  
   public:
     ContactModel();
+    // Explicitly create other default constructors and assignment operators
+    ContactModel(const ContactModel &other) = default;
+    ContactModel& operator=(const ContactModel &other) = default;
+    ContactModel(ContactModel &&other) = default;
+    ContactModel& operator=(ContactModel &&other) = default;
+
     void setGenerator(std::default_random_engine *generator);
     // Calculates any location-specific values and stores them as new
     // attributes of the location
