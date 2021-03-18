@@ -60,8 +60,7 @@ People::People() {
   // Randomly infect people to seed the initial outbreak
   for (Person &person: people) {
     if (unitDistrib(generator) < INITIAL_INFECTIOUS_PROBABILITY) {
-      person.state = INFECTIOUS;
-      person.secondsLeftInState = INFECTION_PERIOD;
+      std::tie(person.state, person.secondsLeftInState) = diseaseModel->getExposedState();
       newCases++;
     }
   }
