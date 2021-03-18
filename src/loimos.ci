@@ -20,6 +20,7 @@ mainmodule loimos {
   readonly int numDays;
 
   readonly bool syntheticRun;
+  readonly int contactModelType;
   readonly int firstPersonIdx;
   readonly int firstLocationIdx;
   readonly std::string scenarioPath;

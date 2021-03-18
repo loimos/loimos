@@ -15,9 +15,14 @@ class ContactModel;
 
 #include <random>
 
+// May add more eventually, or split them into different classes; for now,
+// though, we only need one class since 
+enum class ContactModelType { constant_probability, min_max_alpha };
+
 // Note that this is just an example implemntation, this should eventually be
 // split into an abstract class and an implementation of that API
 class ContactModel {
+
   private:
     std::default_random_engine *generator;
     std::uniform_real_distribution<> unitDistrib;

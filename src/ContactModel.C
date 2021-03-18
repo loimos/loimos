@@ -13,6 +13,9 @@
 #include <vector>
 #include <random>
 
+extern int contactModelType;
+
+const double DEFAULT_CONTACT_PROBABILITY = 0.5;
 const unsigned int MIN = 5;
 const unsigned int MAX = 40;
 const unsigned int ALPHA = 1000;
@@ -27,19 +30,22 @@ void ContactModel::setGenerator(std::default_random_engine *generator) {
 }
 
 void ContactModel::computeLocationValues(Location& location) {
-  std::vector<union Data> &data = location.getDataField();
-  
-  if (-1 == contactProbabilityIndex) {
-    contactProbabilityIndex = (int) data.size();
-  }
+  if (contactModelType == (int) ContactModelType::min_max_alpha) {
+    std::vector<union Data> &data = location.getDataField();
+    
+    if (-1 == contactProbabilityIndex) {
+      contactProbabilityIndex = (int) data.size();
+    }
 
-  double max_visits = (double) data[LOCATIONS_MAX_VISITS_INDEX].uint_32;
-  union Data contactProbability;
-  contactProbability.probability = fmin(
-    1,
-    (MIN + (MAX - MIN) * (1.0 - exp(-max_visits / ALPHA))) / (max_visits - 1)
-  );
-  data.push_back(contactProbability);
+    union Data contactProbability;
+    double max_visits = (double) data[LOCATIONS_MAX_VISITS_INDEX].uint_32;
+    contactProbability.probability = fmin(
+      1,
+      (MIN + (MAX - MIN) * (1.0 - exp(-max_visits / ALPHA))) / (max_visits - 1)
+    );
+
+    data.push_back(contactProbability);
+  }
 }
 
 bool ContactModel::madeContact(
@@ -47,7 +53,11 @@ bool ContactModel::madeContact(
   const Event& infectiousEvent,
   Location& location
 ) {
-  union Data contactProbability = 
-    location.getDataField()[contactProbabilityIndex];
-  return unitDistrib(*generator) < contactProbability.probability;
+  if (contactModelType == (int) ContactModelType::min_max_alpha) {
+    union Data contactProbability = 
+      location.getDataField()[contactProbabilityIndex];
+    return unitDistrib(*generator) < contactProbability.probability;
+  } else {
+    return unitDistrib(*generator) < DEFAULT_CONTACT_PROBABILITY;
+  }
 }
