@@ -15,13 +15,10 @@ class ContactModel;
 
 #include <random>
 
-// This enum provides an easy way of specifying which contact model to use.
-// Each enum value should be named after a class which extends ContactModel
-enum class ContactModelType { min_max_alpha, constant_probability };
-
 // This is the default implmenetation, which uses a constant contact
 // probability for every pair of people at every location. Other implmentations
-// should extend this class
+// should extend this class. Note that this is NOT an abstract class because
+// we want to use it for variables and return types
 class ContactModel {
 
   // These are protected rather than private so child classes can use them
@@ -51,5 +48,13 @@ class ContactModel {
       Location& location
     );
 };
+
+// This enum provides an easy way of specifying which contact model to use.
+// Each enum value should be named after a class which extends ContactModel
+enum class ContactModelType { constant_probability, min_max_alpha };
+
+// This creates a new instance of the contact model class indicated by
+// the global variable contactModelType
+ContactModel *createContactModel();
 
 #endif //__ContactModel_H__

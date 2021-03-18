@@ -46,7 +46,7 @@ Locations::Locations() {
   // Seed random number generator via branch ID for reproducibility
   generator.seed(thisIndex);
   // Init contact model
-  contactModel = new ContactModel();
+  contactModel = createContactModel();
   contactModel->setGenerator(&generator);
 }
 
