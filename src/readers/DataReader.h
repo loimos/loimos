@@ -17,7 +17,7 @@
 #define MAX_INPUT_lineLength (std::streamsize) 262144 // 2^18
 
 namespace DataTypes {
-    enum DataType { int_b10, uint_32, string, category }; 
+    enum DataType { int_b10, uint_32, string, probability, category }; 
 }
 
 union Data {
