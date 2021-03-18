@@ -15,6 +15,18 @@ class DataInterface {
         virtual ~DataInterface() {};
         virtual void setUniqueId(int idx) = 0;
         virtual std::vector<union Data> getDataField() = 0;
-
 };
+
+namespace DataTypes {
+    enum DataType { int_b10, uint_32, string, category }; 
+}
+
+union Data {
+    int int_b10;
+    bool boolean;
+    uint32_t uint_32;
+    std::string *str;
+    uint16_t category; 
+};
+
 #endif

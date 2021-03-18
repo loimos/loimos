@@ -17,6 +17,7 @@
 /* readonly */ CProxy_People peopleArray;
 /* readonly */ CProxy_Locations locationsArray;
 /* readonly */ CProxy_DiseaseModel globDiseaseModel;
+/* readonly */ CProxy_DataLoader dataLoaders;
 /* readonly */ int numPeople;
 /* readonly */ int numLocations;
 /* readonly */ int numPeoplePartitions;

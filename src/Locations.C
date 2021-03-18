@@ -34,64 +34,24 @@ Locations::Locations() {
   diseaseModel = globDiseaseModel.ckLocalBranch();
 
   // Load application data
-  if (syntheticRun) {
-    Location tmp { 0 };
-    locations.resize(numLocalLocations, tmp);
-  } else {
-    locations.reserve(numLocalLocations);
-    loadLocationData();
-  }
+  Location tmp { 0 };
+  locations.resize(numLocalLocations, tmp);
+  locationsInitialized = 0;
 
   // Seed random number generator via branch ID for reproducibility
   generator.seed(thisIndex);
+
   // Init contact model
   contactModel = new ContactModel();
   contactModel->setGenerator(&generator);
 }
 
-void Locations::loadLocationData() {
-  // Init local.
-  int numAttributesPerLocation = 
-    DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
-  for (int p = 0; p < numLocalLocations; p++) {
-    locations.emplace_back(numAttributesPerLocation);
-  }
-
-  // Load in location information.
-  int startingLineIndex = getGlobalIndex(
-    0,
-    thisIndex,
-    numLocations,
-    numLocationPartitions,
-    firstLocationIdx
-  ) - firstLocationIdx;
-  int endingLineIndex = startingLineIndex + numLocalLocations;
-  std::string line;
-
-  std::ifstream locationData(scenarioPath + "locations.csv");
-  std::ifstream locationCache(scenarioPath + scenarioId + "_locations.cache", std::ios_base::binary);
-  if (!locationData || !locationCache) {
-    CkAbort("Could not open person data input.");
-  }
-  
-  // Find starting line for our data through location cache.
-  locationCache.seekg(thisIndex * sizeof(uint32_t));
-  uint32_t locationOffset;
-  locationCache.read((char *) &locationOffset, sizeof(uint32_t));
-  locationData.seekg(locationOffset);
-
-  // Read in our location data.
-  DataReader<Location>::readData(&locationData, diseaseModel->locationDef,
-                                 &locations);
-  locationData.close();
-  locationCache.close();
-
-  // Seed random number generator via branch ID for reproducibility.
-  generator.seed(thisIndex);
-  
-  // Init contact model
-  contactModel = new ContactModel();
-  contactModel->setGenerator(&generator);
+void Locations::ReceiveLocationSetup(DataInterfaceMessage *msg) {
+  // Copy read data into next person and increment.
+  locations[locationsInitialized].uniqueId = msg->uniqueId;
+  memcpy(locations[locationsInitialized], msg->dataAttributes,
+         sizeof(union Data) * msg->numDataAttributes)
+  locationsInitialized += 1;
 }
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {

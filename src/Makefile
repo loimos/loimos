@@ -12,6 +12,7 @@ OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o Defs.o \
 DEFS   = Defs.h loimos.def.h readers/DataReader.h
 DECLS  = loimos.decl.h
 BIN    = loimos
+# CXXFLAGS = -w
 
 SUBDIRS := disease_model readers
 

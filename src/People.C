@@ -26,6 +26,7 @@ std::uniform_real_distribution<> unitDistrib(0,1);
 People::People() {
   newCases = 0;
   day = 0;
+  peopleInitialized = 0;
   generator.seed(thisIndex);
 
   // Initialize disease model and identify the healthy state
@@ -46,7 +47,7 @@ People::People() {
     people.resize(numLocalPeople, tmp);
   } else {
       int numAttributesPerPerson = 
-        DataReader<Person>::getNonZeroAttributes(diseaseModel->personDef);
+        DataReader::getNumberOfDataAttributes(diseaseModel->personDef);
       for (int p = 0; p < numLocalPeople; p++) {
         people.emplace_back(Person(numAttributesPerPerson,
           healthyState, std::numeric_limits<Time>::max()
@@ -54,7 +55,7 @@ People::People() {
       }
 
       // Load in people data from file.
-      loadPeopleData();
+      loadActivityData();
   }
   
   // Randomly infect people to seed the initial outbreak
@@ -67,27 +68,18 @@ People::People() {
   }
 }
 
+void People::ReceivePersonSetup(DataInterfaceMessage *msg) {
+  // Copy read data into next person and increment.
+  people[peopleInitialized].uniqueId = msg->uniqueId;
+  memcpy(people[peopleInitialized], msg->dataAttributes,
+         sizeof(union Data) * msg->numDataAttributes)
+  peopleInitialized += 1;
+}
+
 /**
  * Loads real people data from file.
  */
-void People::loadPeopleData() {  
-  std::ifstream peopleData(scenarioPath + "people.csv");
-  std::ifstream peopleCache(scenarioPath + scenarioId + "_people.cache", std::ios_base::binary);
-  if (!peopleData || !peopleCache) {
-    CkAbort("Could not open person data input.");
-  }
-
-  // Find starting line for our data through people cache.
-  peopleCache.seekg(thisIndex * sizeof(uint32_t));
-  uint32_t peopleOffset;
-  peopleCache.read((char *) &peopleOffset, sizeof(uint32_t));
-  peopleData.seekg(peopleOffset);
-
-  // Read in from remote file.
-  DataReader<Person>::readData(&peopleData, diseaseModel->personDef, &people);
-  peopleData.close();
-  peopleCache.close();
-
+void People::loadActivityData() {  
   // Open activity data and cache. 
   activityData = new std::ifstream(scenarioPath + "visits.csv");
   std::ifstream activityCache(scenarioPath + scenarioId + "_interactions.cache", std::ios_base::binary);
@@ -202,7 +194,7 @@ void People::RealDataSendVisitMessages() {
     int locationId = -1;
     int visitStart = -1;
     int visitDuration = -1;
-    std::tie(personId, locationId, visitStart, visitDuration) = DataReader<Person>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
+    std::tie(personId, locationId, visitStart, visitDuration) = DataReader::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
 
     // Seek while same person on same day.
     while(personId == people[localPersonId].uniqueId && visitStart < nextDaySecs) {
@@ -218,7 +210,7 @@ void People::RealDataSendVisitMessages() {
       // Send off the visit message.
       VisitMessage visitMsg(locationId, personId, people[localPersonId].state, visitStart, visitStart + visitDuration);
       locationsArray[locationSubset].ReceiveVisitMessages(visitMsg);
-      std::tie(personId, locationId, visitStart, visitDuration) = DataReader<Person>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
+      std::tie(personId, locationId, visitStart, visitDuration) = DataReader::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
     }
   }
 }

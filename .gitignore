@@ -11,8 +11,12 @@ loimos
 settings.json
 .vscode
 *.dSYM
+.ipynb_checkpoints/
+__pycache__/
 
 data/populations/coc/locations.csv
 data/populations/coc/people.csv
 data/populations/coc/visits.csv
+
 *.cache
+*.heuristic

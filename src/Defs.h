@@ -29,6 +29,7 @@ const Time DAY_LENGTH = 3600 * 24;
 // Data loading
 #define EMPTY_VISIT_SCHEDULE 0xFFFFFFFF
 #define CSV_DELIM ','
+#define LOADING_CHARES_PER_CHARE 16
 
 #define INITIAL_INFECTIOUS_PROBABILITY 0.05
 
@@ -36,6 +37,7 @@ extern /* readonly */ CProxy_Main mainProxy;
 extern /* readonly */ CProxy_People peopleArray;
 extern /* readonly */ CProxy_Locations locationsArray;
 extern /* readonly */ CProxy_DiseaseModel globDiseaseModel;
+extern /* readonly */ CProxy_DataLoader dataLoaders;
 extern /* readonly */ int numPeople;
 extern /* readonly */ int numLocations;
 extern /* readonly */ int numPeoplePartitions;
