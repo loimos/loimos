@@ -8,8 +8,6 @@
 #define __PERSON_H__
 
 #include "Defs.h"
-#include "readers/DataInterface.h"
-#include "readers/DataReader.h"
 
 class Person : public DataInterface {
     public:
@@ -42,8 +40,5 @@ class Person : public DataInterface {
         // Override DataInterfect abstract methods
         void setUniqueId(int idx);
         std::vector<union Data> getDataField();
-
-        // Debugging.
-        void _print_information(loimos::proto::CSVDefinition *personDef);
 };
 #endif

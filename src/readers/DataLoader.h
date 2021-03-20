@@ -27,7 +27,7 @@ class DataLoader : public CBase_DataLoader {
     public:
         DataLoader();
         void BeginDataLoading();
-        void readData(std::ifstream *input, loimos::proto::CSVDefinition *dataFormat, DataInterfaceMessage *msg)
+        void readData(std::ifstream *input, loimos::proto::CSVDefinition *dataFormat, DataInterfaceMessage *msg);
         static int getNumberOfDataAttributes(loimos::proto::CSVDefinition *dataFormat);
         static std::tuple<int, int, int, int> parseActivityStream(std::ifstream *input, loimos::proto::CSVDefinition *dataFormat, std::vector<union Data> *attributes);
 };

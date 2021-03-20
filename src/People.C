@@ -10,7 +10,8 @@
 #include "Interaction.h"
 #include "DiseaseModel.h"
 #include "Person.h"
-#include "readers/DataReader.h"
+#include "readers/DataLoader.h"
+#include "readers/DataInterfaceMessage.h"
 
 #include <tuple>
 #include <limits>
@@ -47,7 +48,7 @@ People::People() {
     people.resize(numLocalPeople, tmp);
   } else {
       int numAttributesPerPerson = 
-        DataReader::getNumberOfDataAttributes(diseaseModel->personDef);
+        DataLoader::getNumberOfDataAttributes(diseaseModel->personDef);
       for (int p = 0; p < numLocalPeople; p++) {
         people.emplace_back(Person(numAttributesPerPerson,
           healthyState, std::numeric_limits<Time>::max()
@@ -195,7 +196,7 @@ void People::RealDataSendVisitMessages() {
     int locationId = -1;
     int visitStart = -1;
     int visitDuration = -1;
-    std::tie(personId, locationId, visitStart, visitDuration) = DataReader::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
+    std::tie(personId, locationId, visitStart, visitDuration) = DataLoader::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
 
     // Seek while same person on same day.
     while(personId == people[localPersonId].uniqueId && visitStart < nextDaySecs) {
@@ -211,7 +212,7 @@ void People::RealDataSendVisitMessages() {
       // Send off the visit message.
       VisitMessage visitMsg(locationId, personId, people[localPersonId].state, visitStart, visitStart + visitDuration);
       locationsArray[locationSubset].ReceiveVisitMessages(visitMsg);
-      std::tie(personId, locationId, visitStart, visitDuration) = DataReader::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
+      std::tie(personId, locationId, visitStart, visitDuration) = DataLoader::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
     }
   }
 }

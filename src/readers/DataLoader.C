@@ -13,6 +13,7 @@
 #include <fstream>
 
 #include "data.pb.h"
+#include "DataLoader.h"
 #include "DataInterface.h"
 #include "DataInterfaceMessage.h"
 #include "../DiseaseModel.h"
@@ -45,8 +46,8 @@ void DataLoader::BeginDataLoading() {
 
     // Create object to read into.
     int numAttributesPerObj = personReader ? 
-        DataReader::getNumberOfDataAttributes(diseaseModel->personDef) :
-        DataReader::getNumberOfDataAttributes(diseaseModel->locationDef); 
+        DataLoader::getNumberOfDataAttributes(diseaseModel->personDef) :
+        DataLoader::getNumberOfDataAttributes(diseaseModel->locationDef); 
 
     // Read in data for each chare sequentially.
     int firstIdx = personReader ? firstPersonIdx : firstLocationIdx;
@@ -72,10 +73,10 @@ void DataLoader::BeginDataLoading() {
             assert(msg != NULL);
 
             if (personReader) {
-                DataReader::readData(&dataStream, diseaseModel->personDef, msg);
+                DataLoader::readData(&dataStream, diseaseModel->personDef, msg);
                 peopleArray[targetChare].ReceivePersonSetup(msg);
             } else {
-                DataReader::readData(&dataStream, diseaseModel->locationDef, msg);
+                DataLoader::readData(&dataStream, diseaseModel->locationDef, msg);
                 locationsArray[targetChare].ReceiveLocationSetup(msg);
             }
         }
@@ -143,7 +144,8 @@ void DataLoader::readData(std::ifstream *input, loimos::proto::CSVDefinition *da
         }
     }
 }
-static int DataLoader::getNumberOfDataAttributes(loimos::proto::CSVDefinition *dataFormat) {
+
+int DataLoader::getNumberOfDataAttributes(loimos::proto::CSVDefinition *dataFormat) {
     int count = 0;
     for (int c = 0; c < dataFormat->field_size(); c++) {
         if (!dataFormat->field(c).has_ignore() && !dataFormat->field(c).has_uniqueid()) {
@@ -153,7 +155,7 @@ static int DataLoader::getNumberOfDataAttributes(loimos::proto::CSVDefinition *d
     return count;
 }
 
-static std::tuple<int, int, int, int> DataLoader::parseActivityStream(std::ifstream *input, loimos::proto::CSVDefinition *dataFormat, std::vector<union Data> *attributes) {
+std::tuple<int, int, int, int> DataLoader::parseActivityStream(std::ifstream *input, loimos::proto::CSVDefinition *dataFormat, std::vector<union Data> *attributes) {
     int personId = -1;
     int locationId = -1;
     int startTime = -1;

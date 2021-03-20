@@ -14,6 +14,7 @@
 #include "Event.h"
 #include "Defs.h"
 #include "Person.h"
+#include "readers/DataInterfaceMessage.h"
 
 #include <algorithm>
 #include <queue>
@@ -53,7 +54,6 @@ void Locations::ReceiveLocationSetup(DataInterfaceMessage *msg) {
   }
   locationsInitialized += 1;
   assert(locationsInitialized <= numLocalLocations);
-  printf("%d initialized\n",locationsInitialized );
 }
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {

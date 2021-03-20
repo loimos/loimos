@@ -27,9 +27,10 @@ class DataInterfaceMessage : public CMessage_DataInterfaceMessage {
             p|uniqueId;
             p|numDataAttributes;
             // if (p.isUnpacking() && numDataAttributes != 0) {
+            if (numDataAttributes != 0) {
+                PUParray(p, dataAttributes, numDataAttributes);
+            }
             
-                
-            PUParray(p, dataAttributes, numDataAttributes);
         }
 };
 
