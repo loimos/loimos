@@ -8,7 +8,7 @@ include Makefile.include
 OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o Defs.o \
          Event.o Interaction.o ContactModel.o readers/Preprocess.o \
          disease_model/disease.pb.o disease_model/distribution.pb.o \
-		 readers/data.pb.o
+		 readers/data.pb.o readers/DataLoader.o
 DEFS   = Defs.h loimos.def.h readers/DataReader.h
 DECLS  = loimos.decl.h
 BIN    = loimos
@@ -60,7 +60,7 @@ TESTS=$(subst -,test-,$(TEST_NAMES))
 test: $(TESTS)
 
 test-small: all
-	./charmrun +p4 ./loimos 39 16 1 4 7 ../data/disease_models/h5n1.textproto ../data/populations/synthetic_small_city/ ++local
+	./charmrun +p1 ./loimos 39 16 1 4 7 ../data/disease_models/h5n1.textproto ../data/populations/synthetic_small_city/ ++local
 
 test-syn: all
 	./charmrun +p4 ./loimos 39 16 1 4 7 ../data/disease_models/h5n1.textproto ++local

@@ -8,6 +8,7 @@
 #define __DATA_INTERFACE_H__
 
 #include <vector>
+// #include "pup_stl.h"
 
 class DataInterface {
     public:
@@ -25,8 +26,11 @@ union Data {
     int int_b10;
     bool boolean;
     uint32_t uint_32;
-    std::string *str;
     uint16_t category; 
+
+    void pup(PUP::er &p) {
+        p|int_b10;
+    }
 };
 
 #endif

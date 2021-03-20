@@ -99,14 +99,13 @@ mainmodule loimos {
 
   message DataInterfaceMessage {
     // This line is causing errors so allocate as word size.
-    // union Data dataAttributes[]; 
-    void *dataAttributes[]; 
+    Data dataAttributes[]; 
     int uniqueId;
   };
 
   array [1D] People {
     entry People();
-    entry void ReceivePersonSetup(DataInterfaceMessage);
+    entry void ReceivePersonSetup(DataInterfaceMessage *msg);
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
 #ifdef USE_TRAM
     entry [aggregate] void ReceiveInteractions(InteractionMessage);
@@ -118,7 +117,7 @@ mainmodule loimos {
 
   array [1D] Locations {
     entry Locations();
-    entry void ReceiveLocationSetup(DataInterfaceMessage);
+    entry void ReceiveLocationSetup(DataInterfaceMessage *msg);
 #ifdef USE_TRAM
     entry [aggregate] void ReceiveVisitMessages(VisitMessage);
 #else

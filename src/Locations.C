@@ -13,7 +13,6 @@
 #include "Location.h"
 #include "Event.h"
 #include "Defs.h"
-#include "readers/DataReader.h"
 #include "Person.h"
 
 #include <algorithm>
@@ -49,9 +48,12 @@ Locations::Locations() {
 void Locations::ReceiveLocationSetup(DataInterfaceMessage *msg) {
   // Copy read data into next person and increment.
   locations[locationsInitialized].uniqueId = msg->uniqueId;
-  memcpy(locations[locationsInitialized], msg->dataAttributes,
-         sizeof(union Data) * msg->numDataAttributes)
+  for (int i = 0; i < msg->numDataAttributes; i++) {
+    locations[locationsInitialized].getDataField()[i] = msg->dataAttributes[i];
+  }
   locationsInitialized += 1;
+  assert(locationsInitialized <= numLocalLocations);
+  printf("%d initialized\n",locationsInitialized );
 }
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {

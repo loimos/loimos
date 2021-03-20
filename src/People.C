@@ -71,8 +71,9 @@ People::People() {
 void People::ReceivePersonSetup(DataInterfaceMessage *msg) {
   // Copy read data into next person and increment.
   people[peopleInitialized].uniqueId = msg->uniqueId;
-  memcpy(people[peopleInitialized], msg->dataAttributes,
-         sizeof(union Data) * msg->numDataAttributes)
+  for (int i = 0; i < msg->numDataAttributes; i++) {
+    people[peopleInitialized].getDataField()[i] = msg->dataAttributes[i];
+  }
   peopleInitialized += 1;
 }
 

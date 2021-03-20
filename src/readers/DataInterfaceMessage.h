@@ -6,11 +6,31 @@
 
 #include "../loimos.decl.h"
 
-class DataInterfaceMessage : CMessage_DataInterfaceMessage {
+#ifndef __DATA_INTERFACE_MESSAGE__
+#define __DATA_INTERFACE_MESSAGE__
+
+class DataInterfaceMessage : public CMessage_DataInterfaceMessage {
     public:
-        DataInterfaceMessage() {}
         int numDataAttributes;
-        void **dataAttributes;
-        // union Data *dataAttributes;
+        Data *dataAttributes;
         int uniqueId;
+
+        DataInterfaceMessage(int attributes) {
+            numDataAttributes = attributes;
+            if (numDataAttributes != 0) {
+                dataAttributes = new Data[numDataAttributes];
+                assert(dataAttributes != NULL);
+            }
+        }
+        
+        void pup(PUP::er &p) {
+            p|uniqueId;
+            p|numDataAttributes;
+            // if (p.isUnpacking() && numDataAttributes != 0) {
+            
+                
+            PUParray(p, dataAttributes, numDataAttributes);
+        }
 };
+
+#endif // __DATA_INTERFACE_MESSAGE__
