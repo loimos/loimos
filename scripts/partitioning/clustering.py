@@ -17,15 +17,15 @@ PEOPLE_SCHEMES = ["GREEDY"]
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Scripts to perform pre-run load balancing.")
-    parser.add_argument("location_method", help=f"Location partitioning scheme to use: {LOCATION_SCHEMES}")
-    parser.add_argument("people_method", help=f"People partitioning scheme to use: {PEOPLE_SCHEMES}")
+    parser.add_argument("location_method", choices=LOCATION_SCHEMES,
+        help=f"Location partitioning scheme to use")
+    parser.add_argument("people_method", choices=PEOPLE_SCHEMES,
+        help=f"People partitioning scheme to us")
     parser.add_argument("num_people_partitions")
     parser.add_argument("num_location_partitions")
     parser.add_argument("data_path", help=f"Path to root datafile.")
     parser.add_argument("output_path", help=f"Where to write rewritten files.")
     args = parser.parse_args()
-    assert(args.location_method in LOCATION_SCHEMES)
-    assert(args.people_method in PEOPLE_SCHEMES)
     
     # Read datafiles.
     people = pd.read_csv(f"{args.data_path}/people.csv")
