@@ -70,6 +70,7 @@ void DataLoader::BeginDataLoading() {
         for (int i = 0; i < numElements; i++) {
             // Message freed by system.
             DataInterfaceMessage *msg = new DataInterfaceMessage(numAttributesPerObj);
+            msg->numDataAttributes = numAttributesPerObj;
             assert(msg != NULL);
 
             if (personReader) {

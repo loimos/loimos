@@ -73,11 +73,13 @@ Main::Main(CkArgMsg* msg) {
   CkPrintf("Loading people and locations.\n");
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
-  dataLoaders = CProxy_DataLoader::ckNew(
-    // Round up loaders for both.
-    (numPeoplePartitions + LOADING_CHARES_PER_CHARE - 1) / LOADING_CHARES_PER_CHARE +
-    (numLocationPartitions + LOADING_CHARES_PER_CHARE - 1) / LOADING_CHARES_PER_CHARE
-  ); 
+  if (!syntheticRun) {
+    dataLoaders = CProxy_DataLoader::ckNew(
+      // Round up loaders for both.
+      (numPeoplePartitions + LOADING_CHARES_PER_CHARE - 1) / LOADING_CHARES_PER_CHARE +
+      (numLocationPartitions + LOADING_CHARES_PER_CHARE - 1) / LOADING_CHARES_PER_CHARE
+    );
+  } 
 
   // run
   CkPrintf("Running.\n");

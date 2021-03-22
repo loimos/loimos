@@ -28,9 +28,9 @@ union Data {
     uint32_t uint_32;
     uint16_t category; 
 
-    void pup(PUP::er &p) {
-        p|int_b10;
-    }
+    // void pup(PUP::er &p) {
+    //     p|int_b10;
+    // }
 };
 
 #endif
