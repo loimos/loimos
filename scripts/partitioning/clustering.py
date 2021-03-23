@@ -17,20 +17,20 @@ PEOPLE_SCHEMES = ["GREEDY"]
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Scripts to perform pre-run load balancing.")
-    parser.add_argument("location_method", help=f"Location partitioning scheme to use: {LOCATION_SCHEMES}")
-    parser.add_argument("people_method", help=f"People partitioning scheme to use: {PEOPLE_SCHEMES}")
+    parser.add_argument("location_method", choices=LOCATION_SCHEMES,
+        help="Location partitioning scheme to use")
+    parser.add_argument("people_method", choices=PEOPLE_SCHEMES,
+        help="People partitioning scheme to us")
     parser.add_argument("num_people_partitions")
     parser.add_argument("num_location_partitions")
-    parser.add_argument("data_path", help=f"Path to root datafile.")
-    parser.add_argument("output_path", help=f"Where to write rewritten files.")
+    parser.add_argument("data_path", help="Path to root datafile.")
+    parser.add_argument("output_path", help="Where to write rewritten files.")
     args = parser.parse_args()
-    assert(args.location_method in LOCATION_SCHEMES)
-    assert(args.people_method in PEOPLE_SCHEMES)
     
     # Read datafiles.
-    people = pd.read_csv(f"{args.data_path}/people.csv")
-    locations = pd.read_csv(f"{args.data_path}/locations.csv")
-    visits = pd.read_csv(f"{args.data_path}/visits.csv")
+    people = pd.read_csv(os.path.join(args.data_path, "people.csv"))
+    locations = pd.read_csv(os.path.join(args.data_path, "locations.csv"))
+    visits = pd.read_csv(os.path.join(args.data_path, "visits.csv"))
 
     # Build PeopleXLocation visit graph. Rows represent locations, columns are people
     # and the values are the number of times that person visits the location.
@@ -58,8 +58,8 @@ if __name__ == "__main__":
     people, locations, visits = id_remapper.remap(people.reindex(people_remapped_ids), locations.reindex(people_remapped_ids), visits, people_remapped_ids, location_remapped_ids)    
 
     # Output
-    people.to_csv(f"{args.output_path}/people.csv", index=False)
-    locations.to_csv(f"{args.output_path}/locations.csv", index=False)
-    visits.to_csv(f"{args.output_path}/visits.csv", index=False)
+    people.to_csv(os.path.join(args.output_path, "people.csv"), index=False)
+    locations.to_csv(os.path.join(args.output_path, "locations.csv"), index=False)
+    visits.to_csv(os.path.join(args.output_path, "visits.csv"), index=False)
 
 
