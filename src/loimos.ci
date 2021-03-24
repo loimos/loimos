@@ -32,9 +32,11 @@ mainmodule loimos {
   mainchare Main {
     entry Main(CkArgMsg*);
     entry void run() {
-      serial {
-        dataLoaders.BeginDataLoading();
-        CkWaitQD();
+      if (!syntheticRun) {
+        serial {
+          dataLoaders.BeginDataLoading();
+          CkWaitQD();
+        }
       }
       for(day = 0; day < numDays; day++) {
         serial {
