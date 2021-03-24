@@ -1,3 +1,9 @@
+# Copyright 2020 The Loimos Project Developers.
+# See the top-level LICENSE file for details.
+#
+# SPDX-License-Identifier: MIT
+#
+
 def split_large_clusters(clusters, max_in_cluster):
     """ Breaks clusters that are above the maximum size into (n-1) full clusters
     and 1 partially fully cluster. """

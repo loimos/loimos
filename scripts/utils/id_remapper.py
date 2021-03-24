@@ -1,3 +1,9 @@
+# Copyright 2020 The Loimos Project Developers.
+# See the top-level LICENSE file for details.
+#
+# SPDX-License-Identifier: MIT
+#
+
 def remap(people, locations, visits, new_people_ids, new_location_ids):
     # Remap person ids.
     people = people.reset_index(drop=True).copy()

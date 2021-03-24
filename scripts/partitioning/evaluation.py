@@ -1,3 +1,9 @@
+# Copyright 2020 The Loimos Project Developers.
+# See the top-level LICENSE file for details.
+#
+# SPDX-License-Identifier: MIT
+#
+
 import pandas as pd
 import numpy as np
 
