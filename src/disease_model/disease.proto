@@ -19,7 +19,13 @@ import "distribution.proto";
 message DiseaseModel {
     // Defines the unique disease identifier.
     string label = 1;
-    string starting_state = 2;
+
+    message StartingCondition {
+      int32 starting_state = 1;
+      int32 lower = 2;
+      int32 upper = 3;
+    }
+    repeated StartingCondition starting_states = 2;
 
     // Defines a vertex in the graph and its outbound nodes.
     message DiseaseState {
@@ -32,16 +38,16 @@ message DiseaseModel {
         double incapacitation = 4;
 
         // Level of non-disease-specific symptoms.
-        oneof prodrome_or_vulnerability {
-          int32 prodrome = 5;
-          int32 vulnerability = 6; 
-        }
+        // oneof prodrome_or_vulnerability {
+        //   int32 prodrome = 5;
+        //   int32 vulnerability = 6; 
+        // }
         
         // TODO: Fill in this definition.
-        oneof symptomatic_or_tracing {
-          int32 symptomatic = 7;
-          int32 tracing = 8;
-        }
+        // oneof symptomatic_or_tracing {
+        //   int32 symptomatic = 7;
+        //   int32 tracing = 8;
+        // }
 
         // Defines a set of edges that should be used
         // for a certain intervention. For example, a vaccinated patient
@@ -66,16 +72,11 @@ message DiseaseModel {
         }
 
         message ExposureTransitionSet {
-          message AgeCondition {
-            short lower = 1;
-            short upper = 2;
-          }
-
           message ExposureTransition {
             // Describes 
-            AgeCondition condition = 1;
-            int next_state = 2; 
+            int32 next_state = 2; 
           }
+          repeated ExposureTransition transition = 1;
         }
 
         oneof transition_type {

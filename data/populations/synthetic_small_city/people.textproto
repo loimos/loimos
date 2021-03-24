@@ -28,7 +28,7 @@ field {
 }
 field {
     field_name: "sex"
-    b10int {}
+    ignore {}
 }
 field {
     field_name: "school_enrollment"

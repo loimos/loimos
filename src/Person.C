@@ -20,6 +20,7 @@ Person::Person(int numAttributes, int startingState, int timeLeftInState) {
     this->state = startingState;
     this->secondsLeftInState = timeLeftInState;
     this->interactionsByDay = std::vector<uint32_t>();
+    this->next_state = -1;
 }
 
 void Person::setUniqueId(int idx) {
