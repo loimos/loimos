@@ -172,7 +172,7 @@ std::tuple<int, int, int, int> DataLoader::parseActivityStream(std::ifstream *in
     int duration = -1;
     char buf[MAX_INPUT_lineLength];
 
-    // Get header line.
+    // Preread first line.
     input->getline(buf, MAX_INPUT_lineLength);
 
     // Read over people data format.

@@ -13,10 +13,11 @@
  * Defines attributes of a single person.
  */ 
 
-Person::Person(int numAttributes, int startingState, int timeLeftInState) {
+Person::Person(int uniqueId, int numAttributes, int startingState, int timeLeftInState) {
     if (numAttributes != 0) {
         this->personData.resize(numAttributes);
     }
+    this->uniqueId = uniqueId;
     this->state = startingState;
     this->secondsLeftInState = timeLeftInState;
     this->interactionsByDay = std::vector<uint32_t>();

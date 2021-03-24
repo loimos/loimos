@@ -44,13 +44,14 @@ People::People() {
   // Create real or fake people
   if (syntheticRun) {
     // Make a default person and populate people with copies
-    Person tmp { NO_ATTRS, healthyState, std::numeric_limits<Time>::max() };
+    Person tmp { 0, NO_ATTRS, healthyState, std::numeric_limits<Time>::max() };
     people.resize(numLocalPeople, tmp);
   } else {
       int numAttributesPerPerson = 
         DataLoader::getNumberOfDataAttributes(diseaseModel->personDef);
+      int startingId = getNumLocalElements(numPeople, numPeoplePartitions, 0) * thisIndex;
       for (int p = 0; p < numLocalPeople; p++) {
-        people.emplace_back(Person(numAttributesPerPerson,
+        people.emplace_back(Person(startingId + p, numAttributesPerPerson,
           healthyState, std::numeric_limits<Time>::max()
         ));
       }
@@ -84,6 +85,7 @@ void People::ReceivePersonSetup(DataInterfaceMessage *msg) {
 void People::loadActivityData() {  
   // Open activity data and cache. 
   activityData = new std::ifstream(scenarioPath + "visits.csv");
+  std::string test = scenarioPath + scenarioId + "_interactions.cache";
   std::ifstream activityCache(scenarioPath + scenarioId + "_interactions.cache", std::ios_base::binary);
   if (!activityData || !activityCache) {
     CkAbort("Could not open activity input.");
@@ -96,7 +98,6 @@ void People::loadActivityData() {
     int curr_id = people[c].uniqueId;
 
     // Read in their activity data offsets.
-    // activityCache.seekg(0);
     activityCache.seekg(sizeof(uint32_t) * numDays * (curr_id - firstPersonIdx));
     activityCache.read((char *) buf, sizeof(uint32_t) * numDays);
     for (int day = 0; day < numDays; day++) {

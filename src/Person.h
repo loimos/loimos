@@ -30,7 +30,7 @@ class Person : public DataInterface {
         std::vector<union Data> personData;
 
         // Constructors and assignment operators
-        Person(int numAttributes, int startingState, int timeLeftInState);
+        Person(int uniqueId, int numAttributes, int startingState, int timeLeftInState);
         Person(const Person&) = default;
         Person(Person&&) = default;
         Person& operator=(const Person&) = default;
