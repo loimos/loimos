@@ -49,27 +49,19 @@ class DataInterfaceMessage : public CMessage_DataInterfaceMessage {
             DataInterfaceMessage *msg = (DataInterfaceMessage *) CkAllocBuffer(buf, sizeof(DataInterfaceMessage));
             // Unpack array.
             int *data = (int *) buf;
-            int uniqueId = data[0];
-            int numDataAttributes = data[1];
-            if (numDataAttributes != 0) {
-                msg->dataAttributes = new Data[numDataAttributes];
-                memcpy(msg->dataAttributes, &data[2], sizeof(Data) * numDataAttributes);
+            // Copy fixed int fields into message.
+            msg->uniqueId = data[0];
+            msg->numDataAttributes = data[1];
+            // Copy data fields to message.
+            if (msg->numDataAttributes != 0) {
+                msg->dataAttributes = new Data[msg->numDataAttributes];
+                memcpy(msg->dataAttributes, &data[2], sizeof(Data) * msg->numDataAttributes);
             } else {
                 msg->dataAttributes = NULL;
             }
             CkFreeMsg(buf);
             return msg;
         }
-
-        // void pup(PUP::er &p) {
-        //     p|uniqueId;
-        //     p|numDataAttributes;
-        //     if (p.isUnpacking()) {
-        //         dataAttributes = new Data[numDataAttributes];
-        //     }
-
-        //     PUParray(p, dataAttributes, numDataAttributes);
-        // }
 };
 
 #endif // __DATA_INTERFACE_MESSAGE__

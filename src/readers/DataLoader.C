@@ -70,14 +70,23 @@ void DataLoader::BeginDataLoading() {
         for (int i = 0; i < numElements; i++) {
             // Message freed by system.
             DataInterfaceMessage *msg = new DataInterfaceMessage(numAttributesPerObj);
-            msg->numDataAttributes = numAttributesPerObj;
             assert(msg != NULL);
 
             if (personReader) {
                 DataLoader::readData(&dataStream, diseaseModel->personDef, msg);
                 peopleArray[targetChare].ReceivePersonSetup(msg);
             } else {
+                if (numAttributesPerObj != 0) {
+                    printf("ERROR ERROR ERROR\n");
+                }
                 DataLoader::readData(&dataStream, diseaseModel->locationDef, msg);
+                if (numAttributesPerObj != 0) {
+                    printf("ERROR2 ERRO2R ERROR2\n");
+                }
+
+                if (msg->numDataAttributes != 0) {
+                    printf("ERROR2 ERRO2R ERROR2\n");
+                }
                 locationsArray[targetChare].ReceiveLocationSetup(msg);
             }
         }
