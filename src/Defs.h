@@ -28,6 +28,9 @@ const Time DAY_LENGTH = 3600 * 24;
 const Time HOUR_LENGTH = 3600;
 const Time MINUTE_LENGTH = 60;
 
+// CSV Order
+#define AGE_LOC 0
+
 // Data loading
 #define EMPTY_VISIT_SCHEDULE 0xFFFFFFFF
 #define CSV_DELIM ','
