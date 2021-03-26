@@ -55,6 +55,9 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath, int nu
      */
     // Open activity stream..
     std::ifstream activityStream(inputPath, std::ios_base::binary);
+    if (!activityStream) {
+        CkAbort("Could not open object stream at %s\n", inputPath.c_str());
+    }
     int objPerChare = numObjs / numChares;
 
     // Read config file.
