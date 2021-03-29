@@ -6,6 +6,8 @@
 
 #include "../loimos.decl.h"
 #include "Schedule.h"
+#include "SyntheticSchedule.h"
+#include "FiledSchedule.h"
 #include "../Person.h"
 #include "../DiseaseModel.h"
 
@@ -24,3 +26,11 @@ void Schedule::sendVisitMessages(
   const int peopleChareIndex,
   const int day
 ) {}
+
+Schedule *createSchedule() {
+  if (syntheticRun) {
+    return new SyntheticSchedule();
+  } else {
+    return new FiledSchedule();
+  }
+}

@@ -11,6 +11,7 @@
 #include "Interaction.h"
 #include "Person.h"
 #include "Message.h"
+#include "schedule/Schedule.h"
 
 #include <random>
 #include <vector>
@@ -26,18 +27,16 @@ class People : public CBase_People {
     int day;
     int newCases;
 
-    std::ifstream *activityData;
     std::vector<Person> people;
     std::default_random_engine generator;
     DiseaseModel *diseaseModel;
+    Schedule *schedule;
 
     void ProcessInteractions(Person &person);
     void loadPeopleData();
   public:
     People();
     void SendVisitMessages(); 
-    void SyntheticSendVisitMessages();
-    void RealDataSendVisitMessages();
     void ReceiveInteractions(InteractionMessage interMsg);
     void EndofDayStateUpdate();
 };
