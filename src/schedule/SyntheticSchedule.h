@@ -4,9 +4,10 @@
  * SPDX-License-Identifier: MIT
  */
 
-#ifndef __SCHEDULE_H__
-#define __SCHEDULE_H__
+#ifndef __SYNTHETIC_SCHEDULE_H__
+#define __SYNTHETIC_SCHEDULE_H__
 
+#include "Schedule.h"
 #include "../Person.h"
 
 #include <random>
@@ -14,11 +15,16 @@
 #include <iostream>
 
 // This is a minimal implemetation of a schedule, which doesn't actually send
-// any messages (or do anythign else, really). This is mainly intended as a
-// parent class for actual schedule generators/readers, and the only reason
-// it's not abstract is because we need to be able to make variables of this
-// type.
-class Schedule {
+// any messages. This is mainly intended as a parent class for more practical/
+// realistic schedules, and the only reason it's not abstract is because we
+// need to be able to make variables of this type.
+class SyntheticSchedule : public Schedule {
+  private:
+    // For the most part, schedules should be periodic, so if they're random
+    // the easiest way to achieve that while storing minimal information is to
+    // reset the seed for the random generator every so often
+    int seed;
+    std::default_random_engine generator;
   public:
     // Updates the seed we use for our random generator (if any)
     void setSeed(const int seed);
@@ -30,4 +36,4 @@ class Schedule {
     void sendVisitMessages(const std::vector<Person> &people);
 };
 
-#endif // __SCHEDULE_H__
+#endif // __SYNTHETIC_SCHEDULE_H__

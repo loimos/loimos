@@ -12,13 +12,9 @@
 #include <vector>
 #include <iostream>
 
-void Schedule::setSeed(const int seed) {
-  this->seed = seed;
-  generator.seed(seed);
-}
+// These are just stubs so that we can actually make varibales of type Schedule
+void Schedule::setSeed(const int seed) {}
 
-void Schedule::setActivityData(std::ifstream *activityData) {
-  this->activityData = activityData;
-}
+void Schedule::setActivityData(std::ifstream *activityData) {}
 
 void Schedule::sendVisitMessages(const std::vector<Person> &people) {}
