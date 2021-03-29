@@ -15,4 +15,7 @@ void FiledSchedule::setActivityData(std::ifstream *activityData) {
   this->activityData = activityData;
 }
 
-void FiledSchedule::sendVisitMessages(const std::vector<Person> &people) {}
+void FiledSchedule::sendVisitMessages(
+  const std::vector<Person> &people,
+  int peopleChareIndex
+) {}

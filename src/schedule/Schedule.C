@@ -17,4 +17,7 @@ void Schedule::setSeed(const int seed) {}
 
 void Schedule::setActivityData(std::ifstream *activityData) {}
 
-void Schedule::sendVisitMessages(const std::vector<Person> &people) {}
+void Schedule::sendVisitMessages(
+  const std::vector<Person> &people,
+  int peopleChareIndex
+) {}
