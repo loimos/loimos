@@ -38,6 +38,9 @@ mainmodule loimos {
           CkWaitQD();
         }
       }
+      serial {
+        simulationStartTime = CkWallTimer();
+      }
       for(day = 0; day < numDays; day++) {
         serial {
           // CkPrintf("Sending Visit Messages\n");

@@ -83,7 +83,6 @@ Main::Main(CkArgMsg* msg) {
 
   // run
   CkPrintf("Running.\n");
-  simulationStartTime = CkWallTimer();
   mainProxy.run();
 }
 

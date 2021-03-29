@@ -8,7 +8,6 @@
 #define __DATA_INTERFACE_H__
 
 #include <vector>
-// #include "pup_stl.h"
 
 class DataInterface {
     public:
