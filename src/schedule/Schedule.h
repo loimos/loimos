@@ -8,6 +8,7 @@
 #define __SCHEDULE_H__
 
 #include "../Person.h"
+#include "../DiseaseModel.h"
 
 #include <random>
 #include <vector>
@@ -27,7 +28,12 @@ class Schedule {
     // This is the main interface method for this class; this send out visit
     // messages for all of the visits in the schedules we generate for the
     // given people
-    void sendVisitMessages(const std::vector<Person> &people, int peopleChareIndex);
+    void sendVisitMessages(
+      const std::vector<Person> &people,
+      const DiseaseModel *diseaseModel,
+      const int peopleChareIndex,
+      const int day
+    );
 };
 
 #endif // __SCHEDULE_H__

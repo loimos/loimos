@@ -7,6 +7,7 @@
 #include "../loimos.decl.h"
 #include "Schedule.h"
 #include "../Person.h"
+#include "../DiseaseModel.h"
 
 #include <random>
 #include <vector>
@@ -19,5 +20,7 @@ void Schedule::setActivityData(std::ifstream *activityData) {}
 
 void Schedule::sendVisitMessages(
   const std::vector<Person> &people,
-  int peopleChareIndex
+  const DiseaseModel *diseaseModel,
+  const int peopleChareIndex,
+  const int day
 ) {}

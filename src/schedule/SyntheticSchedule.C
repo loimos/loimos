@@ -7,6 +7,7 @@
 #include "../loimos.decl.h"
 #include "SyntheticSchedule.h"
 #include "../Person.h"
+#include "../DiseaseModel.h"
 
 #include <random>
 #include <vector>
@@ -21,7 +22,9 @@ void SyntheticSchedule::setSeed(const int seed) {
 
 void SyntheticSchedule::sendVisitMessages(
   const std::vector<Person> &people,
-  int peopleChareIndex
+  const DiseaseModel *diseaseModel,
+  const int peopleChareIndex,
+  const int day
 ) {
   int numVisits, personIdx, locationIdx, locationSubset;
   // initialize random number generator for a Poisson distribution
