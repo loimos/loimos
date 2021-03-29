@@ -59,7 +59,7 @@ TESTS=$(subst -,test-,$(TEST_NAMES))
 test: $(TESTS)
 
 test-small: all
-	./charmrun +p1 ./loimos 100 735 2 2 7 ../data/disease_models/covid19.textproto ../data/populations/synthetic_small_city/ ++local
+	./charmrun +p4 ./loimos 100 735 2 2 7 ../data/disease_models/covid19.textproto ../data/populations/synthetic_small_city/ ++local
 
 test-syn: all
 	./charmrun +p4 ./loimos 39 16 1 4 7 ../data/disease_models/covid19.textproto ++local
