@@ -28,9 +28,9 @@ void Schedule::sendVisitMessages(
 ) {}
 
 Schedule *createSchedule() {
-  if (syntheticRun) {
+  if ((int) ScheduleType::syntheticSchedule == scheduleType) {
     return new SyntheticSchedule();
-  } else {
+  } else if ((int) ScheduleType::filedSchedule == scheduleType) {
     return new FiledSchedule();
   }
 }

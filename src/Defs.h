@@ -46,7 +46,7 @@ extern /* readonly */ int numLocations;
 extern /* readonly */ int numPeoplePartitions;
 extern /* readonly */ int numLocationPartitions;
 extern /* readonly */ int numDays;
-extern /* readonly */ bool syntheticRun;
+extern /* readonly */ int scheduleType;
 extern /* readonly */ int firstPersonIdx;
 extern /* readonly */ int firstLocationIdx;
 extern /* readonly */ std::string scenarioPath;

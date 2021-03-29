@@ -43,13 +43,7 @@ People::People() {
   schedule = createSchedule();
 
   // Create real or fake people
-  if (syntheticRun) {
-    // Make a default person and populate people with copies
-    Person tmp { NO_ATTRS, healthyState, std::numeric_limits<Time>::max() };
-    people.resize(numLocalPeople, tmp);
-    schedule->setSeed(thisIndex);
-
-  } else {
+  if ((int) ScheduleType::filedSchedule == scheduleType) {
     int numAttributesPerPerson = 
       DataReader<Person>::getNonZeroAttributes(diseaseModel->personDef);
     for (int p = 0; p < numLocalPeople; p++) {
@@ -60,6 +54,13 @@ People::People() {
 
     // Load in people data from file.
     loadPeopleData();
+
+  } else {
+    // Make a default person and populate people with copies
+    Person tmp { NO_ATTRS, healthyState, std::numeric_limits<Time>::max() };
+    people.resize(numLocalPeople, tmp);
+    schedule->setSeed(thisIndex);
+
   }
   
   // Randomly infect people to seed the initial outbreak

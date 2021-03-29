@@ -38,7 +38,7 @@ class Schedule {
 
 // This enum rpovide sna easy way of specifying which scheule reader/generator
 // to use. Each enum value should be named after a type which extends Schedule
-enum class ScheduleType { syntheticSchedule, filedScheule };
+enum class ScheduleType { syntheticSchedule, filedSchedule };
 
 // This creates a new instance of the scheule class indicated by the global
 // variable syntheticRun

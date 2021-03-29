@@ -11,6 +11,7 @@
 #include "DiseaseModel.h"
 #include "contact_model/ContactModel.h"
 #include "readers/Preprocess.h"
+#include "schedule/Schedule.h"
 
 #include <tuple>
 
@@ -23,8 +24,8 @@
 /* readonly */ int numPeoplePartitions;
 /* readonly */ int numLocationPartitions;
 /* readonly */ int numDays;
-/* readonly */ bool syntheticRun;
 /* readonly */ int contactModelType;
+/* readonly */ int scheduleType;
 /* readonly */ std::string scenarioPath;
 /* readonly */ std::string scenarioId;
 /* readonly */ int firstPersonIdx;
@@ -46,13 +47,13 @@ Main::Main(CkArgMsg* msg) {
 
   // Handle both real data runs or runs using synthetic populations.
   if(msg->argc >= 8) {
-    syntheticRun = false;
+    scheduleType = (int) ScheduleType::filedSchedule;
     
     // Create data caches.
     scenarioPath = std::string(msg->argv[7]);
     std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(scenarioPath, numPeople, numPeoplePartitions, numLocations, numLocationPartitions, numDays);
   } else {
-    syntheticRun = true;
+    scheduleType = (int) ScheduleType::syntheticSchedule;
     firstPersonIdx = 0;
     firstLocationIdx = 0;
   }
