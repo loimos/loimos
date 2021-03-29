@@ -186,7 +186,6 @@ void People::SyntheticSendVisitMessages() {
 }
 
 void People::RealDataSendVisitMessages() {
-  int numVisits, personIdx, locationIdx, locationSubset;
   // Send of activities for each person.
   int nextDaySecs = (day + 1) * DAY_LENGTH;
   for (int localPersonId = 0; localPersonId < numLocalPeople; localPersonId++) {
@@ -206,14 +205,13 @@ void People::RealDataSendVisitMessages() {
     // Seek while same person on same day.
     while(personId == people[localPersonId].uniqueId && visitStart < nextDaySecs) {
       // Find process that owns that location.
-      locationSubset = getPartitionIndex(
+      int locationSubset = getPartitionIndex(
           locationId,
           numLocations,
           numLocationPartitions,
           firstLocationIdx
       );
-
-      // printf("Person %d visited %d at %d for %d. They have %d\n", personIdx, locationIdx, visitStart, visitDuration, people[localPersonId].state);
+      
       // Send off the visit message.
       VisitMessage visitMsg(locationId, personId, people[localPersonId].state, visitStart, visitStart + visitDuration);
       locationsArray[locationSubset].ReceiveVisitMessages(visitMsg);

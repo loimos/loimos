@@ -38,7 +38,8 @@ Locations::Locations() {
     Location tmp { 0 };
     locations.resize(numLocalLocations, tmp);
   } else {
-    locations.reserve(numLocalLocations);
+    Location tmp { 0 };
+    locations.resize(numLocalLocations, tmp);
     loadLocationData();
   }
 
