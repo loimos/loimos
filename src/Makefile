@@ -66,3 +66,6 @@ test-syn: all
 
 test-large: all
 	./charmrun +p4 ./loimos 41119 19203 60 40 7 ../data/disease_models/covid19.textproto ../data/populations/coc/ ++local
+
+clean-cache:
+	rm ../data/populations/coc/*.cache ../data/populations/synthetic_small_city/*.cache
