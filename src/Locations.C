@@ -50,7 +50,7 @@ void Locations::ReceiveLocationSetup(DataInterfaceMessage *msg) {
   // Copy read data into next person and increment.
   // locations[locationsInitialized].uniqueId = msg->uniqueId;
   for (int i = 0; i < msg->numDataAttributes; i++) {
-    locations[locationsInitialized].getDataField()[i] = msg->dataAttributes[i];
+    locations[locationsInitialized].setField(i, msg->dataAttributes[i]);
   }
   locationsInitialized += 1;
   assert(locationsInitialized <= numLocalLocations);

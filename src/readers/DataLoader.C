@@ -21,37 +21,48 @@
 DataLoader::DataLoader() {}
 
 void DataLoader::BeginDataLoading() {
-    // Calculate if this chare needs to load people of locations.
-    int numPeopleLoadingChares = (numPeoplePartitions + LOADING_CHARES_PER_CHARE - 1) / LOADING_CHARES_PER_CHARE;
-    bool personReader = thisIndex < numPeopleLoadingChares;
+    // Calculate if this chare needs to load people or locations.
+    int numPeopleLoadingChares = 
+        (numPeoplePartitions + DATALOADING_CHARES_PER_COMPUTATION_CHARE - 1)
+        / DATALOADING_CHARES_PER_COMPUTATION_CHARE;
+    bool isPersonReader = thisIndex < numPeopleLoadingChares;
     // Determine relative position among people or data loaders.
-    int objOfType = personReader ? numPeople : numLocations;
-    int charesOfType = personReader ? numPeoplePartitions : numLocationPartitions;
-    int relIndex = personReader ? thisIndex : thisIndex - numPeopleLoadingChares;
-    // Calculate range of chares.
-    int lowerChare = relIndex * LOADING_CHARES_PER_CHARE;
-    int upperChare = std::min(charesOfType - 1, (relIndex + 1) * LOADING_CHARES_PER_CHARE - 1);
+    int countObjsOfType, countCharesOfType, relIndex;
+    if (isPersonReader) {
+        countObjsOfType = numPeople;
+        countCharesOfType = numPeoplePartitions;
+        relIndex = thisIndex;
+    } else {
+        countObjsOfType = numLocations;
+        countCharesOfType = numLocationPartitions;
+        relIndex = thisIndex - numPeopleLoadingChares;
+    }
+
+    // Calculate range of chares that this data loader is responsible for.
+    int lowerChareIndex = relIndex * DATALOADING_CHARES_PER_COMPUTATION_CHARE;
+    int upperChareIndex = std::min(countCharesOfType - 1, (relIndex + 1) 
+        * DATALOADING_CHARES_PER_COMPUTATION_CHARE - 1);
     
     // Open relevant files.
     const DiseaseModel *diseaseModel = globDiseaseModel.ckLocalBranch();
     std::string dataPath = scenarioPath
-                        + (personReader ? "people.csv" : "locations.csv");
+                        + (isPersonReader ? "people.csv" : "locations.csv");
     std::ifstream dataStream(dataPath);
     std::string cachePath = scenarioPath + scenarioId
-                        + (personReader ? "_people.cache" : "_locations.cache");
+                        + (isPersonReader ? "_people.cache" : "_locations.cache");
     std::ifstream cacheStream(cachePath);
     if (!dataStream || !cacheStream) {
         CkAbort("Could not open person data input.");
     }
 
     // Create object to read into.
-    int numAttributesPerObj = personReader ? 
+    int numAttributesPerObj = isPersonReader ? 
         DataLoader::getNumberOfDataAttributes(diseaseModel->personDef) :
         DataLoader::getNumberOfDataAttributes(diseaseModel->locationDef); 
 
     // Read in data for each chare sequentially.
-    int firstIdx = personReader ? firstPersonIdx : firstLocationIdx;
-    for (int targetChare = lowerChare; targetChare <= upperChare; targetChare++) {
+    int firstIdx = isPersonReader ? firstPersonIdx : firstLocationIdx;
+    for (int targetChare = lowerChareIndex; targetChare <= upperChareIndex; targetChare++) {
         // Seek to correct position in cache.
         cacheStream.seekg(targetChare * sizeof(uint32_t));
         uint32_t offset;
@@ -62,8 +73,8 @@ void DataLoader::BeginDataLoading() {
         // Calculate range of people.
         // Load in location information.
         int numElements = getNumLocalElements(
-            objOfType,
-            charesOfType,
+            countObjsOfType,
+            countCharesOfType,
             targetChare
         );
 
@@ -72,21 +83,11 @@ void DataLoader::BeginDataLoading() {
             DataInterfaceMessage *msg = new DataInterfaceMessage(numAttributesPerObj);
             assert(msg != NULL);
 
-            if (personReader) {
+            if (isPersonReader) {
                 DataLoader::readData(&dataStream, diseaseModel->personDef, msg);
                 peopleArray[targetChare].ReceivePersonSetup(msg);
             } else {
-                if (numAttributesPerObj != 0) {
-                    printf("ERROR ERROR ERROR\n");
-                }
                 DataLoader::readData(&dataStream, diseaseModel->locationDef, msg);
-                if (numAttributesPerObj != 0) {
-                    printf("ERROR2 ERRO2R ERROR2\n");
-                }
-
-                if (msg->numDataAttributes != 0) {
-                    printf("ERROR2 ERRO2R ERROR2\n");
-                }
                 locationsArray[targetChare].ReceiveLocationSetup(msg);
             }
         }

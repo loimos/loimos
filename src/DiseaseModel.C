@@ -36,6 +36,9 @@ DiseaseModel::DiseaseModel(std::string pathToModel) {
   // TODO(iancostello): Load directly without string.
   model = new loimos::proto::DiseaseModel();
   std::ifstream diseaseModelStream(pathToModel);
+  if (!diseaseModelStream) {
+    CkAbort("Could not open disease model at %s", pathToModel.c_str());
+  }
   std::string str((std::istreambuf_iterator<char>(diseaseModelStream)),
                   std::istreambuf_iterator<char>());
   if (!google::protobuf::TextFormat::ParseFromString(str, model)) {

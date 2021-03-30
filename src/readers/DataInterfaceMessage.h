@@ -6,8 +6,8 @@
 
 #include "../loimos.decl.h"
 
-#ifndef __DATA_INTERFACE_MESSAGE__
-#define __DATA_INTERFACE_MESSAGE__
+#ifndef __DATA_INTERFACE_MESSAGE_H__
+#define __DATA_INTERFACE_MESSAGE_H__
 
 class DataInterfaceMessage : public CMessage_DataInterfaceMessage {
     public:
@@ -64,4 +64,4 @@ class DataInterfaceMessage : public CMessage_DataInterfaceMessage {
         }
 };
 
-#endif // __DATA_INTERFACE_MESSAGE__
+#endif // __DATA_INTERFACE_MESSAGE_H__

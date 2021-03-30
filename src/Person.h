@@ -36,9 +36,5 @@ class Person : public DataInterface {
         Person& operator=(const Person&) = default;
         Person& operator=(Person&&) = default;
         ~Person() = default;
-
-        // Override DataInterfect abstract methods
-        void setUniqueId(int idx);
-        std::vector<union Data> getDataField();
 };
 #endif

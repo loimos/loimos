@@ -13,7 +13,9 @@
  * Defines attributes of a single person.
  */ 
 
-Person::Person(int uniqueId, int numAttributes, int startingState, int timeLeftInState) {
+Person::Person(int uniqueId, int numAttributes, int startingState, int timeLeftInState) 
+    : DataInterface (numAttributes)    
+{
     if (numAttributes != 0) {
         this->personData.resize(numAttributes);
     }
@@ -21,12 +23,4 @@ Person::Person(int uniqueId, int numAttributes, int startingState, int timeLeftI
     this->state = startingState;
     this->secondsLeftInState = timeLeftInState;
     this->interactionsByDay = std::vector<uint32_t>();
-}
-
-void Person::setUniqueId(int idx) {
-    this->uniqueId = idx;
-}
-
-std::vector<union Data> Person::getDataField() {
-    return this->personData;
 }

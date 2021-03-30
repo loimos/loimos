@@ -76,8 +76,8 @@ Main::Main(CkArgMsg* msg) {
   if (!syntheticRun) {
     dataLoaders = CProxy_DataLoader::ckNew(
       // Round up loaders for both.
-      (numPeoplePartitions + LOADING_CHARES_PER_CHARE - 1) / LOADING_CHARES_PER_CHARE +
-      (numLocationPartitions + LOADING_CHARES_PER_CHARE - 1) / LOADING_CHARES_PER_CHARE
+      (numPeoplePartitions + DATALOADING_CHARES_PER_COMPUTATION_CHARE - 1) / DATALOADING_CHARES_PER_COMPUTATION_CHARE +
+      (numLocationPartitions + DATALOADING_CHARES_PER_COMPUTATION_CHARE - 1) / DATALOADING_CHARES_PER_COMPUTATION_CHARE
     );
   } 
 

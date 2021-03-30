@@ -65,7 +65,4 @@ test-syn: all
 	./charmrun +p4 ./loimos 39 16 1 4 7 ../data/disease_models/h5n1.textproto ++local
 
 test-large: all
-	./charmrun +p4 ./loimos 41119 19203 60 40 7 ../data/disease_models/covid19.textproto ../data/populations/coc/ ++local
-
-# ./charmrun +p4 ./loimos 100 51 2 2 7 ../data/disease_models/h5n1.textproto ../data/populations/validation_set/ ++local
-#  ./charmrun +p4 ./loimos 100 51 2 2 7 ../data/disease_models/test_highly_contagious.textproto ../data/populations/validation_set/ ++local
+	./charmrun +p4 ./loimos 41119 19203 60 40 7 ../data/disease_models/h5n1.textproto ../data/populations/coc/ ++local
