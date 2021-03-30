@@ -19,10 +19,8 @@ class FiledSchedule : public Schedule {
   private:
     std::ifstream *activityData;
   public:
-    // Updates the seed we use for our random generator (if any)
-    void setSeed(const int seed);
     // Updates the activity data file we might read data from (if any)
-    void setActivityData(std::ifstream *activityData);
+    void setActivityData(std::ifstream *activityData) override;
     // This is the main interface method for this class; this send out visit
     // messages for all of the visits in the schedules we generate for the
     // given people
@@ -31,7 +29,7 @@ class FiledSchedule : public Schedule {
       const DiseaseModel *diseaseModel,
       const int peopleChareIndex,
       const int day
-    );
+    ) override;
 };
 
 #endif // __FILED_SCHEDULE_H__

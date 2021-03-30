@@ -22,13 +22,13 @@
 class Schedule {
   public:
     // Updates the seed we use for our random generator (if any)
-    void setSeed(const int seed);
+    virtual void setSeed(const int seed);
     // Updates the activity data file we might read data from (if any)
-    void setActivityData(std::ifstream *activityData);
+    virtual void setActivityData(std::ifstream *activityData);
     // This is the main interface method for this class; this send out visit
     // messages for all of the visits in the schedules we generate for the
     // given people
-    void sendVisitMessages(
+    virtual void sendVisitMessages(
       const std::vector<Person> &people,
       const DiseaseModel *diseaseModel,
       const int peopleChareIndex,

@@ -28,9 +28,7 @@ class SyntheticSchedule : public Schedule {
     std::default_random_engine generator;
   public:
     // Updates the seed we use for our random generator (if any)
-    void setSeed(const int seed);
-    // Updates the activity data file we might read data from (if any)
-    void setActivityData(std::ifstream *activityData);
+    void setSeed(const int seed) override;
     // This is the main interface method for this class; this send out visit
     // messages for all of the visits in the schedules we generate for the
     // given people
@@ -39,7 +37,7 @@ class SyntheticSchedule : public Schedule {
       const DiseaseModel *diseaseModel,
       const int peopleChareIndex,
       const int day
-    );
+    ) override;
 };
 
 #endif // __SYNTHETIC_SCHEDULE_H__
