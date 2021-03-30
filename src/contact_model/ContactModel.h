@@ -38,11 +38,11 @@ class ContactModel {
     void setGenerator(std::default_random_engine *generator);
     // Calculates any location-specific values and stores them as new
     // attributes of the location
-    void computeLocationValues(Location &location);
+    virtual void computeLocationValues(Location &location);
     // Returns whether or not two people at the same location make contact
     // (will probably need to mess with the arguments once we start
     // implementing more complex models)
-    bool madeContact(
+    virtual bool madeContact(
       const Event& susceptibleEvent,
       const Event& infectiousEvent,
       Location& location
