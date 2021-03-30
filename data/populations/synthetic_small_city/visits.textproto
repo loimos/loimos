@@ -1,5 +1,5 @@
 field {
-    field_name: "hid"
+    field_name: "daynum"
     ignore {}
 }
 field {
@@ -8,7 +8,7 @@ field {
 }
 field {
     field_name: "activity_number"
-    foreignId {}
+    ignore {}
 }
 field {
     field_name: "activity_type"
@@ -19,22 +19,14 @@ field {
     startTime {}
 }
 field {
+    field_name: "end_time"
+    ignore {}
+}
+field {
     field_name: "duration"
     duration {}
 }
 field {
     field_name: "lid"
-    ignore {}
-}
-field {
-    field_name: "longitude"
-    ignore {}
-}
-field {
-    field_name: "latitude"
-    ignore {}
-}
-field {
-    field_name: "travel_mode"
-    ignore {}
+    foreignId {}
 }
