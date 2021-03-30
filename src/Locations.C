@@ -9,7 +9,7 @@
 #include "Location.h"
 #include "Event.h"
 #include "DiseaseModel.h"
-#include "ContactModel.h"
+#include "contact_model/ContactModel.h"
 #include "Location.h"
 #include "Event.h"
 #include "Defs.h"
@@ -46,7 +46,7 @@ Locations::Locations() {
   // Seed random number generator via branch ID for reproducibility
   generator.seed(thisIndex);
   // Init contact model
-  contactModel = new ContactModel();
+  contactModel = createContactModel();
   contactModel->setGenerator(&generator);
 }
 
@@ -54,6 +54,7 @@ void Locations::loadLocationData() {
   // Init local.
   int numAttributesPerLocation = 
     DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
+  locations.reserve(numLocalLocations);
   for (int p = 0; p < numLocalLocations; p++) {
     locations.emplace_back(numAttributesPerLocation);
   }
@@ -82,8 +83,11 @@ void Locations::loadLocationData() {
   locationData.seekg(locationOffset);
 
   // Read in our location data.
-  DataReader<Location>::readData(&locationData, diseaseModel->locationDef,
-                                 &locations);
+  DataReader<Location>::readData(
+      &locationData,
+      diseaseModel->locationDef,
+      &locations
+  );
   locationData.close();
   locationCache.close();
 
@@ -93,6 +97,11 @@ void Locations::loadLocationData() {
   // Init contact model
   contactModel = new ContactModel();
   contactModel->setGenerator(&generator);
+
+  // Let contact model add any attributes it needs to the locations
+  for (Location &location: locations) {
+    contactModel->computeLocationValues(location);
+  }
 }
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {

@@ -7,10 +7,13 @@
 #ifndef __LOCATION_H__
 #define __LOCATION_H__
 
+// Foreward declaration to help with includes
+class Location;
+
 #include "Event.h"
 #include "Interaction.h"
 #include "DiseaseModel.h"
-#include "ContactModel.h"
+#include "contact_model/ContactModel.h"
 #include "readers/DataInterface.h"
 
 #include <queue>
@@ -85,7 +88,7 @@ class Location : public DataInterface {
 
     // Override abstract DataInterface getters and setters.
     void setUniqueId(int idx);
-    std::vector<union Data> getDataField();
+    std::vector<union Data> &getDataField();
     int uniqueId;
     
     // This distribution shoul always be the same - not sure how well

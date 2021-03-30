@@ -10,7 +10,7 @@
 #include "Event.h"
 #include "Defs.h"
 #include "DiseaseModel.h"
-#include "ContactModel.h"
+#include "contact_model/ContactModel.h"
 
 #include <random>
 #include <vector>
@@ -28,7 +28,7 @@ void Location::setUniqueId(int idx) {
     this->uniqueId = idx;
 }
 
-std::vector<union Data> Location::getDataField() {
+std::vector<union Data> &Location::getDataField() {
     return this->locationData;
 }
 
@@ -146,7 +146,7 @@ inline void Location::registerInteraction(
   int startTime,
   int endTime
 ) {
-  if (!contactModel->madeContact(susceptibleEvent, infectiousEvent)) {
+  if (!contactModel->madeContact(susceptibleEvent, infectiousEvent, *this)) {
     return;
   }
 
