@@ -31,6 +31,10 @@ void MinMaxAlphaModel::computeLocationValues(Location& location) {
     contactProbabilityIndex = (int) data.size();
   }
 
+  // This is the probability (NOT propensity) of two people who are a location
+  // at the same time coming into contact. MIN, MAX, and ALPHA are constant for
+  // all locations, but the maximum number if simulateous visits (max_visits)
+  // varries by location
   union Data contactProbability;
   double max_visits = (double) data[LOCATIONS_MAX_VISITS_INDEX].uint_32;
   contactProbability.probability = fmin(
