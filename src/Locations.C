@@ -13,8 +13,9 @@
 #include "Location.h"
 #include "Event.h"
 #include "Defs.h"
-#include "readers/DataReader.h"
 #include "Person.h"
+#include "readers/DataReader.h"
+#include "schedule/Schedule.h"
 
 #include <algorithm>
 #include <queue>
@@ -34,13 +35,12 @@ Locations::Locations() {
   diseaseModel = globDiseaseModel.ckLocalBranch();
 
   // Load application data
-  if (syntheticRun) {
-    Location tmp { 0 };
-    locations.resize(numLocalLocations, tmp);
-  } else {
-    Location tmp { 0 };
-    locations.resize(numLocalLocations, tmp);
+  if ((int) ScheduleType::filedSchedule == scheduleType) {
     loadLocationData();
+  
+  } else {
+    Location tmp(0);
+    locations.resize(numLocalLocations, tmp);
   }
 
   // Seed random number generator via branch ID for reproducibility

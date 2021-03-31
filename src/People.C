@@ -11,6 +11,7 @@
 #include "DiseaseModel.h"
 #include "Person.h"
 #include "readers/DataReader.h"
+#include "schedule/Schedule.h"
 
 #include <tuple>
 #include <limits>
@@ -38,23 +39,28 @@ People::People() {
     numPeoplePartitions,
     thisIndex
   );
-  
+
+  schedule = createSchedule();
+
   // Create real or fake people
-  if (syntheticRun) {
+  if ((int) ScheduleType::filedSchedule == scheduleType) {
+    int numAttributesPerPerson = 
+      DataReader<Person>::getNonZeroAttributes(diseaseModel->personDef);
+    for (int p = 0; p < numLocalPeople; p++) {
+      people.emplace_back(Person(numAttributesPerPerson,
+        healthyState, std::numeric_limits<Time>::max()
+      ));
+    }
+
+    // Load in people data from file.
+    loadPeopleData();
+
+  } else {
     // Make a default person and populate people with copies
     Person tmp { NO_ATTRS, healthyState, std::numeric_limits<Time>::max() };
     people.resize(numLocalPeople, tmp);
-  } else {
-      int numAttributesPerPerson = 
-        DataReader<Person>::getNonZeroAttributes(diseaseModel->personDef);
-      for (int p = 0; p < numLocalPeople; p++) {
-        people.emplace_back(Person(numAttributesPerPerson,
-          healthyState, std::numeric_limits<Time>::max()
-        ));
-      }
+    schedule->setSeed(thisIndex);
 
-      // Load in people data from file.
-      loadPeopleData();
   }
   
   // Randomly infect people to seed the initial outbreak
@@ -88,7 +94,7 @@ void People::loadPeopleData() {
   peopleCache.close();
 
   // Open activity data and cache. 
-  activityData = new std::ifstream(scenarioPath + "visits.csv");
+  std::ifstream *activityData = new std::ifstream(scenarioPath + "visits.csv");
   std::ifstream activityCache(scenarioPath + scenarioId + "_interactions.cache", std::ios_base::binary);
   if (!activityData || !activityCache) {
     CkAbort("Could not open activity input.");
@@ -109,6 +115,7 @@ void People::loadPeopleData() {
     }
   }
   free(buf);
+  schedule->setActivityData(activityData);
 } 
 
 /**
@@ -116,108 +123,7 @@ void People::loadPeopleData() {
  * for each person and sends visit messages to locations.
  */ 
 void People::SendVisitMessages() {
-  if (syntheticRun) {
-    SyntheticSendVisitMessages();
-  } else {
-    RealDataSendVisitMessages();
-  }
-}
-
-void People::SyntheticSendVisitMessages() {
-  int numVisits, personIdx, locationIdx, locationSubset;
-  // initialize random number generator for a Poisson distribution
-  std::poisson_distribution<int> poisson_dist(LOCATION_LAMBDA);
-
-  // there should be an equal chance of visiting each location
-  // and selecting any given time
-  std::uniform_int_distribution<int> location_dist(0, numLocations - 1);
-  std::uniform_int_distribution<int> time_dist(0, DAY_LENGTH); // in seconds
-    
-  std::priority_queue<int, std::vector<int>, std::greater<int> > times;
-
-  // generate itinerary for each person
-  for (int i = 0; i < numLocalPeople; i++) {
-    personIdx = getGlobalIndex(
-      i,
-      thisIndex,
-      numPeople,
-      numPeoplePartitions,
-      firstPersonIdx
-    );
-    int personState = people[i].state;
-
-    // getting random number of locations to visit
-    numVisits = poisson_dist(generator);
-    //CkPrintf("Person %d with %d visits\n",personIdx,visits);
-    
-    // randomly generate start and end times for each visit,
-    // using a priority queue ensures the times are in order
-    for (int j = 0; j < 2*numVisits; j++) {
-      times.push(time_dist(generator));
-    }
-
-    for (int j = 0; j < numVisits; j++) {
-      int visitStart = times.top();
-      times.pop();
-      int visitEnd = times.top();
-      times.pop();
-      
-      // we don't guarentee that these times aren't equal
-      // so this is a workaround
-      if (visitStart == visitEnd) {
-        continue;
-      }
-
-      // generate random location to visit
-      locationIdx = location_dist(generator);
-      //CkPrintf("Person %d visits %d\n",personIdx,locationIdx);
-      locationSubset = getPartitionIndex(
-        locationIdx,
-        numLocations,
-        numLocationPartitions,
-        firstLocationIdx
-      );
-
-      // sending message to location
-      VisitMessage visitMsg(locationIdx, personIdx, personState, visitStart, visitEnd);
-      locationsArray[locationSubset].ReceiveVisitMessages(visitMsg);
-    }
-  }
-}
-
-void People::RealDataSendVisitMessages() {
-  // Send of activities for each person.
-  int nextDaySecs = (day + 1) * DAY_LENGTH;
-  for (int localPersonId = 0; localPersonId < numLocalPeople; localPersonId++) {
-    // Seek to correct position in file.
-    uint32_t seekPos = people[localPersonId].interactionsByDay[day];
-    if (seekPos == EMPTY_VISIT_SCHEDULE)
-      continue;
-    activityData->seekg(seekPos, std::ios_base::beg);
-
-    // Start reading
-    int personId = -1; 
-    int locationId = -1;
-    int visitStart = -1;
-    int visitDuration = -1;
-    std::tie(personId, locationId, visitStart, visitDuration) = DataReader<Person>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
-
-    // Seek while same person on same day.
-    while(personId == people[localPersonId].uniqueId && visitStart < nextDaySecs) {
-      // Find process that owns that location.
-      int locationSubset = getPartitionIndex(
-          locationId,
-          numLocations,
-          numLocationPartitions,
-          firstLocationIdx
-      );
-      
-      // Send off the visit message.
-      VisitMessage visitMsg(locationId, personId, people[localPersonId].state, visitStart, visitStart + visitDuration);
-      locationsArray[locationSubset].ReceiveVisitMessages(visitMsg);
-      std::tie(personId, locationId, visitStart, visitDuration) = DataReader<Person>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
-    }
-  }
+  schedule->sendVisitMessages(people, diseaseModel, thisIndex, day);
 }
 
 void People::ReceiveInteractions(InteractionMessage interMsg) {

@@ -9,7 +9,8 @@ OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o Defs.o \
          Event.o Interaction.o readers/Preprocess.o \
          disease_model/disease.pb.o disease_model/distribution.pb.o \
 		     readers/data.pb.o contact_model/ContactModel.o \
-				 contact_model/MinMaxAlphaModel.o
+				 contact_model/MinMaxAlphaModel.o schedule/Schedule.o \
+         schedule/SyntheticSchedule.o schedule/FiledSchedule.o
 DEFS   = Defs.h loimos.def.h readers/DataReader.h
 DECLS  = loimos.decl.h
 BIN    = loimos
