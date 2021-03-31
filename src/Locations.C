@@ -9,7 +9,7 @@
 #include "Location.h"
 #include "Event.h"
 #include "DiseaseModel.h"
-#include "ContactModel.h"
+#include "contact_model/ContactModel.h"
 #include "Location.h"
 #include "Event.h"
 #include "Defs.h"
@@ -50,7 +50,7 @@ Locations::Locations() {
   generator.seed(thisIndex);
 
   // Init contact model
-  contactModel = new ContactModel();
+  contactModel = createContactModel();
   contactModel->setGenerator(&generator);
 }
 

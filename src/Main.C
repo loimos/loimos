@@ -9,6 +9,7 @@
 #include "People.h"
 #include "Locations.h"
 #include "DiseaseModel.h"
+#include "contact_model/ContactModel.h"
 #include "readers/Preprocess.h"
 #include "readers/DataLoader.h"
 
@@ -25,6 +26,7 @@
 /* readonly */ int numLocationPartitions;
 /* readonly */ int numDays;
 /* readonly */ bool syntheticRun;
+/* readonly */ int contactModelType;
 /* readonly */ std::string scenarioPath;
 /* readonly */ std::string scenarioId;
 /* readonly */ int firstPersonIdx;
@@ -45,7 +47,7 @@ Main::Main(CkArgMsg* msg) {
   std::string pathToDiseaseModel = std::string(msg->argv[6]);
 
   // Handle both real data runs or runs using synthetic populations.
-  if(msg->argc == 8) {
+  if(msg->argc >= 8) {
     syntheticRun = false;
     
     // Create data caches.
@@ -55,6 +57,18 @@ Main::Main(CkArgMsg* msg) {
     syntheticRun = true;
     firstPersonIdx = 0;
     firstLocationIdx = 0;
+  }
+
+  // Detemine which contact modle to use
+  contactModelType = (int) ContactModelType::constant_probability;
+  if (msg->argc >= 9) {
+    std::string tmp = std::string(msg->argv[8]);
+    // We can just use a flag for now in the CLI, since we only have two
+    // models and that's easier to parse, but we may eventually have more,
+    // which is why we use an enum to actually hold the model value
+    if ("-m" == tmp or "--min-max-alpha" == tmp) {
+      contactModelType = (int) ContactModelType::min_max_alpha;
+    }
   }
 
   // setup main proxy

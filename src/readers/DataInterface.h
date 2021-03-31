@@ -19,10 +19,7 @@ union Data {
     bool boolean;
     uint32_t uint_32;
     uint16_t category; 
-
-    // void pup(PUP::er &p) {
-    //     p|int_b10;
-    // }
+    double probability;
 };
 
 class DataInterface {
@@ -50,6 +47,9 @@ class DataInterface {
         }
         const union Data& getField(int index) {
             return dataField.at(index);
+        }
+        std::vector<Data> &getDataField() {
+            return dataField;
         }
 };
 

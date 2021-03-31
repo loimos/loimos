@@ -1,11 +1,18 @@
+# No generated code files
 *.decl.h
 *.def.h
-*.o
 *.pb.C
 *.pb.h
+*.pb.cc
 
+# No generated binaries
+*.o
 charmrun
 loimos
+
+# No temporary versions of files
+*.old.*
+*.new.*
 
 .DS_Store
 settings.json

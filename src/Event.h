@@ -27,7 +27,7 @@ struct Event {
   int partnerTime;
 
   // Lets us order events in the location queues
-  bool operator>(const Event& rhs) const;
+  bool operator<(const Event& rhs) const;
 
   // Compares events based on their partners, returning whether or not e0's
   // partner is greater than e1's. Assumes both partnes are non-null

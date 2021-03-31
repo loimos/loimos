@@ -7,39 +7,55 @@
 """
 Given a visit schedule, this script calculates the total visits and maximum
 simultaneous visits for all locations in the dataset. 
-
-Inputs:
-    path_to_visit_file: Path to visit schedule CSV. Must have a column "lid" that
-        describes the location id.
-    output_file (optional): Where to output calculated csv. 
-    
-Outputs:
-    CSV to file with three columns - lid, total_visits, max_simultaneous_visits.
-    Locations without any visits will not have an entry.
 """
 
 # Column name that describes the location id being visited.
-LOCATION_ID_COLUMN_NAME = "lid"
+LOCATION_ID_COLUMN_NAME = 'lid'
 # Any other column in the dataset that is fully populated.
-OTHER_COLUMN = "start_time"
+OTHER_COLUMN = 'start_time'
 
 import pandas as pd
 import heapq
 import argparse
+import os
 
-if __name__ == "__main__":
-    # Required argument is the path to the visit schedule and optional output file.
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Calculates summary statistics for a given visit file.')
-    parser.add_argument("path_to_visit_file")
-    parser.add_argument("output_file", nargs='?')
+    
+    # Positional/required arguments:
+    parser.add_argument('population_dir', metavar='P',
+        help='The path to directory containing data files for a population')
+
+    # Named/optional arguments:
+    parser.add_argument('-v', '--visits-file', default='visits.csv',
+        help='The name of the visits file within population_dir. Should be ' +\
+             'a csv file with a column called \'lid\'')
+    parser.add_argument('-l', '--locations-file', default='locations.csv',
+        help='The name of the locations file within population_dir. Should ' +\
+             'a csv file with a column called \'lid\'')
+    parser.add_argument('-o', '--output-file', default='{name}.heuristic.csv',
+        help='Format of output files (\'{name}\' will be replaced by the ' +\
+             'name of the corresponding input file, ignoring the extension).'+\
+             'This output will be a csv containing the data from the ' +\
+             'locations file, plus some extra information about visits '+\
+             'computed by this script.')
+    parser.add_argument('-O', '--override', action='store_true',
+        help='Pass this argument to overwrite the locations file with the ' +\
+             'output, rather than saving it to the specified output file')
     args = parser.parse_args()
 
-    # Get command line arguments.a
-    path_to_visits = args.path_to_visit_file
+    # Get command line arguments, and place input files in the population_dir
+    path_to_visits = os.path.join(args.population_dir, args.visits_file)
+    path_to_locations = os.path.join(args.population_dir, args.locations_file)
+
     # Output file defaults to given path with .heuristic.csv file extension.
-    output_file = (args.output_file if args.output_file else 
-        path_to_visits[ : path_to_visits.rfind(".")] + ".heuristic.csv")
+    output_file = args.output_file.format(
+        name=path_to_locations[ : path_to_locations.rfind('.')]
+    )
+    # If the override flag is set, save output to locations_file instead
+    if args.override:
+        output_file = path_to_locations
 
     # Load dataset.
     visits = pd.read_csv(path_to_visits)
@@ -48,15 +64,15 @@ if __name__ == "__main__":
     max_visits = (
         visits[[LOCATION_ID_COLUMN_NAME, OTHER_COLUMN]]
             .groupby(LOCATION_ID_COLUMN_NAME).count()
-            .rename({OTHER_COLUMN: "total_visits"}, axis=1)
+            .rename({OTHER_COLUMN: 'total_visits'}, axis=1)
     )
 
     # Calculate total visits for each day per location.
-    daily_summaries = visits[['lid','daynum','start_time']].groupby(["lid","daynum"]).count().unstack().fillna(0)
+    daily_summaries = visits[['lid','daynum','start_time']].groupby(['lid','daynum']).count().unstack().fillna(0)
     # Rename columns.
     renaming = []
     for column in daily_summaries.columns:
-        renaming.append(f"total_on_day_{column[1]}")
+        renaming.append(f'total_on_day_{column[1]}')
     daily_summaries.columns = renaming
     # Calculate some additional statistics.
     daily_summaries['average_daily_total'] = daily_summaries.mean(axis=1)
@@ -79,11 +95,16 @@ if __name__ == "__main__":
             # Append in sorted order.
             heapq.heappush(end_times, row['end_time'])
             max_in_visit = max(max_in_visit, len(end_times))
-        max_visits.at[lid, "max_simultaneous_visits"] = max_in_visit
+        max_visits.at[lid, 'max_simultaneous_visits'] = max_in_visit
         
         # Reset counts for next row/location
         max_in_visit = 0
         end_times.clear()
 
+    # We need the max visit data to be a location attribute, so combine it
+    # with the location data
+    locations = pd.read_csv(path_to_locations)
+    output_df = locations.join(max_visits, on='lid')
+
     # Output with index column which is the lids.
-    max_visits.to_csv(output_file)
+    output_df.to_csv(output_file, index=False)
