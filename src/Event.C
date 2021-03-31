@@ -8,24 +8,24 @@
 #include "Event.h"
 
 // This is just so that we can order Events in the Location queues
-bool Event::operator>(const Event& rhs) const {
+bool Event::operator<(const Event& rhs) const {
   // First compare times...
   if (scheduledTime != rhs.scheduledTime) {
-    return scheduledTime > rhs.scheduledTime;
+    return scheduledTime < rhs.scheduledTime;
   }
 
   // .. then break ties with the type...
   if (type != rhs.type) {
-    return type > rhs.type;
+    return type < rhs.type;
   }
 
   // ...then break ties with the visitor's index...
   if (personIdx != rhs.personIdx) {
-    return personIdx > rhs.personIdx;
+    return personIdx < rhs.personIdx;
   }
 
   // ...then finally break ties with the visitor's state
-  return personState > rhs.personState;
+  return personState < rhs.personState;
 }
 
 // Compares two events based on the correspodning other event (if one is an
