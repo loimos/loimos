@@ -6,9 +6,9 @@
 syntax = "proto3";
 
 message Time_Def {
-  int32 days = 1;
-  int32 hours = 2;
-  int32 minutes = 3;
+  oneof days_ { float days = 1; }
+  oneof hours_ { float hours = 2; }
+  oneof minutes_ { float minutes = 3; }
 }
 
 message Dist_Uniform {
@@ -18,12 +18,12 @@ message Dist_Uniform {
 
 message Dist_Normal {
   Time_Def tmean = 1;  // SimTime type
-  Time_Def tstdev = 2; // SimTime type
+  Time_Def tvariance = 2; // SimTime type
 }
 
 message Dist_Forever {}
 
-message Dist_Histogram {
+message Dist_Discrete {
   message Bin {
     Time_Def tval = 1; // lower bound of the values in the bin, SimTime type
     double with_prob = 2; // probability/frequency of the bin

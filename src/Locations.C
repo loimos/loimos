@@ -29,7 +29,7 @@ Locations::Locations() {
     numLocationPartitions,
     thisIndex
   );
-  
+
   // Init disease states
   diseaseModel = globDiseaseModel.ckLocalBranch();
 
@@ -37,6 +37,14 @@ Locations::Locations() {
   Location tmp { 0 };
   locations.resize(numLocalLocations, tmp);
   locationsInitialized = 0;
+
+  // Create fake ids for synthetic runs.
+  if (syntheticRun) {
+    int localFirstLocationId = thisIndex * getNumElementsPerPartition(numLocations, numLocationPartitions);
+    for (int i = 0; i < numLocalLocations; i++) {
+      locations[i].uniqueId = localFirstLocationId + i;
+    }
+  }
 
   // Seed random number generator via branch ID for reproducibility
   generator.seed(thisIndex);
@@ -48,7 +56,7 @@ Locations::Locations() {
 
 void Locations::ReceiveLocationSetup(DataInterfaceMessage *msg) {
   // Copy read data into next person and increment.
-  // locations[locationsInitialized].uniqueId = msg->uniqueId;
+  locations[locationsInitialized].uniqueId = msg->uniqueId;
   for (int i = 0; i < msg->numDataAttributes; i++) {
     locations[locationsInitialized].setField(i, msg->dataAttributes[i]);
   }
@@ -81,3 +89,4 @@ void Locations::ComputeInteractions() {
     loc.processEvents(diseaseModel, contactModel);
   }
 }
+

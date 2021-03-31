@@ -26,9 +26,10 @@ class DiseaseModel : public CBase_DiseaseModel {
         std::unordered_map<std::string, int> *stateLookup;
         // For each state index, map from stategy name string to index of strategy labels.
         std::vector<std::unordered_map<std::string, int> *> *strategyLookup;  
-        Time getTimeInNextState(int nextState, std::default_random_engine *generator) const;
+        Time getTimeInNextState(const loimos::proto::DiseaseModel_DiseaseState_StateTransitionSet_StateTransition *transitionSet, std::default_random_engine *generator) const;
         Time timeDefToSeconds(Time_Def time) const;
         int healthyState;
+        int exposedState;
     public:
         DiseaseModel(std::string pathToModel);
         int getIndexOfState(std::string stateLabel) const;
@@ -37,6 +38,7 @@ class DiseaseModel : public CBase_DiseaseModel {
         std::string lookupStateName(int state) const;
         int getNumberOfStates() const;
         int getHealthyState() const;
+        std::tuple<int,int> getExposedState() const;
         bool isInfectious(int personState) const;
         bool isSusceptible(int personState) const;
         const char * getStateLabel(int personState) const;

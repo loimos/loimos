@@ -97,7 +97,7 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath, int nu
     // Check if file cache already created.
     std::ifstream existenceCheck(outputPath, std::ios_base::binary);
     if (existenceCheck.good()) {
-        printf("Using existing cache.\n");
+        CkPrintf("Using existing cache.\n");
         existenceCheck.close();
         return firstIdx;
     } else {
@@ -127,13 +127,13 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
     // Check if cache already created.
     std::ifstream existenceCheck(outputPath, std::ios_base::binary);
     if (existenceCheck.good()) {
-        printf("Activity cache already exists.");
+        CkPrintf("Activity cache already exists.");
         return;
     }
 
     std::ifstream activityStream(inputPath, std::ios_base::binary);
     if (!activityStream) {
-        printf("Could not open person data input.\n");
+        CkPrintf("Could not open person data input.\n");
         exit(1);
     }
 
@@ -151,7 +151,7 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
     std::size_t totalDataSize = numPeople * numDays * sizeof(uint32_t);
     uint32_t *elements = (uint32_t *) malloc(totalDataSize);
     if (elements == NULL) {
-        printf("Failed to malloc enoough memory for preprocessing.\n");
+        CkPrintf("Failed to malloc enoough memory for preprocessing.\n");
         exit(1);
     }
     memset(elements, 0xFF, totalDataSize);

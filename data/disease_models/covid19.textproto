@@ -1,0 +1,597 @@
+label: "covid19"
+starting_state: "S_a"
+starting_exposed_state: "E_a"
+disease_state: {
+	state_label: "S_a"
+	infectivity: 0
+	susceptibility: 1
+	transition_set: {
+		transition_label: "untreated"
+		transition: {
+			next_state: "E_a"
+			with_prob: 1
+			fixed: {
+				time_in_state: {
+					days: 3
+				}
+			}
+		}
+	}
+}
+disease_state: {
+	state_label: "HypRxFail_a"
+	infectivity: 0
+	susceptibility: 1
+	transition_set: {
+		transition_label: "untreated"
+		transition: {
+			next_state: "E_a"
+			with_prob: 1
+			fixed: {
+				time_in_state: {
+					days: 3
+				}
+			}
+		}
+	}
+}
+disease_state: {
+	state_label: "HypRxProt_a"
+	infectivity: 0
+	susceptibility: 0
+	transition_set: {
+		transition_label: "untreated"
+		transition: {
+			next_state: "R_a"
+			with_prob: 1
+			fixed: {
+				time_in_state: {
+					days: 1
+				}
+			}
+		}
+	}
+}
+disease_state: {
+	state_label: "E_a"
+	infectivity: 0
+	susceptibility: 0
+	transition_set: {
+		transition_label: "untreated"
+		transition: {
+			next_state: "Ipresymp_a"
+			with_prob: 0.65
+			fixed: {
+				time_in_state: {
+					days: 3
+				}
+			}
+		}
+		transition: {
+			next_state: "Iasymp_a"
+			with_prob: 0.35
+			normal: {
+				tmean: {
+					days: 5
+				}
+				tvariance: {
+					days: 1
+				}
+			}
+		}
+	}
+}
+disease_state: {
+	state_label: "Ipresymp_a"
+	infectivity: 0.8
+	susceptibility: 0
+	transition_set: {
+		transition_label: "untreated"
+		transition: {
+			next_state: "Isymp_a"
+			with_prob: 1
+			fixed: {
+				time_in_state: {
+					days: 2
+				}
+			}
+		}
+	}
+}
+disease_state: {
+	state_label: "Isymp_a"
+	infectivity: 1
+	susceptibility: 0
+	transition_set: {
+		transition_label: "untreated"
+		transition: {
+			next_state: "rMedAttend_a"
+			with_prob: 0.9594
+			discrete: {
+				bin: {
+					tval: {
+						days: 1
+					}
+					with_prob: 0.175
+				}
+				bin: {
+					tval: {
+						days: 2
+					}
+					with_prob: 0.175
+				}
+				bin: {
+					tval: {
+						days: 3
+					}
+					with_prob: 0.1
+				}
+				bin: {
+					tval: {
+						days: 4
+					}
+					with_prob: 0.1
+				}
+				bin: {
+					tval: {
+						days: 5
+					}
+					with_prob: 0.1
+				}
+				bin: {
+					tval: {
+						days: 6
+					}
+					with_prob: 0.1
+				}
+				bin: {
+					tval: {
+						days: 7
+					}
+					with_prob: 0.1
+				}
+				bin: {
+					tval: {
+						days: 8
+					}
+					with_prob: 0.05
+				}
+				bin: {
+					tval: {
+						days: 9
+					}
+					with_prob: 0.05
+				}
+				bin: {
+					tval: {
+						days: 10
+					}
+					with_prob: 0.05
+				}
+			}
+		}
+		transition: {
+			next_state: "hMedAttend_a"
+			with_prob: 0.04
+			fixed: {
+				time_in_state: {
+					days: 1
+				}
+			}
+		}
+		transition: {
+			next_state: "dMedAttend_a"
+			with_prob: 0.0006
+			discrete: {
+				bin: {
+					tval: {
+						days: 1
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 2
+					}
+					with_prob: 1
+				}
+			}
+		}
+	}
+}
+disease_state: {
+	state_label: "Iasymp_a"
+	infectivity: 1.0
+	susceptibility: 0
+	transition_set: {
+		transition_label: "untreated"
+		transition: {
+			next_state: "R_a"
+			with_prob: 1
+			normal: {
+				tmean: {
+					days: 5
+				}
+				tvariance: {
+					days: 1
+				}
+			}
+		}
+	}
+}
+disease_state: {
+	state_label: "rMedAttend_a"
+	infectivity: 0
+	susceptibility: 0
+	transition_set: {
+		transition_label: "untreated"
+		transition: {
+			next_state: "R_a"
+			with_prob: 1
+			normal: {
+				tmean: {
+					days: 5
+				}
+				tvariance: {
+					days: 1
+				}
+			}
+		}
+	}
+}
+disease_state: {
+	state_label: "hMedAttend_a"
+	infectivity: 0
+	susceptibility: 0
+	transition_set: {
+		transition_label: "untreated"
+		transition: {
+			next_state: "Hosp_a"
+			with_prob: 1
+			normal: {
+				tmean: {
+					days: 5.0
+				}
+				tvariance: {
+					days: 4.6
+				}
+			}
+		}
+	}
+}
+disease_state: {
+	state_label: "dMedAttend_a"
+	infectivity: 0
+	susceptibility: 0
+	transition_set: {
+		transition_label: "untreated"
+		transition: {
+			next_state: "dHosp_a"
+			with_prob: 0.95
+			discrete: {
+				bin: {
+					tval: {
+						days: 1
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 2
+					}
+					with_prob: 1
+				}
+			}
+		}
+		transition: {
+			next_state: "Death_a"
+			with_prob: 0.05
+			discrete: {
+				bin: {
+					tval: {
+						days: 1
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 2
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 3
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 4
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 5
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 6
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 7
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 8
+					}
+					with_prob: 1
+				}
+				bin: {
+					tval: {
+						days: 9
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 10
+					}
+					with_prob: 0
+				}
+			}
+		}
+	}
+}
+disease_state: {
+	state_label: "Hosp_a"
+	infectivity: 0
+	susceptibility: 0
+	transition_set: {
+		transition_label: "untreated"
+		transition: {
+			next_state: "Vent_a"
+			with_prob: 0.06
+			normal: {
+				tmean: {
+					days: 1
+				}
+				tvariance: {
+					days: 0.2
+				}
+			}
+		}
+		transition: {
+			next_state: "R_a"
+			with_prob: 0.94
+			normal: {
+				tmean: {
+					days: 3.1
+				}
+				tvariance: {
+					days: 3.7
+				}
+			}
+		}
+	}
+}
+disease_state: {
+	state_label: "dHosp_a"
+	infectivity: 0
+	susceptibility: 0
+	transition_set: {
+		transition_label: "untreated"
+		transition: {
+			next_state: "dVent_a"
+			with_prob: 0.06
+			discrete: {
+				bin: {
+					tval: {
+						days: 1
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 2
+					}
+					with_prob: 1
+				}
+				bin: {
+					tval: {
+						days: 3
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 4
+					}
+					with_prob: 0
+				}
+			}
+		}
+		transition: {
+			next_state: "Death_a"
+			with_prob: 0.94
+			discrete: {
+				bin: {
+					tval: {
+						days: 1
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 2
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 3
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 4
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 5
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 6
+					}
+					with_prob: 1
+				}
+				bin: {
+					tval: {
+						days: 7
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 8
+					}
+					with_prob: 0
+				}
+			}
+		}
+	}
+}
+disease_state: {
+	state_label: "Vent_a"
+	infectivity: 0
+	susceptibility: 0
+	transition_set: {
+		transition_label: "untreated"
+		transition: {
+			next_state: "R_a"
+			with_prob: 1
+			normal: {
+				tmean: {
+					days: 2.1
+				}
+				tvariance: {
+					days: 3.7
+				}
+			}
+		}
+	}
+}
+disease_state: {
+	state_label: "dVent_a"
+	infectivity: 0
+	susceptibility: 0
+	transition_set: {
+		transition_label: "untreated"
+		transition: {
+			next_state: "Death_a"
+			with_prob: 1
+			discrete: {
+				bin: {
+					tval: {
+						days: 1
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 2
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 3
+					}
+					with_prob: 0
+				}
+				bin: {
+					tval: {
+						days: 4
+					}
+					with_prob: 1
+				}
+			}
+		}
+	}
+}
+disease_state: {
+	state_label: "Death_a"
+	infectivity: 0
+	susceptibility: 0
+	transition_set: {
+		transition_label: "untreated"
+	}
+}
+disease_state: {
+	state_label: "R_a"
+	infectivity: 0
+	susceptibility: 0
+	transition_set: {
+		transition_label: "untreated"
+		transition: {
+			next_state: "RyetS_a"
+			with_prob: 0
+			normal: {
+				tmean: {
+					days: 30
+				}
+				tvariance: {
+					days: 5
+				}
+			}
+		}
+		transition: {
+			next_state: "Rimmune_a"
+			with_prob: 1
+			fixed: {
+				time_in_state: {
+					days: 1
+				}
+			}
+		}
+	}
+}
+disease_state: {
+	state_label: "RyetS_a"
+	infectivity: 0
+	susceptibility: 1
+	transition_set: {
+		transition_label: "untreated"
+		transition: {
+			next_state: "E_a"
+			with_prob: 1
+			fixed: {
+				time_in_state: {
+					days: 3
+				}
+			}
+		}
+	}
+}
+disease_state: {
+	state_label: "Rimmune_a"
+	infectivity: 0
+	susceptibility: 0
+	transition_set: {
+		transition_label: "untreated"
+	}
+}

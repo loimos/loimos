@@ -11,6 +11,7 @@
 #include "DiseaseModel.h"
 #include "Location.h" 
 #include "ContactModel.h"
+#include "Message.h"
 
 #include <vector>
 #include <set>

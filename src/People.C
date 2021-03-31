@@ -46,9 +46,19 @@ People::People() {
     // Make a default person and populate people with copies
     Person tmp { 0, NO_ATTRS, healthyState, std::numeric_limits<Time>::max() };
     people.resize(numLocalPeople, tmp);
+
+    // Create fake ids.
+    int localFirstPersonId = thisIndex * getNumElementsPerPartition(numPeople, numPeoplePartitions);
+    for (int i = 0; i < numLocalPeople; i++) {
+      people[i].uniqueId = localFirstPersonId + i;
+    }
   } else {
       int numAttributesPerPerson = 
         DataLoader::getNumberOfDataAttributes(diseaseModel->personDef);
+
+      // Loading activity data requires people ids to already be assigned.
+      // We want to load this activity data in parallel to the other loading
+      // So manually assign it here.
       int startingId = getNumLocalElements(numPeople, numPeoplePartitions, 0) * thisIndex;
       for (int p = 0; p < numLocalPeople; p++) {
         people.emplace_back(Person(startingId + p, numAttributesPerPerson,
@@ -63,8 +73,7 @@ People::People() {
   // Randomly infect people to seed the initial outbreak
   for (Person &person: people) {
     if (unitDistrib(generator) < INITIAL_INFECTIOUS_PROBABILITY) {
-      person.state = INFECTIOUS;
-      person.secondsLeftInState = INFECTION_PERIOD;
+      std::tie(person.state, person.secondsLeftInState) = diseaseModel->getExposedState();
       newCases++;
     }
   }
@@ -182,7 +191,6 @@ void People::SyntheticSendVisitMessages() {
 }
 
 void People::RealDataSendVisitMessages() {
-  int numVisits, personIdx, locationIdx, locationSubset;
   // Send of activities for each person.
   int nextDaySecs = (day + 1) * DAY_LENGTH;
   for (int localPersonId = 0; localPersonId < numLocalPeople; localPersonId++) {
@@ -202,14 +210,13 @@ void People::RealDataSendVisitMessages() {
     // Seek while same person on same day.
     while(personId == people[localPersonId].uniqueId && visitStart < nextDaySecs) {
       // Find process that owns that location.
-      locationSubset = getPartitionIndex(
+      int locationSubset = getPartitionIndex(
           locationId,
           numLocations,
           numLocationPartitions,
           firstLocationIdx
       );
-
-      // printf("Person %d visited %d at %d for %d. They have %d\n", personIdx, locationIdx, visitStart, visitDuration, people[localPersonId].state);
+      
       // Send off the visit message.
       VisitMessage visitMsg(locationId, personId, people[localPersonId].state, visitStart, visitStart + visitDuration);
       locationsArray[locationSubset].ReceiveVisitMessages(visitMsg);

@@ -19,6 +19,8 @@ import "distribution.proto";
 message DiseaseModel {
     // Defines the unique disease identifier.
     string label = 1;
+    string starting_state = 2;
+    string starting_exposed_state = 3;
 
     // Defines a vertex in the graph and its outbound nodes.
     message DiseaseState {
@@ -41,15 +43,6 @@ message DiseaseModel {
           int32 symptomatic = 7;
           int32 tracing = 8;
         }
-    
-        // Defines the time transition model for the node.
-        oneof dwell_time_distribution {
-          Dist_Uniform   uniform   =  9;
-          Dist_Normal    normal    = 10;
-          Dist_Fixed     fixed    = 11;
-          Dist_Forever   forever   = 12;
-          Dist_Histogram histogram = 13;
-        }
 
         // Defines a set of edges that should be used
         // for a certain intervention. For example, a vaccinated patient
@@ -62,6 +55,16 @@ message DiseaseModel {
           message StateTransition {
             string next_state = 2;
             double with_prob = 3;
+
+            // Defines the time transition model for the node.
+            oneof dwell_time_distribution {
+              Dist_Uniform   uniform   =  9;
+              Dist_Normal    normal    = 10;
+              Dist_Fixed     fixed    = 11;
+              Dist_Forever   forever   = 12;
+              Dist_Discrete discrete = 13;
+            }
+
           }
           // A transition state has one vertex and multiple edges.
           repeated StateTransition transition = 6;
@@ -71,5 +74,5 @@ message DiseaseModel {
     }
 
     // A model is graph of state transitions.
-    repeated DiseaseState disease_state = 2;
+    repeated DiseaseState disease_state = 4;
 }

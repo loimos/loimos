@@ -25,6 +25,8 @@ using EventType = char;
 // Time
 using Time = int32_t;
 const Time DAY_LENGTH = 3600 * 24;
+const Time HOUR_LENGTH = 3600;
+const Time MINUTE_LENGTH = 60;
 
 // Data loading
 #define EMPTY_VISIT_SCHEDULE 0xFFFFFFFF

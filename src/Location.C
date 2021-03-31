@@ -31,7 +31,6 @@ void Location::processEvents(
 
   while (!events.empty()) {
     curEvent = events.top();
-    events.pop();
 
     if (diseaseModel->isSusceptible(curEvent.personState)) {
       arrivals = &susceptibleArrivals;
@@ -53,9 +52,9 @@ void Location::processEvents(
       // Remove the arrival event corresponding to this departure 
       std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
       arrivals->pop_back();
-
       onDeparture(diseaseModel, contactModel, curEvent);
     }
+    events.pop();
   }
 
   interactions.clear();
