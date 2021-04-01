@@ -35,11 +35,9 @@ Locations::Locations() {
 
   // Load application data
   if (syntheticRun) {
-    Location tmp { 0 };
+    Location tmp(0);
     locations.resize(numLocalLocations, tmp);
   } else {
-    Location tmp { 0 };
-    locations.resize(numLocalLocations, tmp);
     loadLocationData();
   }
 
