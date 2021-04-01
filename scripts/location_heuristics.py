@@ -74,13 +74,14 @@ if __name__ == '__main__':
     for column in daily_summaries.columns:
         renaming.append(f'total_on_day_{column[1]}')
     daily_summaries.columns = renaming
+    
     # Calculate some additional statistics.
     daily_summaries['average_daily_total'] = daily_summaries.mean(axis=1)
     daily_summaries['median_daily_total'] = daily_summaries.median(axis=1)
     daily_summaries['max_daily_total'] = daily_summaries.max(axis=1)
     # Merge in.
     max_visits = max_visits.merge(daily_summaries, left_index=True, right_index=True)
-
+    
     # Calculate the maximum simulatenous visits.
     max_visits['max_simultaneous_visits'] = 0
     max_in_visit = 0
@@ -105,6 +106,16 @@ if __name__ == '__main__':
     # with the location data
     locations = pd.read_csv(path_to_locations)
     output_df = locations.join(max_visits, on='lid')
+
+    # Fix types
+    output_dtypes = {
+        'median_daily_total': int,
+        'max_daily_total': int,
+        'max_simultaneous_visits': int
+    }
+    output_dtypes.update({c: int for c in renaming})
+    output_df.fillna(0, inplace=True)
+    output_df = output_df.astype(output_dtypes)
 
     # Output with index column which is the lids.
     output_df.to_csv(output_file, index=False)
