@@ -34,7 +34,7 @@ std::vector<union Data> &Location::getDataField() {
 
 // Event processing.
 void Location::addEvent(Event e) {
-  events.push(e);
+  events.push_back(e);
 }
 
 void Location::processEvents(
@@ -42,16 +42,13 @@ void Location::processEvents(
   ContactModel *contactModel
 ) {
   std::vector<Event> *arrivals;
-  Event curEvent;
-
-  while (!events.empty()) {
-    curEvent = events.top();
-    events.pop();
-
-    if (diseaseModel->isSusceptible(curEvent.personState)) {
+  
+  std::sort(events.begin(), events.end());
+  for (Event event: events) {
+    if (diseaseModel->isSusceptible(event.personState)) {
       arrivals = &susceptibleArrivals;
 
-    } else if (diseaseModel->isInfectious(curEvent.personState)) {
+    } else if (diseaseModel->isInfectious(event.personState)) {
       arrivals = &infectiousArrivals;
 
     // If a person can niether infect other people nor be infected themself,
@@ -60,19 +57,20 @@ void Location::processEvents(
       continue;
     }
 
-    if (ARRIVAL == curEvent.type) {
-      arrivals->push_back(curEvent);
+    if (ARRIVAL == event.type) {
+      arrivals->push_back(event);
       std::push_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
 
-    } else if (DEPARTURE == curEvent.type) {
+    } else if (DEPARTURE == event.type) {
       // Remove the arrival event corresponding to this departure 
       std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
       arrivals->pop_back();
 
-      onDeparture(diseaseModel, contactModel, curEvent);
+      onDeparture(diseaseModel, contactModel, event);
     }
   }
 
+  events.clear();
   interactions.clear();
 }
 

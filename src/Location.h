@@ -16,7 +16,6 @@ class Location;
 #include "contact_model/ContactModel.h"
 #include "readers/DataInterface.h"
 
-#include <queue>
 #include <vector>
 #include <functional>
 #include <random>
@@ -30,7 +29,7 @@ class Location : public DataInterface {
   private:
     // Represents all of the arrivals and departures of people
     // from this location on a given day
-    std::priority_queue<Event, std::vector<Event>, std::greater<Event> > events;
+    std::vector<Event> events;
     // Each Event in one of these containers is the arrival event for a
     // a person currently at this location
     std::vector<Event> infectiousArrivals;
