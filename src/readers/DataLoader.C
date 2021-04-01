@@ -133,7 +133,6 @@ void DataLoader::readData(std::ifstream *input, loimos::proto::CSVDefinition *da
                 } else {
                     // Parse byte stream to the correct representation.
                     if (field->has_b10int() || field->has_foreignid()) {
-                        // TODO parse this directly.
                         objData[numDataFields].int_b10 = 
                             std::stoi(std::string(start, dataLen));
                     } else if (field->has_label()) {
