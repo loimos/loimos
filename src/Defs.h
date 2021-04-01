@@ -29,8 +29,8 @@ const Time HOUR_LENGTH = 3600;
 const Time MINUTE_LENGTH = 60;
 
 // CSV Order
-#define AGE_CSV_LOC 0
-#define LOCATIONS_MAX_VISITS_INDEX 1
+#define AGE_CSV_INDEX 0
+#define SIMULTANEOUS_MAX_VISITS_CSV_INDEX 1
 
 // Data loading
 #define EMPTY_VISIT_SCHEDULE 0xFFFFFFFF
