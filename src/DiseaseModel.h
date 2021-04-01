@@ -10,6 +10,7 @@
 
 #include "disease_model/disease.pb.h"
 #include "disease_model/distribution.pb.h"
+#include "readers/DataReader.h"
 
 #include "Event.h"
  #include "readers/data.pb.h"
@@ -26,7 +27,7 @@ class DiseaseModel : public CBase_DiseaseModel {
         std::unordered_map<std::string, int> *stateLookup;
         // For each state index, map from stategy name string to index of strategy labels.
         std::vector<std::unordered_map<std::string, int> *> *strategyLookup;  
-        Time getTimeInNextState(const loimos::proto::DiseaseModel_DiseaseState_StateTransitionSet_StateTransition *transitionSet, std::default_random_engine *generator) const;
+        Time getTimeInNextState(const loimos::proto::DiseaseModel_DiseaseState_TimedTransitionSet_StateTransition *transitionSet, std::default_random_engine *generator) const;
         Time timeDefToSeconds(Time_Def time) const;
         int healthyState;
         int exposedState;
@@ -34,11 +35,10 @@ class DiseaseModel : public CBase_DiseaseModel {
         DiseaseModel(std::string pathToModel);
         int getIndexOfState(std::string stateLabel) const;
         // TODO(iancostello): Change interventionStategies to index based.
-        std::tuple<int, int> transitionFromState(int fromState, std::string interventionStategy, std::default_random_engine *generator) const;
+        std::tuple<int, int> transitionFromState(int fromState, std::default_random_engine *generator) const;
         std::string lookupStateName(int state) const;
         int getNumberOfStates() const;
-        int getHealthyState() const;
-        std::tuple<int,int> getExposedState() const;
+        int getHealthyState(std::vector<Data> dataField) const;
         bool isInfectious(int personState) const;
         bool isSusceptible(int personState) const;
         const char * getStateLabel(int personState) const;

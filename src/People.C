@@ -21,7 +21,8 @@
 #include <fstream>
 
 std::uniform_real_distribution<> unitDistrib(0,1);
-#define NO_ATTRS 0
+#define ONE_ATTR 1
+#define DEFAULT_
 
 People::People() {
   newCases = 0;
@@ -30,7 +31,6 @@ People::People() {
 
   // Initialize disease model and identify the healthy state
   diseaseModel = globDiseaseModel.ckLocalBranch();
-  int healthyState = diseaseModel->getHealthyState();
 
   // Get the number of people assigned to this chare
   numLocalPeople = getNumLocalElements(
@@ -42,14 +42,23 @@ People::People() {
   // Create real or fake people
   if (syntheticRun) {
     // Make a default person and populate people with copies
-    Person tmp { NO_ATTRS, healthyState, std::numeric_limits<Time>::max() };
+    Person tmp {0, 0, std::numeric_limits<Time>::max() };
     people.resize(numLocalPeople, tmp);
+
+    // Random initialize peoples ages.
+    std::uniform_int_distribution<int> age_dist(0, 100);
+    for (Person &person: people) {
+      Data age;
+      age.int_b10 = age_dist(generator);
+      std::vector<Data> dataField = { age };
+      person.state = diseaseModel->getHealthyState(dataField);
+    } 
   } else {
       int numAttributesPerPerson = 
         DataReader<Person>::getNonZeroAttributes(diseaseModel->personDef);
       for (int p = 0; p < numLocalPeople; p++) {
         people.emplace_back(Person(numAttributesPerPerson,
-          healthyState, std::numeric_limits<Time>::max()
+          0, std::numeric_limits<Time>::max()
         ));
       }
 
@@ -60,7 +69,12 @@ People::People() {
   // Randomly infect people to seed the initial outbreak
   for (Person &person: people) {
     if (unitDistrib(generator) < INITIAL_INFECTIOUS_PROBABILITY) {
-      std::tie(person.state, person.secondsLeftInState) = diseaseModel->getExposedState();
+      // Get which exposed state they should transition to.
+      std::tie(person.state, std::ignore) = 
+        diseaseModel->transitionFromState(person.state, &generator);
+      // See where they will transition next.
+      std::tie(person.next_state, person.secondsLeftInState) =
+        diseaseModel->transitionFromState(person.state, &generator);
       newCases++;
     }
   }
@@ -109,6 +123,11 @@ void People::loadPeopleData() {
     }
   }
   free(buf);
+
+  // Initialize intial states. (This will move in the DataLoaderPR)
+  for (Person &person: people) {
+    person.state = diseaseModel->getHealthyState(person.getDataField());
+  }
 } 
 
 /**
@@ -253,9 +272,19 @@ void People::EndofDayStateUpdate() {
     // Transition to next state or mark the passage of time
     secondsLeftInState -= DAY_LENGTH;
     if (secondsLeftInState <= 0) {
-      std::tie(person.state, person.secondsLeftInState) = 
-        diseaseModel->transitionFromState(currState, "untreated", &generator);
-    
+      // If they have already been infected
+      if (person.next_state != -1) {
+        person.state = person.next_state;
+        std::tie(person.next_state, person.secondsLeftInState) = 
+          diseaseModel->transitionFromState(person.state, &generator);
+      } else {
+          // Get which exposed state they should transition to.
+          std::tie(person.state, std::ignore) = 
+            diseaseModel->transitionFromState(person.state, &generator);
+          // See where they will transition next.
+          std::tie(person.next_state, person.secondsLeftInState) =
+            diseaseModel->transitionFromState(person.state, &generator);
+      }
     } else {
       person.secondsLeftInState = secondsLeftInState;
     }
@@ -300,7 +329,7 @@ void People::ProcessInteractions(Person &person) {
 
     // Mark that exposed healthy individuals should make transition at the end
     // of the day.
-    if (person.state == diseaseModel->getHealthyState()) {
+    if (diseaseModel->isSusceptible(person.state)) {
       person.secondsLeftInState = -1; 
     }
   }

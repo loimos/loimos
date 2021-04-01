@@ -17,6 +17,7 @@ class Person : public DataInterface {
         int uniqueId;
         // Numeric disease state of the person.
         int state;
+        int next_state;
         int secondsLeftInState;
 
         // If this is a susceptible person, this is a list of all of their
