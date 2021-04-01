@@ -7,13 +7,15 @@
 #ifndef __LOCATION_H__
 #define __LOCATION_H__
 
+// Foreward declaration to help with includes
+class Location;
+
 #include "Event.h"
 #include "Interaction.h"
 #include "DiseaseModel.h"
-#include "ContactModel.h"
+#include "contact_model/ContactModel.h"
 #include "readers/DataInterface.h"
 
-#include <queue>
 #include <vector>
 #include <functional>
 #include <random>
@@ -27,7 +29,7 @@ class Location : public DataInterface {
   private:
     // Represents all of the arrivals and departures of people
     // from this location on a given day
-    std::priority_queue<Event, std::vector<Event>, std::greater<Event> > events;
+    std::vector<Event> events;
     // Each Event in one of these containers is the arrival event for a
     // a person currently at this location
     std::vector<Event> infectiousArrivals;
@@ -85,7 +87,7 @@ class Location : public DataInterface {
 
     // Override abstract DataInterface getters and setters.
     void setUniqueId(int idx);
-    std::vector<union Data> getDataField();
+    std::vector<union Data> &getDataField();
     int uniqueId;
     
     // This distribution shoul always be the same - not sure how well

@@ -1,5 +1,5 @@
 field {
-    field_name: "alid"
+    field_name: "lid"
     uniqueId {}
 }
 field {
@@ -56,5 +56,9 @@ field {
 }
 field {
     field_name: "designation"
+    ignore {}
+}
+field {
+    field_name: "home"
     ignore {}
 }

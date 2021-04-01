@@ -10,7 +10,7 @@
 #include "Location.h" 
 #include "DiseaseModel.h"
 #include "Location.h" 
-#include "ContactModel.h"
+#include "contact_model/ContactModel.h"
 
 #include <vector>
 #include <set>

@@ -27,7 +27,7 @@ void Person::setUniqueId(int idx) {
     this->uniqueId = idx;
 }
 
-std::vector<union Data> Person::getDataField() {
+std::vector<union Data> &Person::getDataField() {
     return this->personData;
 }
 

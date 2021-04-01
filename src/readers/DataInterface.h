@@ -14,7 +14,6 @@ class DataInterface {
         DataInterface(){};
         virtual ~DataInterface() {};
         virtual void setUniqueId(int idx) = 0;
-        virtual std::vector<union Data> getDataField() = 0;
-
+        virtual std::vector<union Data> &getDataField() = 0;
 };
 #endif

@@ -42,7 +42,7 @@ class Person : public DataInterface {
 
         // Override DataInterfect abstract methods
         void setUniqueId(int idx);
-        std::vector<union Data> getDataField();
+        std::vector<union Data> &getDataField();
 
         // Debugging.
         void _print_information(loimos::proto::CSVDefinition *personDef);

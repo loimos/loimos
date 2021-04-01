@@ -1,18 +1,24 @@
+# No generated code files
 *.decl.h
 *.def.h
-*.o
 *.pb.C
 *.pb.h
+*.pb.cc
 
+# No generated binaries
+*.o
 charmrun
 loimos
+
+# No temporary versions of files
+*.old.*
+*.new.*
 
 .DS_Store
 settings.json
 .vscode
 *.dSYM
 
-data/populations/coc/locations.csv
-data/populations/coc/people.csv
-data/populations/coc/visits.csv
+# Large data files shouldn't be commited
+data/populations/coc/*.csv
 *.cache
