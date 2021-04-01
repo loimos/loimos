@@ -65,6 +65,7 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath, int nu
     }
     csvConfigDefStream.close();
 
+    CkPrintf("Looking for unique id in %s\r\n", inputPath.c_str());
     int csvLocationOfPid = -1;
     for (int i = 0; i < csvDefinition.field_size(); i += 1) {
         if (csvDefinition.field(i).has_uniqueid()) {

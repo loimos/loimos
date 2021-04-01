@@ -29,7 +29,7 @@ const Time HOUR_LENGTH = 3600;
 const Time MINUTE_LENGTH = 60;
 
 // Data columns
-#define LOCATIONS_MAX_VISITS_INDEX 27
+#define LOCATIONS_MAX_VISITS_INDEX 1
 
 // Data loading
 #define EMPTY_VISIT_SCHEDULE 0xFFFFFFFF
