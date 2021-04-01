@@ -36,6 +36,7 @@ void MinMaxAlphaModel::computeLocationValues(Location& location) {
   // varries by location
   union Data contactProbability;
   double max_visits = (double) data[LOCATIONS_MAX_VISITS_INDEX].uint_32;
+  CkPrintf("max_simultaneous visits %f\r\n", max_visits);
   contactProbability.probability = fmin(
     1,
     (MIN + (MAX - MIN) * (1.0 - exp(-max_visits / ALPHA))) / (max_visits - 1)

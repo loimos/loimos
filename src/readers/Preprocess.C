@@ -70,6 +70,7 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath, int nu
     }
     csvConfigDefStream.close();
 
+    CkPrintf("Looking for unique id in %s\r\n", inputPath.c_str());
     int csvLocationOfPid = -1;
     for (int i = 0; i < csvDefinition.field_size(); i += 1) {
         if (csvDefinition.field(i).has_uniqueid()) {
@@ -169,6 +170,7 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
     int duration = -1;
     // For better looping efficiency simulate one break of inner loop to start.
     std::tie(nextPerson, personId, nextTime, duration) = DataLoader::parseActivityStream(&activityStream, &csvDefinition, NULL);
+    nextTime = getDay(nextTime);
 
     // Loop over the entire activity file and note boundaries on people and days
     while (!activityStream.eof()) {
