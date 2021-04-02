@@ -74,6 +74,7 @@ if __name__ == '__main__':
     for column in daily_summaries.columns:
         renaming.append(f'total_on_day_{column[1]}')
     daily_summaries.columns = renaming
+    
     # Calculate some additional statistics.
     daily_summaries['average_daily_total'] = daily_summaries.mean(axis=1)
     daily_summaries['median_daily_total'] = daily_summaries.median(axis=1)
@@ -105,6 +106,19 @@ if __name__ == '__main__':
     # with the location data
     locations = pd.read_csv(path_to_locations)
     output_df = locations.join(max_visits, on='lid')
+
+    # Zero out the heuristic values for any location with no visits
+    output_df.fillna(0, inplace=True)
+    
+    # Fix types of heuristic coluns so that we can read in integer attributes
+    # properly in loimos
+    output_dtypes = {
+        'median_daily_total': int,
+        'max_daily_total': int,
+        'max_simultaneous_visits': int
+    }
+    output_dtypes.update({c: int for c in renaming})
+    output_df = output_df.astype(output_dtypes)
 
     # Output with index column which is the lids.
     output_df.to_csv(output_file, index=False)

@@ -198,7 +198,7 @@ int DiseaseModel::getNumberOfStates() const {
 /** Returns the initial starting healthy and exposed state */
 int DiseaseModel::getHealthyState(std::vector<Data> dataField) const { 
   // Age based transition.
-  int personAge = dataField[AGE_CSV_LOC].int_b10;
+  int personAge = dataField[AGE_CSV_INDEX].int_b10;
   int numStartingStates = model->starting_states_size();
   for (int stateNum = 0; stateNum < numStartingStates; stateNum++) {
     const loimos::proto::DiseaseModel_StartingCondition state = 
