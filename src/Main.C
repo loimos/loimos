@@ -29,7 +29,9 @@
 /* readonly */ std::string scenarioId;
 /* readonly */ int firstPersonIdx;
 /* readonly */ int firstLocationIdx;
+/* readonly */ uint64_t totalVisits;
 /* readonly */ double simulationStartTime;
+/* readonly */ double iterationStartTime;
 
 // For synthetic run.
 /* readonly */ int synPeopleGridWidth;

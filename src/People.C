@@ -138,6 +138,7 @@ void People::loadPeopleData() {
  * for each person and sends visit messages to locations.
  */ 
 void People::SendVisitMessages() {
+  totalVisitsForDay = 0;
   if (syntheticRun) {
     SyntheticSendVisitMessages();
   } else {
@@ -173,6 +174,7 @@ void People::SyntheticSendVisitMessages() {
 
     // Get random number of visits for this person.
     int numVisits = num_visits_generator(generator);
+    totalVisitsForDay += numVisits;
     // Randomly generate start and end times for each visit,
     // using a priority queue ensures the times are in order.
     for (int j = 0; j < 2 * numVisits; j++) {
@@ -273,6 +275,7 @@ void People::RealDataSendVisitMessages() {
       // Send off the visit message.
       VisitMessage visitMsg(locationId, personId, people[localPersonId].state, visitStart, visitStart + visitDuration);
       locationsArray[locationSubset].ReceiveVisitMessages(visitMsg);
+      totalVisitsForDay += 1;
       std::tie(personId, locationId, visitStart, visitDuration) = DataReader<Person>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
     }
   }
@@ -299,7 +302,8 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
 void People::EndofDayStateUpdate() {
   // Handle state transitions at the end of the day.
   int totalStates = diseaseModel->getNumberOfStates();
-  std::vector<int> stateSummary(totalStates, 0);
+  std::vector<int> stateSummary(totalStates + 1, 0);
+  stateSummary[0] = totalVisitsForDay;
   for (Person &person: people) {
     
     ProcessInteractions(person);
@@ -328,7 +332,7 @@ void People::EndofDayStateUpdate() {
       person.secondsLeftInState = secondsLeftInState;
     }
 
-    stateSummary[currState]++;
+    stateSummary[currState + 1]++;
   }
 
   // contributing to reduction

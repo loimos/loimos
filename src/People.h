@@ -25,6 +25,7 @@ class People : public CBase_People {
     int numLocalPeople;
     int day;
     int newCases;
+    int totalVisitsForDay;
 
     std::ifstream *activityData;
     std::vector<Person> people;
