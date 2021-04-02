@@ -25,8 +25,14 @@ mainmodule loimos {
   readonly int firstLocationIdx;
   readonly std::string scenarioPath;
   readonly std::string scenarioId;
-  
+
   readonly double simulationStartTime;
+
+  readonly int synPeopleGridWidth;
+  readonly int synPeopleGridHeight;
+  readonly int synLocationGridWidth;
+  readonly int synLocationGridHeight;
+  readonly int averageDegreeOfVisit;
 
   mainchare Main {
     entry Main(CkArgMsg*);

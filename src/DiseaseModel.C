@@ -37,6 +37,9 @@ DiseaseModel::DiseaseModel(std::string pathToModel) {
   // TODO(iancostello): Load directly without string.
   model = new loimos::proto::DiseaseModel();
   std::ifstream diseaseModelStream(pathToModel);
+  if (!diseaseModelStream) {
+    CkAbort("Could not read disease model at %s.", pathToModel.c_str());
+  }
   std::string str((std::istreambuf_iterator<char>(diseaseModelStream)),
                   std::istreambuf_iterator<char>());
   if (!google::protobuf::TextFormat::ParseFromString(str, model)) {
@@ -98,9 +101,6 @@ std::tuple<int, int> DiseaseModel::transitionFromState(
   std::default_random_engine *generator
 ) const {
   // Get current state and next transition set to use.
-  if (fromState >= model->disease_state_size()) {
-    printf("Expecting %d but got %d", fromState, model->disease_state_size());
-  }
   const loimos::proto::DiseaseModel_DiseaseState *currState =
       &model->disease_state(fromState);
 
@@ -209,7 +209,7 @@ int DiseaseModel::getHealthyState(std::vector<Data> dataField) const {
       return state.starting_state();
     }
   }
-  CkAbort("No starting state for person of age %d.", personAge);  
+  CkAbort("No starting state for person of age %d. Read %d states total.", personAge, numStartingStates);  
 }
 
 /** Returns if someone is infectious */

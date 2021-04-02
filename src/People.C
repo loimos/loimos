@@ -45,13 +45,16 @@ People::People() {
     Person tmp {0, 0, std::numeric_limits<Time>::max() };
     people.resize(numLocalPeople, tmp);
 
-    // Random initialize peoples ages.
+    // Init peoples ids and randomly init ages.
+    int firstPersonIdx = thisIndex * (numPeople / numPeoplePartitions);
     std::uniform_int_distribution<int> age_dist(0, 100);
-    for (Person &person: people) {
+    for (int p = 0; p < numLocalPeople; p++) {
       Data age;
       age.int_b10 = age_dist(generator);
       std::vector<Data> dataField = { age };
-      person.state = diseaseModel->getHealthyState(dataField);
+
+      people[p].uniqueId = firstPersonIdx + p;
+      people[p].state = diseaseModel->getHealthyState(dataField);
     } 
   } else {
       int numAttributesPerPerson = 
@@ -143,64 +146,100 @@ void People::SendVisitMessages() {
 }
 
 void People::SyntheticSendVisitMessages() {
-  int numVisits, personIdx, locationIdx, locationSubset;
-  // initialize random number generator for a Poisson distribution
-  std::poisson_distribution<int> poisson_dist(LOCATION_LAMBDA);
+  // Model number of visits as a poisson distribution.
+  std::poisson_distribution<int> num_visits_generator(LOCATION_LAMBDA);
 
-  // there should be an equal chance of visiting each location
-  // and selecting any given time
-  std::uniform_int_distribution<int> location_dist(0, numLocations - 1);
+  // Model visit distance as poisson distribution.
+  std::poisson_distribution<int> visit_distance_generator(averageDegreeOfVisit);
+
+  // Model visit times as uniform.
   std::uniform_int_distribution<int> time_dist(0, DAY_LENGTH); // in seconds
-    
   std::priority_queue<int, std::vector<int>, std::greater<int> > times;
 
-  // generate itinerary for each person
-  for (int i = 0; i < numLocalPeople; i++) {
-    personIdx = getGlobalIndex(
-      i,
-      thisIndex,
-      numPeople,
-      numPeoplePartitions,
-      firstPersonIdx
-    );
-    int personState = people[i].state;
+  // Calculate minigrid sizes.
+  int peoplePerLocationX = synPeopleGridWidth / synLocationGridWidth;
+  int peoplePerLocationY = synPeopleGridHeight / synLocationGridHeight;
 
-    // getting random number of locations to visit
-    numVisits = poisson_dist(generator);
-    //CkPrintf("Person %d with %d visits\n",personIdx,visits);
-    
-    // randomly generate start and end times for each visit,
-    // using a priority queue ensures the times are in order
-    for (int j = 0; j < 2*numVisits; j++) {
+  // Calculate schedule for each person.
+  for (Person p : people) {
+    // Calculate person location in person grid.
+    int personIdx = p.uniqueId;
+    int personGridX = personIdx % synPeopleGridWidth;
+    int personGridY = personIdx / synPeopleGridWidth;
+
+    // Calculate "home" location coordinates.
+    int homeLocationX = personGridX / peoplePerLocationX;
+    int homeLocationY = personGridY / peoplePerLocationY;
+
+    // Get random number of visits for this person.
+    int numVisits = num_visits_generator(generator);
+    // Randomly generate start and end times for each visit,
+    // using a priority queue ensures the times are in order.
+    for (int j = 0; j < 2 * numVisits; j++) {
       times.push(time_dist(generator));
     }
 
+    // Randomly pick nearby location for person to visit.
     for (int j = 0; j < numVisits; j++) {
+      // Generate visit start and end times.
       int visitStart = times.top();
       times.pop();
       int visitEnd = times.top();
       times.pop();
-      
-      // we don't guarentee that these times aren't equal
-      // so this is a workaround
-      if (visitStart == visitEnd) {
+      // Skip empty visits.
+      if (visitStart == visitEnd)
         continue;
-      }
 
-      // generate random location to visit
-      locationIdx = location_dist(generator);
-      //CkPrintf("Person %d visits %d\n",personIdx,locationIdx);
-      locationSubset = getPartitionIndex(
-        locationIdx,
+      // Get number of locations away this person should visit.
+      int numHops = std::min(visit_distance_generator(generator),
+        synLocationGridWidth + synLocationGridHeight - 2);
+
+      int locationOffsetX = 0;
+      int locationOffsetY = 0;
+
+      if (numHops != 0) {
+        // Calculate maximum hops that can be taken from home location in each
+        // direction. (i.e. might be constrained for home locations close to edge)
+        int maxHopsNegativeX =  std::min(numHops, homeLocationX);
+        int maxHopsPositiveX =  std::min(numHops, synLocationGridWidth - 1 - homeLocationX);
+        int maxHopsNegativeY =  std::min(numHops, homeLocationY);
+        int maxHopsPositiveY =  std::min(numHops, synLocationGridHeight - 1 - homeLocationY);
+
+        // Choose random number of hops in the X direction.
+        std::uniform_int_distribution<int> dist_gen(-maxHopsNegativeX, maxHopsPositiveX);
+        int locationOffsetX = dist_gen(generator);
+        
+        // Choose a random direction between positive and negative
+        std::uniform_int_distribution<int> dir_gen(0, 1);
+        
+        if (numHops != 0) {
+          numHops -= std::abs(locationOffsetX);
+          if (dir_gen(generator) == 0) {
+            // Offset positively in Y.
+            locationOffsetY = std::min(numHops, maxHopsPositiveY);
+          } else {
+            // Offset negatively in Y.
+            locationOffsetY = -std::min(numHops, maxHopsNegativeY);
+          }
+        }
+      }
+      
+      // Finally calculate the location to actually visit
+      int locationToVisit = (homeLocationX + locationOffsetX) 
+                          + (homeLocationY + locationOffsetY) * synLocationGridWidth;
+
+      // Determine which chare tracks this location.
+      int locationSubset = getPartitionIndex(
+        locationToVisit,
         numLocations,
         numLocationPartitions,
         firstLocationIdx
       );
 
-      // sending message to location
-      VisitMessage visitMsg(locationIdx, personIdx, personState, visitStart, visitEnd);
+      // Send off visit message
+      VisitMessage visitMsg(locationToVisit, personIdx, p.state, visitStart, visitEnd);
       locationsArray[locationSubset].ReceiveVisitMessages(visitMsg);
-    }
+    } 
   }
 }
 

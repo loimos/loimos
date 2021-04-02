@@ -104,6 +104,7 @@ void Locations::loadLocationData() {
 }
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
+  
   // adding person to location visit list
   int localLocIdx = getLocalIndex(
     visitMsg.locationIdx,
