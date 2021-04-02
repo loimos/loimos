@@ -28,7 +28,7 @@ const Time DAY_LENGTH = 3600 * 24;
 const Time HOUR_LENGTH = 3600;
 const Time MINUTE_LENGTH = 60;
 
-// CSV Order
+// Indices of attribute columns in the appropriate csvs
 #define AGE_CSV_INDEX 0
 #define SIMULTANEOUS_MAX_VISITS_CSV_INDEX 1
 
