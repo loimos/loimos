@@ -63,7 +63,7 @@ test-small: all
 	./charmrun +p4 ./loimos 0 100 735 2 2 7 ../data/disease_models/covid19.textproto ../data/populations/synthetic_small_city/ ++local
 
 test-syn: all
-	./charmrun +p4 ./loimos 1 200 200 100 100 5 32 16 30 ../data/disease_models/covid19_onepath.textproto ++local
+	./charmrun +p4 ./loimos 1 100 100 50 50 5 32 16 30 ../data/disease_models/covid19_onepath.textproto ++local
 
 test-large: all
 	./charmrun +p4 ./loimos 0 41119 19203 60 40 7 ../data/disease_models/covid19.textproto ../data/populations/coc/ --min-max-alpha ++local

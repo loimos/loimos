@@ -48,7 +48,10 @@ extern /* readonly */ int numPeoplePartitions;
 extern /* readonly */ int numLocationPartitions;
 extern /* readonly */ int numDays;
 extern /* readonly */ bool syntheticRun;
+extern /* readonly */ uint64_t totalVisits;
 extern /* readonly */ double simulationStartTime;
+extern /* readonly */ double iterationStartTime;
+
 
 // For real data run.
 extern /* readonly */ std::string scenarioPath;
