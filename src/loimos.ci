@@ -34,6 +34,10 @@ mainmodule loimos {
   readonly int synPeopleGridHeight;
   readonly int synLocationGridWidth;
   readonly int synLocationGridHeight;
+  readonly int synLocalLocationGridWidth;
+  readonly int synLocalLocationGridHeight;
+  readonly int synLocationPartitionGridWidth;
+  readonly int synLocationPartitionGridHeight;
   readonly int averageDegreeOfVisit;
 
   mainchare Main {

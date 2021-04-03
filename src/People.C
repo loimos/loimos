@@ -162,12 +162,11 @@ void People::SyntheticSendVisitMessages() {
     numLocations,
     numLocationPartitions
   );
-  int locationPartitionWidth = getGridWidth(numLocationsPerPartition);
-  int locationPartitionHeight =
-    numLocationsPerPartition / locationPartitionWidth;
-  int locationPartitionGridWidth = getGridWidth(numLocationPartitions);
-  CkPrintf("location grid at each chare is %d by %d\r\n",
-    locationPartitionWidth, locationPartitionHeight);
+  int locationPartitionWidth = synLocalLocationGridWidth;
+  int locationPartitionHeight = synLocalLocationGridHeight;
+  int locationPartitionGridWidth = synLocationPartitionGridWidth;
+  //CkPrintf("location grid at each chare is %d by %d\r\n",
+  //  locationPartitionWidth, locationPartitionHeight);
 
   // Choose one location partition for the people in this parition to call home
   int homePartitionIdx = thisIndex % numLocationPartitions;
@@ -264,11 +263,11 @@ void People::SyntheticSendVisitMessages() {
         + (destinationY % locationPartitionHeight) * locationPartitionWidth
         + partitionX * numLocationsPerPartition
         + partitionY * locationPartitionGridWidth * numLocationsPerPartition;
-      CkPrintf(
-        "person %d will visit location (%d, %d) with offset (%d,%d)\r\n",
-        personIdx, destinationX, destinationY, destinationOffsetX, destinationOffsetY);
-        CkPrintf("(%d, %d) -> %d in partition (%d, %d)\r\n",
-          destinationX, destinationY, destinationIdx, partitionX, partitionY);
+      //CkPrintf(
+      //  "person %d will visit location (%d, %d) with offset (%d,%d)\r\n",
+      //  personIdx, destinationX, destinationY, destinationOffsetX, destinationOffsetY);
+      //  CkPrintf("(%d, %d) -> %d in partition (%d, %d)\r\n",
+      //    destinationX, destinationY, destinationIdx, partitionX, partitionY);
 
       // Determine which chare tracks this location.
       int locationPartition = getPartitionIndex(

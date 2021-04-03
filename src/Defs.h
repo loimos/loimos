@@ -64,6 +64,10 @@ extern /* readonly */ int synPeopleGridWidth;
 extern /* readonly */ int synPeopleGridHeight;
 extern /* readonly */ int synLocationGridWidth;
 extern /* readonly */ int synLocationGridHeight;
+extern /* readonly */ int synLocalLocationGridWidth;
+extern /* readonly */ int synLocalLocationGridHeight;
+extern /* readonly */ int synLocationPartitionGridWidth;
+extern /* readonly */ int synLocationPartitionGridHeight;
 extern /* readonly */ int averageDegreeOfVisit;
 
 int getNumElementsPerPartition(int numElements, int numPartitions);
