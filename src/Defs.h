@@ -67,6 +67,8 @@ int getNumElementsPerPartition(int numElements, int numPartitions);
 
 int getNumLocalElements(int numElements, int numPartitions, int partitionIndex);
 
+int getGridWidth(int numElements);
+
 int getPartitionIndex(int globalIndex, int numElements, int numPartitions, int offset);
 
 int getLocalIndex(int globalIndex, int numElements, int numPartitions, int offset);
