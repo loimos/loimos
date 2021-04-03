@@ -157,8 +157,6 @@ void People::SyntheticSendVisitMessages() {
   std::priority_queue<int, std::vector<int>, std::greater<int> > times;
 
   // Calculate minigrid sizes.
-  int peoplePerLocationX = synPeopleGridWidth / synLocationGridWidth;
-  int peoplePerLocationY = synPeopleGridHeight / synLocationGridHeight;
   int numLocationsPerPartition = getNumElementsPerPartition(
     numLocations,
     numLocationPartitions
@@ -167,9 +165,6 @@ void People::SyntheticSendVisitMessages() {
   int locationPartitionHeight =
     numLocationsPerPartition / locationPartitionWidth;
   int locationPartitionGridWidth = getGridWidth(numLocationPartitions);
-
-  //CkPrintf("location partitions are %d by %d\r\n",
-  //  locationPartitionWidth, locationPartitionHeight);
 
   // Choose one location partition for the people in this parition to call home
   int homePartitionIdx = thisIndex % numLocationPartitions;
@@ -182,8 +177,6 @@ void People::SyntheticSendVisitMessages() {
     numLocationPartitions,
     homePartitionIdx
   );
-  //CkPrintf("home location partition (%d, %d) starts at (%d, %d)\r\n",
-  //  homePartitionX, homePartitionY, homePartitionStartX, homePartitionStartY);
 
   // Calculate schedule for each person.
   for (Person &p : people) {
@@ -192,12 +185,6 @@ void People::SyntheticSendVisitMessages() {
     int localPersonIdx = (personIdx - firstLocationIdx) % homePartitionNumLocations;
     int homeX = homePartitionStartX + localPersonIdx % locationPartitionWidth;
     int homeY = homePartitionStartY + localPersonIdx / locationPartitionWidth;
-    
-    //int personGridX = personIdx % locationPartitionWidth;
-    //int personGridY = personIdx / locationPartitionHeight;
-
-    //int homeX = personGridX / peoplePerLocationX;
-    //int homeY = personGridY / peoplePerLocationY;
 
     // Get random number of visits for this person.
     int numVisits = num_visits_generator(generator);
@@ -222,7 +209,6 @@ void People::SyntheticSendVisitMessages() {
       // Get number of locations away this person should visit.
       int numHops = std::min(visit_distance_generator(generator),
         synLocationGridWidth + synLocationGridHeight - 2);
-      //CkPrintf("visiting a location %d hops away \r\n", numHops);
 
       int destinationOffsetX = 0;
       int destinationOffsetY = 0;
@@ -241,13 +227,9 @@ void People::SyntheticSendVisitMessages() {
             synLocationGridHeight - 1 - homeY
         );
        
-        //CkPrintf("max hops +x: %d, -x: %d, +y: %d, -y: %d, grid is %d by %d\r\n",
-          //maxHopsPositiveX, maxHopsNegativeX, maxHopsPositiveY, maxHopsNegativeY, synLocationGridWidth, synLocationGridHeight); 
-
         // Choose random number of hops in the X direction.
         std::uniform_int_distribution<int> dist_gen(-maxHopsNegativeX, maxHopsPositiveX);
         destinationOffsetX = dist_gen(generator);
-        //CkPrintf("offset x %d\r\n", destinationOffsetX);
 
         // Travel the remaining hops in the Y direction
         numHops -= std::abs(destinationOffsetX);
@@ -266,14 +248,8 @@ void People::SyntheticSendVisitMessages() {
       }
 
       // Finally calculate the index of the location to actually visit...
-      int destinationIdx = (homeX + destinationOffsetX)
-                          + (homeY + destinationOffsetY) * synLocationGridWidth;
       int destinationX = homeX + destinationOffsetX;
       int destinationY = homeY + destinationOffsetY;
-      //CkPrintf(
-      //  "person %d will visit location (%d, %d) with offset (%d,%d)\r\n",
-      //  personIdx, destinationX, destinationY, destinationOffsetX, destinationOffsetY);
-      /*
 
       // ...and translate it from 2D to 1D, respecting the 2D distribution
       // of the locations across partitions
@@ -283,10 +259,7 @@ void People::SyntheticSendVisitMessages() {
           (destinationX % locationPartitionWidth)
         + (destinationY % locationPartitionHeight) * locationPartitionWidth
         + partitionX * numLocationsPerPartition
-        + partitionY * synLocationGridWidth * numLocationsPerPartition;
-      CkPrintf("(%d, %d) -> %d in partition (%d, %d)\r\n",
-         destinationX, destinationY, destinationIdx, partitionX, partitionY);
-      */
+        + partitionY * locationPartitionGridWidth * numLocationsPerPartition;
 
       // Determine which chare tracks this location.
       int locationPartition = getPartitionIndex(
