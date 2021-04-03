@@ -113,6 +113,9 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
     firstLocationIdx
   );
 
+  CkPrintf("Visiting location %d (%d of %d locally)\r\n",
+    visitMsg.locationIdx, localLocIdx, numLocalLocations);
+
   // Wrap vist info...
   Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.personState, visitMsg.visitStart };
   Event departure { DEPARTURE, visitMsg.personIdx, visitMsg.personState, visitMsg.visitEnd };
