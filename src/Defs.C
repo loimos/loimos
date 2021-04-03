@@ -40,21 +40,6 @@ int getNumLocalElements(int numElements, int numPartitions, int partitionIndex){
 }
 
 /**
- * Returns how many elements wide a 2D parition is
- *
- * Args:
- *    int numElements: The total number of elements in the 2D parition
- */
-int getGridWidth(int numElements) {
-  int width;
-  // Try to get a value which evenly divides numElements while still being
-  // fairly close to the other factor
-  for (width = floor(sqrt(numElements)); numElements % width != 0; ++width);
-
-  return width;
-}
-
-/**
  * Returns the number of the chare that tracks a particular element. 
  * 
  * Args:

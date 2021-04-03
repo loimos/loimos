@@ -135,14 +135,17 @@ Main::Main(CkArgMsg* msg) {
 
 
   // Instantiate DiseaseModel nodegroup (One for each physical processor).
-  CkPrintf("Loading diseaseModel.\n");
+  CkPrintf("Loading diseaseModel at %s.\n", pathToDiseaseModel.c_str());
   globDiseaseModel = CProxy_DiseaseModel::ckNew(pathToDiseaseModel);
   diseaseModel = globDiseaseModel.ckLocalBranch();
   accumulated.resize(diseaseModel->getNumberOfStates(), 0);
   delete msg;
 
   // creating chare arrays
-  CkPrintf("Loading people and locations.\n");
+  if (!syntheticRun) {
+    CkPrintf("Loading people and locations from %s.\n", scenarioPath.c_str());
+  }
+  
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
 

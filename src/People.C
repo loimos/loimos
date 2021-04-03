@@ -248,6 +248,7 @@ void People::SyntheticSendVisitMessages() {
             destinationOffsetY = -std::min(numHops, maxHopsNegativeY);
           }
         }
+        // CkPrintf("Home is (%d, %d) (%d %d %d %d))\n", homeX, homeY, maxHopsNegativeX, maxHopsPositiveX, maxHopsNegativeY, maxHopsPositiveY);
       }
 
       // Finally calculate the index of the location to actually visit...
