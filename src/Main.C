@@ -98,8 +98,8 @@ Main::Main(CkArgMsg* msg) {
   } else {
     numPeople = atoi(msg->argv[2]);
     numLocations = atoi(msg->argv[3]);
-    numLocationPartitions = atoi(msg->argv[4]);
-    numPeoplePartitions = atoi(msg->argv[5]);
+    numPeoplePartitions = atoi(msg->argv[4]);
+    numLocationPartitions = atoi(msg->argv[5]);
     baseRunInfo = 5;
   }
   
