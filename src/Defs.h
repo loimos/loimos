@@ -48,11 +48,27 @@ extern /* readonly */ int numPeoplePartitions;
 extern /* readonly */ int numLocationPartitions;
 extern /* readonly */ int numDays;
 extern /* readonly */ bool syntheticRun;
-extern /* readonly */ int firstPersonIdx;
-extern /* readonly */ int firstLocationIdx;
+extern /* readonly */ uint64_t totalVisits;
+extern /* readonly */ double simulationStartTime;
+extern /* readonly */ double iterationStartTime;
+
+
+// For real data run.
 extern /* readonly */ std::string scenarioPath;
 extern /* readonly */ std::string scenarioId;
-extern /* readonly */ double simulationStartTime;
+extern /* readonly */ int firstPersonIdx;
+extern /* readonly */ int firstLocationIdx;
+
+// For synthetic run.
+extern /* readonly */ int synPeopleGridWidth;
+extern /* readonly */ int synPeopleGridHeight;
+extern /* readonly */ int synLocationGridWidth;
+extern /* readonly */ int synLocationGridHeight;
+extern /* readonly */ int synLocalLocationGridWidth;
+extern /* readonly */ int synLocalLocationGridHeight;
+extern /* readonly */ int synLocationPartitionGridWidth;
+extern /* readonly */ int synLocationPartitionGridHeight;
+extern /* readonly */ int averageDegreeOfVisit;
 
 int getNumElementsPerPartition(int numElements, int numPartitions);
 

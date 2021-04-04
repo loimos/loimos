@@ -104,6 +104,7 @@ void Locations::loadLocationData() {
 }
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
+  
   // adding person to location visit list
   int localLocIdx = getLocalIndex(
     visitMsg.locationIdx,
@@ -111,6 +112,9 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
     numLocationPartitions,
     firstLocationIdx
   );
+
+  //CkPrintf("Visiting location %d (%d of %d locally)\r\n",
+  //  visitMsg.locationIdx, localLocIdx, numLocalLocations);
 
   // Wrap vist info...
   Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.personState, visitMsg.visitStart };
