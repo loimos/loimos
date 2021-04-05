@@ -84,36 +84,47 @@ mainmodule loimos {
         }
       }
       serial { 
-        printf("\nFinished data loading in %lf seconds.\n", simulationStartTime);
-        printf("Finished simulating %d days in %lf seconds.\n", numDays, (CkWallTimer() - simulationStartTime));
-        printf("Total Visits Processed %llu.\n\n", totalVisits);
-        CkExit(); 
+        CkPrintf("\nFinished data loading in %lf seconds.\n", simulationStartTime);
+        CkPrintf("Finished simulating %d days in %lf seconds.\n", numDays, (CkWallTimer() - simulationStartTime));
+        
+        peopleArray.SendStats();
       }
       when ReceiveStats(CkReductionMsg *summary) {
         serial {
-          CkPrintf("Summary of Day %d\n", day);
           int *data = reinterpret_cast<int *>(summary->getData());
-          // Get total visits for the day.
-          totalVisits += *data;
-          data++;
-
-          // Get number of disease state changes.
           DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
-          for (int i = 0; i < diseaseModel->getNumberOfStates(); i++) {
-            int total_in_state = *data;
-            int change_in_infected = total_in_state - accumulated[i];
-            if (total_in_state != 0 || change_in_infected != 0) {
-              CkPrintf(
-                "%d in %s. (%d change from previous day)\n",
-                total_in_state,
-                diseaseModel->lookupStateName(i).c_str(),
-                change_in_infected
-              );
-            }
-            accumulated[i] = total_in_state; 
+          int numDiseaseStates = diseaseModel->getNumberOfStates();
+
+          for (int day; day < numDays; ++day, data += numDiseaseStates + 1) {
+            CkPrintf("Summary of Day %d\n", day);
+            // Get total visits for the day.
+            totalVisits += *data;
             data++;
+
+            // Get number of disease state changes.
+            for (int i = 0; i < numDiseaseStates; i++) {
+              int total_in_state = *data;
+              int change_in_infected = total_in_state - accumulated[i];
+              if (total_in_state != 0 || change_in_infected != 0) {
+                CkPrintf(
+                  "%d in %s. (%d change from previous day)\n",
+                  total_in_state,
+                  diseaseModel->lookupStateName(i).c_str(),
+                  change_in_infected
+                );
+              }
+              accumulated[i] = total_in_state; 
+              data++;
+            }
+            
+            CkPrintf("%d visits\n", *data); 
           }
+
+          CkPrintf("Total Visits Processed %llu.\n\n", totalVisits);
         }
+      }
+      serial {
+        CkExit(); 
       }
     };
     entry void StartComputingInteractions(); 
@@ -130,7 +141,8 @@ mainmodule loimos {
 #else
     entry void ReceiveInteractions(InteractionMessage);
 #endif
-    entry void EndofDayStateUpdate(); // contribute call to ReceiveStats
+    entry void EndofDayStateUpdate(); // contribute call to ReceiveInfectiousCount
+    entry void SendStats(); // contribute call to ReceiveStats
   };
 
   array [1D] Locations {
