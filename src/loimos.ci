@@ -100,9 +100,9 @@ mainmodule loimos {
         }
       }
       serial { 
-        printf("Finished data loading in %lf seconds.\n", simulationStartTime);
-        printf("Finished simulation in %lf seconds.\n", (CkWallTimer() - simulationStartTime));
-        printf("Total Visits Processed %llu.\n", totalVisits);
+        printf("\nFinished data loading in %lf seconds.\n", simulationStartTime);
+        printf("Finished simulating %d days in %lf seconds.\n", numDays, (CkWallTimer() - simulationStartTime));
+        printf("Total Visits Processed %llu.\n\n", totalVisits);
         CkExit(); 
       }
     };
