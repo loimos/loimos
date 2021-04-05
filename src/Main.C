@@ -12,6 +12,7 @@
 #include "contact_model/ContactModel.h"
 #include "readers/Preprocess.h"
 
+#include <string>
 #include <tuple>
 
 /* readonly */ CProxy_Main mainProxy;
@@ -104,7 +105,8 @@ Main::Main(CkArgMsg* msg) {
   }
   
   numDays = atoi(msg->argv[baseRunInfo + 1]);
-  std::string pathToDiseaseModel = std::string(msg->argv[baseRunInfo + 2]);
+  std::string pathToOutput = std::string(msg->argv[baseRunInfo + 2]);
+  std::string pathToDiseaseModel = std::string(msg->argv[baseRunInfo + 3]);
 
   // Handle both real data runs or runs using synthetic populations.
   if(syntheticRun) {
@@ -112,14 +114,14 @@ Main::Main(CkArgMsg* msg) {
     firstLocationIdx = 0;
   } else {    
     // Create data caches.
-    scenarioPath = std::string(msg->argv[baseRunInfo + 3]);
+    scenarioPath = std::string(msg->argv[baseRunInfo + 4]);
     std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(scenarioPath, numPeople, numPeoplePartitions, numLocations, numLocationPartitions, numDays);
   }
 
   // Detemine which contact modle to use
   contactModelType = (int) ContactModelType::constant_probability;
-  if (msg->argc == baseRunInfo + 5) {
-    std::string tmp = std::string(msg->argv[baseRunInfo + 4]);
+  if (msg->argc == baseRunInfo + 6) {
+    std::string tmp = std::string(msg->argv[baseRunInfo + 5]);
     // We can just use a flag for now in the CLI, since we only have two
     // models and that's easier to parse, but we may eventually have more,
     // which is why we use an enum to actually hold the model value
