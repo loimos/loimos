@@ -128,7 +128,7 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 
 void Locations::ComputeInteractions() {
   // traverses list of locations
-  for (Location loc : locations) {
+  for (Location &loc : locations) {
     loc.processEvents(diseaseModel, contactModel);
   }
 }

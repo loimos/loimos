@@ -44,7 +44,7 @@ void Location::processEvents(
   std::vector<Event> *arrivals;
   
   std::sort(events.begin(), events.end());
-  for (Event event: events) {
+  for (const Event &event: events) {
     if (diseaseModel->isSusceptible(event.personState)) {
       arrivals = &susceptibleArrivals;
 
