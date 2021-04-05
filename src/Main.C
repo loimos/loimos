@@ -108,7 +108,6 @@ Main::Main(CkArgMsg* msg) {
 
   // Handle both real data runs or runs using synthetic populations.
   if(syntheticRun) {
-    CkPrintf("Synthetic run with (%d, %d) person grid and (%d, %d) location grid. Average degree of %d\n", synPeopleGridWidth, synPeopleGridHeight, synLocationGridWidth, synLocationGridHeight, averageDegreeOfVisit);
     firstPersonIdx = 0;
     firstLocationIdx = 0;
   } else {    
@@ -130,9 +129,12 @@ Main::Main(CkArgMsg* msg) {
   }
 
   // setup main proxy
-  CkPrintf("Running Loimos on %d PEs with %d people, %d locations, %d people subsets, %d location subsets, and %d days\n", CkNumPes(), numPeople, numLocations, numPeoplePartitions, numLocationPartitions, numDays);
+  CkPrintf("\nRunning Loimos on %d PEs with %d people, %d locations, %d people chares, %d location chares, and %d days\n", CkNumPes(), numPeople, numLocations, numPeoplePartitions, numLocationPartitions, numDays);
   mainProxy = thisProxy;
 
+  if(syntheticRun) {
+    CkPrintf("Synthetic run with (%d, %d) person grid and (%d, %d) location grid. Average degree of %d\n\n", synPeopleGridWidth, synPeopleGridHeight, synLocationGridWidth, synLocationGridHeight, averageDegreeOfVisit);
+  }
 
   // Instantiate DiseaseModel nodegroup (One for each physical processor).
   CkPrintf("Loading diseaseModel at %s.\n", pathToDiseaseModel.c_str());
@@ -150,7 +152,7 @@ Main::Main(CkArgMsg* msg) {
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
 
   // run
-  CkPrintf("Running.\n");
+  CkPrintf("Running ...\n\n");
   simulationStartTime = CkWallTimer();
   mainProxy.run();
 }
