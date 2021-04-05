@@ -340,10 +340,14 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
 }
 
 void People::EndofDayStateUpdate() {
-  // Handle state transitions at the end of the day.
+  // Create list to count the number of people in each state
   int totalStates = diseaseModel->getNumberOfStates();
-  std::vector<int> stateSummary(totalStates + 1, 0);
+  dailyStateSummaries.emplace_back(totalStates + 1, 0);
+  std::vector<int> &stateSummary = dailyStateSummaries.back();
   stateSummary[0] = totalVisitsForDay;
+  
+  // Handle state transitions at the end of the day.
+  int infectiousCount = 0;
   for (Person &person: people) {
     
     ProcessInteractions(person);
@@ -373,11 +377,16 @@ void People::EndofDayStateUpdate() {
     }
 
     stateSummary[currState + 1]++;
+    if (diseaseModel->isInfectious(currState)) {
+      infectiousCount++;
+    }
   }
 
   // contributing to reduction
-  CkCallback cb(CkReductionTarget(Main, ReceiveStats), mainProxy);
-  contribute(stateSummary, CkReduction::sum_int, cb);
+  CkCallback cb(CkReductionTarget(Main, ReceiveInfectiousCount), mainProxy);
+  contribute(sizeof(int), &infectiousCount, CkReduction::sum_int, cb);
+  //CkCallback cb(CkReductionTarget(Main, ReceiveStats), mainProxy);
+  //contribute(stateSummary, CkReduction::sum_int, cb);
   day++;
   newCases = 0;
 }

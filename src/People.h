@@ -31,6 +31,7 @@ class People : public CBase_People {
     std::vector<Person> people;
     std::default_random_engine generator;
     DiseaseModel *diseaseModel;
+    std::vector<std::vector<int> > dailyStateSummaries;
 
     void ProcessInteractions(Person &person);
     void loadPeopleData();
