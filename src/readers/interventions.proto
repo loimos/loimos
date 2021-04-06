@@ -1,0 +1,13 @@
+syntax = "proto3";
+package loimos.proto;
+
+import "data.proto";
+
+message Intervention {
+    double newDailyCasesTriggerOn = 1;
+    double newDailyCasesTriggerOff = 2;
+    bool schoolClosures = 3;
+    bool stayAtHome = 4; 
+    // CSV Mappings
+    int32 csvLocationOfSchool = 5;
+}

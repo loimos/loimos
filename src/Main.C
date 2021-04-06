@@ -44,6 +44,7 @@
 /* readonly */ int numPeoplePartitions;
 /* readonly */ int numLocationPartitions;
 /* readonly */ int numDays;
+/* readonly */ int numDaysWithRealData;
 /* readonly */ bool syntheticRun;
 /* readonly */ int contactModelType;
 /* readonly */ std::string scenarioPath;
@@ -64,6 +65,7 @@
 /* readonly */ int synLocationPartitionGridWidth;
 /* readonly */ int synLocationPartitionGridHeight;
 /* readonly */ int averageDegreeOfVisit;
+/* readonly */ bool interventionStategy;
 
 class TraceSwitcher : public CBase_TraceSwitcher {
   public:
@@ -170,19 +172,21 @@ Main::Main(CkArgMsg* msg) {
         synLocationPartitionGridWidth, synLocationPartitionGridHeight,
         synLocationGridWidth, synLocationGridHeight);
     }
-
-    baseRunInfo = 9;
+    numDays = atoi(msg->argv[10]);
+    baseRunInfo = 10;
   } else {
     numPeople = atoi(msg->argv[2]);
     numLocations = atoi(msg->argv[3]);
     numPeoplePartitions = atoi(msg->argv[4]);
     numLocationPartitions = atoi(msg->argv[5]);
-    baseRunInfo = 5;
+    numDays = atoi(msg->argv[6]);
+    numDaysWithRealData = atoi(msg->argv[7]);
+    baseRunInfo = 7;
   }
   
-  numDays = atoi(msg->argv[baseRunInfo + 1]);
-  pathToOutput = std::string(msg->argv[baseRunInfo + 2]);
-  std::string pathToDiseaseModel = std::string(msg->argv[baseRunInfo + 3]);
+  pathToOutput = std::string(msg->argv[baseRunInfo + 1]);
+  std::string pathToDiseaseModel = std::string(msg->argv[baseRunInfo + 2]);
+  printf("Disease model is at %s\n", msg->argv[baseRunInfo + 2]);
 
   // Handle both real data runs or runs using synthetic populations.
   if(syntheticRun) {
@@ -190,19 +194,21 @@ Main::Main(CkArgMsg* msg) {
     firstLocationIdx = 0;
   } else {    
     // Create data caches.
-    scenarioPath = std::string(msg->argv[baseRunInfo + 4]);
+    scenarioPath = std::string(msg->argv[baseRunInfo + 3]);
     std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(scenarioPath, numPeople, numPeoplePartitions, numLocations, numLocationPartitions, numDays);
+    baseRunInfo += 1;
   }
 
   // Detemine which contact modle to use
   contactModelType = (int) ContactModelType::constant_probability;
-  if (msg->argc == baseRunInfo + 6) {
-    std::string tmp = std::string(msg->argv[baseRunInfo + 5]);
-    // We can just use a flag for now in the CLI, since we only have two
-    // models and that's easier to parse, but we may eventually have more,
-    // which is why we use an enum to actually hold the model value
+  int interventionStategyLocation = -1;
+  for (int i = baseRunInfo + 2; i + 1 < msg->argc; i++) {
+    std::string tmp = std::string(msg->argv[i]);
     if ("-m" == tmp or "--min-max-alpha" == tmp) {
       contactModelType = (int) ContactModelType::min_max_alpha;
+    } else if ("-i" == tmp) {
+      interventionStategyLocation = ++i;
+      interventionStategy = true;
     }
   }
 
@@ -222,7 +228,16 @@ Main::Main(CkArgMsg* msg) {
 
   // Instantiate DiseaseModel nodegroup (One for each physical processor).
   CkPrintf("Loading diseaseModel at %s.\n", pathToDiseaseModel.c_str());
-  globDiseaseModel = CProxy_DiseaseModel::ckNew(pathToDiseaseModel, scenarioPath);
+  if (interventionStategyLocation == -1) {
+    interventionStategy = false;
+    globDiseaseModel = CProxy_DiseaseModel::ckNew(pathToDiseaseModel, scenarioPath, "");
+    printf("Running with no intervention.\n");
+  } else {
+    interventionStategy = true;
+    globDiseaseModel = CProxy_DiseaseModel::ckNew(pathToDiseaseModel, scenarioPath, msg->argv[interventionStategyLocation]);
+    printf("Loading intervention at %s.\n", msg->argv[interventionStategyLocation]);
+  }
+  
   diseaseModel = globDiseaseModel.ckLocalBranch();
   accumulated.resize(diseaseModel->getNumberOfStates(), 0);
   delete msg;

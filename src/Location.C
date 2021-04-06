@@ -91,34 +91,35 @@ void Location::processEvents(
   ContactModel *contactModel
 ) {
   std::vector<Event> *arrivals;
-  
-  std::sort(events.begin(), events.end());
-  for (const Event &event: events) {
-    if (diseaseModel->isSusceptible(event.personState)) {
-      arrivals = &susceptibleArrivals;
 
-    } else if (diseaseModel->isInfectious(event.personState)) {
-      arrivals = &infectiousArrivals;
+  if (!interventionStategy || diseaseModel->isLocationOpen(&locationData)) {
+    std::sort(events.begin(), events.end());
+    for (const Event &event: events) {
+      if (diseaseModel->isSusceptible(event.personState)) {
+        arrivals = &susceptibleArrivals;
 
-    // If a person can niether infect other people nor be infected themself,
-    // we can just ignore their comings and goings
-    } else {
-      continue;
-    }
+      } else if (diseaseModel->isInfectious(event.personState)) {
+        arrivals = &infectiousArrivals;
 
-    if (ARRIVAL == event.type) {
-      arrivals->push_back(event);
-      std::push_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
+      // If a person can niether infect other people nor be infected themself,
+      // we can just ignore their comings and goings
+      } else {
+        continue;
+      }
 
-    } else if (DEPARTURE == event.type) {
-      // Remove the arrival event corresponding to this departure 
-      std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
-      arrivals->pop_back();
+      if (ARRIVAL == event.type) {
+        arrivals->push_back(event);
+        std::push_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
 
-      onDeparture(diseaseModel, contactModel, event);
+      } else if (DEPARTURE == event.type) {
+        // Remove the arrival event corresponding to this departure 
+        std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
+        arrivals->pop_back();
+
+        onDeparture(diseaseModel, contactModel, event);
+      }
     }
   }
-
   events.clear();
   interactions.clear();
   day++;

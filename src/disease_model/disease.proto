@@ -36,6 +36,7 @@ message DiseaseModel {
         // Incapacitation defines the level of restricted movement caused
         // by the disease.
         double incapacitation = 4;
+        bool symptomatic = 5;
 
         // Level of non-disease-specific symptoms.
         // oneof prodrome_or_vulnerability {

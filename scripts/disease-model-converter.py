@@ -68,6 +68,9 @@ def to_textproto(dictv, offset=0):
                 print(coffset + f"{key}: {{")
                 to_textproto(x, offset+1)
                 print(coffset +"}")
+        elif type(value) == bool:
+            formatted_value = "true" if value else "false"
+            print(coffset + f"{key}: {formatted_value}")
         else:
             formatted_value = value if type(value) != str else f"\"{value}\""
             print(coffset + f"{key}: {formatted_value}")
@@ -111,9 +114,13 @@ def convert_file(filepath):
     # Convert from their json to intermediary dictionary format.
     converted_states = []
     for state in states.values():
+        if '_a' not in state['id']:
+            continue
+
         disease_state = {}
         disease_state['state_label'] = state['id']
         disease_state['infectivity'] = state['infectivity']
+        disease_state['symptomatic'] = '(symptomatic)' in state['ann:label']
         disease_state['susceptibility'] = state['susceptibility']
         if len(state['paths']):
             disease_state['timed_transition'] = {

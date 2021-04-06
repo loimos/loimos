@@ -32,7 +32,6 @@ People::People() {
   //Must be set to true to make AtSync work
   usesAtSync = true;
 
-  newCases = 0;
   day = 0;
   generator.seed(thisIndex);
 
@@ -66,6 +65,9 @@ People::People() {
 
       people[p].uniqueId = firstPersonIdx + p;
       people[p].state = diseaseModel->getHealthyState(dataField);
+      // We set persons next state to equal current state to signify
+      // that they are not in a disease model progression.
+      people[p].next_state = people[p].state;
     } 
   } else {
       int numAttributesPerPerson = 
@@ -117,16 +119,16 @@ void People::loadPeopleData() {
   }
 
   // Load preprocessing meta data.
-  uint32_t *buf = (uint32_t *) malloc(sizeof(uint32_t) * numDays);
+  uint32_t *buf = (uint32_t *) malloc(sizeof(uint32_t) * numDaysWithRealData);
   for (int c = 0; c < numLocalPeople; c++) {
     std::vector<uint32_t> *data_pos = &people[c].visitOffsetByDay;
     int curr_id = people[c].uniqueId;
 
     // Read in their activity data offsets.
-    activityCache.seekg(sizeof(uint32_t) * DAYS_IN_WEEK
-                        * (curr_id - firstPersonIdx));
-    activityCache.read((char *) buf, sizeof(uint32_t) * DAYS_IN_WEEK);
-    for (int day = 0; day < DAYS_IN_WEEK; day++) {
+    activityCache.seekg(sizeof(uint32_t) * numDaysWithRealData
+       * (curr_id - firstPersonIdx));
+    activityCache.read((char *) buf, sizeof(uint32_t) * numDaysWithRealData);
+    for (int day = 0; day < numDaysWithRealData; day++) {
       data_pos->push_back(buf[day]);
     }
   }
@@ -143,13 +145,13 @@ void People::loadPeopleData() {
 } 
 
 void People::loadVisitData(std::ifstream *activityData) {
-  for (int day = 0; day < DAYS_IN_WEEK; ++day) {
+  for (int day = 0; day < numDaysWithRealData; ++day) {
     int nextDaySecs = (day + 1) * DAY_LENGTH;
     for (Person &person: people) {
       
       // Seek to correct position in file.
       uint32_t seekPos = person
-        .visitOffsetByDay[day % DAYS_IN_WEEK];
+        .visitOffsetByDay[day % numDaysWithRealData];
       if (seekPos == EMPTY_VISIT_SCHEDULE) {
         //CkPrintf("No visits on day %d in people chare %d\n", day, thisIndex);
         continue;
@@ -183,7 +185,6 @@ void People::loadVisitData(std::ifstream *activityData) {
 void People::pup(PUP::er &p) {
   p | numLocalPeople;
   p | day;
-  p | newCases;
   p | totalVisitsForDay;
   p | people;
   p | generator;
@@ -243,8 +244,13 @@ void People::SyntheticSendVisitMessages() {
 
   // Calculate schedule for each person.
   for (Person &p : people) {
-    // Calculate "home" location coordinates.
+    // Check if person is self isolating.
     int personIdx = p.uniqueId;
+    if (p.isIsolating && diseaseModel->isInfectious(p.state)) {
+      continue;
+    }
+
+    // Calculate home location
     int localPersonIdx = (personIdx - firstLocationIdx) % homePartitionNumLocations;
     int homeX = homePartitionStartX + localPersonIdx % locationPartitionWidth;
     int homeY = homePartitionStartY + localPersonIdx / locationPartitionWidth;
@@ -358,7 +364,8 @@ void People::SyntheticSendVisitMessages() {
 void People::RealDataSendVisitMessages() {
   // Send activities for each person.
   for (const Person &person: people) {
-    for (VisitMessage visitMessage: person.visitsByDay[day % DAYS_IN_WEEK]) {
+    for (VisitMessage visitMessage:
+        person.visitsByDay[day % numDaysWithRealData]) {
       visitMessage.personState = person.state;
 
       // Find process that owns that location
@@ -422,7 +429,6 @@ void People::EndOfDayStateUpdate() {
   
   // Get ready for the next day
   day++;
-  newCases = 0;
 }
 
 void People::SendStats() {

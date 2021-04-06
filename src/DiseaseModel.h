@@ -11,9 +11,10 @@
 #include "disease_model/disease.pb.h"
 #include "disease_model/distribution.pb.h"
 #include "readers/DataReader.h"
+#include "readers/interventions.pb.h"
 
 #include "Event.h"
- #include "readers/data.pb.h"
+#include "readers/data.pb.h"
 
 #include <random>
 
@@ -31,14 +32,18 @@ class DiseaseModel : public CBase_DiseaseModel {
         Time timeDefToSeconds(Time_Def time) const;
         int healthyState;
         int exposedState;
+        
+        // Intervention related.
+        bool interventionToggled;
     public:
-        DiseaseModel(std::string pathToModel, std::string scenarioPath);
+        DiseaseModel(std::string pathToModel, std::string scenarioPath,
+            std::string pathToIntervention);
         int getIndexOfState(std::string stateLabel) const;
         // TODO(iancostello): Change interventionStategies to index based.
         std::tuple<int, int> transitionFromState(int fromState, std::default_random_engine *generator) const;
         std::string lookupStateName(int state) const;
         int getNumberOfStates() const;
-        int getHealthyState(std::vector<Data> dataField) const;
+        int getHealthyState(std::vector<Data> &dataField) const;
         bool isInfectious(int personState) const;
         bool isSusceptible(int personState) const;
         const char * getStateLabel(int personState) const;
@@ -55,6 +60,12 @@ class DiseaseModel : public CBase_DiseaseModel {
         loimos::proto::CSVDefinition *personDef;
         loimos::proto::CSVDefinition *locationDef;
         loimos::proto::CSVDefinition *activityDef;
+        loimos::proto::Intervention *interventionDef;
+
+        // Intervention methods
+        void toggleIntervention(int newDailyInfections);
+        bool shouldPersonIsolate(int healthState);
+        bool isLocationOpen(std::vector<Data> *locAttr) const;
 };
 
 #endif // __DiseaseModel_H__
