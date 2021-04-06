@@ -98,10 +98,10 @@ test-validation: all
 	./charmrun +p4 ./loimos 0 25000 5001 60 40 30 7 test-validation.csv ../data/disease_models/validation_model.textproto ../data/populations/validation_set/ ++local
 
 test-intervention: all
-	./charmrun +p4 ./loimos 0 41119 19203 60 40 30 7 test-intervention.csv ../data/disease_models/covid19_onepath.textproto ../data/populations/coc/ -i ../data/interventions/strict_closures.text_proto ++local
+	./charmrun +p4 ./loimos 0 41119 19203 60 40 30 7 test-intervention.csv ../data/disease_models/covid19_onepath.textproto ../data/populations/coc/ -i ../data/interventions/isolation_and_school_closures.text_proto ++local
 
 test-intervention-syn: all
-	./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 test-intervention-syn.csv ../data/disease_models/covid19_onepath.textproto -i ../data/interventions/only_population_based_closures.text_proto ++local
+	./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 test-intervention-syn.csv ../data/disease_models/covid19_onepath.textproto -i ../data/interventions/only_isolation.text_proto ++local
 
 
 clean-cache:
