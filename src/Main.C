@@ -175,7 +175,6 @@ void Main::SaveStats(int *data) {
   outFile << "day,state,total_in_state,change_in_state" << std::endl;
 
   for (day = 0; day < numDays; ++day, data += numDiseaseStates + 1) {
-    CkPrintf("Summary of Day %d\n", day);
     // Get total visits for the day.
     totalVisits += *data;
     data++;
@@ -185,13 +184,6 @@ void Main::SaveStats(int *data) {
       int total_in_state = *data;
       int change_in_state = total_in_state - accumulated[i];
       if (total_in_state != 0 || change_in_state != 0) {
-        CkPrintf(
-          "%d in %s. (%d change from previous day)\n",
-          total_in_state,
-          diseaseModel->lookupStateName(i).c_str(),
-          change_in_state
-        );
-
         // Write out data for state on that day
         outFile << day << ","
           << diseaseModel->lookupStateName(i) << ","
@@ -201,12 +193,9 @@ void Main::SaveStats(int *data) {
       accumulated[i] = total_in_state;
       data++;
     }
-
-    //CkPrintf("%d visits\n", *data); 
   }
 
   outFile.close();
-  //CkPrintf("Total Visits Processed %llu.\n\n", totalVisits);
 }
 
 #include "loimos.def.h"
