@@ -14,12 +14,13 @@
 class Main : public CBase_Main {
   Main_SDAG_CODE
   int day;
-  std::string summaryPath;
+  std::string pathToOutput;
   std::vector<int> accumulated;
   DiseaseModel* diseaseModel;
 
   public:
     Main(CkArgMsg* msg);
+    void SaveStats(int *data);
 };
 
 #endif // __MAIN_H__

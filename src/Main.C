@@ -14,6 +14,8 @@
 
 #include <string>
 #include <tuple>
+#include <iostream>
+#include <fstream>
 
 /* readonly */ CProxy_Main mainProxy;
 /* readonly */ CProxy_People peopleArray;
@@ -105,7 +107,7 @@ Main::Main(CkArgMsg* msg) {
   }
   
   numDays = atoi(msg->argv[baseRunInfo + 1]);
-  std::string pathToOutput = std::string(msg->argv[baseRunInfo + 2]);
+  pathToOutput = std::string(msg->argv[baseRunInfo + 2]);
   std::string pathToDiseaseModel = std::string(msg->argv[baseRunInfo + 3]);
 
   // Handle both real data runs or runs using synthetic populations.
@@ -157,6 +159,54 @@ Main::Main(CkArgMsg* msg) {
   CkPrintf("Running ...\n\n");
   simulationStartTime = CkWallTimer();
   mainProxy.run();
+}
+
+void Main::SaveStats(int *data) {
+  DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
+  int numDiseaseStates = diseaseModel->getNumberOfStates();
+
+  // Open output csv
+  std::ofstream outFile(pathToOutput);
+  if (!outFile) {
+    CkAbort("Error: invalid output path, %s\n", pathToOutput.c_str());
+  }
+
+  // Write header row
+  outFile << "day,state,total_in_state,change_in_state" << std::endl;
+
+  for (day = 0; day < numDays; ++day, data += numDiseaseStates + 1) {
+    CkPrintf("Summary of Day %d\n", day);
+    // Get total visits for the day.
+    totalVisits += *data;
+    data++;
+
+    // Get number of disease state changes.
+    for (int i = 0; i < numDiseaseStates; i++) {
+      int total_in_state = *data;
+      int change_in_state = total_in_state - accumulated[i];
+      if (total_in_state != 0 || change_in_state != 0) {
+        CkPrintf(
+          "%d in %s. (%d change from previous day)\n",
+          total_in_state,
+          diseaseModel->lookupStateName(i).c_str(),
+          change_in_state
+        );
+
+        // Write out data for state on that day
+        outFile << day << ","
+          << diseaseModel->lookupStateName(i) << ","
+          << total_in_state << ","
+          << change_in_state << std::endl;
+      }
+      accumulated[i] = total_in_state;
+      data++;
+    }
+
+    //CkPrintf("%d visits\n", *data); 
+  }
+
+  outFile.close();
+  //CkPrintf("Total Visits Processed %llu.\n\n", totalVisits);
 }
 
 #include "loimos.def.h"

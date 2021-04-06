@@ -66,12 +66,12 @@ test-small: all
 
 test-syn: all
 	./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 \
-		../data/out/test-small.csv \
+		../data/out/test-syn.csv \
 		../data/disease_models/covid19_onepath.textproto ++local
 
 test-large: all
 	./charmrun +p4 ./loimos 0 41119 19203 60 40 7 \
-		../data/out/test-small.csv ../data/disease_models/covid19.textproto \
+		../data/out/test-large.csv ../data/disease_models/covid19.textproto \
 		../data/populations/coc/ --min-max-alpha ++local
 
 clean-cache:
