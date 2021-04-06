@@ -124,30 +124,38 @@ Main::Main(CkArgMsg* msg) {
   if(msg->argc < 7){
     CkAbort("Error, usage %s <people> <locations> <people subsets> <location subsets> <days> <disease_model_path> <scenario_folder (optional)>\n", msg->argv[0]);
   }
-  syntheticRun = atoi(msg->argv[1]) == 1;
+
+  /*
+  for (int i = 0; i < msg->argc; ++i) {
+    CkPrintf("argv[%d]: %s\n", i, msg->argv[i]);
+  }
+  */
+  
+  int argNum = 0;
+  syntheticRun = atoi(msg->argv[++argNum]) == 1;
   int baseRunInfo = 0;
   if (syntheticRun) {
     // Get number of people.
-    synPeopleGridWidth = atoi(msg->argv[2]);
-    synPeopleGridHeight = atoi(msg->argv[3]);
+    synPeopleGridWidth = atoi(msg->argv[++argNum]);
+    synPeopleGridHeight = atoi(msg->argv[++argNum]);
     numPeople = synPeopleGridWidth * synPeopleGridHeight;
     
     // Location data
-    synLocationGridWidth = atoi(msg->argv[4]);
-    synLocationGridHeight = atoi(msg->argv[5]);
+    synLocationGridWidth = atoi(msg->argv[++argNum]);
+    synLocationGridHeight = atoi(msg->argv[++argNum]);
     numLocations = synLocationGridWidth * synLocationGridHeight;
     assert(synPeopleGridWidth >= synLocationGridWidth);
     assert(synPeopleGridHeight >= synLocationGridHeight);
 
     // Edge degree.
-    averageDegreeOfVisit = atoi(msg->argv[6]);
+    averageDegreeOfVisit = atoi(msg->argv[++argNum]);
     
     // Chare data
-    synLocationPartitionGridWidth = atoi(msg->argv[7]);
-    synLocationPartitionGridHeight = atoi(msg->argv[8]);
+    synLocationPartitionGridWidth = atoi(msg->argv[++argNum]);
+    synLocationPartitionGridHeight = atoi(msg->argv[++argNum]);
     numLocationPartitions =
       synLocationPartitionGridWidth * synLocationPartitionGridHeight;
-    numPeoplePartitions = atoi(msg->argv[9]);
+    numPeoplePartitions = atoi(msg->argv[++argNum]);
  
     // Calculate the dimensions of the block of locations stored by each
     // location chare
@@ -167,21 +175,21 @@ Main::Main(CkArgMsg* msg) {
         synLocationPartitionGridWidth, synLocationPartitionGridHeight,
         synLocationGridWidth, synLocationGridHeight);
     }
-    numDays = atoi(msg->argv[10]);
+    numDays = atoi(msg->argv[++argNum]);
     baseRunInfo = 10;
   } else {
-    numPeople = atoi(msg->argv[2]);
-    numLocations = atoi(msg->argv[3]);
-    numPeoplePartitions = atoi(msg->argv[4]);
-    numLocationPartitions = atoi(msg->argv[5]);
-    numDays = atoi(msg->argv[6]);
-    numDaysWithRealData = atoi(msg->argv[7]);
+    numPeople = atoi(msg->argv[++argNum]);
+    numLocations = atoi(msg->argv[++argNum]);
+    numPeoplePartitions = atoi(msg->argv[++argNum]);
+    numLocationPartitions = atoi(msg->argv[++argNum]);
+    numDays = atoi(msg->argv[++argNum]);
+    numDaysWithRealData = atoi(msg->argv[++argNum]);
     baseRunInfo = 7;
   }
   
-  pathToOutput = std::string(msg->argv[baseRunInfo + 1]);
-  std::string pathToDiseaseModel = std::string(msg->argv[baseRunInfo + 2]);
-  printf("Disease model is at %s\n", msg->argv[baseRunInfo + 2]);
+  pathToOutput = std::string(msg->argv[++argNum]);
+  std::string pathToDiseaseModel = std::string(msg->argv[++argNum]);
+  CkPrintf("Disease model is at %s\n", msg->argv[argNum]);
 
   // Handle both real data runs or runs using synthetic populations.
   if(syntheticRun) {
@@ -189,20 +197,22 @@ Main::Main(CkArgMsg* msg) {
     firstLocationIdx = 0;
   } else {    
     // Create data caches.
-    scenarioPath = std::string(msg->argv[baseRunInfo + 3]);
-    std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(scenarioPath, numPeople, numPeoplePartitions, numLocations, numLocationPartitions, numDays);
-    baseRunInfo += 1;
+    scenarioPath = std::string(msg->argv[++argNum]);
+    std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(
+        scenarioPath, numPeople, numPeoplePartitions, numLocations,
+        numLocationPartitions, numDays);
   }
 
   // Detemine which contact modle to use
   contactModelType = (int) ContactModelType::constant_probability;
+  interventionStategy = false;
   int interventionStategyLocation = -1;
-  for (int i = baseRunInfo + 2; i + 1 < msg->argc; i++) {
-    std::string tmp = std::string(msg->argv[i]);
+  for (; argNum < msg->argc; ++argNum) {
+    std::string tmp = std::string(msg->argv[argNum]);
     if ("-m" == tmp or "--min-max-alpha" == tmp) {
       contactModelType = (int) ContactModelType::min_max_alpha;
-    } else if ("-i" == tmp) {
-      interventionStategyLocation = ++i;
+    } else if ("-i" == tmp && argNum + 1 < msg->argc) {
+      interventionStategyLocation = ++argNum;
       interventionStategy = true;
     }
   }
@@ -216,21 +226,24 @@ Main::Main(CkArgMsg* msg) {
   }
 
 #ifdef ENABLE_UNIT_TESTING
-  printf("Executing unit testing.");
+  CkPrintf("Executing unit testing.");
   testing::InitGoogleTest(&msg->argc, msg->argv);
   RUN_ALL_TESTS();
 #endif
 
   // Instantiate DiseaseModel nodegroup (One for each physical processor).
   CkPrintf("Loading diseaseModel at %s.\n", pathToDiseaseModel.c_str());
-  if (interventionStategyLocation == -1) {
-    interventionStategy = false;
-    globDiseaseModel = CProxy_DiseaseModel::ckNew(pathToDiseaseModel, scenarioPath, "");
-    printf("Running with no intervention.\n");
+  if (interventionStategy) {
+    CkPrintf("intervention stategy index: %d\n", interventionStategyLocation);
+    globDiseaseModel = CProxy_DiseaseModel::ckNew(pathToDiseaseModel,
+        scenarioPath, msg->argv[interventionStategyLocation]);
+    CkPrintf("Loading intervention at %s.\n",
+        msg->argv[interventionStategyLocation]);
+
   } else {
-    interventionStategy = true;
-    globDiseaseModel = CProxy_DiseaseModel::ckNew(pathToDiseaseModel, scenarioPath, msg->argv[interventionStategyLocation]);
-    printf("Loading intervention at %s.\n", msg->argv[interventionStategyLocation]);
+    globDiseaseModel = CProxy_DiseaseModel::ckNew(pathToDiseaseModel,
+        scenarioPath, "");
+    CkPrintf("Running with no intervention.\n");
   }
   
   diseaseModel = globDiseaseModel.ckLocalBranch();

@@ -8,6 +8,7 @@ message Intervention {
     double newDailyCasesTriggerOff = 2;
     bool schoolClosures = 3;
     bool stayAtHome = 4; 
+    double isolationCompliance = 5;
     // CSV Mappings
-    int32 csvLocationOfSchool = 5;
+    int32 csvLocationOfSchool = 6;
 }

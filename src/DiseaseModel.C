@@ -62,46 +62,64 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
   assert(model->disease_state_size() != 0);
 
   // Setup other shared PE objects.
-  
-  // Handle people...
-  personDef = new loimos::proto::CSVDefinition();
-  std::ifstream personInputStream(scenarioPath + "people.textproto");
-  std::string strPerson((std::istreambuf_iterator<char>(personInputStream)),
-      std::istreambuf_iterator<char>());
-  if (!google::protobuf::TextFormat::ParseFromString(strPerson, personDef)) {
-    CkAbort("Could not parse protobuf!");
-  }
-  personInputStream.close();
+  if (!syntheticRun) {
+    // Handle people...
+    personDef = new loimos::proto::CSVDefinition();
+    std::ifstream personInputStream(scenarioPath + "people.textproto");
+    if (!personInputStream)
+      CkAbort("Could not open people textproto!");
+    std::string strPerson((std::istreambuf_iterator<char>(personInputStream)),
+                    std::istreambuf_iterator<char>());
+    if (!google::protobuf::TextFormat::ParseFromString(strPerson, personDef)) {
+      CkAbort("Could not parse person protobuf!");
+    }
+    personInputStream.close();
 
-  // ...locations...
-  locationDef = new loimos::proto::CSVDefinition();
-  std::ifstream locationInputStream(scenarioPath + "locations.textproto");
-  std::string strLocation((std::istreambuf_iterator<char>(locationInputStream)),
-      std::istreambuf_iterator<char>());
-  if (!google::protobuf::TextFormat::ParseFromString(strLocation,
-        locationDef)) {
-    CkAbort("Could not parse protobuf!");
+    // ...locations...
+    locationDef = new loimos::proto::CSVDefinition();
+    std::ifstream locationInputStream(scenarioPath + "locations.textproto");
+    if (!locationInputStream)
+      CkAbort("Could not open location textproto!");
+    std::string strLocation((std::istreambuf_iterator<char>(
+            locationInputStream)),
+                    std::istreambuf_iterator<char>());
+    if (!google::protobuf::TextFormat::ParseFromString(strLocation,
+          locationDef)) {
+      CkAbort("Could not parse location protobuf!");
+    }
+    locationInputStream.close();
+
+    // ...and visits
+    activityDef = new loimos::proto::CSVDefinition();
+    std::ifstream activityInputStream(scenarioPath + "visits.textproto");
+    if (!activityInputStream)
+      CkAbort("Could not open activity textproto!");
+    std::string strActivity((std::istreambuf_iterator<char>(
+            activityInputStream)),
+                    std::istreambuf_iterator<char>());
+    if (!google::protobuf::TextFormat::ParseFromString(strActivity,
+          activityDef)) {
+      CkAbort("Could not parse activity protobuf!");
+    }
+    activityInputStream.close();
   }
-  locationInputStream.close();
   
-  // ...and visits
-  activityDef = new loimos::proto::CSVDefinition();
-  std::ifstream activityInputStream(scenarioPath + "visits.textproto");
-  std::string strActivity((std::istreambuf_iterator<char>(activityInputStream)),
-      std::istreambuf_iterator<char>());
-  if (!google::protobuf::TextFormat::ParseFromString(strActivity,
-        activityDef)) {
-    CkAbort("Could not parse protobuf!");
+  if (interventionStategy) {
+    interventionDef = new loimos::proto::Intervention();
+    std::ifstream interventionActivityStream(pathToIntervention);
+    if (!interventionActivityStream)
+      CkAbort("Could not open intervention textproto!");
+    std::string interventionString((std::istreambuf_iterator<char>(
+            interventionActivityStream)),
+                    std::istreambuf_iterator<char>());
+    if (!google::protobuf::TextFormat::ParseFromString(interventionString,
+          interventionDef)) {
+      CkAbort("Could not parse protobuf!");
+    }
+    interventionActivityStream.close();
   }
-  activityInputStream.close();
-  interventionDef = new loimos::proto::Intervention();
-  std::ifstream interventionActivityStream(pathToIntervention);
-  std::string interventionString((std::istreambuf_iterator<char>(interventionActivityStream)),
-                  std::istreambuf_iterator<char>());
-  if (!google::protobuf::TextFormat::ParseFromString(interventionString, interventionDef)) {
-    CkAbort("Could not parse protobuf!");
-  }
-  interventionActivityStream.close();
+  
+  // Always toggle intervention off to start.
   interventionToggled = false;
 }
 
@@ -325,12 +343,24 @@ void DiseaseModel::toggleIntervention(int newDailyInfections) {
 }
 
 /**
+ * For now only the self-siolation intervention has a compilance value
+ */
+double DiseaseModel::getCompilance() const {
+  if (interventionStategy && interventionDef->stayathome()) {
+    return interventionDef->isolationcompliance();
+  } else {
+    return 0;
+  }
+}
+
+/**
  * Only thing that causes person to self-isolate is if interventions are
  * triggered, that intervention imposes stay at home, and person is symptomatic. 
  */ 
 bool DiseaseModel::shouldPersonIsolate(int healthState) {
-  return interventionToggled && interventionDef->stayathome() &&
-    model->disease_state(healthState).symptomatic();
+  return interventionToggled
+    && interventionDef->stayathome()
+    && model->disease_state(healthState).symptomatic();
 }
 
 /**
