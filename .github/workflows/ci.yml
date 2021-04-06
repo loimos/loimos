@@ -63,7 +63,9 @@ jobs:
         export CHARM_HOME=$GITHUB_WORKSPACE/charm-nonsmp
         export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
         make
-        ./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 ../data/disease_models/covid19_onepath.textproto +setcpuaffinity ++local
+        # Make output dir
+        mkdir ../data/out
+        ./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 ../data/out/test-ci.csv ../data/disease_models/covid19_onepath.textproto +setcpuaffinity ++local
         make clean
         # Test SMP
         export CHARM_HOME=$GITHUB_WORKSPACE/charm-smp
