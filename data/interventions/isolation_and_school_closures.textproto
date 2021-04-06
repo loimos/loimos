@@ -1,0 +1,5 @@
+newDailyCasesTriggerOn: 0.004
+newDailyCasesTriggerOff: 0.001;
+schoolClosures: true
+stayAtHome: true
+csvLocationOfSchool: 0

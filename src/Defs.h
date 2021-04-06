@@ -52,7 +52,9 @@ extern /* readonly */ int numLocations;
 extern /* readonly */ int numPeoplePartitions;
 extern /* readonly */ int numLocationPartitions;
 extern /* readonly */ int numDays;
+extern /* readonly */ int numDaysWithRealData;
 extern /* readonly */ bool syntheticRun;
+
 extern /* readonly */ uint64_t totalVisits;
 extern /* readonly */ double simulationStartTime;
 extern /* readonly */ double iterationStartTime;
@@ -73,6 +75,9 @@ extern /* readonly */ int synLocalLocationGridHeight;
 extern /* readonly */ int synLocationPartitionGridWidth;
 extern /* readonly */ int synLocationPartitionGridHeight;
 extern /* readonly */ int averageDegreeOfVisit;
+
+// Intervention
+extern /* readonly */ bool interventionStategy;
 
 int getNumElementsPerPartition(int numElements, int numPartitions);
 

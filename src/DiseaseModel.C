@@ -17,9 +17,10 @@
 #include "DiseaseModel.h"
 #include "Defs.h"
 #include "Event.h"
+#include "readers/DataReader.h"
 #include "disease_model/disease.pb.h"
 #include "disease_model/distribution.pb.h"
-#include "readers/DataReader.h"
+#include "readers/interventions.pb.h"
 
 #include <cmath>
 #include <cstdio>
@@ -35,12 +36,14 @@ using NameIndexLookupType = std::unordered_map<std::string, int>;
 // (i.e. it normalizes for the size of the smallest time increment used
 // in the discrete event simulation and disease model)
 const long double TRANSMISSIBILITY = 7.5E-6 / DAY_LENGTH;
+//const long double TRANSMISSIBILITY = 4E-6 / DAY_LENGTH;
 
 /**
  * Constructor which loads in disease file from text proto file.
  * On failure, aborts the entire simulation.
  */
-DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath) {
+DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
+    std::string pathToIntervention) {
   // Load in text proto definition.
   // TODO(iancostello): Load directly without string.
 
@@ -56,6 +59,7 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath) {
     CkAbort("Could not parse protobuf!");
   }
   diseaseModelStream.close();
+  assert(model->disease_state_size() != 0);
 
   // Setup other shared PE objects.
   
@@ -90,6 +94,15 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath) {
     CkAbort("Could not parse protobuf!");
   }
   activityInputStream.close();
+  interventionDef = new loimos::proto::Intervention();
+  std::ifstream interventionActivityStream(pathToIntervention);
+  std::string interventionString((std::istreambuf_iterator<char>(interventionActivityStream)),
+                  std::istreambuf_iterator<char>());
+  if (!google::protobuf::TextFormat::ParseFromString(interventionString, interventionDef)) {
+    CkAbort("Could not parse protobuf!");
+  }
+  interventionActivityStream.close();
+  interventionToggled = false;
 }
 
 /**
@@ -123,7 +136,6 @@ DiseaseModel::transitionFromState(int fromState,
 
   // Two cases
   if (currState->has_timed_transition()) {
-    // printf("Timed trans from %d\n", fromState);
     // Get the next transition set to use.
     // Currently for timed transitions we only support one set edge.
     const loimos::proto::DiseaseModel_DiseaseState_TimedTransitionSet
@@ -222,7 +234,7 @@ int DiseaseModel::getNumberOfStates() const {
 }
 
 /** Returns the initial starting healthy and exposed state */
-int DiseaseModel::getHealthyState(std::vector<Data> dataField) const {
+int DiseaseModel::getHealthyState(std::vector<Data> &dataField) const { 
   // Age based transition.
   int personAge = dataField[AGE_CSV_INDEX].int_b10;
   int numStartingStates = model->starting_states_size();
@@ -292,4 +304,39 @@ double DiseaseModel::getPropensity(int susceptibleState, int infectiousState,
   return TRANSMISSIBILITY * dt
     * model->disease_state(susceptibleState).susceptibility()
     * model->disease_state(infectiousState).infectivity();
+}
+
+/**
+ * Intervention Methods
+ * TODO: Move to own chare as these become more complex.
+ */
+void DiseaseModel::toggleIntervention(int newDailyInfections) {
+  if (!interventionToggled) {
+    if (static_cast<double>(newDailyInfections) / numPeople >= 
+          interventionDef->newdailycasestriggeron()) {
+      interventionToggled = true;
+    }
+  } else {
+    if (static_cast<double>(newDailyInfections) / numPeople <=
+          interventionDef->newdailycasestriggeroff()) {
+      interventionToggled = false;
+    }
+  }
+}
+
+/**
+ * Only thing that causes person to self-isolate is if interventions are
+ * triggered, that intervention imposes stay at home, and person is symptomatic. 
+ */ 
+bool DiseaseModel::shouldPersonIsolate(int healthState) {
+  return interventionToggled && interventionDef->stayathome() &&
+    model->disease_state(healthState).symptomatic();
+}
+
+/**
+ * Location closed if it is a school and intervention is triggered.
+ */ 
+bool DiseaseModel::isLocationOpen(std::vector<Data> *locAttr) const {
+  return !(interventionToggled && interventionDef->schoolclosures() &&
+   locAttr->at(interventionDef->csvlocationofschool()).int_b10 > 0);
 }

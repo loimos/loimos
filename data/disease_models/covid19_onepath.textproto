@@ -8,6 +8,7 @@ starting_states: {
 disease_state: {
 	state_label: "S_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 1
 	exposure_transition: {
 		transition: {
@@ -18,6 +19,7 @@ disease_state: {
 disease_state: {
 	state_label: "HypRxFail_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 1
 	timed_transition: {
 		transition: {
@@ -34,6 +36,7 @@ disease_state: {
 disease_state: {
 	state_label: "HypRxProt_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
@@ -50,6 +53,7 @@ disease_state: {
 disease_state: {
 	state_label: "E_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
@@ -94,6 +98,7 @@ disease_state: {
 disease_state: {
 	state_label: "Isymp_a"
 	infectivity: 1
+	symptomatic: true
 	susceptibility: 0
 	timed_transition: {
 		transition: {
@@ -213,6 +218,7 @@ disease_state: {
 disease_state: {
 	state_label: "rMedAttend_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
@@ -232,6 +238,7 @@ disease_state: {
 disease_state: {
 	state_label: "hMedAttend_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
@@ -251,6 +258,7 @@ disease_state: {
 disease_state: {
 	state_label: "dMedAttend_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
@@ -342,6 +350,7 @@ disease_state: {
 disease_state: {
 	state_label: "Hosp_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
@@ -373,6 +382,7 @@ disease_state: {
 disease_state: {
 	state_label: "dHosp_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
@@ -464,6 +474,7 @@ disease_state: {
 disease_state: {
 	state_label: "Vent_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
@@ -483,6 +494,7 @@ disease_state: {
 disease_state: {
 	state_label: "dVent_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
@@ -520,6 +532,7 @@ disease_state: {
 disease_state: {
 	state_label: "Death_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 	}
@@ -527,6 +540,7 @@ disease_state: {
 disease_state: {
 	state_label: "R_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
@@ -555,6 +569,7 @@ disease_state: {
 disease_state: {
 	state_label: "RyetS_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 1
 	timed_transition: {
 		transition: {
@@ -571,7 +586,8 @@ disease_state: {
 disease_state: {
 	state_label: "Rimmune_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
-			}
+	}
 }

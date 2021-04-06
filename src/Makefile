@@ -9,7 +9,7 @@ OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o \
          Defs.o Event.o Interaction.o readers/Preprocess.o Aggregator.o \
          disease_model/disease.pb.o disease_model/distribution.pb.o \
 		     readers/data.pb.o contact_model/ContactModel.o \
-				 contact_model/MinMaxAlphaModel.o
+				 contact_model/MinMaxAlphaModel.o readers/interventions.pb.o
 DEFS   = Defs.h loimos.def.h readers/DataReader.h
 DECLS  = loimos.decl.h
 BIN    = loimos
@@ -72,7 +72,7 @@ clean:
 	done
 
 # All test names start with "test-"
-TEST_NAMES= -small -syn -large -validation
+TEST_NAMES= -small -syn -large -validation -intervention -intervention-syn
 TESTS=$(subst -,test-,$(TEST_NAMES))
 
 # Run all tests with test rule
@@ -80,16 +80,23 @@ TESTS=$(subst -,test-,$(TEST_NAMES))
 test: $(TESTS)
 
 test-small: all
-	./charmrun +p4 ./loimos 0 100 735 2 2 7 test-small.csv ../data/disease_models/covid19.textproto ../data/populations/synthetic_small_city/ ++local
+	./charmrun +p4 ./loimos 0 100 735 2 2 30 7 test-small.csv ../data/disease_models/covid19.textproto ../data/populations/synthetic_small_city/ ++local
 
 test-syn: all
 	./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 test-syn.csv ../data/disease_models/covid19_onepath.textproto ++local
 
 test-large: all
-	./charmrun +p4 ./loimos 0 41119 19203 60 40 14 test-large.csv ../data/disease_models/covid19.textproto ../data/populations/coc/ --min-max-alpha ++local
+	./charmrun +p4 ./loimos 0 41119 19203 60 40 30 7 test-large.csv ../data/disease_models/covid19.textproto ../data/populations/coc/ --min-max-alpha ++local
 
 test-validation: all
-	./charmrun +p4 ./loimos 0 25000 5001 60 40 30 test-validation.csv ../data/disease_models/validation_model.textproto ../data/populations/validation_set/ ++local
+	./charmrun +p4 ./loimos 0 25000 5001 60 40 30 7 test-validation.csv ../data/disease_models/validation_model.textproto ../data/populations/validation_set/ ++local
+
+test-intervention: all
+	./charmrun +p4 ./loimos 0 41119 19203 60 40 30 7 test-intervention.csv ../data/disease_models/covid19_onepath.textproto ../data/populations/coc/ -i ../data/interventions/strict_closures.text_proto ++local
+
+test-intervention-syn: all
+	./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 test-intervention-syn.csv ../data/disease_models/covid19_onepath.textproto -i ../data/interventions/only_population_based_closures.text_proto ++local
+
 
 clean-cache:
 	rm ../data/populations/coc/*.cache ../data/populations/synthetic_small_city/*.cache
