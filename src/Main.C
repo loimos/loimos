@@ -176,12 +176,11 @@ void Main::SaveStats(int *data) {
 
   for (day = 0; day < numDays; ++day, data += numDiseaseStates + 1) {
     // Get total visits for the day.
-    totalVisits += *data;
-    data++;
+    totalVisits += data[0];
 
     // Get number of disease state changes.
     for (int i = 0; i < numDiseaseStates; i++) {
-      int total_in_state = *data;
+      int total_in_state = data[i + 1];
       int change_in_state = total_in_state - accumulated[i];
       if (total_in_state != 0 || change_in_state != 0) {
         // Write out data for state on that day
@@ -191,7 +190,6 @@ void Main::SaveStats(int *data) {
           << change_in_state << std::endl;
       }
       accumulated[i] = total_in_state;
-      data++;
     }
   }
 
