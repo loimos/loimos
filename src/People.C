@@ -135,8 +135,10 @@ void People::loadPeopleData() {
   free(buf);
 
   // Initialize intial states. (This will move in the DataLoaderPR)
+  double isolationCompliance = diseaseModel->getCompilance();
   for (Person &person: people) {
     person.state = diseaseModel->getHealthyState(person.getDataField());
+    person.willComply = unitDistrib(generator) < isolationCompliance;
   }
 
   loadVisitData(&activityData);

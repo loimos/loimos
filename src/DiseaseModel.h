@@ -64,6 +64,7 @@ class DiseaseModel : public CBase_DiseaseModel {
 
         // Intervention methods
         void toggleIntervention(int newDailyInfections);
+        double getCompilance() const;
         bool shouldPersonIsolate(int healthState);
         bool isLocationOpen(std::vector<Data> *locAttr) const;
 };
