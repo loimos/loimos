@@ -29,8 +29,12 @@ People::People() {
   day = 0;
   generator.seed(thisIndex);
 
-  // Initialize disease model and identify the healthy state
+  // Initialize disease model
   diseaseModel = globDiseaseModel.ckLocalBranch();
+
+  // Allocate space to summarize the state summaries for every day
+  int totalStates = diseaseModel->getNumberOfStates();
+  stateSummaries.resize((totalStates + 1) * numDays, 0);
 
   // Get the number of people assigned to this chare
   numLocalPeople = getNumLocalElements(
@@ -340,10 +344,13 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
 }
 
 void People::EndofDayStateUpdate() {
-  // Handle state transitions at the end of the day.
+  // Get ready to count today's states
   int totalStates = diseaseModel->getNumberOfStates();
-  std::vector<int> stateSummary(totalStates + 1, 0);
-  stateSummary[0] = totalVisitsForDay;
+  int offset = (totalStates + 1) * day;
+  stateSummaries[offset] = totalVisitsForDay;
+  
+  // Handle state transitions at the end of the day.
+  int infectiousCount = 0;
   for (Person &person: people) {
     
     ProcessInteractions(person);
@@ -372,14 +379,22 @@ void People::EndofDayStateUpdate() {
       person.secondsLeftInState = secondsLeftInState;
     }
 
-    stateSummary[currState + 1]++;
+    stateSummaries[currState + offset + 1]++;
+    if (diseaseModel->isInfectious(currState)) {
+      infectiousCount++;
+    }
   }
 
   // contributing to reduction
-  CkCallback cb(CkReductionTarget(Main, ReceiveStats), mainProxy);
-  contribute(stateSummary, CkReduction::sum_int, cb);
+  CkCallback cb(CkReductionTarget(Main, ReceiveInfectiousCount), mainProxy);
+  contribute(sizeof(int), &infectiousCount, CkReduction::sum_int, cb);
   day++;
   newCases = 0;
+}
+
+void People::SendStats() {
+  CkCallback cb(CkReductionTarget(Main, ReceiveStats), mainProxy);
+  contribute(stateSummaries, CkReduction::sum_int, cb);
 }
 
 void People::ProcessInteractions(Person &person) {

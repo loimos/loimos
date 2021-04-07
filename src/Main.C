@@ -12,7 +12,10 @@
 #include "contact_model/ContactModel.h"
 #include "readers/Preprocess.h"
 
+#include <string>
 #include <tuple>
+#include <iostream>
+#include <fstream>
 
 /* readonly */ CProxy_Main mainProxy;
 /* readonly */ CProxy_People peopleArray;
@@ -104,7 +107,8 @@ Main::Main(CkArgMsg* msg) {
   }
   
   numDays = atoi(msg->argv[baseRunInfo + 1]);
-  std::string pathToDiseaseModel = std::string(msg->argv[baseRunInfo + 2]);
+  pathToOutput = std::string(msg->argv[baseRunInfo + 2]);
+  std::string pathToDiseaseModel = std::string(msg->argv[baseRunInfo + 3]);
 
   // Handle both real data runs or runs using synthetic populations.
   if(syntheticRun) {
@@ -112,14 +116,14 @@ Main::Main(CkArgMsg* msg) {
     firstLocationIdx = 0;
   } else {    
     // Create data caches.
-    scenarioPath = std::string(msg->argv[baseRunInfo + 3]);
+    scenarioPath = std::string(msg->argv[baseRunInfo + 4]);
     std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(scenarioPath, numPeople, numPeoplePartitions, numLocations, numLocationPartitions, numDays);
   }
 
   // Detemine which contact modle to use
   contactModelType = (int) ContactModelType::constant_probability;
-  if (msg->argc == baseRunInfo + 5) {
-    std::string tmp = std::string(msg->argv[baseRunInfo + 4]);
+  if (msg->argc == baseRunInfo + 6) {
+    std::string tmp = std::string(msg->argv[baseRunInfo + 5]);
     // We can just use a flag for now in the CLI, since we only have two
     // models and that's easier to parse, but we may eventually have more,
     // which is why we use an enum to actually hold the model value
@@ -155,6 +159,41 @@ Main::Main(CkArgMsg* msg) {
   CkPrintf("Running ...\n\n");
   simulationStartTime = CkWallTimer();
   mainProxy.run();
+}
+
+void Main::SaveStats(int *data) {
+  DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
+  int numDiseaseStates = diseaseModel->getNumberOfStates();
+
+  // Open output csv
+  std::ofstream outFile(pathToOutput);
+  if (!outFile) {
+    CkAbort("Error: invalid output path, %s\n", pathToOutput.c_str());
+  }
+
+  // Write header row
+  outFile << "day,state,total_in_state,change_in_state" << std::endl;
+
+  for (day = 0; day < numDays; ++day, data += numDiseaseStates + 1) {
+    // Get total visits for the day.
+    totalVisits += data[0];
+
+    // Get number of disease state changes.
+    for (int i = 0; i < numDiseaseStates; i++) {
+      int total_in_state = data[i + 1];
+      int change_in_state = total_in_state - accumulated[i];
+      if (total_in_state != 0 || change_in_state != 0) {
+        // Write out data for state on that day
+        outFile << day << ","
+          << diseaseModel->lookupStateName(i) << ","
+          << total_in_state << ","
+          << change_in_state << std::endl;
+      }
+      accumulated[i] = total_in_state;
+    }
+  }
+
+  outFile.close();
 }
 
 #include "loimos.def.h"

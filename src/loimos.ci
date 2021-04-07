@@ -71,43 +71,37 @@ mainmodule loimos {
             peopleArray.EndofDayStateUpdate();
           }
         }
-        when ReceiveStats(CkReductionMsg *summary) {
+        when ReceiveInfectiousCount(int infectiousCount) {
           serial {
-            CkPrintf("Summary of Day %d\n", day);
-            CkPrintf("Iteration %d Execution Time: %lf seconds.\n", day, CkWallTimer() - iterationStartTime);
-            int *data = reinterpret_cast<int *>(summary->getData());
-            // Get total visits for the day.
-            totalVisits += *data;
-            data++;
-
-            // Get number of disease state changes.
-            DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
-            for (int i = 0; i < diseaseModel->getNumberOfStates(); i++) {
-              int total_in_state = *data;
-              int change_in_infected = total_in_state - accumulated[i];
-              if (total_in_state != 0 || change_in_infected != 0) {
-                CkPrintf(
-                  "%d in %s. (%d change from previous day)\n",
-                  total_in_state,
-                  diseaseModel->lookupStateName(i).c_str(),
-                  change_in_infected
-                );
-              }
-              accumulated[i] = total_in_state; 
-              data++;
-            }
+            // Use this count as desired here
+            
+            // Print how long this iteration took to run
+            CkPrintf(
+              "Iteration %d Execution Time: %lf seconds.\n",
+              day, CkWallTimer() - iterationStartTime
+            );
           }
         }
       }
       serial { 
-        printf("\nFinished data loading in %lf seconds.\n", simulationStartTime);
-        printf("Finished simulating %d days in %lf seconds.\n", numDays, (CkWallTimer() - simulationStartTime));
-        printf("Total Visits Processed %llu.\n\n", totalVisits);
+        CkPrintf("\nFinished data loading in %lf seconds.\n", simulationStartTime);
+        CkPrintf("Finished simulating %d days in %lf seconds.\n", numDays, (CkWallTimer() - simulationStartTime));
+        
+        peopleArray.SendStats();
+      }
+      when ReceiveStats(CkReductionMsg *summary) {
+        serial {
+          int *data = reinterpret_cast<int *>(summary->getData());
+          SaveStats(data);
+        }
+      }
+      serial {
         CkExit(); 
       }
     };
     entry void StartComputingInteractions(); 
     entry void ComputedInteractions();
+    entry [reductiontarget] void ReceiveInfectiousCount(int infectiousCount);
     entry [reductiontarget] void ReceiveStats(CkReductionMsg *summary);
   };
 
@@ -119,7 +113,8 @@ mainmodule loimos {
 #else
     entry void ReceiveInteractions(InteractionMessage);
 #endif
-    entry void EndofDayStateUpdate(); // contribute call to ReceiveStats
+    entry void EndofDayStateUpdate(); // contribute call to ReceiveInfectiousCount
+    entry void SendStats(); // contribute call to ReceiveStats
   };
 
   array [1D] Locations {
