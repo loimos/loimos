@@ -35,9 +35,11 @@ Locations::Locations() {
 
   // Load application data
   if (syntheticRun) {
-    Location tmp(0);
-    locations.resize(numLocalLocations, tmp);
-
+    locations.reserve(numLocalLocations);
+    int firstIdx = thisIndex * getNumLocalElements(numLocations, numLocationPartitions, 0);
+    for (int p = 0; p < numLocalLocations; p++) {
+      locations.emplace_back(0, firstIdx + p, &generator);
+    }
   } else {
     loadLocationData();
   }
@@ -54,8 +56,9 @@ void Locations::loadLocationData() {
   int numAttributesPerLocation = 
     DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
   locations.reserve(numLocalLocations);
+  int firstIdx = thisIndex * getNumLocalElements(numLocations, numLocationPartitions, 0);
   for (int p = 0; p < numLocalLocations; p++) {
-    locations.emplace_back(numAttributesPerLocation);
+    locations.emplace_back(numAttributesPerLocation, firstIdx + p, &generator);
   }
 
   // Load in location information.

@@ -21,7 +21,6 @@ class Locations : public CBase_Locations {
     std::vector<Location> locations;
     std::default_random_engine generator;
     DiseaseModel *diseaseModel;
-  
     ContactModel *contactModel;
 
   public:

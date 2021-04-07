@@ -72,19 +72,6 @@ People::People() {
       // Load in people data from file.
       loadPeopleData();
   }
-  
-  // Randomly infect people to seed the initial outbreak
-  for (Person &person: people) {
-    if (unitDistrib(generator) < INITIAL_INFECTIOUS_PROBABILITY) {
-      // Get which exposed state they should transition to.
-      std::tie(person.state, std::ignore) = 
-        diseaseModel->transitionFromState(person.state, &generator);
-      // See where they will transition next.
-      std::tie(person.next_state, person.secondsLeftInState) =
-        diseaseModel->transitionFromState(person.state, &generator);
-      newCases++;
-    }
-  }
 }
 
 /**
@@ -368,12 +355,12 @@ void People::EndofDayStateUpdate() {
         std::tie(person.next_state, person.secondsLeftInState) = 
           diseaseModel->transitionFromState(person.state, &generator);
       } else {
-          // Get which exposed state they should transition to.
-          std::tie(person.state, std::ignore) = 
-            diseaseModel->transitionFromState(person.state, &generator);
-          // See where they will transition next.
-          std::tie(person.next_state, person.secondsLeftInState) =
-            diseaseModel->transitionFromState(person.state, &generator);
+        // Get which exposed state they should transition to.
+        std::tie(person.state, std::ignore) = 
+          diseaseModel->transitionFromState(person.state, &generator);
+        // See where they will transition next.
+        std::tie(person.next_state, person.secondsLeftInState) =
+          diseaseModel->transitionFromState(person.state, &generator);
       }
     } else {
       person.secondsLeftInState = secondsLeftInState;

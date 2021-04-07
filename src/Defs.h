@@ -36,7 +36,9 @@ const Time MINUTE_LENGTH = 60;
 #define EMPTY_VISIT_SCHEDULE 0xFFFFFFFF
 #define CSV_DELIM ','
 
-#define INITIAL_INFECTIOUS_PROBABILITY 0.05
+#define PERCENTAGE_OF_SEEDING_LOCATIONS 0.001
+#define INITIAL_INFECTIOUS_PROBABILITY 0.01
+#define DAYS_TO_SEED_INFECTION 3
 
 extern /* readonly */ CProxy_Main mainProxy;
 extern /* readonly */ CProxy_People peopleArray;
