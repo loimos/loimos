@@ -26,7 +26,7 @@ using NameIndexLookupType = std::unordered_map<std::string, int>;
 // not everyone gets infected immediately given the small time units
 // (i.e. it normalizes for the size of the smallest time increment used
 // in the discrete event simulation and disease model)
-const long double TRANSMISSIBILITY = 1.36E-6 / DAY_LENGTH;
+const long double TRANSMISSIBILITY = 7.5E-6 / DAY_LENGTH;
 
 /**
  * Constructor which loads in disease file from text proto file.
