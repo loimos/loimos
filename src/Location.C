@@ -17,10 +17,32 @@
 #include <cmath>
 #include <algorithm>
 
-Location::Location(int numAttributes) {
+Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator) : uniform_dist(0, 1) {
   if (numAttributes != 0) {
     this->locationData.resize(numAttributes);
   }
+  day = 0;
+  this->generator = generator;
+
+  // Determine if this location should seed the disease.
+  if (syntheticRun) {
+    // For synthetic runs start seed in corner.
+    // Determine grid size in each corner s.t. randomly selecting 50%
+    // of these locations will result
+    int seedSize = 
+      std::max((int) std::sqrt((numLocations * PERCENTAGE_OF_SEEDING_LOCATIONS) / 4), 1);
+    
+    int locationX = uniqueIdx % synLocationGridWidth;
+    int locationY = uniqueIdx / synLocationGridWidth;
+    if ((locationX < seedSize || (synLocationGridWidth - locationX) <= seedSize)
+        && (locationY < seedSize || (synLocationGridHeight - locationY) <= seedSize)) {
+      isDiseaseSeeder = true;
+    }
+  } else {
+    // For non-synthetic set just seed completely at random.
+    isDiseaseSeeder = uniform_dist(*generator) < PERCENTAGE_OF_SEEDING_LOCATIONS;
+  }
+  
 }
 
 // DataInterface overrides. 
@@ -72,6 +94,7 @@ void Location::processEvents(
 
   events.clear();
   interactions.clear();
+  day++;
 }
 
 // Simple dispatch to the susceptible/infectious depature handlers
@@ -176,6 +199,18 @@ inline void Location::sendInteractions(int personIdx) {
     firstPersonIdx
   );
 
+  // Randomly seed some people for infection.
+  if (isDiseaseSeeder && day < DAYS_TO_SEED_INFECTION 
+      && uniform_dist(*generator) < INITIAL_INFECTIOUS_PROBABILITY) {
+        // Add a super contagious visit for that person.
+        interactions[personIdx].emplace_back(
+          std::numeric_limits<double>::max(),
+          0,
+          0,
+          0,
+          std::numeric_limits<int>::max()
+        );
+  }
   InteractionMessage interMsg(personIdx, interactions[personIdx]);
   peopleArray[peoplePartitionIdx].ReceiveInteractions(interMsg);
 
