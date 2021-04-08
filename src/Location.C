@@ -37,7 +37,6 @@ Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine 
     if ((locationX < seedSize || (synLocationGridWidth - locationX) <= seedSize)
         && (locationY < seedSize || (synLocationGridHeight - locationY) <= seedSize)) {
       isDiseaseSeeder = true;
-      printf("gucci gang (%d, %d) (%d %d) %d\n", locationX, locationY, synLocationGridWidth - locationX, synLocationGridHeight - locationY, seedSize);
     }
   } else {
     // For non-synthetic set just seed completely at random.
