@@ -67,6 +67,8 @@ class DiseaseModel : public CBase_DiseaseModel {
         double getCompilance() const;
         bool shouldPersonIsolate(int healthState);
         bool isLocationOpen(std::vector<Data> *locAttr) const;
+        bool complyingWithLockdown(std::default_random_engine *generator) const;
+        bool isLocationSeeder(std::vector<Data> *locAttr) const;
 };
 
 #endif // __DiseaseModel_H__

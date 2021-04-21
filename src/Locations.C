@@ -44,14 +44,16 @@ Locations::Locations() {
     locations.reserve(numLocalLocations);
     int firstIdx = thisIndex * getNumLocalElements(numLocations, numLocationPartitions, 0);
     for (int p = 0; p < numLocalLocations; p++) {
-      locations.emplace_back(0, firstIdx + p, &generator);
+      locations.emplace_back(0, firstIdx + p, &generator, diseaseModel);
     }
   } else {
     loadLocationData();
   }
 
   // Seed random number generator via branch ID for reproducibility
-  generator.seed(thisIndex);
+  generator.seed(time(NULL));
+  // generator.seed(thisIndex);
+
   // Init contact model
   contactModel = createContactModel();
   contactModel->setGenerator(&generator);
@@ -69,7 +71,7 @@ void Locations::loadLocationData() {
   locations.reserve(numLocalLocations);
   int firstIdx = thisIndex * getNumLocalElements(numLocations, numLocationPartitions, 0);
   for (int p = 0; p < numLocalLocations; p++) {
-    locations.emplace_back(numAttributesPerLocation, firstIdx + p, &generator);
+    locations.emplace_back(numAttributesPerLocation, firstIdx + p, &generator, diseaseModel);
   }
 
   // Load in location information.
@@ -114,6 +116,9 @@ void Locations::loadLocationData() {
   // Let contact model add any attributes it needs to the locations
   for (Location &location: locations) {
     contactModel->computeLocationValues(location);
+    if (interventionStategy && diseaseModel->isLocationSeeder(&location.getDataField())) {
+      location.setLocationAsSpreader();
+    }
   }
 }
 

@@ -104,11 +104,14 @@ mainmodule loimos {
         when ReceiveInfectiousCount(int infectiousCount) {
           serial {
             // Use this count as desired here
-            
+            if (interventionStategy) {
+              globDiseaseModel.toggleIntervention(infectiousCount);
+            }
+
             // Print how long this iteration took to run
             CkPrintf(
-              "Iteration %d Execution Time: %lf seconds.\n",
-              day, CkWallTimer() - iterationStartTime
+              "Iteration %d Execution Time: %lf seconds. Infectious Count: %d.\n",
+              day, CkWallTimer() - iterationStartTime, infectiousCount
             );
             
             // Trigger intervention updates.

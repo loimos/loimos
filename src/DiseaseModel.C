@@ -190,6 +190,16 @@ DiseaseModel::transitionFromState(int fromState,
     return std::make_tuple(
         currState->exposure_transition().transition(0).next_state(), 0);
   
+    /*
+    // If already infected then they are settling in this state so no transition.
+    if (alreadyInfected) {
+      return std::make_tuple(fromState, std::numeric_limits<Time>::max());
+    } else {
+      // Otherwise they are transitioning out of this state.
+      return std::make_tuple(
+        currState->exposure_transition().transition(0).next_state(), 0);
+    }
+    */
   } else {
     return std::make_tuple(fromState, std::numeric_limits<Time>::max());
   }
@@ -333,6 +343,7 @@ void DiseaseModel::toggleIntervention(int newDailyInfections) {
     if (static_cast<double>(newDailyInfections) / numPeople >= 
           interventionDef->newdailycasestriggeron()) {
       interventionToggled = true;
+      printf("Intervention toggled!\n");
     }
   } else {
     if (static_cast<double>(newDailyInfections) / numPeople <=
@@ -369,4 +380,15 @@ bool DiseaseModel::shouldPersonIsolate(int healthState) {
 bool DiseaseModel::isLocationOpen(std::vector<Data> *locAttr) const {
   return !(interventionToggled && interventionDef->schoolclosures() &&
    locAttr->at(interventionDef->csvlocationofschool()).int_b10 > 0);
+}
+
+bool DiseaseModel::complyingWithLockdown(std::default_random_engine *generator) const {
+  std::uniform_real_distribution<double> uniform_dist(0,1);
+  return uniform_dist(*generator) < interventionDef->schoolclosurecompliance();
+}
+
+bool DiseaseModel::isLocationSeeder(std::vector<Data> *locAttr) const {
+  // printf("got %d is %d\n", locAttr->at(interventionDef->csvlocationofseederbool()).int_b10, interventionDef->seedingadmincode());
+  return locAttr->at(interventionDef->csvlocationofseederbool()).int_b10
+    == interventionDef->seedingadmincode();
 }

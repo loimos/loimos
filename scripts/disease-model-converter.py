@@ -83,12 +83,16 @@ def convert_file(filepath):
     # Filter out only disease path for main age group.
     states = {}
     state_names_to_index = {}
+    actual_added = 0
     for index, state in enumerate(disease_dict['states']):
+        #if not "_a" in state['id']:
+        #    continue
         # Paths will track transitions and transmissions.
         state['paths'] = []
         state['exp_paths'] = []
         states[state['id']] = state
-        state_names_to_index[state['id']] = index
+        state_names_to_index[state['id']] = actual_added
+        actual_added += 1
 
     # Add transitions to states. (transitions are explicit and timed based).
     for tns in disease_dict['transitions']:
@@ -109,7 +113,8 @@ def convert_file(filepath):
             transmissions[entryState] = exitState
 
     for entryPath, exitPath in transmissions.items():
-        states[entryPath]['exp_paths'].append(exitPath)
+        if entryPath in states and exitPath in states:
+            states[entryPath]['exp_paths'].append(exitPath)
 
     # Convert from their json to intermediary dictionary format.
     converted_states = []

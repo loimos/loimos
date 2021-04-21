@@ -125,11 +125,9 @@ Main::Main(CkArgMsg* msg) {
     CkAbort("Error, usage %s <people> <locations> <people subsets> <location subsets> <days> <disease_model_path> <scenario_folder (optional)>\n", msg->argv[0]);
   }
 
-  /*
   for (int i = 0; i < msg->argc; ++i) {
     CkPrintf("argv[%d]: %s\n", i, msg->argv[i]);
   }
-  */
   
   int argNum = 0;
   syntheticRun = atoi(msg->argv[++argNum]) == 1;
@@ -175,8 +173,9 @@ Main::Main(CkArgMsg* msg) {
         synLocationPartitionGridWidth, synLocationPartitionGridHeight,
         synLocationGridWidth, synLocationGridHeight);
     }
+    
     numDays = atoi(msg->argv[++argNum]);
-    baseRunInfo = 10;
+
   } else {
     numPeople = atoi(msg->argv[++argNum]);
     numLocations = atoi(msg->argv[++argNum]);
@@ -184,12 +183,12 @@ Main::Main(CkArgMsg* msg) {
     numLocationPartitions = atoi(msg->argv[++argNum]);
     numDays = atoi(msg->argv[++argNum]);
     numDaysWithRealData = atoi(msg->argv[++argNum]);
-    baseRunInfo = 7;
   }
   
   pathToOutput = std::string(msg->argv[++argNum]);
+  CkPrintf("Saving simulation output to %s\n", msg->argv[argNum]);
   std::string pathToDiseaseModel = std::string(msg->argv[++argNum]);
-  CkPrintf("Disease model is at %s\n", msg->argv[argNum]);
+  CkPrintf("Reading disease model from %s\n", msg->argv[argNum]);
 
   // Handle both real data runs or runs using synthetic populations.
   if(syntheticRun) {
@@ -200,7 +199,7 @@ Main::Main(CkArgMsg* msg) {
     scenarioPath = std::string(msg->argv[++argNum]);
     std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(
         scenarioPath, numPeople, numPeoplePartitions, numLocations,
-        numLocationPartitions, numDays);
+        numLocationPartitions, numDaysWithRealData);
   }
 
   // Detemine which contact modle to use
@@ -209,8 +208,13 @@ Main::Main(CkArgMsg* msg) {
   int interventionStategyLocation = -1;
   for (; argNum < msg->argc; ++argNum) {
     std::string tmp = std::string(msg->argv[argNum]);
+    
+    // We can just use a flag for now in the CLI, since we only have two
+    // models and that's easier to parse, but we may eventually have more,
+    // which is why we use an enum to actually hold the model value
     if ("-m" == tmp or "--min-max-alpha" == tmp) {
       contactModelType = (int) ContactModelType::min_max_alpha;
+    
     } else if ("-i" == tmp && argNum + 1 < msg->argc) {
       interventionStategyLocation = ++argNum;
       interventionStategy = true;
