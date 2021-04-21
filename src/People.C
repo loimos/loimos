@@ -33,7 +33,8 @@ People::People() {
   usesAtSync = true;
 
   day = 0;
-  generator.seed(thisIndex);
+  // generator.seed(thisIndex);
+  generator.seed(time(NULL));
 
   // Initialize disease model
   diseaseModel = globDiseaseModel.ckLocalBranch();
@@ -416,8 +417,9 @@ void People::EndOfDayStateUpdate() {
   int infectiousCount = 0;
   for (Person &person : people) {
     ProcessInteractions(person);
+    
     person.EndOfDayStateUpdate(diseaseModel, &generator);
-
+    
     int resultantState = person.state;
     stateSummaries[resultantState + offset + 1]++;
     if (diseaseModel->isInfectious(resultantState)) {

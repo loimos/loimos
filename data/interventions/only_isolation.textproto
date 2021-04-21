@@ -3,4 +3,7 @@ newDailyCasesTriggerOff: 0.001;
 schoolClosures: false
 stayAtHome: true
 isolationCompliance: 0.95
-csvLocationOfSchool: 0
+schoolClosureCompliance: 1
+csvLocationOfSchool: 1
+csvLocationOfSeederBool: 0
+seedingAdminCode: 600
