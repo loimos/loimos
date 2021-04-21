@@ -27,8 +27,20 @@ mainmodule loimos {
   readonly int firstLocationIdx;
   readonly std::string scenarioPath;
   readonly std::string scenarioId;
-  
+
+  readonly uint64_t totalVisits;
   readonly double simulationStartTime;
+  readonly double iterationStartTime;
+
+  readonly int synPeopleGridWidth;
+  readonly int synPeopleGridHeight;
+  readonly int synLocationGridWidth;
+  readonly int synLocationGridHeight;
+  readonly int synLocalLocationGridWidth;
+  readonly int synLocalLocationGridHeight;
+  readonly int synLocationPartitionGridWidth;
+  readonly int synLocationPartitionGridHeight;
+  readonly int averageDegreeOfVisit;
 
   mainchare Main {
     entry Main(CkArgMsg*);
@@ -44,6 +56,7 @@ mainmodule loimos {
       }
       for(day = 0; day < numDays; day++) {
         serial {
+          iterationStartTime = CkWallTimer();
           // CkPrintf("Sending Visit Messages\n");
           peopleArray.SendVisitMessages();
           // CkPrintf("QD Visit Messages\n");
@@ -69,37 +82,37 @@ mainmodule loimos {
             peopleArray.EndofDayStateUpdate();
           }
         }
-        when ReceiveStats(CkReductionMsg *summary) {
+        when ReceiveInfectiousCount(int infectiousCount) {
           serial {
-            CkPrintf("Summary of Day %d\n", day);
-            int *data = reinterpret_cast<int *>(summary->getData());
-            DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
-
-            for (int i = 0; i < diseaseModel->getNumberOfStates(); i++) {
-              int total_in_state = *data;
-              int change_in_infected = total_in_state - accumulated[i];
-              if (total_in_state != 0 || change_in_infected != 0) {
-                CkPrintf(
-                  "%d in %s. (%d change from previous day)\n",
-                  total_in_state,
-                  diseaseModel->lookupStateName(i).c_str(),
-                  change_in_infected
-                );
-              }
-              accumulated[i] = total_in_state; 
-              data++;
-            }
+            // Use this count as desired here
+            
+            // Print how long this iteration took to run
+            CkPrintf(
+              "Iteration %d Execution Time: %lf seconds.\n",
+              day, CkWallTimer() - iterationStartTime
+            );
           }
         }
       }
       serial { 
-        CkPrintf("Finished data loading in %lf seconds.\n", simulationStartTime);
-        CkPrintf("Finished simulation in %lf seconds.\n", (CkWallTimer() - simulationStartTime));
+        CkPrintf("\nFinished data loading in %lf seconds.\n", simulationStartTime);
+        CkPrintf("Finished simulating %d days in %lf seconds.\n", numDays, (CkWallTimer() - simulationStartTime));
+        
+        peopleArray.SendStats();
+      }
+      when ReceiveStats(CkReductionMsg *summary) {
+        serial {
+          int *data = reinterpret_cast<int *>(summary->getData());
+          SaveStats(data);
+        }
+      }
+      serial {
         CkExit(); 
       }
     };
     entry void StartComputingInteractions(); 
     entry void ComputedInteractions();
+    entry [reductiontarget] void ReceiveInfectiousCount(int infectiousCount);
     entry [reductiontarget] void ReceiveStats(CkReductionMsg *summary);
   };
 
@@ -118,7 +131,8 @@ mainmodule loimos {
 #else
     entry void ReceiveInteractions(InteractionMessage);
 #endif
-    entry void EndofDayStateUpdate(); // contribute call to ReceiveStats
+    entry void EndofDayStateUpdate(); // contribute call to ReceiveInfectiousCount
+    entry void SendStats(); // contribute call to ReceiveStats
   };
 
   array [1D] Locations {

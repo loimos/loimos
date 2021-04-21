@@ -23,4 +23,5 @@ Person::Person(int uniqueId, int numAttributes, int startingState, int timeLeftI
     this->state = startingState;
     this->secondsLeftInState = timeLeftInState;
     this->interactionsByDay = std::vector<uint32_t>();
+    this->next_state = -1;
 }

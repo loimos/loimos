@@ -26,11 +26,13 @@ class People : public CBase_People {
     int peopleInitialized;
     int day;
     int newCases;
+    int totalVisitsForDay;
 
     std::ifstream *activityData;
     std::vector<Person> people;
     std::default_random_engine generator;
     DiseaseModel *diseaseModel;
+    std::vector<int> stateSummaries;
 
     void ProcessInteractions(Person &person);
     void loadActivityData();
@@ -42,6 +44,7 @@ class People : public CBase_People {
     void RealDataSendVisitMessages();
     void ReceiveInteractions(InteractionMessage interMsg);
     void EndofDayStateUpdate();
+    void SendStats();
 };
 
 #endif // __PEOPLE_H__

@@ -34,16 +34,12 @@ Locations::Locations() {
   diseaseModel = globDiseaseModel.ckLocalBranch();
 
   // Load application data
-  Location tmp { 0 };
-  locations.resize(numLocalLocations, tmp);
   locationsInitialized = 0;
-
-  // Create fake ids for synthetic runs.
-  if (syntheticRun) {
-    int localFirstLocationId = thisIndex * getNumElementsPerPartition(numLocations, numLocationPartitions);
-    for (int i = 0; i < numLocalLocations; i++) {
-      locations[i].uniqueId = localFirstLocationId + i;
-    }
+  locations.reserve(numLocalLocations);
+  int firstIdx = thisIndex * getNumLocalElements(numLocations, numLocationPartitions, 0);
+  int numAttributes = syntheticRun ? 0 : DataLoader::getNumberOfDataAttributes(diseaseModel->locationDef);
+  for (int p = 0; p < numLocalLocations; p++) {
+    locations.emplace_back(numAttributes, firstIdx + p, &generator);
   }
 
   // Seed random number generator via branch ID for reproducibility
@@ -60,11 +56,13 @@ void Locations::ReceiveLocationSetup(DataInterfaceMessage *msg) {
   for (int i = 0; i < msg->numDataAttributes; i++) {
     locations[locationsInitialized].setField(i, msg->dataAttributes[i]);
   }
+  contactModel->computeLocationValues(locations[locationsInitialized]);
   locationsInitialized += 1;
   assert(locationsInitialized <= numLocalLocations);
 }
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
+  
   // adding person to location visit list
   int localLocIdx = getLocalIndex(
     visitMsg.locationIdx,
@@ -72,6 +70,9 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
     numLocationPartitions,
     firstLocationIdx
   );
+
+  //CkPrintf("Visiting location %d (%d of %d locally)\r\n",
+  //  visitMsg.locationIdx, localLocIdx, numLocalLocations);
 
   // Wrap vist info...
   Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.personState, visitMsg.visitStart };
@@ -85,7 +86,7 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 
 void Locations::ComputeInteractions() {
   // traverses list of locations
-  for (Location loc : locations) {
+  for (Location &loc : locations) {
     loc.processEvents(diseaseModel, contactModel);
   }
 }

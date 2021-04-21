@@ -79,30 +79,34 @@ def convert_file(filepath):
 
     # Filter out only disease path for main age group.
     states = {}
-    for state in disease_dict['states']:
-        if "adult (18-49)" in state['ann:label']:
-            # Paths will track transitions and transmissions.
-            state['paths'] = []
-            states[state['id']] = state
+    state_names_to_index = {}
+    for index, state in enumerate(disease_dict['states']):
+        # Paths will track transitions and transmissions.
+        state['paths'] = []
+        state['exp_paths'] = []
+        states[state['id']] = state
+        state_names_to_index[state['id']] = index
 
     # Add transitions to states. (transitions are explicit and timed based).
     for tns in disease_dict['transitions']:
         state_id = tns['entryState']
         if state_id in states:
-            states[state_id]['paths'].append((tns['exitState'], tns['probability'], tns['dwellTime']))
+            states[state_id]['paths'].append((
+                state_names_to_index[tns['exitState']], tns['probability'], tns['dwellTime']
+            ))
 
     # Add transmissions from states. (which are triggered externally).
     transmissions = {}
     for trms in disease_dict['transmissions']:
         entryState = trms['entryState']
-        contactState = trms['contactState']
+        # contactState = trms['contactState']
         exitState = trms['exitState']
-        if entryState.endswith("a") and contactState.endswith("a") and exitState.endswith("a"):
-            # Only use the first instance of a transmission.
-            if entryState not in transmissions:
-                transmissions[entryState] = exitState
+        # Only use the first instance of a transmission.
+        if entryState not in transmissions:
+            transmissions[entryState] = exitState
+
     for entryPath, exitPath in transmissions.items():
-        states[entryPath]['paths'].append((exitPath, 1, {'discrete': [{'probability': 1, 'value': 1}]}))
+        states[entryPath]['exp_paths'].append(exitPath)
 
     # Convert from their json to intermediary dictionary format.
     converted_states = []
@@ -111,10 +115,14 @@ def convert_file(filepath):
         disease_state['state_label'] = state['id']
         disease_state['infectivity'] = state['infectivity']
         disease_state['susceptibility'] = state['susceptibility']
-        disease_state['transition_set'] = {
-            "transition_label": "untreated",
-            "transition": create_transition_set(state['paths'])
-        }
+        if len(state['paths']):
+            disease_state['timed_transition'] = {
+                "transition": create_transition_set(state['paths'])
+            }
+        elif len(state['exp_paths']):
+            disease_state['exposure_transition'] = {
+                "transition": {"next_state": state_names_to_index[state['exp_paths'][0]]}
+            }
         converted_states.append({"disease_state": disease_state})
 
     # Output as textproto.
@@ -123,7 +131,8 @@ def convert_file(filepath):
     to_textproto({"starting_exposed_state": "TODO_FILL_IN"})
     for state in converted_states:
         to_textproto(state)
-
+    print("\n\n\n")
+    print(state_names_to_index)
 
 if __name__ == "__main__":
     # Required argument is the path to the JSON disease mode
@@ -131,3 +140,4 @@ if __name__ == "__main__":
         description='Converts a UVA JSON format to a new format.')
     parser.add_argument("model_to_convert")
     args = parser.parse_args()
+    convert_file(args.model_to_convert)

@@ -107,14 +107,17 @@ if __name__ == '__main__':
     locations = pd.read_csv(path_to_locations)
     output_df = locations.join(max_visits, on='lid')
 
-    # Fix types
+    # Zero out the heuristic values for any location with no visits
+    output_df.fillna(0, inplace=True)
+    
+    # Fix types of heuristic coluns so that we can read in integer attributes
+    # properly in loimos
     output_dtypes = {
         'median_daily_total': int,
         'max_daily_total': int,
         'max_simultaneous_visits': int
     }
     output_dtypes.update({c: int for c in renaming})
-    output_df.fillna(0, inplace=True)
     output_df = output_df.astype(output_dtypes)
 
     # Output with index column which is the lids.

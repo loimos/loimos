@@ -61,7 +61,6 @@ void DataLoader::BeginDataLoading() {
         DataLoader::getNumberOfDataAttributes(diseaseModel->locationDef); 
 
     // Read in data for each chare sequentially.
-    int firstIdx = isPersonReader ? firstPersonIdx : firstLocationIdx;
     for (int targetChare = lowerChareIndex; targetChare <= upperChareIndex; targetChare++) {
         // Seek to correct position in cache.
         cacheStream.seekg(targetChare * sizeof(uint32_t));
@@ -90,6 +89,8 @@ void DataLoader::BeginDataLoading() {
                 DataLoader::readData(&dataStream, diseaseModel->locationDef, msg);
                 locationsArray[targetChare].ReceiveLocationSetup(msg);
             }
+
+            // Note message is given to charm runtime so will be freed.
         }
     }
 

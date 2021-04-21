@@ -30,6 +30,11 @@ class Location : public DataInterface {
     // Represents all of the arrivals and departures of people
     // from this location on a given day
     std::vector<Event> events;
+
+    // For random generation.
+    std::uniform_real_distribution<float> uniform_dist;
+    std::default_random_engine *generator;
+
     // Each Event in one of these containers is the arrival event for a
     // a person currently at this location
     std::vector<Event> infectiousArrivals;
@@ -74,7 +79,16 @@ class Location : public DataInterface {
 
   public:
     // Provide default constructor operations.
-    Location(int numAttributes): DataInterface (numAttributes) {};
+    Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator);
+
+    // Various attributes of the location.
+    std::vector<union Data> locationData;
+
+    // If this location should be an infection seeding location.
+    bool isDiseaseSeeder;
+    int day;
+    
+    // Provide default constructor operations.
     Location(const Location&) = default;
     Location(Location&&) = default;
     ~Location() = default;

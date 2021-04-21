@@ -11,6 +11,7 @@
 
 #include "disease_model/disease.pb.h"
 #include "disease_model/distribution.pb.h"
+#include "readers/DataLoader.h"
 
 #include <cstdio>
 #include <cmath>
@@ -25,7 +26,7 @@ using NameIndexLookupType = std::unordered_map<std::string, int>;
 // not everyone gets infected immediately given the small time units
 // (i.e. it normalizes for the size of the smallest time increment used
 // in the discrete event simulation and disease model)
-const double TRANSMISSIBILITY = .00002 / DAY_LENGTH;
+const long double TRANSMISSIBILITY = 7.5E-6 / DAY_LENGTH;
 
 /**
  * Constructor which loads in disease file from text proto file.
@@ -37,7 +38,7 @@ DiseaseModel::DiseaseModel(std::string pathToModel) {
   model = new loimos::proto::DiseaseModel();
   std::ifstream diseaseModelStream(pathToModel);
   if (!diseaseModelStream) {
-    CkAbort("Could not open disease model at %s", pathToModel.c_str());
+    CkAbort("Could not read disease model at %s.", pathToModel.c_str());
   }
   std::string str((std::istreambuf_iterator<char>(diseaseModelStream)),
                   std::istreambuf_iterator<char>());
@@ -45,34 +46,6 @@ DiseaseModel::DiseaseModel(std::string pathToModel) {
     CkAbort("Could not parse protobuf!");
   }
   diseaseModelStream.close();
-
-  // Create an intervention strategy mapping for fast lookup.
-  // TODO(iancostello): Remove manual allocation in the future.
-  // TODO(iancostello): ADD deconstructor.
-  strategyLookup = new std::vector<NameIndexLookupType *>;
-  stateLookup = new NameIndexLookupType;
-  for (int stateIndex = 0; stateIndex < model->disease_state_size();
-       stateIndex++) {
-    // Get next state.
-    const loimos::proto::DiseaseModel_DiseaseState *currState =
-        &model->disease_state(stateIndex);
-
-    // Add to lookup map.
-    NameIndexLookupType *treatmentMap = new NameIndexLookupType();
-    stateLookup->insert({currState->state_label(), stateIndex});
-    for (int transitionIndex = 0;
-         transitionIndex < currState->transition_set_size();
-         transitionIndex++) {
-      treatmentMap->insert(
-          {currState->transition_set(transitionIndex).transition_label(),
-           transitionIndex});
-    }
-    strategyLookup->push_back(treatmentMap);
-  }
-
-  // Init commonly used states.
-  healthyState = getIndexOfState(model->starting_state());
-  exposedState = getIndexOfState(model->starting_exposed_state());
 
   // Setup other shared PE objects.
   personDef = new loimos::proto::CSVDefinition();
@@ -102,17 +75,6 @@ DiseaseModel::DiseaseModel(std::string pathToModel) {
 }
 
 /**
- * Returns the initial uninfected state, as an int.
- * Args:
- *      stateLabel: Name of a disease state (e.g. uninfected)
- * Returns:
- *      Index of that state in the loaded disease model.
- */
-int DiseaseModel::getIndexOfState(std::string stateLabel) const {
-  return stateLookup->at(stateLabel);
-}
-
-/**
  * Returns the name of the state at a given index
  */
 std::string DiseaseModel::lookupStateName(int state) const {
@@ -123,58 +85,69 @@ std::string DiseaseModel::lookupStateName(int state) const {
  * Handles a disease state transition given a set of edges to use. This function
  * should be called when the user needs to make a state transition.
  *
+ * When people enter a new state, they need to determine both the next state
+ * and the time until they will transition to that new state.
+ * 
  * Args:
- *  fromState: The current state of a person in the disease.
+ *  fromState: The state the person is currently in.
+ *  nextState: The state that the person is transitioning into. 
+ *  
  * Returns:
- *  The next state to transition to as an int.
+ *  What state they will transition out of fromState into and how much time
+ * they will spend there. 
  */
 std::tuple<int, int> DiseaseModel::transitionFromState(
   int fromState,
-  std::string interventionStategy,
   std::default_random_engine *generator
 ) const {
   // Get current state and next transition set to use.
   const loimos::proto::DiseaseModel_DiseaseState *currState =
       &model->disease_state(fromState);
 
-  // Get the next transition set to use.
-  const loimos::proto::DiseaseModel_DiseaseState_StateTransitionSet
-      *transition_set = &(currState->transition_set(
-          strategyLookup->at(fromState)->at(interventionStategy)));
+  // Two cases
+  if (currState->has_timed_transition()) {
+    // printf("Timed trans from %d\n", fromState);
+    // Get the next transition set to use.
+    // Currently for timed transitions we only support one set edge.
+    const loimos::proto::DiseaseModel_DiseaseState_TimedTransitionSet
+        *transition_set = &(currState->timed_transition());
+    // Check if any transitions to be made.
+    int transitionSetSize = transition_set->transition_size();
+    if (transitionSetSize == 0) {
+      return std::make_tuple(fromState, std::numeric_limits<Time>::max());
+    }
 
-  // Check if any transitions to be made.
-  int transitionSetSize = transition_set->transition_size();
-  if (transitionSetSize == 0) {
+    // Randomly choose a state transition from the set and return the next state.
+    float cdfSoFar = 0;
+    std::uniform_real_distribution<float> uniform_dist(0, 1);
+    float randomCutoff = uniform_dist(*generator);
+    for (int i = 0; i < transitionSetSize; i++) {
+      const loimos::proto::
+          DiseaseModel_DiseaseState_TimedTransitionSet_StateTransition
+              *transition = &transition_set->transition(i);
+      // TODO: Create a CDF vector in initialization.
+      cdfSoFar += transition->with_prob();
+      if (randomCutoff <= cdfSoFar) {
+        int nextState = transition->next_state();
+        int timeInNextState = getTimeInNextState(transition, generator);
+        return std::make_tuple(nextState, timeInNextState);
+      }
+    }
+    // A state transition should be made.
+    CkAbort("No state transition made! From state %d.", fromState);
+  } else if (currState->has_exposure_transition()) {
+    return std::make_tuple(
+      currState->exposure_transition().transition(0).next_state(), 0);
+  } else {
     return std::make_tuple(fromState, std::numeric_limits<Time>::max());
   }
-
-  // Randomly choose a state transition from the set and return the next state.
-  float cdfSoFar = 0;
-  std::uniform_real_distribution<float> uniform_dist(0, 1);
-  float randomCutoff = uniform_dist(*generator);
-
-  for (int i = 0; i < transitionSetSize; i++) {
-    const loimos::proto::
-        DiseaseModel_DiseaseState_StateTransitionSet_StateTransition
-            *transition = &transition_set->transition(i);
-    // TODO: Create a CDF vector in initialization.
-    cdfSoFar += transition->with_prob();
-    if (randomCutoff <= cdfSoFar) {
-      int nextState = stateLookup->at(transition->next_state());
-      int timeInNextState = getTimeInNextState(transition, generator);
-      return std::make_tuple(nextState, timeInNextState);
-    }
-  }
-
-  // A state transition should be made.
-  CkAbort("No state transition made! From state %d.", fromState);
 }
 
 /**
  * Calculates the time to spend in the next state.
  */
 Time DiseaseModel::getTimeInNextState(
-  const loimos::proto::DiseaseModel_DiseaseState_StateTransitionSet_StateTransition *transitionSet,
+  const loimos::proto::DiseaseModel_DiseaseState_TimedTransitionSet_StateTransition *transitionSet,
   std::default_random_engine *generator
 ) const {
   if (transitionSet->has_fixed()) {
@@ -223,9 +196,20 @@ int DiseaseModel::getNumberOfStates() const {
 }
 
 /** Returns the initial starting healthy and exposed state */
-int DiseaseModel::getHealthyState() const { return healthyState; }
-std::tuple<int,int>  DiseaseModel::getExposedState() const { 
-  return std::make_tuple(exposedState, 0); 
+int DiseaseModel::getHealthyState(std::vector<Data> dataField) const { 
+  // Age based transition.
+  int personAge = dataField[AGE_CSV_INDEX].int_b10;
+  int numStartingStates = model->starting_states_size();
+  for (int stateNum = 0; stateNum < numStartingStates; stateNum++) {
+    const loimos::proto::DiseaseModel_StartingCondition state = 
+      model->starting_states(stateNum); 
+
+    if (state.lower() <= personAge &&
+        personAge <= state.upper()) {
+      return state.starting_state();
+    }
+  }
+  CkAbort("No starting state for person of age %d. Read %d states total.", personAge, numStartingStates);  
 }
 
 /** Returns if someone is infectious */

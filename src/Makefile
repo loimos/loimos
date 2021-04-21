@@ -60,13 +60,13 @@ TESTS=$(subst -,test-,$(TEST_NAMES))
 test: $(TESTS)
 
 test-small: all
-	./charmrun +p4 ./loimos 100 735 2 2 7 ../data/disease_models/covid19.textproto ../data/populations/synthetic_small_city/ ++local
+	./charmrun +p4 ./loimos 0 100 735 2 2 7 test-small.csv ../data/disease_models/covid19.textproto ../data/populations/synthetic_small_city/ ++local
 
 test-syn: all
-	./charmrun +p4 ./loimos 39 16 1 4 7 ../data/disease_models/covid19.textproto ++local
+	./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 test-syn.csv ../data/disease_models/covid19_onepath.textproto ++local
 
 test-large: all
-	./charmrun +p4 ./loimos 41119 19203 60 40 7 ../data/disease_models/covid19.textproto ../data/populations/coc/ --min-max-alpha ++local
+	./charmrun +p4 /usr/local/bin/valgrind --log-file="valgrindout" ./loimos 0 41119 19203 60 40 7 test-large.csv ../data/disease_models/covid19.textproto ../data/populations/coc/ --min-max-alpha ++local
 
 clean-cache:
 	rm ../data/populations/coc/*.cache ../data/populations/synthetic_small_city/*.cache
