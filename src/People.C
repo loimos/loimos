@@ -72,6 +72,21 @@ People::People() {
       // Load in people data from file.
       loadPeopleData();
   }
+
+  if (PEOPLE_SEEDING) {
+    // Randomly infect people to seed the initial outbreak
+    for (Person &person: people) {
+      if (unitDistrib(generator) < INITIAL_INFECTIOUS_PROBABILITY) {
+        // Get which exposed state they should transition to.
+        std::tie(person.state, std::ignore) = 
+          diseaseModel->transitionFromState(person.state, &generator);
+        // See where they will transition next.
+        std::tie(person.next_state, person.secondsLeftInState) =
+          diseaseModel->transitionFromState(person.state, &generator);
+        newCases++;
+      }
+    }
+  }
 }
 
 /**
@@ -139,10 +154,11 @@ void People::SendVisitMessages() {
 
 void People::SyntheticSendVisitMessages() {
   // Model number of visits as a poisson distribution.
-  std::poisson_distribution<int> num_visits_generator(LOCATION_LAMBDA);
+  std::poisson_distribution<int> num_visits_generator(averageVisitsPerDay);
 
   // Model visit distance as poisson distribution.
-  std::poisson_distribution<int> visit_distance_generator(averageDegreeOfVisit);
+  // std::poisson_distribution<int> visit_distance_generator(averageDistanceOfVisit);
+  std::geometric_distribution<int> visit_distance_generator(1 / averageDistanceOfVisit);
 
   // Model visit times as uniform.
   std::uniform_int_distribution<int> time_dist(0, DAY_LENGTH); // in seconds

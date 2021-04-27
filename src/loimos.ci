@@ -38,7 +38,8 @@ mainmodule loimos {
   readonly int synLocalLocationGridHeight;
   readonly int synLocationPartitionGridWidth;
   readonly int synLocationPartitionGridHeight;
-  readonly int averageDegreeOfVisit;
+  readonly double averageDistanceOfVisit;
+  readonly double averageVisitsPerDay;
 
   mainchare Main {
     entry Main(CkArgMsg*);
