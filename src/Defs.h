@@ -36,7 +36,9 @@ const Time MINUTE_LENGTH = 60;
 #define EMPTY_VISIT_SCHEDULE 0xFFFFFFFF
 #define CSV_DELIM ','
 
-#define PEOPLE_SEEDING true
+#ifndef PEOPLE_SEEDING
+  #define PEOPLE_SEEDING true
+#endif // PEOPLE_SEEDING
 #define INITIAL_PERSON_INFECTIOUS_PROB 0.01
 // Location seeding options
 #define PERCENTAGE_OF_SEEDING_LOCATIONS 0.001
