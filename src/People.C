@@ -109,8 +109,8 @@ void People::loadPeopleData() {
     int curr_id = people[c].uniqueId;
 
     // Read in their activity data offsets.
-    // activityCache.seekg(0);
-    activityCache.seekg(sizeof(uint32_t) * DAYS_IN_WEEK * (curr_id - firstPersonIdx));
+    activityCache.seekg(sizeof(uint32_t) * DAYS_IN_WEEK
+                        * (curr_id - firstPersonIdx));
     activityCache.read((char *) buf, sizeof(uint32_t) * DAYS_IN_WEEK);
     for (int day = 0; day < DAYS_IN_WEEK; day++) {
       data_pos->push_back(buf[day]);
@@ -122,6 +122,11 @@ void People::loadPeopleData() {
   for (Person &person: people) {
     person.state = diseaseModel->getHealthyState(person.getDataField());
   }
+
+  // 
+  #ifdef TESTING
+  
+  #endif
 } 
 
 /**
@@ -333,6 +338,8 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
   );
 }
 
+
+
 void People::EndofDayStateUpdate() {
   // Get ready to count today's states
   int totalStates = diseaseModel->getNumberOfStates();
@@ -344,33 +351,11 @@ void People::EndofDayStateUpdate() {
   for (Person &person: people) {
     
     ProcessInteractions(person);
+    person.MakeDiseaseTransition(diseaseModel, &generator);
     
-    int currState = person.state;
-    int secondsLeftInState = person.secondsLeftInState;
-
-    // TODO(iancostello): Move into start of day for visits.
-    // Transition to next state or mark the passage of time
-    secondsLeftInState -= DAY_LENGTH;
-    if (secondsLeftInState <= 0) {
-      // If they have already been infected
-      if (person.next_state != -1) {
-        person.state = person.next_state;
-        std::tie(person.next_state, person.secondsLeftInState) = 
-          diseaseModel->transitionFromState(person.state, &generator);
-      } else {
-        // Get which exposed state they should transition to.
-        std::tie(person.state, std::ignore) = 
-          diseaseModel->transitionFromState(person.state, &generator);
-        // See where they will transition next.
-        std::tie(person.next_state, person.secondsLeftInState) =
-          diseaseModel->transitionFromState(person.state, &generator);
-      }
-    } else {
-      person.secondsLeftInState = secondsLeftInState;
-    }
-
-    stateSummaries[currState + offset + 1]++;
-    if (diseaseModel->isInfectious(currState)) {
+    int resultantState = person.state;
+    stateSummaries[resultantState + offset + 1]++;
+    if (diseaseModel->isInfectious(resultantState)) {
       infectiousCount++;
     }
   }
@@ -423,4 +408,8 @@ void People::ProcessInteractions(Person &person) {
   }
 
   person.interactions.clear();
+}
+
+uint32_t People::GetTestParameter(int parameter) {
+  return people[0].getDataField()[parameter].int_b10;
 }

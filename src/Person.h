@@ -40,6 +40,9 @@ class Person : public DataInterface {
         Person& operator=(Person&&) = default;
         ~Person() = default;
 
+        // Disease state.
+        void MakeDiseaseTransition(DiseaseModel *diseaseModel, std::default_random_engine *generator);
+
         // Override DataInterfect abstract methods
         void setUniqueId(int idx);
         std::vector<union Data> &getDataField();

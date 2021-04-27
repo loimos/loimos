@@ -7,6 +7,8 @@
 #ifndef __DEFS_H__
 #define __DEFS_H__
 
+#define LOIMOS_TESTING
+
 // Disease states
 #define SUSCEPTIBLE 0
 #define EXPOSED 1

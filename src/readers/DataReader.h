@@ -11,6 +11,7 @@
 #include <string>
 #include <fstream>
 
+#include "../Defs.h"
 #include "data.pb.h"
 #include "DataInterface.h"
 
@@ -24,9 +25,12 @@ union Data {
     int int_b10;
     bool boolean;
     uint32_t uint_32;
-    std::string *str;
     double probability;
     uint16_t category; 
+
+    void pup(PUP::er& p) {
+        p | probability;
+    }
 };
 
 
@@ -78,8 +82,8 @@ class DataReader {
                                 objData[numNonIgnoredFields].int_b10 = 
                                     std::stoi(std::string(start, dataLen));
                             } else if (field->has_label()) {
-                                objData[numNonIgnoredFields].str = 
-                                    new std::string(start, dataLen);
+                                // objData[numNonIgnoredFields].str = 
+                                    // new std::string(start, dataLen);
                             } else if (field->has_bool_()) {
                                 if (dataLen == 1) {
                                     objData[numNonIgnoredFields].boolean = 

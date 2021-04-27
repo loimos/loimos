@@ -115,6 +115,7 @@ mainmodule loimos {
 #endif
     entry void EndofDayStateUpdate(); // contribute call to ReceiveInfectiousCount
     entry void SendStats(); // contribute call to ReceiveStats
+    entry [sync] uint32_t GetTestParameter(int parameter);
   };
 
   array [1D] Locations {
@@ -125,6 +126,7 @@ mainmodule loimos {
     entry void ReceiveVisitMessages(VisitMessage);
 #endif
     entry void ComputeInteractions(); // calls ReceiveInteractions
+
   };
 
   nodegroup DiseaseModel {

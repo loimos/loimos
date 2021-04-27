@@ -17,6 +17,11 @@
 #include <iostream>
 #include <fstream>
 
+#define LOIMOS_TESTING
+#ifdef LOIMOS_TESTING
+#include "gtest/gtest.h"
+#endif
+
 /* readonly */ CProxy_Main mainProxy;
 /* readonly */ CProxy_People peopleArray;
 /* readonly */ CProxy_Locations locationsArray;
@@ -46,7 +51,6 @@
 /* readonly */ int synLocationPartitionGridWidth;
 /* readonly */ int synLocationPartitionGridHeight;
 /* readonly */ int averageDegreeOfVisit;
-
 
 Main::Main(CkArgMsg* msg) {
   // parsing command line arguments
@@ -154,6 +158,14 @@ Main::Main(CkArgMsg* msg) {
   
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
+
+  // Run pre-run unit tests.
+  #ifdef LOIMOS_TESTING
+  testing::InitGoogleTest(&msg->argc, msg->argv);
+  if (RUN_ALL_TESTS() != 0) {
+    CkAbort("Failed unit tests!\n");
+  }
+  #endif
 
   // run
   CkPrintf("Running ...\n\n");
