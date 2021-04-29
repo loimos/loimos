@@ -70,9 +70,8 @@ Main::Main(CkArgMsg* msg) {
     assert(synPeopleGridHeight >= synLocationGridHeight);
 
     // Edge degree.
-    int physicalDistanceBetweenLocations = atoi(msg->argv[6]);
-    averageDistanceOfVisit = AVERAGE_REAL_WORLD_VISIT_DISTANCE / physicalDistanceBetweenLocations;
-    
+    averageDistanceOfVisit = atof(msg->argv[6]);
+
     // Chare data
     synLocationPartitionGridWidth = atoi(msg->argv[7]);
     synLocationPartitionGridHeight = atoi(msg->argv[8]);
