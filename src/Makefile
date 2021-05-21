@@ -14,7 +14,7 @@ RUNTESTS  = tests/PersonTest.o
 DEFS   = Defs.h loimos.def.h readers/DataReader.h
 DECLS  = loimos.decl.h
 BIN    = loimos
-TESTINGPRAG = -DTESTING
+TESTINGPRAG = -DLOIMOS_TESTING
 
 SUBDIRS := disease_model contact_model readers
 
@@ -74,7 +74,7 @@ test-large: all
 	./charmrun +p4 ./loimos 0 41119 19203 60 40 14 test-large.csv ../data/disease_models/covid19.textproto ../data/populations/coc/ --min-max-alpha ++local
 
 test-validation: all
-	./charmrun +p4 ./loimos 0 25000 5001 60 40 3 test-validation.csv ../data/disease_models/test_highly_contagious.textproto ../data/populations/validation_set/ ++local
+	./charmrun +p4 ./loimos 0 25000 5001 60 40 30 test-validation.csv ../data/disease_models/test_highly_contagious.textproto ../data/populations/validation_set/ ++local
 
 clean-cache:
 	rm ../data/populations/coc/*.cache ../data/populations/synthetic_small_city/*.cache

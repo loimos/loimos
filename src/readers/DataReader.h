@@ -47,16 +47,17 @@ class DataReader {
             // TODO make this 2^16 and support longer lines through multiple reads.
             char buf[MAX_INPUT_lineLength];
             // Rows to read.
-            for (auto obj = std::begin(*dataObjs); obj != std::end(*dataObjs); ++obj) {
+            printf("Hmm\n");
+            for (auto &obj: *dataObjs) {
                 // Get next line.
                 input->getline(buf, MAX_INPUT_lineLength);
 
                 // Read over people data format.
                 int attrIndex = 0;
                 // Tracks how many non-ignored fields there have been.
-                int numNonIgnoredFields = 0;
+                int numDataFields = 0;
                 int leftCommaLocation = 0;
-                std::vector<union Data> objData = obj->getDataField();
+                std::vector<union Data> &objData = obj.getDataField();
 
                 int lineLength = input->gcount();
                 for (int c = 0; c < lineLength; c++) {
@@ -67,7 +68,7 @@ class DataReader {
                         uint16_t dataLen = c - leftCommaLocation;
                         if (field->has_ignore() || dataLen == 0) {
                             // Skip
-                        } else if (numNonIgnoredFields <= 3) {
+                        } else {
                             // Process data.
                             char *start = buf + leftCommaLocation;
                             if (c + 1 == lineLength) {
@@ -76,29 +77,33 @@ class DataReader {
 
                             // Parse byte stream to the correct representation.
                             if (field->has_uniqueid()) {
-                                obj->setUniqueId(std::stoi(std::string(start, dataLen)));
-                            } else if (field->has_b10int() || field->has_foreignid()) {
-                                // TODO parse this directly.
-                                objData[numNonIgnoredFields].int_b10 = 
-                                    std::stoi(std::string(start, dataLen));
-                            } else if (field->has_label()) {
-                                // objData[numNonIgnoredFields].str = 
-                                    // new std::string(start, dataLen);
-                            } else if (field->has_bool_()) {
-                                if (dataLen == 1) {
-                                    objData[numNonIgnoredFields].boolean = 
-                                    (start[0] == 't' || start[0] == '1');
-                                } else {
-                                    objData[numNonIgnoredFields].boolean = false;
+                                obj.setUniqueId(std::stoi(std::string(start, dataLen)));
+                            } else {
+                                if (field->has_b10int() || field->has_foreignid()) {
+                                    // TODO parse this directly.
+                                    objData[numDataFields].int_b10 = 
+                                        std::stoi(std::string(start, dataLen));
+                                } else if (field->has_label()) {
+                                    // objData[numDataFields].str = 
+                                        // new std::string(start, dataLen);
+                                } else if (field->has_bool_()) {
+                                    if (dataLen == 1) {
+                                        objData[numDataFields].boolean = 
+                                        (start[0] == 't' || start[0] == '1');
+                                    } else {
+                                        objData[numDataFields].boolean = false;
+                                    }
                                 }
+                                numDataFields++;
                             }
-                            numNonIgnoredFields++;
                         }
                         leftCommaLocation = c + 1;
                         attrIndex++;
                     }
                 }
             }
+            printf("Hmm 2\n");
+
         }
         static int getNonZeroAttributes(loimos::proto::CSVDefinition *dataFormat) {
             int count = 0;
@@ -123,7 +128,7 @@ class DataReader {
 
             // Read over people data format.
             int attrIndex = 0;
-            int numNonIgnoredFields = 0;
+            int numDataFields = 0;
             int leftCommaLocation = 0;
 
             int lineLength = input->gcount();
@@ -135,7 +140,7 @@ class DataReader {
                     uint16_t dataLen = c - leftCommaLocation;
                     if (field->has_ignore() || dataLen == 0) {
                         // Skip
-                    } else if (numNonIgnoredFields <= 3) {
+                    } else if (numDataFields <= 3) {
                         // Process data.
                         char *start = buf + leftCommaLocation;
                         if (c + 1 == lineLength) {
@@ -155,7 +160,7 @@ class DataReader {
                             duration = std::atoi(start);
                         } else {
                             // TODO process.
-                            numNonIgnoredFields++;
+                            numDataFields++;
                         }
                         
                     }

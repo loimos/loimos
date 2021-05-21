@@ -20,6 +20,10 @@
 #include <iostream>
 #include <fstream>
 
+#ifdef LOIMOS_TESTING
+#include "gtest/gtest.h"
+#endif
+
 std::uniform_real_distribution<> unitDistrib(0,1);
 #define ONE_ATTR 1
 #define DEFAULT_
@@ -123,9 +127,15 @@ void People::loadPeopleData() {
     person.state = diseaseModel->getHealthyState(person.getDataField());
   }
 
-  // 
-  #ifdef TESTING
-  
+  // Data loading testing.
+  #ifdef LOIMOS_TESTING
+  if (thisIndex == 0) {
+    EXPECT_EQ(people[0].getDataField().at(0).int_b10, 65);
+    // assert(people[0].getDataField().at(0).int_b10 == 65);
+  } else if (thisIndex == numPeoplePartitions - 1) {
+    EXPECT_EQ(people[numPeoplePartitions - 1].getDataField().at(0).int_b10, 21);
+    // assert( == 21);people[0].getDataField().at(0
+  }
   #endif
 } 
 
