@@ -92,7 +92,35 @@ mainmodule loimos {
       when ReceiveStats(CkReductionMsg *summary) {
         serial {
           int *data = reinterpret_cast<int *>(summary->getData());
-          SaveStats(data);
+          DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
+          int numDiseaseStates = diseaseModel->getNumberOfStates();
+
+          for (int day; day < numDays; ++day, data += numDiseaseStates + 1) {
+            CkPrintf("Summary of Day %d\n", day);
+            // Get total visits for the day.
+            totalVisits += *data;
+            data++;
+
+            // Get number of disease state changes.
+            for (int i = 0; i < numDiseaseStates; i++) {
+              int total_in_state = *data;
+              int change_in_infected = total_in_state - accumulated[i];
+              if (total_in_state != 0 || change_in_infected != 0) {
+                CkPrintf(
+                  "%d in %s. (%d change from previous day)\n",
+                  total_in_state,
+                  diseaseModel->lookupStateName(i).c_str(),
+                  change_in_infected
+                );
+              }
+              accumulated[i] = total_in_state; 
+              data++;
+            }
+            
+            CkPrintf("%d visits\n", *data); 
+          }
+
+          CkPrintf("Total Visits Processed %llu.\n\n", totalVisits);
         }
       }
       serial {
