@@ -181,6 +181,7 @@ void Main::SaveStats(int *data) {
     data++;
 
     // Get number of disease state changes.
+    /*
     for (int i = 0; i < numDiseaseStates; i++) {
       int total_in_state = *data;
       int change_in_state = total_in_state - accumulated[i];
@@ -201,6 +202,7 @@ void Main::SaveStats(int *data) {
       accumulated[i] = total_in_state;
       data++;
     }
+    */
 
     //CkPrintf("%d visits\n", *data); 
   }
