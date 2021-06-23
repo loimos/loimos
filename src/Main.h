@@ -8,13 +8,11 @@
 #define __MAIN_H__
 
 #include <vector>
-#include <string>
 #include "charm++.h"
 
 class Main : public CBase_Main {
   Main_SDAG_CODE
   int day;
-  std::string summaryPath;
   std::vector<int> accumulated;
   DiseaseModel* diseaseModel;
 
