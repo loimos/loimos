@@ -139,11 +139,6 @@ if __name__ == "__main__":
     locations_file = os.path.join(population_dir, 'locations.csv')
     visits_file = os.path.join(population_dir, 'visits.csv')
 
-    if not override:
-        people_file += '.new'
-        locations_file += '.new'
-        visits_file += '.new'
-
     # Output
     people.to_csv(people_file, index=False)
     combined.to_csv(locations_file, index=False)
