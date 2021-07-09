@@ -38,8 +38,6 @@ def parse_args():
         help='Pass this flag in order to override the original files with ' +\
              'the processed versions')
     parser.add_argument('-p', '--people-file', default='{prefix}_person.csv')
-    parser.add_argument('-l', '--locations-file',
-        default='{prefix}_locations.csv')
     parser.add_argument('-a', '--activity-locations-file',
         default='{prefix}_activity_locations.csv')
     parser.add_argument('-r', '--residence-locations-file',
@@ -103,9 +101,6 @@ if __name__ == "__main__":
     people_file = os.path.join(
             population_dir,
             args.people_file.format(prefix=prefix))
-    locations_file = os.path.join(
-            population_dir,
-            args.locations_file.format(prefix=prefix))
     activity_locations_file = os.path.join(
             population_dir,
             args.activity_locations_file.format(prefix=prefix))
@@ -115,6 +110,11 @@ if __name__ == "__main__":
     visits_file = os.path.join(
             population_dir,
             args.visits_file.format(prefix=prefix))
+
+    print(people_file)
+    print(activity_locations_file)
+    print(residence_locations_file)
+    print(visits_file)
 
     # Read in all the datasetes.
     people = pd.read_csv(people_file)
@@ -127,6 +127,11 @@ if __name__ == "__main__":
 
     # Remap all ids
     people, combined, visits = id_remapper(people, combined, visits)
+    
+    # Fix types
+    combined.fillna(0, inplace=True)
+    combined = combined.astype({'shopping': int})
+    print(combined.dtypes)
 
     if override:
         # Cleanup

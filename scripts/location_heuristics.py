@@ -18,6 +18,24 @@ import pandas as pd
 import heapq
 import argparse
 import os
+import time
+from functools import partial
+from multiprocessing import Pool
+    
+def find_max_simultaneous_visits(visits, lid):
+    max_in_visit = 0
+    end_times = []
+    for _, row in visits[visits[LOCATION_ID_COLUMN_NAME] == lid][['start_time','end_time']].iterrows():
+        # Filter out end_times not in range.
+        start_time = row['start_time']
+        while len(end_times) and end_times[0] <= start_time:
+            heapq.heappop(end_times)
+
+        # Append in sorted order.
+        heapq.heappush(end_times, row['end_time'])
+        max_in_visit = max(max_in_visit, len(end_times))
+    
+    return max_in_visit
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -43,6 +61,8 @@ if __name__ == '__main__':
     parser.add_argument('-O', '--override', action='store_true',
         help='Pass this argument to overwrite the locations file with the ' +\
              'output, rather than saving it to the specified output file')
+    parser.add_argument('-n', '--n-tasks', default=1, type=int,
+        help='Specifies the number of processes to use (default is serial)')
     args = parser.parse_args()
 
     # Get command line arguments, and place input files in the population_dir
@@ -61,9 +81,11 @@ if __name__ == '__main__':
     visits = pd.read_csv(path_to_visits)
 
     # Calculate total visits to a location.
+    start_time = time.perf_counter()
     max_visits = (
         visits[[LOCATION_ID_COLUMN_NAME, OTHER_COLUMN]]
-            .groupby(LOCATION_ID_COLUMN_NAME).count()
+            .groupby(LOCATION_ID_COLUMN_NAME)
+            .count()
             .rename({OTHER_COLUMN: 'total_visits'}, axis=1)
     )
 
@@ -75,32 +97,41 @@ if __name__ == '__main__':
         renaming.append(f'total_on_day_{column[1]}')
     daily_summaries.columns = renaming
     
+    end_time = time.perf_counter()
+    print('Calculating total visits:', end_time - start_time)
+
     # Calculate some additional statistics.
+    start_time = time.perf_counter()
     daily_summaries['average_daily_total'] = daily_summaries.mean(axis=1)
     daily_summaries['median_daily_total'] = daily_summaries.median(axis=1)
     daily_summaries['max_daily_total'] = daily_summaries.max(axis=1)
     # Merge in.
     max_visits = max_visits.merge(daily_summaries, left_index=True, right_index=True)
+    
+    end_time = time.perf_counter()
+    print('Calculating daily summaries:', end_time - start_time)
 
-    # Calculate the maximum simulatenous visits.
-    max_visits['max_simultaneous_visits'] = 0
-    max_in_visit = 0
-    end_times = []
-    for lid, row in max_visits.iterrows():
-        for _, row in visits[visits[LOCATION_ID_COLUMN_NAME] == lid][['start_time','end_time']].iterrows():
-            # Filter out end_times not in range.
-            start_time = row['start_time']
-            while len(end_times) and end_times[0] <= start_time:
-                heapq.heappop(end_times)
+    # Calculate the maximum simulatenous visits using as many processes
+    # as possible
+    start_time = time.perf_counter()
+    if args.n_tasks > 1:
+        with Pool(args.n_tasks) as pool:
+            max_visits['max_simultaneous_visits'] =\
+                pool.map(
+                    partial(find_max_simultaneous_visits, visits),
+                    max_visits.index
+                )
+    else:
+        max_visits['max_simultaneous_visits'] =\
+            max_visits.index.map(
+                partial(find_max_simultaneous_visits, visits)
+            )
 
-            # Append in sorted order.
-            heapq.heappush(end_times, row['end_time'])
-            max_in_visit = max(max_in_visit, len(end_times))
-        max_visits.at[lid, 'max_simultaneous_visits'] = max_in_visit
-        
-        # Reset counts for next row/location
-        max_in_visit = 0
-        end_times.clear()
+    end_time = time.perf_counter()
+    print('Calculating maximum simulatneous visits:', end_time - start_time)
+    
+    print(max_visits.columns)
+    print(max_visits.index)
 
     # We need the max visit data to be a location attribute, so combine it
     # with the location data
@@ -119,6 +150,7 @@ if __name__ == '__main__':
     }
     output_dtypes.update({c: int for c in renaming})
     output_df = output_df.astype(output_dtypes)
+    print(output_df.dtypes)
 
     # Output with index column which is the lids.
     output_df.to_csv(output_file, index=False)
