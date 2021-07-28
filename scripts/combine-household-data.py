@@ -56,7 +56,7 @@ def CreateParser() :
 def FileReport(filename, message) :
     if not os.path.exists(filename) :
         print(f"Missing file <{filename}>")
-        sys.exit(-1)
+        #sys.exit(-1)
     else :
         print(f"Using {message}:  <{filename}>")
 
@@ -68,17 +68,17 @@ def main() :
     cli_parser = CreateParser()
     args = cli_parser.parse_args()
 
-    input_dir = arg.input_dir
+    input_dir = args.input_dir
     if input_dir == '':
         input_dir = os.getcwd()
-    output_dir = arg.output_dir
+    output_dir = args.output_dir
     if output_dir == '':
         output_dir = os.getcwd()
 
     region_prefix = args.region_prefix
 
-    p_filename = os.path.join(input_dir, region_prefix + '_person.csv')
-    h_filename = os.path.join(input_dir, region_prefix + '_household.csv')
+    p_filename = os.path.join(input_dir, 'base_population', region_prefix + '_person.csv')
+    h_filename = os.path.join(input_dir, 'base_population', region_prefix + '_household.csv')
     rl_filename = os.path.join(input_dir, region_prefix + '_residence_locations_final.csv')
     al_filename = os.path.join(input_dir, region_prefix + '_activity_locations_final.csv')
     hra_filename = os.path.join(input_dir, region_prefix + '_household_residence_assignment_final.csv')
@@ -106,8 +106,6 @@ def main() :
 
     # admin1,admin2,admin3,admin4,hid,serialno,puma,record_type,hh_unit_wt,hh_size,vehicles,hh_income,units_in_structure,business,heating_fuel,household_language,family_type_and_employment_status,workers_in_family
     household_df= pd.read_csv(h_filename, usecols=['hid', 'hh_size', 'hh_income', 'workers_in_family'])
-    print(person_df.dtypes)
-    print(household_df.dtypes)
 
     p_h_df = person_df.merge(household_df, how='left', left_on='hid', right_on='hid')
 
@@ -125,9 +123,11 @@ def main() :
         'employment_status': int,
         'workers_in_family': int,
     })
-    print(gidi_person_df.dtypes)
 
-    gidi_person_df.to_csv(os.path.join(output_dir, region_prefix + '_gidi_person.csv', index=False))
+    gidi_person_df.to_csv(
+        os.path.join(output_dir, region_prefix + '_gidi_person.csv'),
+        index=False
+    )
 
     sys.exit(0)
 

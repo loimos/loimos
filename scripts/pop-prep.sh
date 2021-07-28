@@ -87,7 +87,7 @@ awk -F, -v home_shift=${HOME_SHIFT} \
 if( $4 == 1 ){ $7+=home_shift };
 if( NR == 1 ){ print "daynum,pid,activity_number,activity_type,start_time,end_time,duration,lid" };
 if( FNR > 1 ){ end_time=$5+$6; daynum=int($5/(24*60*60)); print daynum,$2,$3,$4,$5,end_time,$6,$7}
-}' ${adult_location_assignment_filename} ${child_location_assignment_filename} >  ${region}_gidi_visits.csv
+}' ${adult_location_assignment_filename} ${child_location_assignment_filename} > ${fixed_location_assignment_filename} # ${region}_gidi_visits.csv
 
 # Create residence locations file with lid offsets:
 awk -F, -v home_shift=${HOME_SHIFT} 'BEGIN{ OFS=","} { if(NR>1){$1+=home_shift; print} else {$1="lid"; print } }' ${residence_locations_filename} > ${fixed_residence_locations_filename}
