@@ -41,44 +41,13 @@ fi
 
 echo Processing data for ${STATE}
 
-# Run all the preprocessing scripts
-#run_script pop-prep.sh
-#run_script combine-household-data.sh
-
-#echo Running pop-prep.sh
-#sbatch --wait \
-#  ${BATCH_DIR}/run-pop-prep.sh #-s ${STATE} -i ${IN_DIR} -o ${IN_DIR}
-#echo Done with pop-prep.sh
-#ls ${IN_DIR}
-#echo
-#
-#echo Running combine-household-data.py
-#sbatch --wait \
-#  ${BATCH_DIR}/run-combine-household-data.sh #-s ${STATE} \
-#  #-i ${IN_DIR} -o ${IN_DIR}
-#echo Done with combine-household-data.sh
-#echo
+run_script pop-prep.sh
+run_script combine-household-data.sh
 
 # From here on we no longer need any of all the raw data, so move all the
 # processed data (which will be at the top level of the input dir) over to
 # the otput dir
-#mv ${IN_DIR}/*.csv ${OUT_DIR}
+mv ${IN_DIR}/*.csv ${OUT_DIR}
 
 run_script merge-location-data.py
 run_script location-heuristics.py
-
-#echo Running merge-location-data.py
-#sbatch --wait \
-#  ${BATCH_DIR}/run-merge-location-data.sh #\
-#  #${OUT_DIR} \
-#  #-p ${STATE}_gidi_person.csv \
-#  #-v ${STATE}_gidi_visits.csv \
-#  #-a ${STATE}_activity_locations_final.csv \
-#  #-r ${STATE}_residence_locations_final.csv
-#echo Done with merge-location-data.py
-#echo
-#
-#echo Running location_heuristics.py 
-#sbatch --wait \
-#  ${BATCH_DIR}/location_heuristics.sh #${OUT_DIR} -n 80 -O
-#echo Done with location_heuristics.py
