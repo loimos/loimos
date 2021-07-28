@@ -12,9 +12,10 @@ function run_script() {
   TIME=$2
 
   echo Running ${SCRIPT}
-  echo sbatch --time ${TIME} --wait ${BATCH_DIR}/${BATCH_SCRIPT}
   sbatch --time ${TIME} --wait ${BATCH_DIR}/${BATCH_SCRIPT}
-  
+ 
+  # Make sure the user knows if the job fails or not, and stop here if it does
+  # since the subsequent scripts won't work without the right input
   EXIT_CODE=$?
   if [ ${EXIT_CODE} -eq 0 ]; then
     echo Done with ${SCRIPT}
@@ -59,3 +60,6 @@ mv ${IN_DIR}/*.csv ${OUT_DIR}
 
 run_script merge-location-data.py ${BASE_TIME}
 run_script location-heuristics.py ${BASE_TIME}
+
+# Copy the neccessary textproto files over
+cp ${OUT_DIR}/../coc/*.textproto ${OUT_DIR}
