@@ -105,7 +105,7 @@ void People::loadPeopleData() {
   // Load preprocessing meta data.
   uint32_t *buf = (uint32_t *) malloc(sizeof(uint32_t) * numDays);
   for (int c = 0; c < numLocalPeople; c++) {
-    std::vector<uint32_t> *data_pos = &people[c].interactionsByDay;
+    std::vector<uint32_t> *data_pos = &people[c].visitOffsetByDay;
     int curr_id = people[c].uniqueId;
 
     // Read in their activity data offsets.
@@ -282,7 +282,7 @@ void People::RealDataSendVisitMessages() {
   for (int localPersonId = 0; localPersonId < numLocalPeople; localPersonId++) {
     // Seek to correct position in file.
     uint32_t seekPos = people[localPersonId]
-                       .interactionsByDay[day % DAYS_IN_WEEK];
+                       .visitOffsetByDay[day % DAYS_IN_WEEK];
     if (seekPos == EMPTY_VISIT_SCHEDULE) {
       //CkPrintf("No visits on day %d in people chare %d\n", day, thisIndex);
       continue;
