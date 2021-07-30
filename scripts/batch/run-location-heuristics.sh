@@ -1,5 +1,4 @@
 #!/bin/bash
-#SBATCH -p parallel
 #SBATCH -q normal
 #SBATCH -N 2
 #SBATCH --ntasks-per-node=40
