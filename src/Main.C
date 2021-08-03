@@ -45,7 +45,8 @@
 /* readonly */ int synLocalLocationGridHeight;
 /* readonly */ int synLocationPartitionGridWidth;
 /* readonly */ int synLocationPartitionGridHeight;
-/* readonly */ int averageDegreeOfVisit;
+/* readonly */ double averageVisitsPerDay;
+/* readonly */ double averageDistanceOfVisit;
 
 
 Main::Main(CkArgMsg* msg) {
@@ -69,8 +70,8 @@ Main::Main(CkArgMsg* msg) {
     assert(synPeopleGridHeight >= synLocationGridHeight);
 
     // Edge degree.
-    averageDegreeOfVisit = atoi(msg->argv[6]);
-    
+    averageDistanceOfVisit = atof(msg->argv[6]);
+
     // Chare data
     synLocationPartitionGridWidth = atoi(msg->argv[7]);
     synLocationPartitionGridHeight = atoi(msg->argv[8]);
@@ -97,6 +98,7 @@ Main::Main(CkArgMsg* msg) {
         synLocationGridWidth, synLocationGridHeight);
     }
 
+    averageVisitsPerDay = PEOPLE_PEOPLE_DEGREE * (numPeople / numLocations);
     baseRunInfo = 9;
   } else {
     numPeople = atoi(msg->argv[2]);
@@ -137,7 +139,7 @@ Main::Main(CkArgMsg* msg) {
   mainProxy = thisProxy;
 
   if(syntheticRun) {
-    CkPrintf("Synthetic run with (%d, %d) person grid and (%d, %d) location grid. Average degree of %d\n\n", synPeopleGridWidth, synPeopleGridHeight, synLocationGridWidth, synLocationGridHeight, averageDegreeOfVisit);
+    CkPrintf("Synthetic run with (%d, %d) person grid and (%d, %d) location grid. Average of %lf visits per day with distance %lf\n\n", synPeopleGridWidth, synPeopleGridHeight, synLocationGridWidth, synLocationGridHeight, averageVisitsPerDay, averageDistanceOfVisit);
   }
 
   // Instantiate DiseaseModel nodegroup (One for each physical processor).

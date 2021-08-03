@@ -36,9 +36,18 @@ const Time MINUTE_LENGTH = 60;
 #define EMPTY_VISIT_SCHEDULE 0xFFFFFFFF
 #define CSV_DELIM ','
 
+#ifndef PEOPLE_SEEDING
+  #define PEOPLE_SEEDING true
+#endif // PEOPLE_SEEDING
+#define INITIAL_PERSON_INFECTIOUS_PROB 0.01
+// Location seeding options
 #define PERCENTAGE_OF_SEEDING_LOCATIONS 0.001
 #define INITIAL_INFECTIOUS_PROBABILITY 0.01
 #define DAYS_TO_SEED_INFECTION 3
+
+// Synthetic configuration
+#define PEOPLE_PEOPLE_DEGREE 40
+#define AVERAGE_REAL_WORLD_VISIT_DISTANCE 50.00
 
 extern /* readonly */ CProxy_Main mainProxy;
 extern /* readonly */ CProxy_People peopleArray;
@@ -70,7 +79,8 @@ extern /* readonly */ int synLocalLocationGridWidth;
 extern /* readonly */ int synLocalLocationGridHeight;
 extern /* readonly */ int synLocationPartitionGridWidth;
 extern /* readonly */ int synLocationPartitionGridHeight;
-extern /* readonly */ int averageDegreeOfVisit;
+extern /* readonly */ double averageDistanceOfVisit;
+extern /* readonly */ double averageVisitsPerDay;
 
 int getNumElementsPerPartition(int numElements, int numPartitions);
 

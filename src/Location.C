@@ -25,24 +25,25 @@ Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine 
   this->generator = generator;
 
   // Determine if this location should seed the disease.
-  if (syntheticRun) {
-    // For synthetic runs start seed in corner.
-    // Determine grid size in each corner s.t. randomly selecting 50%
-    // of these locations will result
-    int seedSize = 
-      std::max((int) std::sqrt((numLocations * PERCENTAGE_OF_SEEDING_LOCATIONS) / 4), 1);
-    
-    int locationX = uniqueIdx % synLocationGridWidth;
-    int locationY = uniqueIdx / synLocationGridWidth;
-    if ((locationX < seedSize || (synLocationGridWidth - locationX) <= seedSize)
-        && (locationY < seedSize || (synLocationGridHeight - locationY) <= seedSize)) {
-      isDiseaseSeeder = true;
+  if (!PEOPLE_SEEDING) {
+    if (syntheticRun) {
+      // For synthetic runs start seed in corner.
+      // Determine grid size in each corner s.t. randomly selecting 50%
+      // of these locations will result
+      int seedSize = 
+        std::max((int) std::sqrt((numLocations * PERCENTAGE_OF_SEEDING_LOCATIONS) / 4), 1);
+      
+      int locationX = uniqueIdx % synLocationGridWidth;
+      int locationY = uniqueIdx / synLocationGridWidth;
+      if ((locationX < seedSize || (synLocationGridWidth - locationX) <= seedSize)
+          && (locationY < seedSize || (synLocationGridHeight - locationY) <= seedSize)) {
+        isDiseaseSeeder = true;
+      }
+    } else {
+      // For non-synthetic set just seed completely at random.
+      isDiseaseSeeder = uniform_dist(*generator) < PERCENTAGE_OF_SEEDING_LOCATIONS;
     }
-  } else {
-    // For non-synthetic set just seed completely at random.
-    isDiseaseSeeder = uniform_dist(*generator) < PERCENTAGE_OF_SEEDING_LOCATIONS;
   }
-  
 }
 
 // DataInterface overrides. 
@@ -200,7 +201,7 @@ inline void Location::sendInteractions(int personIdx) {
   );
 
   // Randomly seed some people for infection.
-  if (isDiseaseSeeder && day < DAYS_TO_SEED_INFECTION 
+  if (!PEOPLE_SEEDING && isDiseaseSeeder && day < DAYS_TO_SEED_INFECTION 
       && uniform_dist(*generator) < INITIAL_INFECTIOUS_PROBABILITY) {
         // Add a super contagious visit for that person.
         interactions[personIdx].emplace_back(
