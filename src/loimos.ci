@@ -45,17 +45,6 @@ mainmodule loimos {
     entry void run() {
       for(day = 0; day < numDays; day++) {
         serial {
-          if (10 == day) {
-            CkPrintf("Staring trace\n");
-            traceBegin();
-          } else if (numDays - 10 == day) {
-            CkPrintf("Halting trace\n");
-            traceEnd();
-          } else if (10 < day && numDays - 10 >= day) {
-            CkPrintf("Flushing logs\n");
-            traceFlushLog();
-          }
-
           iterationStartTime = CkWallTimer();
           // CkPrintf("Sending Visit Messages\n");
           peopleArray.SendVisitMessages();

@@ -19,7 +19,7 @@ Person::Person(int numAttributes, int startingState, int timeLeftInState) {
     }
     this->state = startingState;
     this->secondsLeftInState = timeLeftInState;
-    this->visitOffsetByDay = std::vector<uint32_t>();
+    this->interactionsByDay = std::vector<uint32_t>();
     this->next_state = -1;
 }
 

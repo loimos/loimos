@@ -25,9 +25,9 @@ class Person : public DataInterface {
         std::vector<Interaction> interactions;
 
         // Integer byte offsets in interaction file by data for a persons visit.
-        // for example fseek(visitOffsetByDay[2]) would seek to the start
+        // for example fseek(interactionsByDay[2]) would seek to the start
         // of this persons interactions on day 3.
-        std::vector<uint32_t> visitOffsetByDay;
+        std::vector<uint32_t> interactionsByDay;
         
         // Various dynamic attributes of the person
         std::vector<union Data> personData;
