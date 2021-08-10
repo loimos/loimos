@@ -11,9 +11,11 @@ function run_script() {
   BATCH_SCRIPT=run-${SCRIPT/.py/.sh}
   TIME=$2
   QUEUE=$3
+  TASKS_PER_NODE=$4
 
   echo Running ${SCRIPT}
-  sbatch -t ${TIME} -p ${QUEUE} --wait ${BATCH_DIR}/${BATCH_SCRIPT}
+  sbatch -t ${TIME} -p ${QUEUE} --ntasks-per-node ${TASKS_PER_NODE} --wait \
+    ${BATCH_DIR}/${BATCH_SCRIPT}
  
   # Make sure the user knows if the job fails or not, and stop here if it does
   # since the subsequent scripts won't work without the right input
@@ -51,16 +53,16 @@ fi
 
 echo Processing data for ${STATE}
 
-run_script pop-prep.sh ${BASE_TIME} standard
-run_script combine-household-data.sh ${BASE_TIME} standard
+run_script pop-prep.sh ${BASE_TIME} standard 1
+run_script combine-household-data.sh ${BASE_TIME} standard 1
 
 # From here on we no longer need any of all the raw data, so move all the
 # processed data (which will be at the top level of the input dir) over to
 # the otput dir
 mv ${IN_DIR}/*.csv ${OUT_DIR}
 
-run_script merge-location-data.py ${BASE_TIME} standard
-run_script location-heuristics.py ${BASE_TIME} parallel
+run_script merge-location-data.py ${BASE_TIME} standard 1
+run_script location-heuristics.py ${BASE_TIME} parallel 40
 
 # Copy the neccessary textproto files over
 cp ${OUT_DIR}/../coc/*.textproto ${OUT_DIR}
