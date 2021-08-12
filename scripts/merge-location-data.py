@@ -58,12 +58,13 @@ def combine_residences_and_activities(activity_locations, residence_locations):
 
 def id_remapper(people, locations, visits):
     groups = [
-        (people, 'pid'),
-        (locations, 'lid')
+        (people, 'pid', ['visits']),
+        (locations, 'lid', ['visits', 'people'])
     ]
+    data = {'people': people, 'locations': locations, 'visits': visits}
 
     # Remap location ids.
-    for to_remap, key in groups:
+    for to_remap, key, external_references in groups:
         # Remaps the dataframes existing index to a new dense index.
         to_remap['new_id'] = to_remap.index
         remapper = to_remap[[key, 'new_id']].copy()
@@ -73,11 +74,14 @@ def id_remapper(people, locations, visits):
         # Replaced foreign key references.
         # for df in foreign_dfs:
         # Replace all references of the old keys with the new ones
-        visits = visits.merge(remapper, left_on=key, right_on=key)
-        visits[key]= visits['new_id']
-        visits.drop(["new_id"], axis = 1, inplace=True)
+        for ref_name in external_references:
+            ref = data[ref_name]
+            ref = ref.merge(remapper, left_on=key, right_on=key)
+            ref[key]= ref['new_id']
+            ref.drop(["new_id"], axis = 1, inplace=True)
+            data[ref_name] = ref
             
-    return people, locations, visits
+    return data['people'], data['locations'], data['visits']
 
 if __name__ == "__main__":
     args = parse_args()
