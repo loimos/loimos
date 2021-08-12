@@ -1,0 +1,72 @@
+field {
+    field_name: "hid"
+    ignore {}
+}
+field {
+    field_name: "pid"
+    uniqueId {}
+}
+field {
+    field_name: "age"
+    b10int {}
+}
+field {
+    field_name: "sex"
+    ignore {}
+}
+field {
+    field_name: "employment_status"
+    ignore {}
+}
+field {
+    field_name: "race"
+    ignore {}
+}
+field {
+    field_name: "hispanic"
+    ignore {}
+}
+field {
+    field_name: "designation"
+    ignore {}
+}
+field {
+    field_name: "hh_size"
+    ignore {}
+}
+field {
+    field_name: "hh_income"
+    ignore {}
+}
+field {
+    field_name: "workers_in_family"
+    ignore {}
+}
+field {
+    field_name: "lid"
+    ignore {}
+}
+field {
+    field_name: "longitude"
+    ignore {}
+}
+field {
+    field_name: "latitude"
+    ignore {}
+}
+field {
+    field_name: "admin1"
+    ignore {}
+}
+field {
+    field_name: "admin2"
+    ignore {}
+}
+field {
+    field_name: "admin3"
+    ignore {}
+}
+field {
+    field_name: "admin4"
+    ignore {}
+}

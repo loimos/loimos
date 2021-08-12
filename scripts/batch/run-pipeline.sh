@@ -62,7 +62,7 @@ run_script combine-household-data.sh ${BASE_TIME} standard 1
 mv ${IN_DIR}/*.csv ${OUT_DIR}
 
 run_script merge-location-data.py ${BASE_TIME} standard 1
-run_script location-heuristics.py ${BASE_TIME} parallel 40
+run_script location-heuristics.py $((2 * ${BASE_TIME})) parallel 40
 
 # Copy the neccessary textproto files over
-cp ${OUT_DIR}/../coc/*.textproto ${OUT_DIR}
+cp ${PROJECT_ROOT}/loimos/data/textproto_templates/*.textproto ${OUT_DIR}
