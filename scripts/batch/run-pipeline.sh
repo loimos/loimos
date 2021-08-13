@@ -12,11 +12,17 @@ function run_script() {
   TIME=$2
   QUEUE=$3
   TASKS_PER_NODE=$4
+  MEM=$5
+
+  ARGS="-t ${TIME} -p ${QUEUE} --ntasks-per-node ${TASKS_PER_NODE} --wait"
+  if [ ! -z ${MEM} ]; then
+    ARGS="${ARGS} --mem ${MEM}"
+  fi
 
   echo Running ${SCRIPT}
-  sbatch -t ${TIME} -p ${QUEUE} --ntasks-per-node ${TASKS_PER_NODE} --wait \
-    ${BATCH_DIR}/${BATCH_SCRIPT}
- 
+  #echo sbatch ${ARGS} ${BATCH_DIR}/${BATCH_SCRIPT}
+  sbatch ${ARGS} ${BATCH_DIR}/${BATCH_SCRIPT}
+
   # Make sure the user knows if the job fails or not, and stop here if it does
   # since the subsequent scripts won't work without the right input
   EXIT_CODE=$?
@@ -43,6 +49,8 @@ if [ -z ${BASE_TIME} ]; then
   BASE_TIME=10
 fi
 
+BASE_MEMORY=$3
+
 module load gcc/9.2.0 cuda/11.0.228 openmpi/3.1.6 mvapich2/2.3.3 \
   openmpi/3.1.6 python/3.8.8
 
@@ -53,16 +61,16 @@ fi
 
 echo Processing data for ${STATE}
 
-run_script pop-prep.sh ${BASE_TIME} standard 1
-run_script combine-household-data.sh ${BASE_TIME} standard 1
+run_script pop-prep.sh ${BASE_TIME} standard 1 ${BASE_MEMORY}
+run_script combine-household-data.sh ${BASE_TIME} standard 1 ${BASE_MEMORY}
 
 # From here on we no longer need any of all the raw data, so move all the
 # processed data (which will be at the top level of the input dir) over to
 # the otput dir
-mv ${IN_DIR}/*.csv ${OUT_DIR}
+#mv ${IN_DIR}/*.csv ${OUT_DIR}
 
-run_script merge-location-data.py ${BASE_TIME} standard 1
-run_script location-heuristics.py $((2 * ${BASE_TIME})) parallel 40
+run_script merge-location-data.py ${BASE_TIME} standard 1 ${BASE_MEMORY}
+run_script location-heuristics.py $((2 * ${BASE_TIME})) parallel 40 ${BASE_MEMORY}
 
 # Copy the neccessary textproto files over
 cp ${PROJECT_ROOT}/loimos/data/textproto_templates/*.textproto ${OUT_DIR}
