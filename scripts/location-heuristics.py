@@ -20,7 +20,7 @@ import argparse
 import os
 import time
 from functools import partial
-from multiprocessing import Pool
+from multiprocessing import Pool, set_start_method
     
 def find_max_simultaneous_visits(visits, lid):
     max_in_visit = 0
@@ -115,6 +115,12 @@ if __name__ == '__main__':
     # as possible
     start_time = time.perf_counter()
     if args.n_tasks > 1:
+        # The default way of starting new processes - fork - duplicates the
+        # entire process - including its memory footprint - so let's choose
+        # another method (see https://stackoverflow.com/questions/42584525/
+        # python-multiprocessing-debugging-oserror-errno-12-cannot-allocate-memory
+        set_start_method('forkserver')
+
         with Pool(args.n_tasks) as pool:
             max_visits['max_simultaneous_visits'] =\
                 pool.map(
