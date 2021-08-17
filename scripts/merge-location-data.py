@@ -137,6 +137,9 @@ if __name__ == "__main__":
     combined = combined.astype({'shopping': int})
     print(combined.dtypes)
 
+    # Make sure all the visits are in the right order
+    visits.sort_values(by=['pid', 'start_time'], inplace=True)
+
     if override:
         # Cleanup
         os.remove(people_file)
