@@ -15,9 +15,12 @@ PROTOC         = $(PROTOBUF_HOME)/bin/protoc
 # overide this default
 GTEST_HOME ?= /usr/local/gtest
 
+# Set the environment variable HYPERCOMM_HOME to the Hypercomm library installation
+HYPERCOMM_HOME ?= /usr/local/hypercomm-aggregation
+
 CXX       = g++
 OPTS     += -g -O2
-INCLUDES  = -I$(PROTOBUF_HOME)/include
+INCLUDES  = -I$(PROTOBUF_HOME)/include -I$(HYPERCOMM_HOME)/include
 LIBS      = -lpthread -L$(PROTOBUF_HOME)/lib -lprotobuf 
 
 # Set the ENABLE_UNIT_TESTING environment variable to compile for unit testing

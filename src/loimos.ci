@@ -216,4 +216,8 @@ mainmodule loimos {
   nodegroup DiseaseModel {
       entry DiseaseModel(std::string pathToModel, std::string scenarioPath);
   };
+
+  namespace aggregation {
+    initproc void initialize(void);
+  }
 };

@@ -18,9 +18,15 @@
 #include <iostream>
 #include <fstream>
 
+#include <hypercomm/routing.hpp>
+#include <hypercomm/aggregation.hpp>
+#include <hypercomm/registration.hpp>
+
 #define LOCATION_LAMBDA 5.2
 
 class People : public CBase_People {
+  using aggregator_t = aggregation::array_aggregator<aggregation::direct_buffer, aggregation::routing::direct, InteractionMessage>;
+
   private:
     int numLocalPeople;
     int day;
@@ -31,6 +37,7 @@ class People : public CBase_People {
     std::default_random_engine generator;
     DiseaseModel *diseaseModel;
     std::vector<int> stateSummaries;
+    std::shared_ptr<aggregator_t> aggregator;
 
     void ProcessInteractions(Person &person);
     void loadPeopleData();
