@@ -24,4 +24,4 @@ $(OBJS): %.pb.o: %.pb.C %.pb.h
 
 .PHONY:clean
 clean:
-	rm *.pb.C *.pb.h *.pb.o
+	rm -f *.pb.C *.pb.h *.pb.o
