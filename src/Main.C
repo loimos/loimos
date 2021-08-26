@@ -19,6 +19,7 @@
 #include <unordered_map>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <hypercomm/registration.hpp>
 
 #ifdef ENABLE_UNIT_TESTING
 #include "gtest/gtest.h"

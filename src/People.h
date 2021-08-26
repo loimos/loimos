@@ -20,7 +20,6 @@
 
 #include <hypercomm/routing.hpp>
 #include <hypercomm/aggregation.hpp>
-#include <hypercomm/registration.hpp>
 
 #define LOCATION_LAMBDA 5.2
 

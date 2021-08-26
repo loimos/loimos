@@ -78,7 +78,12 @@ People::People() {
 
   // Create message aggregator
   bool aggregateNodeLevel = true;
-  aggregator = std::make_shared<aggregator_t>(thisProxy, CkIndex_People::ReceiveInteractions(InteractionMessage{}), 100, 0.85, 0.05, aggregateNodeLevel, CcdPROCESSOR_STILL_IDLE);
+  size_t bufferSize = 65536;
+  double threshold = 0.85;
+  double flushPeriod = 0.05;
+  aggregator = std::make_shared<aggregator_t>(
+      thisProxy, CkIndex_People::ReceiveInteractions(InteractionMessage{}),
+      bufferSize, threshold, flushPeriod, aggregateNodeLevel, CcdPROCESSOR_STILL_IDLE);
 }
 
 People::People(CkMigrateMessage *msg) {}
