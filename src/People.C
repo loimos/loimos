@@ -82,7 +82,7 @@ People::People() {
   double threshold = 0.85;
   double flushPeriod = 0.05;
   aggregator = std::make_shared<aggregator_t>(
-      thisProxy, CkIndex_People::ReceiveInteractions(InteractionMessage{}),
+      locationsArray, CkIndex_Locations::ReceiveVisitMessages(VisitMessage{}),
       bufferSize, threshold, flushPeriod, aggregateNodeLevel, CcdPROCESSOR_STILL_IDLE);
 }
 
@@ -341,7 +341,8 @@ void People::SyntheticSendVisitMessages() {
 
       // Send off visit message
       VisitMessage visitMsg(destinationIdx, personIdx, p.state, visitStart, visitEnd);
-      locationsArray[locationPartition].ReceiveVisitMessages(visitMsg);
+      aggregator->send(locationsArray[locationPartition], visitMsg);
+      //locationsArray[locationPartition].ReceiveVisitMessages(visitMsg);
     } 
   }
 }
@@ -356,6 +357,7 @@ void People::RealDataSendVisitMessages() {
       int locationPartition = getPartitionIndex(visitMessage.locationIdx,
           numLocations, numLocationPartitions, firstLocationIdx);
       locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
+      aggregator->send(locationsArray[locationPartition], visitMsg);
     }
   }
 }
