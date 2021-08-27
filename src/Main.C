@@ -226,11 +226,20 @@ Main::Main(CkArgMsg* msg) {
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
   traceArray = CProxy_TraceSwitcher::ckNew();
+  array_count = 2; // Number of chare arrays
+  created_count = 0;
+}
 
-  // run
-  CkPrintf("Running ...\n\n");
-  simulationStartTime = CkWallTimer();
-  mainProxy.run();
+void Main::ArraysCreated() {
+  if (++created_count == array_count) {
+    // Create Hypercomm message aggregator
+    peopleArray.CreateAggregator(CkCallbackResumeThread());
+
+    // Run
+    CkPrintf("Running ...\n\n");
+    simulationStartTime = CkWallTimer();
+    mainProxy.run();
+  }
 }
 
 void Main::SaveStats(int *data) {

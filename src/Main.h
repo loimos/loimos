@@ -17,9 +17,12 @@ class Main : public CBase_Main {
   std::string pathToOutput;
   std::vector<int> accumulated;
   DiseaseModel* diseaseModel;
+  int array_count;
+  int created_count;
 
   public:
     Main(CkArgMsg* msg);
+    void ArraysCreated();
     void SaveStats(int *data);
 };
 

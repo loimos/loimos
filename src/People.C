@@ -77,7 +77,15 @@ People::People() {
       loadPeopleData();
   }
 
+  // Notify Main
+  contribute(CkCallback(CkReductionTarget(Main, ArraysCreated), mainProxy));
+
+}
+
+void People::CreateAggregator(CkCallback cb) {
   // Create message aggregator
+  // We need to ensure that the Locations chare array has been created
+  // and its proxy stored globally before creating the aggregator
   bool aggregateNodeLevel = true;
   size_t bufferSize = 65536;
   double threshold = 0.85;
@@ -85,6 +93,9 @@ People::People() {
   aggregator = std::make_shared<aggregator_t>(
       locationsArray, CkIndex_Locations::ReceiveVisitMessages(VisitMessage{}),
       bufferSize, threshold, flushPeriod, aggregateNodeLevel, CcdPROCESSOR_STILL_IDLE);
+
+  // Notify Main
+  contribute(cb);
 }
 
 People::People(CkMigrateMessage *msg) {}

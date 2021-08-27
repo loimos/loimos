@@ -52,6 +52,7 @@ mainmodule loimos {
 
   mainchare Main {
     entry Main(CkArgMsg*);
+    entry [reductiontarget, threaded] void ArraysCreated();
     entry void run() {
       // We only want to collect instumentation on the main loop
       #ifdef ENABLE_LB
@@ -191,6 +192,7 @@ mainmodule loimos {
 
   array [1D] People {
     entry People();
+    entry void CreateAggregator(CkCallback cb);
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
 #ifdef USE_TRAM
     entry [aggregate] void ReceiveInteractions(InteractionMessage);

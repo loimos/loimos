@@ -55,6 +55,9 @@ Locations::Locations() {
   // Init contact model
   contactModel = createContactModel();
   contactModel->setGenerator(&generator);
+
+  // Notify Main
+  contribute(CkCallback(CkReductionTarget(Main, ArraysCreated), mainProxy));
 }
     
 Locations::Locations(CkMigrateMessage *msg) {};

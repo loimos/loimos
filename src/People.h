@@ -45,6 +45,7 @@ class People : public CBase_People {
     People();
     People(CkMigrateMessage *msg);
     void pup(PUP::er &p);
+    void CreateAggregator(CkCallback cb);
     void SendVisitMessages(); 
     void SyntheticSendVisitMessages();
     void RealDataSendVisitMessages();
