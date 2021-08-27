@@ -54,10 +54,6 @@ class Location : public DataInterface {
     // For DataInterface
     int uniqueId;
     
-    // Hypercomm aggregator
-    using aggregator_t = aggregation::array_aggregator<aggregation::direct_buffer, aggregation::routing::direct, InteractionMessage>;
-    std::shared_ptr<aggregator_t> aggregator;
-
     // Helper functions to handle when a person leaves this location
     // onDeparture branches to one of the two other functions
     inline void onDeparture(

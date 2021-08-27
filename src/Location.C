@@ -43,15 +43,6 @@ Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine 
     // For non-synthetic set just seed completely at random.
     isDiseaseSeeder = unitDistrib(*generator) < PERCENTAGE_OF_SEEDING_LOCATIONS;
   }
-  
-  // Create message aggregator
-  bool aggregateNodeLevel = true;
-  size_t bufferSize = 65536;
-  double threshold = 0.85;
-  double flushPeriod = 0.05;
-  aggregator = std::make_shared<aggregator_t>(
-      peopleArray, CkIndex_People::ReceiveInteractions(InteractionMessage{}),
-      bufferSize, threshold, flushPeriod, aggregateNodeLevel, CcdPROCESSOR_STILL_IDLE);
 }
 
 Location::Location(CkMigrateMessage *msg) {};
@@ -244,8 +235,7 @@ inline void Location::sendInteractions(int personIdx) {
         );
   }
   InteractionMessage interMsg(personIdx, interactions[personIdx]);
-  aggregator->send(peopleArray[peoplePartitionIdx], interMsg);
-  //peopleArray[peoplePartitionIdx].ReceiveInteractions(interMsg);
+  peopleArray[peoplePartitionIdx].ReceiveInteractions(interMsg);
 
   /*  
   CkPrintf(

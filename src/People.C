@@ -10,6 +10,7 @@
 #include "Interaction.h"
 #include "DiseaseModel.h"
 #include "Person.h"
+#include "Message.h"
 #include "readers/DataReader.h"
 
 #include <tuple>
@@ -357,7 +358,7 @@ void People::RealDataSendVisitMessages() {
       int locationPartition = getPartitionIndex(visitMessage.locationIdx,
           numLocations, numLocationPartitions, firstLocationIdx);
       locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
-      aggregator->send(locationsArray[locationPartition], visitMsg);
+      aggregator->send(locationsArray[locationPartition], visitMessage);
     }
   }
 }
