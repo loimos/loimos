@@ -16,7 +16,7 @@ PROTOC         = $(PROTOBUF_HOME)/bin/protoc
 GTEST_HOME ?= /usr/local/gtest
 
 # Set the environment variable HYPERCOMM_HOME to the Hypercomm library installation
-HYPERCOMM_HOME ?= /usr/local/hypercomm-aggregation
+HYPERCOMM_HOME ?= ../hypercomm-aggregation
 
 CXX       = g++
 OPTS     += -g -O2
