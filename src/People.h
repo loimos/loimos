@@ -35,7 +35,8 @@ class People : public CBase_People {
     DiseaseModel *diseaseModel;
     std::vector<int> stateSummaries;
 
-    using aggregator_t = aggregation::array_aggregator<aggregation::direct_buffer, aggregation::routing::direct, VisitMessage>;
+    using aggregator_t = aggregation::array_aggregator<
+      aggregation::direct_buffer, aggregation::routing::direct, VisitMessage>;
     std::shared_ptr<aggregator_t> aggregator;
 
     void ProcessInteractions(Person &person);
@@ -45,7 +46,8 @@ class People : public CBase_People {
     People();
     People(CkMigrateMessage *msg);
     void pup(PUP::er &p);
-    void CreateAggregator(CkCallback cb);
+    void CreateAggregator(size_t bufferSize, double threshold, double flushPeriod,
+        bool nodeLevel, CkCallback cb);
     void SendVisitMessages(); 
     void SyntheticSendVisitMessages();
     void RealDataSendVisitMessages();

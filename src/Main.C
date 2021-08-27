@@ -16,6 +16,8 @@
 #include <tuple>
 #include <iostream>
 #include <fstream>
+#include <cstdlib>
+#include <sstream>
 #include <unordered_map>
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -226,14 +228,41 @@ Main::Main(CkArgMsg* msg) {
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
   traceArray = CProxy_TraceSwitcher::ckNew();
-  array_count = 2; // Number of chare arrays
-  created_count = 0;
+  arrayCount = 2; // Number of chare arrays
+  createdCount = 0;
 }
 
 void Main::ArraysCreated() {
-  if (++created_count == array_count) {
+  if (++createdCount == arrayCount) {
+    // Get Hypercomm environment variables
+    size_t bufferSize = 65536;
+    double threshold = 0.85;
+    double flushPeriod = 0.05;
+    bool nodeLevel = true;
+    char* env_p;
+    if (env_p = std::getenv("HC_VISIT_PARAMS")) {
+      std::string env_str(env_p);
+      std::vector<std::string> tokens;
+      std::stringstream env_ss(env_str);
+      std::string token;
+
+      while (getline(env_ss, token, ',')) {
+        tokens.push_back(token);
+      }
+
+      CkAssert(tokens.size() == 4);
+      bufferSize = static_cast<size_t>(std::stoi(tokens[0]));
+      threshold = std::stod(tokens[1]);
+      flushPeriod = std::stod(tokens[2]);
+      nodeLevel = static_cast<bool>(std::stoi(tokens[3]));
+    }
+
     // Create Hypercomm message aggregator
-    peopleArray.CreateAggregator(CkCallbackResumeThread());
+    CkPrintf("Creating VisitMessage aggregator with buffer size %lu, threshold %.2lf, "
+        "flush period %.2lf, node-level %d\n", bufferSize, threshold, flushPeriod,
+        static_cast<int>(nodeLevel));
+    peopleArray.CreateAggregator(bufferSize, threshold, flushPeriod, nodeLevel,
+        CkCallbackResumeThread());
 
     // Run
     CkPrintf("Running ...\n\n");
