@@ -68,7 +68,7 @@ void Locations::CreateAggregator(bool useAggregator, size_t bufferSize, double t
   this->useAggregator = useAggregator;
 
   // Create message aggregator
-  // We need to ensure that the Locations chare array has been created
+  // We need to ensure that the People chare array has been created
   // and its proxy stored globally before creating the aggregator
   if (useAggregator) {
     aggregator = std::make_shared<aggregator_t>(
