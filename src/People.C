@@ -31,6 +31,7 @@ People::People() {
 
   newCases = 0;
   day = 0;
+  useAggregator = false;
   generator.seed(thisIndex);
 
   // Initialize disease model
@@ -82,14 +83,18 @@ People::People() {
 
 }
 
-void People::CreateAggregator(size_t bufferSize, double threshold, double flushPeriod,
-    bool nodeLevel, CkCallback cb) {
+void People::CreateAggregator(bool useAggregator, size_t bufferSize, double threshold,
+    double flushPeriod, bool nodeLevel, CkCallback cb) {
+  this->useAggregator = useAggregator;
+
   // Create message aggregator
   // We need to ensure that the Locations chare array has been created
   // and its proxy stored globally before creating the aggregator
-  aggregator = std::make_shared<aggregator_t>(
-      locationsArray, CkIndex_Locations::ReceiveVisitMessages(VisitMessage{}),
-      bufferSize, threshold, flushPeriod, nodeLevel, CcdPROCESSOR_STILL_IDLE);
+  if (useAggregator) {
+    aggregator = std::make_shared<aggregator_t>(
+        locationsArray, CkIndex_Locations::ReceiveVisitMessages(VisitMessage{}),
+        bufferSize, threshold, flushPeriod, nodeLevel, CcdPROCESSOR_STILL_IDLE);
+  }
 
   // Notify Main
   contribute(cb);
@@ -350,8 +355,11 @@ void People::SyntheticSendVisitMessages() {
 
       // Send off visit message
       VisitMessage visitMsg(destinationIdx, personIdx, p.state, visitStart, visitEnd);
-      aggregator->send(locationsArray[locationPartition], visitMsg);
-      //locationsArray[locationPartition].ReceiveVisitMessages(visitMsg);
+      if (useAggregator) {
+        aggregator->send(locationsArray[locationPartition], visitMsg);
+      } else {
+        locationsArray[locationPartition].ReceiveVisitMessages(visitMsg);
+      }
     } 
   }
 }

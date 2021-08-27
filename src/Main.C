@@ -235,6 +235,7 @@ Main::Main(CkArgMsg* msg) {
 void Main::ArraysCreated() {
   if (++createdCount == arrayCount) {
     // Get Hypercomm environment variables
+    bool useAggregator = false;
     size_t bufferSize = 65536;
     double threshold = 0.85;
     double flushPeriod = 0.05;
@@ -250,19 +251,25 @@ void Main::ArraysCreated() {
         tokens.push_back(token);
       }
 
-      CkAssert(tokens.size() == 4);
-      bufferSize = static_cast<size_t>(std::stoi(tokens[0]));
-      threshold = std::stod(tokens[1]);
-      flushPeriod = std::stod(tokens[2]);
-      nodeLevel = static_cast<bool>(std::stoi(tokens[3]));
+      CkAssert(tokens.size() == 5);
+      int idx = 0;
+      useAggregator = static_cast<bool>(std::stoi(tokens[idx++]));
+      bufferSize = static_cast<size_t>(std::stoi(tokens[idx++]));
+      threshold = std::stod(tokens[idx++]);
+      flushPeriod = std::stod(tokens[idx++]);
+      nodeLevel = static_cast<bool>(std::stoi(tokens[idx++]));
     }
 
     // Create Hypercomm message aggregator
+    if (useAggregator) {
     CkPrintf("Creating VisitMessage aggregator with buffer size %lu, threshold %.2lf, "
         "flush period %.2lf, node-level %d\n", bufferSize, threshold, flushPeriod,
         static_cast<int>(nodeLevel));
-    peopleArray.CreateAggregator(bufferSize, threshold, flushPeriod, nodeLevel,
-        CkCallbackResumeThread());
+    } else {
+      CkPrintf("Not using VisitMessage aggregator\n");
+    }
+    peopleArray.CreateAggregator(useAggregator, bufferSize, threshold, flushPeriod,
+        nodeLevel, CkCallbackResumeThread());
 
     // Run
     CkPrintf("Running ...\n\n");

@@ -29,6 +29,7 @@ class People : public CBase_People {
     int day;
     int newCases;
     int totalVisitsForDay;
+    bool useAggregator;
 
     std::vector<Person> people;
     std::default_random_engine generator;
@@ -46,8 +47,8 @@ class People : public CBase_People {
     People();
     People(CkMigrateMessage *msg);
     void pup(PUP::er &p);
-    void CreateAggregator(size_t bufferSize, double threshold, double flushPeriod,
-        bool nodeLevel, CkCallback cb);
+    void CreateAggregator(bool useAggregator, size_t bufferSize,
+        double threshold, double flushPeriod, bool nodeLevel, CkCallback cb);
     void SendVisitMessages(); 
     void SyntheticSendVisitMessages();
     void RealDataSendVisitMessages();
