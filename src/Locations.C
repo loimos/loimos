@@ -24,10 +24,14 @@
 #include <fstream>
 
 Locations::Locations() {
+<<<<<<< HEAD
   day = 0;
 
   //Must be set to true to make AtSync work
   usesAtSync = true;
+=======
+  useAggregator = false;
+>>>>>>> Add aggregator for interaction messages
 
   // Getting number of locations assigned to this chare
   numLocalLocations = getNumLocalElements(
@@ -44,7 +48,7 @@ Locations::Locations() {
     locations.reserve(numLocalLocations);
     int firstIdx = thisIndex * getNumLocalElements(numLocations, numLocationPartitions, 0);
     for (int p = 0; p < numLocalLocations; p++) {
-      locations.emplace_back(0, firstIdx + p, &generator);
+      locations.emplace_back(aggregator, 0, firstIdx + p, &generator);
     }
   } else {
     loadLocationData();
@@ -62,6 +66,26 @@ Locations::Locations() {
     
 Locations::Locations(CkMigrateMessage *msg) {};
 
+void Locations::CreateAggregator(bool useAggregator, size_t bufferSize, double threshold,
+    double flushPeriod, bool nodeLevel, CkCallback cb) {
+  this->useAggregator = useAggregator;
+
+  // Create message aggregator
+  // We need to ensure that the Locations chare array has been created
+  // and its proxy stored globally before creating the aggregator
+  if (useAggregator) {
+    aggregator = std::make_shared<aggregator_t>(
+        peopleArray, CkIndex_People::ReceiveInteractions(InteractionMessage{}),
+        bufferSize, threshold, flushPeriod, nodeLevel, CcdPROCESSOR_STILL_IDLE);
+  } else {
+    aggregator = nullptr;
+  }
+
+  // Notify Main
+  contribute(cb);
+}
+
+
 void Locations::loadLocationData() {
   // Init local.
   int numAttributesPerLocation = 
@@ -69,7 +93,7 @@ void Locations::loadLocationData() {
   locations.reserve(numLocalLocations);
   int firstIdx = thisIndex * getNumLocalElements(numLocations, numLocationPartitions, 0);
   for (int p = 0; p < numLocalLocations; p++) {
-    locations.emplace_back(numAttributesPerLocation, firstIdx + p, &generator);
+    locations.emplace_back(aggregator, numAttributesPerLocation, firstIdx + p, &generator);
   }
 
   // Load in location information.

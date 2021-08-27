@@ -15,6 +15,9 @@
 #include <vector>
 #include <set>
 
+#include <hypercomm/routing.hpp>
+#include <hypercomm/aggregation.hpp>
+
 class Locations : public CBase_Locations {
   private:
     int numLocalLocations;
@@ -24,10 +27,17 @@ class Locations : public CBase_Locations {
     ContactModel *contactModel;
     int day;
 
+    using aggregator_t = aggregation::array_aggregator<
+      aggregation::direct_buffer, aggregation::routing::direct, InteractionMessage>;
+    std::shared_ptr<aggregator_t> aggregator;
+    bool useAggregator;
+
   public:
     Locations();
     Locations(CkMigrateMessage *msg);
     void pup(PUP::er &p);
+    void CreateAggregator(bool useAggregator, size_t bufferSize, double threshold,
+        double flushPeriod, bool nodeLevel, CkCallback cb);
     void ReceiveVisitMessages(VisitMessage visitMsg);
     void ComputeInteractions(); // calls ReceiveInfections
     

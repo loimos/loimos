@@ -17,7 +17,8 @@
 #include <cmath>
 #include <algorithm>
 
-Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator) {
+Location::Location(std::shared_ptr<aggregator_t> aggregator, int numAttributes, int uniqueIdx, std::default_random_engine *generator) : uniform_dist(0, 1) {
+  this->aggregator = aggregator;
   if (numAttributes != 0) {
     this->locationData.resize(numAttributes);
   }
@@ -236,7 +237,11 @@ inline void Location::sendInteractions(int personIdx) {
         );
   }
   InteractionMessage interMsg(personIdx, interactions[personIdx]);
-  peopleArray[peoplePartitionIdx].ReceiveInteractions(interMsg);
+  if (aggregator) {
+    aggregator->send(peopleArray[peoplePartitionIdx], interMsg);
+  } else {
+    peopleArray[peoplePartitionIdx].ReceiveInteractions(interMsg);
+  }
 
   /*  
   CkPrintf(

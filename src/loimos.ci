@@ -207,6 +207,8 @@ mainmodule loimos {
 
   array [1D] Locations {
     entry Locations();
+    entry void CreateAggregator(bool useAggregator, size_t bufferSize, double threshold,
+        double flushPeriod, bool nodeLevel, CkCallback cb);
 #ifdef USE_TRAM
     entry [aggregate] void ReceiveVisitMessages(VisitMessage);
 #else

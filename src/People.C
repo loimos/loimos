@@ -94,6 +94,8 @@ void People::CreateAggregator(bool useAggregator, size_t bufferSize, double thre
     aggregator = std::make_shared<aggregator_t>(
         locationsArray, CkIndex_Locations::ReceiveVisitMessages(VisitMessage{}),
         bufferSize, threshold, flushPeriod, nodeLevel, CcdPROCESSOR_STILL_IDLE);
+  } else {
+    aggregator = nullptr;
   }
 
   // Notify Main
@@ -374,7 +376,11 @@ void People::RealDataSendVisitMessages() {
       int locationPartition = getPartitionIndex(visitMessage.locationIdx,
           numLocations, numLocationPartitions, firstLocationIdx);
       locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
-      aggregator->send(locationsArray[locationPartition], visitMessage);
+      if (useAggregator) {
+        aggregator->send(locationsArray[locationSubset], visitMessage);
+      } else {
+        locationsArray[locationSubset].ReceiveVisitMessages(visitMessage);
+      }
     }
   }
 }

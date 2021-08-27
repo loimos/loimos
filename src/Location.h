@@ -22,6 +22,9 @@ class Location;
 #include <set>
 #include <unordered_map>
 
+#include <hypercomm/routing.hpp>
+#include <hypercomm/aggregation.hpp>
+
 // Represents a single location where people can interact
 // Not to be confused with Locations, which represents a group of
 // intances of this class
@@ -83,7 +86,22 @@ class Location : public DataInterface {
     // Simple helper function which send the list of interactions with the
     // specified person to the appropriate People chare
     inline void sendInteractions(int personIdx);
+<<<<<<< HEAD
   
+=======
+
+    // Various attributes of the location.
+    std::vector<union Data> locationData;
+
+    // If this location should be an infection seeding location.
+    bool isDiseaseSeeder;
+    int day;
+
+    using aggregator_t = aggregation::array_aggregator<
+      aggregation::direct_buffer, aggregation::routing::direct, InteractionMessage>;
+    std::shared_ptr<aggregator_t> aggregator;
+
+>>>>>>> Add aggregator for interaction messages
   public:
     // Represents all of the arrivals and departures of people
     // from this location on a given day
@@ -95,9 +113,13 @@ class Location : public DataInterface {
     // static std::uniform_real_distribution<> unitDistrib;
     
     // Provide default constructor operations.
+<<<<<<< HEAD
     Location() = default;
     Location(CkMigrateMessage *msg);
     Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator);
+=======
+    Location(std::shared_ptr<aggregator_t> aggregator, int numAttributes, int uniqueIdx, std::default_random_engine *generator);
+>>>>>>> Add aggregator for interaction messages
     Location(const Location&) = default;
     Location(Location&&) = default;
     ~Location() = default;

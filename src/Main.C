@@ -234,12 +234,7 @@ Main::Main(CkArgMsg* msg) {
 
 void Main::ArraysCreated() {
   if (++createdCount == arrayCount) {
-    // Get Hypercomm environment variables
-    bool useAggregator = false;
-    size_t bufferSize = 65536;
-    double threshold = 0.85;
-    double flushPeriod = 0.05;
-    bool nodeLevel = true;
+    // Create Hypercomm message aggregators using env variables
     char* env_p;
     if (env_p = std::getenv("HC_VISIT_PARAMS")) {
       std::string env_str(env_p);
@@ -253,23 +248,54 @@ void Main::ArraysCreated() {
 
       CkAssert(tokens.size() == 5);
       int idx = 0;
-      useAggregator = static_cast<bool>(std::stoi(tokens[idx++]));
-      bufferSize = static_cast<size_t>(std::stoi(tokens[idx++]));
-      threshold = std::stod(tokens[idx++]);
-      flushPeriod = std::stod(tokens[idx++]);
-      nodeLevel = static_cast<bool>(std::stoi(tokens[idx++]));
-    }
+      bool useAggregator = static_cast<bool>(std::stoi(tokens[idx++]));
+      size_t bufferSize = static_cast<size_t>(std::stoi(tokens[idx++]));
+      double threshold = std::stod(tokens[idx++]);
+      double flushPeriod = std::stod(tokens[idx++]);
+      bool nodeLevel = static_cast<bool>(std::stoi(tokens[idx++]));
 
-    // Create Hypercomm message aggregator
-    if (useAggregator) {
-    CkPrintf("Creating VisitMessage aggregator with buffer size %lu, threshold %.2lf, "
-        "flush period %.2lf, node-level %d\n", bufferSize, threshold, flushPeriod,
-        static_cast<int>(nodeLevel));
+      if (useAggregator) {
+        CkPrintf("Creating VisitMessage aggregator with buffer size %lu, threshold %.2lf, "
+            "flush period %.2lf, node-level %d\n", bufferSize, threshold, flushPeriod,
+            static_cast<int>(nodeLevel));
+      } else {
+        CkPrintf("Not using VisitMessage aggregator\n");
+      }
+      peopleArray.CreateAggregator(useAggregator, bufferSize, threshold, flushPeriod,
+          nodeLevel, CkCallbackResumeThread());
     } else {
       CkPrintf("Not using VisitMessage aggregator\n");
     }
-    peopleArray.CreateAggregator(useAggregator, bufferSize, threshold, flushPeriod,
-        nodeLevel, CkCallbackResumeThread());
+    if (env_p = std::getenv("HC_INTERACT_PARAMS")) {
+      std::string env_str(env_p);
+      std::vector<std::string> tokens;
+      std::stringstream env_ss(env_str);
+      std::string token;
+
+      while (getline(env_ss, token, ',')) {
+        tokens.push_back(token);
+      }
+
+      CkAssert(tokens.size() == 5);
+      int idx = 0;
+      bool useAggregator = static_cast<bool>(std::stoi(tokens[idx++]));
+      size_t bufferSize = static_cast<size_t>(std::stoi(tokens[idx++]));
+      double threshold = std::stod(tokens[idx++]);
+      double flushPeriod = std::stod(tokens[idx++]);
+      bool nodeLevel = static_cast<bool>(std::stoi(tokens[idx++]));
+
+      if (useAggregator) {
+        CkPrintf("Creating InteractionMessage aggregator with buffer size %lu, threshold %.2lf, "
+            "flush period %.2lf, node-level %d\n", bufferSize, threshold, flushPeriod,
+            static_cast<int>(nodeLevel));
+      } else {
+        CkPrintf("Not using InteractionMessage aggregator\n");
+      }
+      locationsArray.CreateAggregator(useAggregator, bufferSize, threshold, flushPeriod,
+          nodeLevel, CkCallbackResumeThread());
+    } else {
+      CkPrintf("Not using InteractionMessage aggregator\n");
+    }
 
     // Run
     CkPrintf("Running ...\n\n");
