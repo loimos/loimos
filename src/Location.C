@@ -43,6 +43,7 @@ Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine 
     // For non-synthetic set just seed completely at random.
     isDiseaseSeeder = unitDistrib(*generator) < PERCENTAGE_OF_SEEDING_LOCATIONS;
   }
+  
 }
 
 Location::Location(CkMigrateMessage *msg) {};

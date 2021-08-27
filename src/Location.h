@@ -22,9 +22,6 @@ class Location;
 #include <set>
 #include <unordered_map>
 
-#include <hypercomm/routing.hpp>
-#include <hypercomm/aggregation.hpp>
-
 // Represents a single location where people can interact
 // Not to be confused with Locations, which represents a group of
 // intances of this class
