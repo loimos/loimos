@@ -17,14 +17,13 @@
 #include <cmath>
 #include <algorithm>
 
-Location::Location(std::shared_ptr<aggregator_t> aggregator, int numAttributes, int uniqueIdx, std::default_random_engine *generator) : uniform_dist(0, 1) {
+Location::Location(std::shared_ptr<aggregator_t> aggregator, int numAttributes, int uniqueIdx, std::default_random_engine *generator) : unitDistrib(0, 1) {
   this->aggregator = aggregator;
   if (numAttributes != 0) {
     this->locationData.resize(numAttributes);
   }
   day = 0;
   this->generator = generator;
-  unitDistrib = std::uniform_real_distribution<>(0.0,1.0);
 
   // Determine if this location should seed the disease.
   if (syntheticRun) {

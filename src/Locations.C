@@ -24,14 +24,11 @@
 #include <fstream>
 
 Locations::Locations() {
-<<<<<<< HEAD
   day = 0;
 
   //Must be set to true to make AtSync work
   usesAtSync = true;
-=======
   useAggregator = false;
->>>>>>> Add aggregator for interaction messages
 
   // Getting number of locations assigned to this chare
   numLocalLocations = getNumLocalElements(

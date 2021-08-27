@@ -377,9 +377,9 @@ void People::RealDataSendVisitMessages() {
           numLocations, numLocationPartitions, firstLocationIdx);
       locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
       if (useAggregator) {
-        aggregator->send(locationsArray[locationSubset], visitMessage);
+        aggregator->send(locationsArray[locationPartition], visitMessage);
       } else {
-        locationsArray[locationSubset].ReceiveVisitMessages(visitMessage);
+        locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
       }
     }
   }
