@@ -76,5 +76,8 @@ test-large: all
 test-validation: all
 	./charmrun +p4 ./loimos 0 25000 5001 60 40 30 test-validation.csv ../data/disease_models/test_highly_contagious.textproto ../data/populations/validation_set/ ++local
 
+unit-test: all
+	./charmrun +p4 ./loimos 0 100 2 60 40 7 test-large.csv ../data/disease_models/covid19.textproto ../data/populations/coc/ --min-max-alpha ++local
+
 clean-cache:
 	rm ../data/populations/coc/*.cache ../data/populations/synthetic_small_city/*.cache

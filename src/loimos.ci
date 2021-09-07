@@ -130,6 +130,6 @@ mainmodule loimos {
   };
 
   nodegroup DiseaseModel {
-      entry DiseaseModel(std::string pathToModel);
+      entry DiseaseModel(std::string pathToModel, std::string scenarioPath);
   };
 };

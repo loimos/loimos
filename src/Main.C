@@ -3,19 +3,19 @@
  *
  * SPDX-License-Identifier: MIT
  */
-
-#include "loimos.decl.h"
+#include "absl/flags/flag.h"
+#include "DiseaseModel.h"
+#include "Locations.h"
 #include "Main.h"
 #include "People.h"
-#include "Locations.h"
-#include "DiseaseModel.h"
 #include "contact_model/ContactModel.h"
+#include "loimos.decl.h"
 #include "readers/Preprocess.h"
 
+#include <fstream>
+#include <iostream>
 #include <string>
 #include <tuple>
-#include <iostream>
-#include <fstream>
 
 #define LOIMOS_TESTING
 #ifdef LOIMOS_TESTING
@@ -52,10 +52,13 @@
 /* readonly */ int synLocationPartitionGridHeight;
 /* readonly */ int averageDegreeOfVisit;
 
-Main::Main(CkArgMsg* msg) {
+Main::Main(CkArgMsg *msg) {
   // parsing command line arguments
-  if(msg->argc < 7){
-    CkAbort("Error, usage %s <people> <locations> <people subsets> <location subsets> <days> <disease_model_path> <scenario_folder (optional)>\n", msg->argv[0]);
+  if (msg->argc < 7) {
+    CkAbort(
+        "Error, usage %s <people> <locations> <people subsets> <location "
+        "subsets> <days> <disease_model_path> <scenario_folder (optional)>\n",
+        msg->argv[0]);
   }
   syntheticRun = atoi(msg->argv[1]) == 1;
   int baseRunInfo = 0;
@@ -64,7 +67,7 @@ Main::Main(CkArgMsg* msg) {
     synPeopleGridWidth = atoi(msg->argv[2]);
     synPeopleGridHeight = atoi(msg->argv[3]);
     numPeople = synPeopleGridWidth * synPeopleGridHeight;
-    
+
     // Location data
     synLocationGridWidth = atoi(msg->argv[4]);
     synLocationGridHeight = atoi(msg->argv[5]);
@@ -74,31 +77,33 @@ Main::Main(CkArgMsg* msg) {
 
     // Edge degree.
     averageDegreeOfVisit = atoi(msg->argv[6]);
-    
+
     // Chare data
     synLocationPartitionGridWidth = atoi(msg->argv[7]);
     synLocationPartitionGridHeight = atoi(msg->argv[8]);
     numLocationPartitions =
-      synLocationPartitionGridWidth * synLocationPartitionGridHeight;
+        synLocationPartitionGridWidth * synLocationPartitionGridHeight;
     numPeoplePartitions = atoi(msg->argv[9]);
- 
+
     // Calculate the dimensions of the block of locations stored by each
     // location chare
     synLocalLocationGridWidth = -1;
     if (0 == synLocationGridWidth % synLocationPartitionGridWidth) {
       synLocalLocationGridWidth =
-        synLocationGridWidth / synLocationPartitionGridWidth;
+          synLocationGridWidth / synLocationPartitionGridWidth;
     }
     synLocalLocationGridHeight = -1;
     if (0 == synLocationGridHeight % synLocationPartitionGridHeight) {
       synLocalLocationGridHeight =
-        synLocationGridHeight / synLocationPartitionGridHeight;
+          synLocationGridHeight / synLocationPartitionGridHeight;
     }
 
     if (-1 == synLocalLocationGridWidth || -1 == synLocalLocationGridHeight) {
-      CkAbort("Error: dimensions of location chare grid must divide those of location grid:\r\nchare grid is %d by %d, location grid is %d by %d\r\n",
-        synLocationPartitionGridWidth, synLocationPartitionGridHeight,
-        synLocationGridWidth, synLocationGridHeight);
+      CkAbort("Error: dimensions of location chare grid must divide those of "
+              "location grid:\r\nchare grid is %d by %d, location grid is %d "
+              "by %d\r\n",
+              synLocationPartitionGridWidth, synLocationPartitionGridHeight,
+              synLocationGridWidth, synLocationGridHeight);
     }
 
     baseRunInfo = 9;
@@ -109,39 +114,47 @@ Main::Main(CkArgMsg* msg) {
     numLocationPartitions = atoi(msg->argv[5]);
     baseRunInfo = 5;
   }
-  
+
   numDays = atoi(msg->argv[baseRunInfo + 1]);
   pathToOutput = std::string(msg->argv[baseRunInfo + 2]);
   std::string pathToDiseaseModel = std::string(msg->argv[baseRunInfo + 3]);
 
   // Handle both real data runs or runs using synthetic populations.
-  if(syntheticRun) {
+  if (syntheticRun) {
     firstPersonIdx = 0;
     firstLocationIdx = 0;
-  } else {    
+  } else {
     // Create data caches.
     scenarioPath = std::string(msg->argv[baseRunInfo + 4]);
-    std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(scenarioPath, numPeople, numPeoplePartitions, numLocations, numLocationPartitions, numDays);
+    std::tie(firstPersonIdx, firstLocationIdx, scenarioId) =
+        buildCache(scenarioPath, numPeople, numPeoplePartitions, numLocations,
+                   numLocationPartitions, numDays);
   }
 
   // Detemine which contact modle to use
-  contactModelType = (int) ContactModelType::constant_probability;
+  contactModelType = (int)ContactModelType::constant_probability;
   if (msg->argc == baseRunInfo + 6) {
     std::string tmp = std::string(msg->argv[baseRunInfo + 5]);
     // We can just use a flag for now in the CLI, since we only have two
     // models and that's easier to parse, but we may eventually have more,
     // which is why we use an enum to actually hold the model value
     if ("-m" == tmp or "--min-max-alpha" == tmp) {
-      contactModelType = (int) ContactModelType::min_max_alpha;
+      contactModelType = (int)ContactModelType::min_max_alpha;
     }
   }
 
   // setup main proxy
-  CkPrintf("\nRunning Loimos on %d PEs with %d people, %d locations, %d people chares, %d location chares, and %d days\n", CkNumPes(), numPeople, numLocations, numPeoplePartitions, numLocationPartitions, numDays);
+  CkPrintf("\nRunning Loimos on %d PEs with %d people, %d locations, %d people "
+           "chares, %d location chares, and %d days\n",
+           CkNumPes(), numPeople, numLocations, numPeoplePartitions,
+           numLocationPartitions, numDays);
   mainProxy = thisProxy;
 
-  if(syntheticRun) {
-    CkPrintf("Synthetic run with (%d, %d) person grid and (%d, %d) location grid. Average degree of %d\n\n", synPeopleGridWidth, synPeopleGridHeight, synLocationGridWidth, synLocationGridHeight, averageDegreeOfVisit);
+  if (syntheticRun) {
+    CkPrintf("Synthetic run with (%d, %d) person grid and (%d, %d) location "
+             "grid. Average degree of %d\n\n",
+             synPeopleGridWidth, synPeopleGridHeight, synLocationGridWidth,
+             synLocationGridHeight, averageDegreeOfVisit);
   }
 
   // Instantiate DiseaseModel nodegroup (One for each physical processor).
@@ -155,17 +168,17 @@ Main::Main(CkArgMsg* msg) {
   if (!syntheticRun) {
     CkPrintf("Loading people and locations from %s.\n", scenarioPath.c_str());
   }
-  
+
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
 
-  // Run pre-run unit tests.
-  #ifdef LOIMOS_TESTING
+// Run pre-run unit tests.
+#ifdef LOIMOS_TESTING
   testing::InitGoogleTest(&msg->argc, msg->argv);
   if (RUN_ALL_TESTS() != 0) {
     CkAbort("Failed unit tests!\n");
   }
-  #endif
+#endif
 
   // run
   CkPrintf("Running ...\n\n");
@@ -174,7 +187,7 @@ Main::Main(CkArgMsg* msg) {
 }
 
 void Main::SaveStats(int *data) {
-  DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
+  DiseaseModel *diseaseModel = globDiseaseModel.ckLocalBranch();
   int numDiseaseStates = diseaseModel->getNumberOfStates();
 
   // Open output csv
@@ -196,10 +209,8 @@ void Main::SaveStats(int *data) {
       int change_in_state = total_in_state - accumulated[i];
       if (total_in_state != 0 || change_in_state != 0) {
         // Write out data for state on that day
-        outFile << day << ","
-          << diseaseModel->lookupStateName(i) << ","
-          << total_in_state << ","
-          << change_in_state << std::endl;
+        outFile << day << "," << diseaseModel->lookupStateName(i) << ","
+                << total_in_state << "," << change_in_state << std::endl;
       }
       accumulated[i] = total_in_state;
     }
