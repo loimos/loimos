@@ -77,6 +77,10 @@ class Location : public DataInterface {
     // specified person to the appropriate People chare
     inline void sendInteractions(int personIdx);
 
+  public:
+    // Provide default constructor operations.
+    Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator);
+
     // Various attributes of the location.
     std::vector<union Data> locationData;
 
@@ -84,9 +88,7 @@ class Location : public DataInterface {
     bool isDiseaseSeeder;
     int day;
     
-  public:
     // Provide default constructor operations.
-    Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator);
     Location(const Location&) = default;
     Location(Location&&) = default;
     ~Location() = default;
@@ -95,8 +97,6 @@ class Location : public DataInterface {
     Location& operator=(Location&&) = default;
 
     // Override abstract DataInterface getters and setters.
-    void setUniqueId(int idx);
-    std::vector<union Data> &getDataField();
     int uniqueId;
     
     // This distribution shoul always be the same - not sure how well

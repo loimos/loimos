@@ -6,6 +6,7 @@
 mainmodule loimos {
   include "Interaction.h";
   include "Message.h";
+  include "readers/DataInterface.h";
 
   include "vector";
 
@@ -13,6 +14,7 @@ mainmodule loimos {
   readonly CProxy_People peopleArray;
   readonly CProxy_Locations locationsArray;
   readonly CProxy_DiseaseModel globDiseaseModel;
+  readonly CProxy_DataLoader dataLoaders;
   readonly int numPeople;
   readonly int numLocations;
   readonly int numPeoplePartitions;
@@ -43,6 +45,15 @@ mainmodule loimos {
   mainchare Main {
     entry Main(CkArgMsg*);
     entry void run() {
+      if (!syntheticRun) {
+        serial {
+          dataLoaders.BeginDataLoading();
+          CkWaitQD();
+        }
+      }
+      serial {
+        simulationStartTime = CkWallTimer();
+      }
       for(day = 0; day < numDays; day++) {
         serial {
           iterationStartTime = CkWallTimer();
@@ -105,8 +116,15 @@ mainmodule loimos {
     entry [reductiontarget] void ReceiveStats(CkReductionMsg *summary);
   };
 
+  message DataInterfaceMessage {
+    // This line is causing errors so allocate as word size.
+    Data dataAttributes[]; 
+    int uniqueId;
+  };
+
   array [1D] People {
     entry People();
+    entry void ReceivePersonSetup(DataInterfaceMessage *msg);
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
 #ifdef USE_TRAM
     entry [aggregate] void ReceiveInteractions(InteractionMessage);
@@ -119,12 +137,18 @@ mainmodule loimos {
 
   array [1D] Locations {
     entry Locations();
+    entry void ReceiveLocationSetup(DataInterfaceMessage *msg);
 #ifdef USE_TRAM
     entry [aggregate] void ReceiveVisitMessages(VisitMessage);
 #else
     entry void ReceiveVisitMessages(VisitMessage);
 #endif
     entry void ComputeInteractions(); // calls ReceiveInteractions
+  };
+
+  array [1D] DataLoader {
+    entry DataLoader();
+    entry void BeginDataLoading(); // Calls Receive
   };
 
   nodegroup DiseaseModel {

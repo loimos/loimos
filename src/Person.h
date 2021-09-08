@@ -8,8 +8,6 @@
 #define __PERSON_H__
 
 #include "Defs.h"
-#include "readers/DataInterface.h"
-#include "readers/DataReader.h"
 
 class Person : public DataInterface {
     public:
@@ -33,18 +31,11 @@ class Person : public DataInterface {
         std::vector<union Data> personData;
 
         // Constructors and assignment operators
-        Person(int numAttributes, int startingState, int timeLeftInState);
+        Person(int uniqueId, int numAttributes, int startingState, int timeLeftInState);
         Person(const Person&) = default;
         Person(Person&&) = default;
         Person& operator=(const Person&) = default;
         Person& operator=(Person&&) = default;
         ~Person() = default;
-
-        // Override DataInterfect abstract methods
-        void setUniqueId(int idx);
-        std::vector<union Data> &getDataField();
-
-        // Debugging.
-        void _print_information(loimos::proto::CSVDefinition *personDef);
 };
 #endif

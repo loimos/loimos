@@ -8,9 +8,9 @@ include Makefile.include
 OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o Defs.o \
          Event.o Interaction.o readers/Preprocess.o \
          disease_model/disease.pb.o disease_model/distribution.pb.o \
-		     readers/data.pb.o contact_model/ContactModel.o \
-				 contact_model/MinMaxAlphaModel.o
-DEFS   = Defs.h loimos.def.h readers/DataReader.h
+		 readers/data.pb.o readers/DataLoader.o contact_model/ContactModel.o \
+		 contact_model/MinMaxAlphaModel.o
+DEFS   = Defs.h loimos.def.h
 DECLS  = loimos.decl.h
 BIN    = loimos
 
@@ -66,7 +66,7 @@ test-syn: all
 	./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 test-syn.csv ../data/disease_models/covid19_onepath.textproto ++local
 
 test-large: all
-	./charmrun +p4 ./loimos 0 41119 19203 60 40 7 test-large.csv ../data/disease_models/covid19.textproto ../data/populations/coc/ --min-max-alpha ++local
+	./charmrun +p4 /usr/local/bin/valgrind --log-file="valgrindout" ./loimos 0 41119 19203 60 40 7 test-large.csv ../data/disease_models/covid19.textproto ../data/populations/coc/ --min-max-alpha ++local
 
 clean-cache:
 	rm ../data/populations/coc/*.cache ../data/populations/synthetic_small_city/*.cache

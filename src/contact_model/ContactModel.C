@@ -48,5 +48,8 @@ ContactModel *createContactModel() {
 
   } else if ((int) ContactModelType::min_max_alpha == contactModelType) {
     return new MinMaxAlphaModel();
+  } else {
+    CkAbort("Invalid contact model option provided!");
   }
+
 }

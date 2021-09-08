@@ -11,6 +11,7 @@
 #include "DiseaseModel.h"
 #include "contact_model/ContactModel.h"
 #include "readers/Preprocess.h"
+#include "readers/DataLoader.h"
 
 #include <string>
 #include <tuple>
@@ -21,6 +22,7 @@
 /* readonly */ CProxy_People peopleArray;
 /* readonly */ CProxy_Locations locationsArray;
 /* readonly */ CProxy_DiseaseModel globDiseaseModel;
+/* readonly */ CProxy_DataLoader dataLoaders;
 /* readonly */ int numPeople;
 /* readonly */ int numLocations;
 /* readonly */ int numPeoplePartitions;
@@ -154,6 +156,13 @@ Main::Main(CkArgMsg* msg) {
   
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
+  if (!syntheticRun) {
+    dataLoaders = CProxy_DataLoader::ckNew(
+      // Round up loaders for both.
+      (numPeoplePartitions + DATALOADING_CHARES_PER_COMPUTATION_CHARE - 1) / DATALOADING_CHARES_PER_COMPUTATION_CHARE +
+      (numLocationPartitions + DATALOADING_CHARES_PER_COMPUTATION_CHARE - 1) / DATALOADING_CHARES_PER_COMPUTATION_CHARE
+    );
+  } 
 
   // run
   CkPrintf("Running ...\n\n");

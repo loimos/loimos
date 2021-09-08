@@ -7,7 +7,7 @@
 def remap(people, locations, visits, new_people_ids, new_location_ids):
     # Remap person ids.
     people = people.reset_index(drop=True).copy()
-    people['temp_id'] = people.index
+    people['temp_id'] = new_people_ids
     person_remapper = people[['pid', 'temp_id']].copy()
     people['pid'] = people['temp_id']
     people.drop(["temp_id"], axis=1, inplace=True)
@@ -17,7 +17,7 @@ def remap(people, locations, visits, new_people_ids, new_location_ids):
 
     # Remap location ids.
     locations = locations.reset_index(drop=True).copy()
-    locations['temp_id'] = locations.index
+    locations['temp_id'] = new_location_ids
     loc_remapper = locations[['lid', 'temp_id']].copy()
     locations['lid'] = locations['temp_id']
     locations.drop(["temp_id"], axis=1, inplace=True)

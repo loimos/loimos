@@ -10,7 +10,8 @@
 #include "Interaction.h"
 #include "DiseaseModel.h"
 #include "Person.h"
-#include "readers/DataReader.h"
+#include "readers/DataLoader.h"
+#include "readers/DataInterfaceMessage.h"
 
 #include <tuple>
 #include <limits>
@@ -27,6 +28,7 @@ std::uniform_real_distribution<> unitDistrib(0,1);
 People::People() {
   newCases = 0;
   day = 0;
+  peopleInitialized = 0;
   generator.seed(thisIndex);
 
   // Initialize disease model
@@ -46,7 +48,7 @@ People::People() {
   // Create real or fake people
   if (syntheticRun) {
     // Make a default person and populate people with copies
-    Person tmp {0, 0, std::numeric_limits<Time>::max() };
+    Person tmp {0, 1, 0, std::numeric_limits<Time>::max() };
     people.resize(numLocalPeople, tmp);
 
     // Init peoples ids and randomly init ages.
@@ -62,41 +64,39 @@ People::People() {
     } 
   } else {
       int numAttributesPerPerson = 
-        DataReader<Person>::getNonZeroAttributes(diseaseModel->personDef);
+        DataLoader::getNumberOfDataAttributes(diseaseModel->personDef);
+
+      // Loading activity data requires people ids to already be assigned.
+      // We want to load this activity data in parallel to the other loading
+      // So manually assign it here.
+      int startingId = getNumLocalElements(numPeople, numPeoplePartitions, 0) * thisIndex;
       for (int p = 0; p < numLocalPeople; p++) {
-        people.emplace_back(Person(numAttributesPerPerson,
+        people.emplace_back(Person(startingId + p, numAttributesPerPerson,
           0, std::numeric_limits<Time>::max()
         ));
       }
 
       // Load in people data from file.
-      loadPeopleData();
+      loadActivityData();
   }
+}
+
+void People::ReceivePersonSetup(DataInterfaceMessage *msg) {
+  // Copy read data into next person and increment.
+  people[peopleInitialized].uniqueId = msg->uniqueId;
+  for (int i = 0; i < msg->numDataAttributes; i++) {
+    people[peopleInitialized].setField(i, msg->dataAttributes[i]);
+  }
+  peopleInitialized += 1;
 }
 
 /**
  * Loads real people data from file.
  */
-void People::loadPeopleData() {  
-  std::ifstream peopleData(scenarioPath + "people.csv");
-  std::ifstream peopleCache(scenarioPath + scenarioId + "_people.cache", std::ios_base::binary);
-  if (!peopleData || !peopleCache) {
-    CkAbort("Could not open person data input.");
-  }
-
-  // Find starting line for our data through people cache.
-  peopleCache.seekg(thisIndex * sizeof(uint32_t));
-  uint32_t peopleOffset;
-  peopleCache.read((char *) &peopleOffset, sizeof(uint32_t));
-  peopleData.seekg(peopleOffset);
-
-  // Read in from remote file.
-  DataReader<Person>::readData(&peopleData, diseaseModel->personDef, &people);
-  peopleData.close();
-  peopleCache.close();
-
+void People::loadActivityData() {  
   // Open activity data and cache. 
   activityData = new std::ifstream(scenarioPath + "visits.csv");
+  std::string test = scenarioPath + scenarioId + "_interactions.cache";
   std::ifstream activityCache(scenarioPath + scenarioId + "_interactions.cache", std::ios_base::binary);
   if (!activityData || !activityCache) {
     CkAbort("Could not open activity input.");
@@ -109,7 +109,6 @@ void People::loadPeopleData() {
     int curr_id = people[c].uniqueId;
 
     // Read in their activity data offsets.
-    // activityCache.seekg(0);
     activityCache.seekg(sizeof(uint32_t) * numDays * (curr_id - firstPersonIdx));
     activityCache.read((char *) buf, sizeof(uint32_t) * numDays);
     for (int day = 0; day < numDays; day++) {
@@ -291,7 +290,7 @@ void People::RealDataSendVisitMessages() {
     int locationId = -1;
     int visitStart = -1;
     int visitDuration = -1;
-    std::tie(personId, locationId, visitStart, visitDuration) = DataReader<Person>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
+    std::tie(personId, locationId, visitStart, visitDuration) = DataLoader::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
 
     // Seek while same person on same day.
     while(personId == people[localPersonId].uniqueId && visitStart < nextDaySecs) {
@@ -306,8 +305,7 @@ void People::RealDataSendVisitMessages() {
       // Send off the visit message.
       VisitMessage visitMsg(locationId, personId, people[localPersonId].state, visitStart, visitStart + visitDuration);
       locationsArray[locationSubset].ReceiveVisitMessages(visitMsg);
-      totalVisitsForDay += 1;
-      std::tie(personId, locationId, visitStart, visitDuration) = DataReader<Person>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
+      std::tie(personId, locationId, visitStart, visitDuration) = DataLoader::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
     }
   }
 }

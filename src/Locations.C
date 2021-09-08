@@ -13,8 +13,8 @@
 #include "Location.h"
 #include "Event.h"
 #include "Defs.h"
-#include "readers/DataReader.h"
 #include "Person.h"
+#include "readers/DataInterfaceMessage.h"
 
 #include <algorithm>
 #include <queue>
@@ -29,81 +29,36 @@ Locations::Locations() {
     numLocationPartitions,
     thisIndex
   );
-  
+
   // Init disease states
   diseaseModel = globDiseaseModel.ckLocalBranch();
 
   // Load application data
-  if (syntheticRun) {
-    locations.reserve(numLocalLocations);
-    int firstIdx = thisIndex * getNumLocalElements(numLocations, numLocationPartitions, 0);
-    for (int p = 0; p < numLocalLocations; p++) {
-      locations.emplace_back(0, firstIdx + p, &generator);
-    }
-  } else {
-    loadLocationData();
+  locationsInitialized = 0;
+  locations.reserve(numLocalLocations);
+  int firstIdx = thisIndex * getNumLocalElements(numLocations, numLocationPartitions, 0);
+  int numAttributes = syntheticRun ? 0 : DataLoader::getNumberOfDataAttributes(diseaseModel->locationDef);
+  for (int p = 0; p < numLocalLocations; p++) {
+    locations.emplace_back(numAttributes, firstIdx + p, &generator);
   }
 
   // Seed random number generator via branch ID for reproducibility
   generator.seed(thisIndex);
+
   // Init contact model
   contactModel = createContactModel();
   contactModel->setGenerator(&generator);
 }
 
-void Locations::loadLocationData() {
-  // Init local.
-  int numAttributesPerLocation = 
-    DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
-  locations.reserve(numLocalLocations);
-  int firstIdx = thisIndex * getNumLocalElements(numLocations, numLocationPartitions, 0);
-  for (int p = 0; p < numLocalLocations; p++) {
-    locations.emplace_back(numAttributesPerLocation, firstIdx + p, &generator);
+void Locations::ReceiveLocationSetup(DataInterfaceMessage *msg) {
+  // Copy read data into next person and increment.
+  locations[locationsInitialized].uniqueId = msg->uniqueId;
+  for (int i = 0; i < msg->numDataAttributes; i++) {
+    locations[locationsInitialized].setField(i, msg->dataAttributes[i]);
   }
-
-  // Load in location information.
-  int startingLineIndex = getGlobalIndex(
-    0,
-    thisIndex,
-    numLocations,
-    numLocationPartitions,
-    firstLocationIdx
-  ) - firstLocationIdx;
-  int endingLineIndex = startingLineIndex + numLocalLocations;
-  std::string line;
-
-  std::ifstream locationData(scenarioPath + "locations.csv");
-  std::ifstream locationCache(scenarioPath + scenarioId + "_locations.cache", std::ios_base::binary);
-  if (!locationData || !locationCache) {
-    CkAbort("Could not open person data input.");
-  }
-  
-  // Find starting line for our data through location cache.
-  locationCache.seekg(thisIndex * sizeof(uint32_t));
-  uint32_t locationOffset;
-  locationCache.read((char *) &locationOffset, sizeof(uint32_t));
-  locationData.seekg(locationOffset);
-
-  // Read in our location data.
-  DataReader<Location>::readData(
-      &locationData,
-      diseaseModel->locationDef,
-      &locations
-  );
-  locationData.close();
-  locationCache.close();
-
-  // Seed random number generator via branch ID for reproducibility.
-  generator.seed(thisIndex);
-  
-  // Init contact model
-  contactModel = new ContactModel();
-  contactModel->setGenerator(&generator);
-
-  // Let contact model add any attributes it needs to the locations
-  for (Location &location: locations) {
-    contactModel->computeLocationValues(location);
-  }
+  contactModel->computeLocationValues(locations[locationsInitialized]);
+  locationsInitialized += 1;
+  assert(locationsInitialized <= numLocalLocations);
 }
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
@@ -135,3 +90,4 @@ void Locations::ComputeInteractions() {
     loc.processEvents(diseaseModel, contactModel);
   }
 }
+

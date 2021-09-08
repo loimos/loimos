@@ -8,7 +8,7 @@
 #include "../Location.h"
 #include "../Event.h"
 #include "../Defs.h"
-#include "../readers/DataReader.h"
+#include "../readers/DataLoader.h"
 #include "ContactModel.h"
 #include "MinMaxAlphaModel.h"
 
@@ -52,7 +52,6 @@ bool MinMaxAlphaModel::madeContact(
   const Event& infectiousEvent,
   Location& location
 ) {
-  union Data contactProbability = 
-    location.getDataField()[contactProbabilityIndex];
+  union Data contactProbability = location.getField(contactProbabilityIndex);
   return unitDistrib(*generator) < contactProbability.probability;
 }

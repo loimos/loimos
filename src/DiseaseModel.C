@@ -11,7 +11,7 @@
 
 #include "disease_model/disease.pb.h"
 #include "disease_model/distribution.pb.h"
-#include "readers/DataReader.h"
+#include "readers/DataLoader.h"
 
 #include <cstdio>
 #include <cmath>

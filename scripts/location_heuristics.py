@@ -81,7 +81,7 @@ if __name__ == '__main__':
     daily_summaries['max_daily_total'] = daily_summaries.max(axis=1)
     # Merge in.
     max_visits = max_visits.merge(daily_summaries, left_index=True, right_index=True)
-
+    
     # Calculate the maximum simulatenous visits.
     max_visits['max_simultaneous_visits'] = 0
     max_in_visit = 0

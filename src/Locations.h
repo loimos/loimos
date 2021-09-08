@@ -18,6 +18,7 @@
 class Locations : public CBase_Locations {
   private:
     int numLocalLocations;
+    int locationsInitialized;
     std::vector<Location> locations;
     std::default_random_engine generator;
     DiseaseModel *diseaseModel;
@@ -25,11 +26,10 @@ class Locations : public CBase_Locations {
 
   public:
     Locations();
+    void ReceiveLocationSetup(DataInterfaceMessage *msg);
+
     void ReceiveVisitMessages(VisitMessage visitMsg);
     void ComputeInteractions(); // calls ReceiveInfections
-    
-    // Load location data from CSV.
-    void loadLocationData();
-};
+  };
 
 #endif // __LOCATIONS_H__

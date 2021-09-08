@@ -20,8 +20,10 @@
 #include <google/protobuf/text_format.h>
 
 #include "../loimos.decl.h"
-#include "Preprocess.h"
 #include "../Person.h"
+#include "data.pb.h"
+#include "Preprocess.h"
+#include "DataLoader.h"
 
 #define MAX_WRITE_SIZE 65536 // 2^16
 
@@ -53,6 +55,9 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath, int nu
      */
     // Open activity stream..
     std::ifstream activityStream(inputPath, std::ios_base::binary);
+    if (!activityStream) {
+        CkAbort("Could not open object stream at %s\n", inputPath.c_str());
+    }
     int objPerChare = numObjs / numChares;
 
     // Read config file.
@@ -65,6 +70,7 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath, int nu
     }
     csvConfigDefStream.close();
 
+    CkPrintf("Looking for unique id in %s\r\n", inputPath.c_str());
     int csvLocationOfPid = -1;
     for (int i = 0; i < csvDefinition.field_size(); i += 1) {
         if (csvDefinition.field(i).has_uniqueid()) {
@@ -92,7 +98,7 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath, int nu
     // Check if file cache already created.
     std::ifstream existenceCheck(outputPath, std::ios_base::binary);
     if (existenceCheck.good()) {
-        printf("Using existing cache.\n");
+        CkPrintf("Using existing cache.\n");
         existenceCheck.close();
         return firstIdx;
     } else {
@@ -122,13 +128,13 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
     // Check if cache already created.
     std::ifstream existenceCheck(outputPath, std::ios_base::binary);
     if (existenceCheck.good()) {
-        printf("Activity cache already exists.");
+        CkPrintf("Activity cache already exists.");
         return;
     }
 
     std::ifstream activityStream(inputPath, std::ios_base::binary);
     if (!activityStream) {
-        printf("Could not open person data input.\n");
+        CkPrintf("Could not open person data input.\n");
         exit(1);
     }
 
@@ -146,7 +152,7 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
     std::size_t totalDataSize = numPeople * numDays * sizeof(uint32_t);
     uint32_t *elements = (uint32_t *) malloc(totalDataSize);
     if (elements == NULL) {
-        printf("Failed to malloc enoough memory for preprocessing.\n");
+        CkPrintf("Failed to malloc enoough memory for preprocessing.\n");
         exit(1);
     }
     memset(elements, 0xFF, totalDataSize);
@@ -163,7 +169,7 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
     int personId = -1;
     int duration = -1;
     // For better looping efficiency simulate one break of inner loop to start.
-    std::tie(nextPerson, personId, nextTime, duration) = DataReader<Person>::parseActivityStream(&activityStream, &csvDefinition, NULL);
+    std::tie(nextPerson, personId, nextTime, duration) = DataLoader::parseActivityStream(&activityStream, &csvDefinition, NULL);
     nextTime = getDay(nextTime);
 
     // Loop over the entire activity file and note boundaries on people and days
@@ -177,7 +183,7 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
         // Scan until the next boundary.
         while (!activityStream.eof() && lastTime == nextTime && lastPerson == nextPerson) {
             current_position = activityStream.tellg();
-            std::tie(nextPerson, personId, nextTime, duration) = DataReader<Person>::parseActivityStream(&activityStream, &csvDefinition, NULL);
+            std::tie(nextPerson, personId, nextTime, duration) = DataLoader::parseActivityStream(&activityStream, &csvDefinition, NULL);
             nextTime = getDay(nextTime);
         }
     }

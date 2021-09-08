@@ -35,6 +35,7 @@ const Time MINUTE_LENGTH = 60;
 // Data loading
 #define EMPTY_VISIT_SCHEDULE 0xFFFFFFFF
 #define CSV_DELIM ','
+#define DATALOADING_CHARES_PER_COMPUTATION_CHARE 4
 
 #define PERCENTAGE_OF_SEEDING_LOCATIONS 0.001
 #define INITIAL_INFECTIOUS_PROBABILITY 0.01
@@ -44,6 +45,7 @@ extern /* readonly */ CProxy_Main mainProxy;
 extern /* readonly */ CProxy_People peopleArray;
 extern /* readonly */ CProxy_Locations locationsArray;
 extern /* readonly */ CProxy_DiseaseModel globDiseaseModel;
+extern /* readonly */ CProxy_DataLoader dataLoaders;
 extern /* readonly */ int numPeople;
 extern /* readonly */ int numLocations;
 extern /* readonly */ int numPeoplePartitions;

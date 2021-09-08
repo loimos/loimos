@@ -23,6 +23,7 @@
 class People : public CBase_People {
   private:
     int numLocalPeople;
+    int peopleInitialized;
     int day;
     int newCases;
     int totalVisitsForDay;
@@ -34,9 +35,10 @@ class People : public CBase_People {
     std::vector<int> stateSummaries;
 
     void ProcessInteractions(Person &person);
-    void loadPeopleData();
+    void loadActivityData();
   public:
     People();
+    void ReceivePersonSetup(DataInterfaceMessage *msg);
     void SendVisitMessages(); 
     void SyntheticSendVisitMessages();
     void RealDataSendVisitMessages();

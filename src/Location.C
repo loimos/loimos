@@ -17,7 +17,7 @@
 #include <cmath>
 #include <algorithm>
 
-Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator) : uniform_dist(0, 1) {
+Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator) : DataInterface (numAttributes), uniform_dist(0, 1) {
   if (numAttributes != 0) {
     this->locationData.resize(numAttributes);
   }
@@ -43,15 +43,6 @@ Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine 
     isDiseaseSeeder = uniform_dist(*generator) < PERCENTAGE_OF_SEEDING_LOCATIONS;
   }
   
-}
-
-// DataInterface overrides. 
-void Location::setUniqueId(int idx) {
-    this->uniqueId = idx;
-}
-
-std::vector<union Data> &Location::getDataField() {
-    return this->locationData;
 }
 
 // Event processing.
