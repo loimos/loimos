@@ -21,6 +21,7 @@
 /* readonly */ CProxy_People peopleArray;
 /* readonly */ CProxy_Locations locationsArray;
 /* readonly */ CProxy_DiseaseModel globDiseaseModel;
+/* readonly */ CProxy_TraceSwitcher traceArray;
 /* readonly */ int numPeople;
 /* readonly */ int numLocations;
 /* readonly */ int numPeoplePartitions;
@@ -47,6 +48,20 @@
 /* readonly */ int synLocationPartitionGridHeight;
 /* readonly */ int averageDegreeOfVisit;
 
+
+class TraceSwitcher : public CBase_TraceSwitcher {
+public:
+    TraceSwitcher() : CBase_TraceSwitcher(){}
+    void traceOn(){
+        traceBegin();
+        contribute(CkCallback(CkReductionTarget(Main, traceSwitchOn),mainProxy));
+    };
+    void traceOff(){
+        traceEnd();    
+        contribute(CkCallback(CkReductionTarget(Main, traceSwitchOff),mainProxy));
+    };   
+    
+};
 
 Main::Main(CkArgMsg* msg) {
   // parsing command line arguments
@@ -154,6 +169,7 @@ Main::Main(CkArgMsg* msg) {
   
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
+  traceArray = CProxy_TraceSwitcher::ckNew();
 
   // run
   CkPrintf("Running ...\n\n");
@@ -195,5 +211,7 @@ void Main::SaveStats(int *data) {
 
   outFile.close();
 }
+
+
 
 #include "loimos.def.h"

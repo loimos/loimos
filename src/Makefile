@@ -21,7 +21,7 @@ all: all-sub $(BIN)
 
 # Build the executable (and implicitly charmrun) from the object files
 $(BIN): $(OBJS) $(DECLS)
-	$(CHARMC) -o $@ $(OBJS) -language charm++ -module CkMulticast \
+	$(CHARMC) -o $@ $(OBJS) -tracemode projections -language charm++ -module CkMulticast \
 	-module NDMeshStreamer -lpthread -L$(PROTOBUF_HOME)/lib -lprotobuf
 
 # Build .decl.h (and implicitly .def.h) files from the corresponding

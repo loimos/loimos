@@ -1,4 +1,4 @@
-# Set the environment variable CHARM_HOME to the Charm++ installation
+# Set the environment variable CHARM_HOME to the Charm++ installation with projections enabled
 CHARM_HOME  ?= /usr/local/charm
 CHARMC      = $(CHARM_HOME)/bin/charmc
 
