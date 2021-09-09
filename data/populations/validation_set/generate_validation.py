@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 '''
 Introduces synthetic dataset that is setup such that a large 
-portition of the population (risky subset) all visit a single location
+portion of the population (risky subset) all visit a single location
 for the entire day every day. The rest of the population is very safe
 and stays in their room (only person at a location). We expect
 all the risky people to get infected by the super infectious disease model.
