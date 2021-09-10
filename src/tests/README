@@ -1,0 +1,8 @@
+This testing suite uses GoogleTest.
+
+To run the tests you have to install 
+https://github.com/google/googletest/tree/master/googletest
+and add it to your build path.
+
+To run the tests run
+make test_all
