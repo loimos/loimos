@@ -46,11 +46,11 @@ std::string SCENARIO_PATH = "../data/populations/validation_set";
 //     EXPECT_EQ(person->secondsLeftInState, 3 * (60 * 60 * 24));
 //   }
 // };
-TEST(DiseaseModelTest, TestModelLoad) {
-  /** Tests that the model was loaded correctly. */
-  DiseaseModel *diseaseModel = new DiseaseModel(PATH_TO_DISEASE_MODEL, SCENARIO_PATH);
-  EXPECT_EQ(diseaseModel->getNumberOfStates(), 6);
-  EXPECT_EQ(diseaseModel->lookupStateName(0), "healthy_safe");
-  EXPECT_EQ(diseaseModel->lookupStateName(1), "infectious_safe");
-}
+// TEST(DiseaseModelTest, TestModelLoad) {
+//   /** Tests that the model was loaded correctly. */
+//   DiseaseModel *diseaseModel = new DiseaseModel(PATH_TO_DISEASE_MODEL, SCENARIO_PATH);
+//   EXPECT_EQ(diseaseModel->getNumberOfStates(), 6);
+//   EXPECT_EQ(diseaseModel->lookupStateName(0), "healthy_safe");
+//   EXPECT_EQ(diseaseModel->lookupStateName(1), "infectious_safe");
+// }
 };
