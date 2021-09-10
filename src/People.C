@@ -4,37 +4,30 @@
  * SPDX-License-Identifier: MIT
  */
 
-/**
- * The People class 
- */ 
+#include "loimos.decl.h"
+#include "People.h"
+#include "Defs.h"
+#include "Interaction.h"
+#include "DiseaseModel.h"
+#include "Person.h"
+#include "readers/DataReader.h"
 
-#include <cmath>
-#include <fstream>
-#include <iostream>
+#include <tuple>
 #include <limits>
 #include <queue>
+#include <cmath>
 #include <string>
-#include <tuple>
-
-#include "Defs.h"
-#include "DiseaseModel.h"
-#include "Interaction.h"
-#include "People.h"
-#include "Person.h"
-#include "loimos.decl.h"
-#include "readers/DataReader.h"
+#include <iostream>
+#include <fstream>
 
 #ifdef LOIMOS_TESTING
 #include "gtest/gtest.h"
 #endif
 
-std::uniform_real_distribution<> unitDistrib(0, 1);
+std::uniform_real_distribution<> unitDistrib(0,1);
 #define ONE_ATTR 1
 #define DEFAULT_
 
-/**
- * 
- */ 
 People::People() {
   newCases = 0;
   day = 0;
@@ -46,20 +39,18 @@ People::People() {
   // Allocate space to summarize the state summaries for every day
   int totalStates = diseaseModel->getNumberOfStates();
   stateSummaries.resize((totalStates + 1) * numDays, 0);
-}
 
-/**
- * Initializes the 
- */ 
-People::Initialize(DiseaseModel *diseaseModel, int thisIndex, bool syntheticRun) {
   // Get the number of people assigned to this chare
-  numLocalPeople =
-      getNumLocalElements(numPeople, numPeoplePartitions, thisIndex);
-
+  numLocalPeople = getNumLocalElements(
+    numPeople,
+    numPeoplePartitions,
+    thisIndex
+  );
+  
   // Create real or fake people
   if (syntheticRun) {
     // Make a default person and populate people with copies
-    Person tmp{0, 0, std::numeric_limits<Time>::max()};
+    Person tmp {0, 0, std::numeric_limits<Time>::max() };
     people.resize(numLocalPeople, tmp);
 
     // Init peoples ids and randomly init ages.
@@ -68,31 +59,31 @@ People::Initialize(DiseaseModel *diseaseModel, int thisIndex, bool syntheticRun)
     for (int p = 0; p < numLocalPeople; p++) {
       Data age;
       age.int_b10 = age_dist(generator);
-      std::vector<Data> dataField = {age};
+      std::vector<Data> dataField = { age };
 
       people[p].uniqueId = firstPersonIdx + p;
       people[p].state = diseaseModel->getHealthyState(dataField);
-    }
-  } else { // Not a synthetic run (i.e using real data).
-    int numAttributesPerPerson =
+    } 
+  } else {
+      int numAttributesPerPerson = 
         DataReader<Person>::getNonZeroAttributes(diseaseModel->personDef);
-    for (int p = 0; p < numLocalPeople; p++) {
-      people.emplace_back(
-          Person(numAttributesPerPerson, 0, std::numeric_limits<Time>::max()));
-    }
+      for (int p = 0; p < numLocalPeople; p++) {
+        people.emplace_back(Person(numAttributesPerPerson,
+          0, std::numeric_limits<Time>::max()
+        ));
+      }
 
-    // Load in people data from file.
-    loadPeopleData();
+      // Load in people data from file.
+      loadPeopleData();
   }
 }
 
 /**
  * Loads real people data from file.
  */
-void People::loadPeopleData() {
+void People::loadPeopleData() {  
   std::ifstream peopleData(scenarioPath + "people.csv");
-  std::ifstream peopleCache(scenarioPath + scenarioId + "_people.cache",
-                            std::ios_base::binary);
+  std::ifstream peopleCache(scenarioPath + scenarioId + "_people.cache", std::ios_base::binary);
   if (!peopleData || !peopleCache) {
     CkAbort("Could not open person data input.");
   }
@@ -100,7 +91,7 @@ void People::loadPeopleData() {
   // Find starting line for our data through people cache.
   peopleCache.seekg(thisIndex * sizeof(uint32_t));
   uint32_t peopleOffset;
-  peopleCache.read((char *)&peopleOffset, sizeof(uint32_t));
+  peopleCache.read((char *) &peopleOffset, sizeof(uint32_t));
   peopleData.seekg(peopleOffset);
 
   // Read in from remote file.
@@ -108,16 +99,15 @@ void People::loadPeopleData() {
   peopleData.close();
   peopleCache.close();
 
-  // Open activity data and cache.
+  // Open activity data and cache. 
   activityData = new std::ifstream(scenarioPath + "visits.csv");
-  std::ifstream activityCache(scenarioPath + scenarioId + "_interactions.cache",
-                              std::ios_base::binary);
+  std::ifstream activityCache(scenarioPath + scenarioId + "_interactions.cache", std::ios_base::binary);
   if (!activityData || !activityCache) {
     CkAbort("Could not open activity input.");
   }
 
   // Load preprocessing meta data.
-  uint32_t *buf = (uint32_t *)malloc(sizeof(uint32_t) * numDays);
+  uint32_t *buf = (uint32_t *) malloc(sizeof(uint32_t) * numDays);
   for (int c = 0; c < numLocalPeople; c++) {
     std::vector<uint32_t> *data_pos = &people[c].visitOffsetByDay;
     int curr_id = people[c].uniqueId;
@@ -132,16 +122,27 @@ void People::loadPeopleData() {
   }
   free(buf);
 
-  // Initialize intial states.
-  for (Person &person : people) {
+  // Initialize intial states. (This will move in the DataLoaderPR)
+  for (Person &person: people) {
     person.state = diseaseModel->getHealthyState(person.getDataField());
   }
-}
+
+  // Data loading testing.
+  #ifdef LOIMOS_TESTING
+  if (thisIndex == 0) {
+    EXPECT_EQ(people[0].getDataField().at(0).int_b10, 65);
+    // assert(people[0].getDataField().at(0).int_b10 == 65);
+  } else if (thisIndex == numPeoplePartitions - 1) {
+    EXPECT_EQ(people[numPeoplePartitions - 1].getDataField().at(0).int_b10, 21);
+    // assert( == 21);people[0].getDataField().at(0
+  }
+  #endif
+} 
 
 /**
  * Randomly generates an itinerary (number of visits to random locations)
  * for each person and sends visit messages to locations.
- */
+ */ 
 void People::SendVisitMessages() {
   totalVisitsForDay = 0;
   if (syntheticRun) {
@@ -159,16 +160,18 @@ void People::SyntheticSendVisitMessages() {
   std::poisson_distribution<int> visit_distance_generator(averageDegreeOfVisit);
 
   // Model visit times as uniform.
-  std::uniform_int_distribution<int> time_dist(0, DAY_LENGTH);  // in seconds
+  std::uniform_int_distribution<int> time_dist(0, DAY_LENGTH); // in seconds
   std::priority_queue<int, std::vector<int>, std::greater<int> > times;
 
   // Calculate minigrid sizes.
-  int numLocationsPerPartition =
-      getNumElementsPerPartition(numLocations, numLocationPartitions);
+  int numLocationsPerPartition = getNumElementsPerPartition(
+    numLocations,
+    numLocationPartitions
+  );
   int locationPartitionWidth = synLocalLocationGridWidth;
   int locationPartitionHeight = synLocalLocationGridHeight;
   int locationPartitionGridWidth = synLocationPartitionGridWidth;
-  // CkPrintf("location grid at each chare is %d by %d\r\n",
+  //CkPrintf("location grid at each chare is %d by %d\r\n",
   //  locationPartitionWidth, locationPartitionHeight);
 
   // Choose one location partition for the people in this parition to call home
@@ -178,14 +181,16 @@ void People::SyntheticSendVisitMessages() {
   int homePartitionStartX = homePartitionX * locationPartitionWidth;
   int homePartitionStartY = homePartitionY * locationPartitionHeight;
   int homePartitionNumLocations = getNumLocalElements(
-      numLocations, numLocationPartitions, homePartitionIdx);
+    numLocations,
+    numLocationPartitions,
+    homePartitionIdx
+  );
 
   // Calculate schedule for each person.
   for (Person &p : people) {
     // Calculate "home" location coordinates.
     int personIdx = p.uniqueId;
-    int localPersonIdx =
-        (personIdx - firstLocationIdx) % homePartitionNumLocations;
+    int localPersonIdx = (personIdx - firstLocationIdx) % homePartitionNumLocations;
     int homeX = homePartitionStartX + localPersonIdx % locationPartitionWidth;
     int homeY = homePartitionStartY + localPersonIdx / locationPartitionWidth;
 
@@ -200,35 +205,39 @@ void People::SyntheticSendVisitMessages() {
 
     // Randomly pick nearby location for person to visit.
     for (int j = 0; j < numVisits; j++) {
+      
       // Generate visit start and end times.
       int visitStart = times.top();
       times.pop();
       int visitEnd = times.top();
       times.pop();
       // Skip empty visits.
-      if (visitStart == visitEnd) continue;
+      if (visitStart == visitEnd)
+        continue;
 
       // Get number of locations away this person should visit.
       int numHops = std::min(visit_distance_generator(generator),
-                             synLocationGridWidth + synLocationGridHeight - 2);
+        synLocationGridWidth + synLocationGridHeight - 2);
 
       int destinationOffsetX = 0;
       int destinationOffsetY = 0;
 
       if (numHops != 0) {
         // Calculate maximum hops that can be taken from home location in each
-        // direction. (i.e. might be constrained for home locations close to
-        // edge)
+        // direction. (i.e. might be constrained for home locations close to edge)
         int maxHopsNegativeX = std::min(numHops, homeX);
-        int maxHopsPositiveX =
-            std::min(numHops, synLocationGridWidth - 1 - homeX);
+        int maxHopsPositiveX = std::min(
+            numHops,
+            synLocationGridWidth - 1 - homeX
+        );
         int maxHopsNegativeY = std::min(numHops, homeY);
-        int maxHopsPositiveY =
-            std::min(numHops, synLocationGridHeight - 1 - homeY);
-
+        int maxHopsPositiveY = std::min(
+            numHops,
+            synLocationGridHeight - 1 - homeY
+        );
+       
         // Choose random number of hops in the X direction.
-        std::uniform_int_distribution<int> dist_gen(-maxHopsNegativeX,
-                                                    maxHopsPositiveX);
+        std::uniform_int_distribution<int> dist_gen(-maxHopsNegativeX, maxHopsPositiveX);
         destinationOffsetX = dist_gen(generator);
 
         // Travel the remaining hops in the Y direction
@@ -236,7 +245,7 @@ void People::SyntheticSendVisitMessages() {
         if (numHops != 0) {
           // Choose a random direction between positive and negative
           std::uniform_int_distribution<int> dir_gen(0, 1);
-
+          
           if (dir_gen(generator) == 0) {
             // Offset positively in Y.
             destinationOffsetY = std::min(numHops, maxHopsPositiveY);
@@ -245,9 +254,7 @@ void People::SyntheticSendVisitMessages() {
             destinationOffsetY = -std::min(numHops, maxHopsNegativeY);
           }
         }
-        // CkPrintf("Home is (%d, %d) (%d %d %d %d))\n", homeX, homeY,
-        // maxHopsNegativeX, maxHopsPositiveX, maxHopsNegativeY,
-        // maxHopsPositiveY);
+        // CkPrintf("Home is (%d, %d) (%d %d %d %d))\n", homeX, homeY, maxHopsNegativeX, maxHopsPositiveX, maxHopsNegativeY, maxHopsPositiveY);
       }
 
       // Finally calculate the index of the location to actually visit...
@@ -259,27 +266,28 @@ void People::SyntheticSendVisitMessages() {
       int partitionX = destinationX / locationPartitionWidth;
       int partitionY = destinationY / locationPartitionHeight;
       int destinationIdx =
-          (destinationX % locationPartitionWidth) +
-          (destinationY % locationPartitionHeight) * locationPartitionWidth +
-          partitionX * numLocationsPerPartition +
-          partitionY * locationPartitionGridWidth * numLocationsPerPartition;
-      // CkPrintf(
+          (destinationX % locationPartitionWidth)
+        + (destinationY % locationPartitionHeight) * locationPartitionWidth
+        + partitionX * numLocationsPerPartition
+        + partitionY * locationPartitionGridWidth * numLocationsPerPartition;
+      //CkPrintf(
       //  "person %d will visit location (%d, %d) with offset (%d,%d)\r\n",
-      //  personIdx, destinationX, destinationY, destinationOffsetX,
-      //  destinationOffsetY); CkPrintf("(%d, %d) -> %d in partition (%d,
-      //  %d)\r\n",
+      //  personIdx, destinationX, destinationY, destinationOffsetX, destinationOffsetY);
+      //  CkPrintf("(%d, %d) -> %d in partition (%d, %d)\r\n",
       //    destinationX, destinationY, destinationIdx, partitionX, partitionY);
 
       // Determine which chare tracks this location.
-      int locationPartition =
-          getPartitionIndex(destinationIdx, numLocations, numLocationPartitions,
-                            firstLocationIdx);
+      int locationPartition = getPartitionIndex(
+        destinationIdx,
+        numLocations,
+        numLocationPartitions,
+        firstLocationIdx
+      );
 
       // Send off visit message
-      VisitMessage visitMsg(destinationIdx, personIdx, p.state, visitStart,
-                            visitEnd);
+      VisitMessage visitMsg(destinationIdx, personIdx, p.state, visitStart, visitEnd);
       locationsArray[locationPartition].ReceiveVisitMessages(visitMsg);
-    }
+    } 
   }
 }
 
@@ -297,62 +305,74 @@ void People::RealDataSendVisitMessages() {
     }
 =======
     uint32_t seekPos = people[localPersonId].interactionsByDay[day];
+<<<<<<< HEAD
     if (seekPos == EMPTY_VISIT_SCHEDULE) continue;
 >>>>>>> Refactors and adding initial tests
+=======
+    if (seekPos == EMPTY_VISIT_SCHEDULE)
+      continue;
+>>>>>>> Undo wider changes
     activityData->seekg(seekPos, std::ios_base::beg);
 
     // Start reading
-    int personId = -1;
+    int personId = -1; 
     int locationId = -1;
     int visitStart = -1;
     int visitDuration = -1;
-    std::tie(personId, locationId, visitStart, visitDuration) =
-        DataReader<Person>::parseActivityStream(
-            activityData, diseaseModel->activityDef, NULL);
+    std::tie(personId, locationId, visitStart, visitDuration) = DataReader<Person>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
 
     // Seek while same person on same day.
-    while (personId == people[localPersonId].uniqueId &&
-           visitStart < nextDaySecs) {
+    while(personId == people[localPersonId].uniqueId && visitStart < nextDaySecs) {
       // Find process that owns that location.
       int locationSubset = getPartitionIndex(
-          locationId, numLocations, numLocationPartitions, firstLocationIdx);
-
+          locationId,
+          numLocations,
+          numLocationPartitions,
+          firstLocationIdx
+      );
+      
       // Send off the visit message.
-      VisitMessage visit Msg(locationId, personId, people[localPersonId].state,
-                            visitStart, visitStart + visitDuration);
+      VisitMessage visitMsg(locationId, personId, people[localPersonId].state, visitStart, visitStart + visitDuration);
       locationsArray[locationSubset].ReceiveVisitMessages(visitMsg);
       totalVisitsForDay += 1;
-      std::tie(personId, locationId, visitStart, visitDuration) =
-          DataReader<Person>::parseActivityStream(
-              activityData, diseaseModel->activityDef, NULL);
+      std::tie(personId, locationId, visitStart, visitDuration) = DataReader<Person>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
     }
   }
 }
 
 void People::ReceiveInteractions(InteractionMessage interMsg) {
-  int localIdx = getLocalIndex(interMsg.personIdx, numPeople,
-                               numPeoplePartitions, firstPersonIdx);
+  int localIdx = getLocalIndex(
+    interMsg.personIdx,
+    numPeople,
+    numPeoplePartitions,
+    firstPersonIdx
+  );
 
   // Just concatenate the interaction lists so that we can process all of the
   // interactions at the end of the day
   Person &person = people[localIdx];
-  person.interactions.insert(person.interactions.end(),
-                             interMsg.interactions.cbegin(),
-                             interMsg.interactions.cend());
+  person.interactions.insert(
+    person.interactions.end(),
+    interMsg.interactions.cbegin(),
+    interMsg.interactions.cend()
+  );
 }
+
+
 
 void People::EndofDayStateUpdate() {
   // Get ready to count today's states
   int totalStates = diseaseModel->getNumberOfStates();
   int offset = (totalStates + 1) * day;
   stateSummaries[offset] = totalVisitsForDay;
-
+  
   // Handle state transitions at the end of the day.
   int infectiousCount = 0;
-  for (Person &person : people) {
+  for (Person &person: people) {
+    
     ProcessInteractions(person);
     person.MakeDiseaseTransition(diseaseModel, &generator);
-
+    
     int resultantState = person.state;
     stateSummaries[resultantState + offset + 1]++;
     if (diseaseModel->isInfectious(resultantState)) {
@@ -374,7 +394,7 @@ void People::SendStats() {
 
 void People::ProcessInteractions(Person &person) {
   double totalPropensity = 0.0;
-  int numInteractions = (int)person.interactions.size();
+  int numInteractions = (int) person.interactions.size();
   for (int i = 0; i < numInteractions; ++i) {
     totalPropensity += person.interactions[i].propensity;
   }
@@ -388,8 +408,9 @@ void People::ProcessInteractions(Person &person) {
     roll = std::uniform_real_distribution<>(0, totalPropensity)(generator);
     double partialSum = 0.0;
     int interactionIdx;
-    for (interactionIdx = 0; interactionIdx < numInteractions;
-         ++interactionIdx) {
+    for (
+      interactionIdx = 0; interactionIdx < numInteractions; ++interactionIdx
+    ) {
       partialSum += person.interactions[interactionIdx].propensity;
       if (partialSum > roll) {
         break;
@@ -402,7 +423,7 @@ void People::ProcessInteractions(Person &person) {
     // Mark that exposed healthy individuals should make transition at the end
     // of the day.
     if (diseaseModel->isSusceptible(person.state)) {
-      person.secondsLeftInState = -1;
+      person.secondsLeftInState = -1; 
     }
   }
 

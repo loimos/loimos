@@ -47,7 +47,6 @@ class DataReader {
             // TODO make this 2^16 and support longer lines through multiple reads.
             char buf[MAX_INPUT_lineLength];
             // Rows to read.
-            printf("Hmm\n");
             for (auto &obj: *dataObjs) {
                 // Get next line.
                 input->getline(buf, MAX_INPUT_lineLength);
@@ -102,9 +101,8 @@ class DataReader {
                     }
                 }
             }
-            printf("Hmm 2\n");
-
         }
+        
         static int getNonZeroAttributes(loimos::proto::CSVDefinition *dataFormat) {
             int count = 0;
             for (int c = 0; c < dataFormat->field_size(); c++) {
@@ -168,7 +166,6 @@ class DataReader {
                     attrIndex++;
                 }
             }
-            // printf("Person %d visited %d at %d for %d\n", personId, locationId, startTime, duration);
             return std::make_tuple(personId, locationId, startTime, duration);
         }
 };
