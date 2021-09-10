@@ -14,7 +14,7 @@ function run_script() {
   TASKS_PER_NODE=$4
   MEM=$5
 
-  ARGS="-t ${TIME} -p ${QUEUE} --ntasks-per-node ${TASKS_PER_NODE} --wait"
+  ARGS="--export=ALL -t ${TIME} -p ${QUEUE} --ntasks-per-node ${TASKS_PER_NODE} --wait"
   if [ ! -z ${MEM} ]; then
     ARGS="${ARGS} --mem ${MEM}"
   fi
