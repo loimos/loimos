@@ -11,7 +11,6 @@
 #include "Interaction.h"
 #include "Person.h"
 #include "Message.h"
-#include "Defs.h"
 
 #include <random>
 #include <vector>
@@ -36,7 +35,6 @@ class People : public CBase_People {
 
     void ProcessInteractions(Person &person);
     void loadPeopleData();
-    
   public:
     People();
     void SendVisitMessages(); 
@@ -45,11 +43,6 @@ class People : public CBase_People {
     void ReceiveInteractions(InteractionMessage interMsg);
     void EndofDayStateUpdate();
     void SendStats();
-
-    #ifdef LOIMOS_TESTING
-    uint32_t GetTestParameter(int parameter);
-    #endif
-  };
-  
+};
 
 #endif // __PEOPLE_H__

@@ -13,7 +13,6 @@ OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o Defs.o \
 DEFS   = Defs.h loimos.def.h readers/DataReader.h
 DECLS  = loimos.decl.h
 BIN    = loimos
-TESTINGPRAG = -DLOIMOS_TESTING
 
 SUBDIRS := disease_model contact_model readers
 
@@ -21,9 +20,9 @@ SUBDIRS := disease_model contact_model readers
 all: all-sub $(BIN)
 
 # Build the executable (and implicitly charmrun) from the object files
-$(BIN): $(OBJS) $(RUNTESTS) $(DECLS)
+$(BIN): $(OBJS) $(DECLS)
 	$(CHARMC) -o $@ $(OBJS) -language charm++ -module CkMulticast \
-	-module NDMeshStreamer -lpthread -L$(PROTOBUF_HOME)/lib -lprotobuf -lgtest
+	-module NDMeshStreamer -lpthread -L$(PROTOBUF_HOME)/lib -lprotobuf
 
 # Build .decl.h (and implicitly .def.h) files from the corresponding
 # .ci files
@@ -32,10 +31,7 @@ $(DECLS): %.decl.h: %.ci
 
 # Build .o files from the corresponding .C and .h files
 $(OBJS): %.o: %.C %.h $(DECLS) $(DEFS)
-	$(CHARMC) $(CXXFLAGS) $(TESTINGPRAG) -o $@ $<
-
-$(RUNTESTS): %.o: %.C $(DECLS) $(DEFS)
-	$(CHARMC) $(CXXFLAGS) $(TESTINGPRAG) -o $@ $<
+	$(CHARMC) $(CXXFLAGS) -o $@ $<
 
 # Subdirs will build the protobuf object files
 .PHONY: all-sub

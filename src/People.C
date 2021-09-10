@@ -20,10 +20,6 @@
 #include <iostream>
 #include <fstream>
 
-#ifdef LOIMOS_TESTING
-#include "gtest/gtest.h"
-#endif
-
 std::uniform_real_distribution<> unitDistrib(0,1);
 #define ONE_ATTR 1
 #define DEFAULT_
@@ -126,17 +122,6 @@ void People::loadPeopleData() {
   for (Person &person: people) {
     person.state = diseaseModel->getHealthyState(person.getDataField());
   }
-
-  // Data loading testing.
-  #ifdef LOIMOS_TESTING
-  if (thisIndex == 0) {
-    EXPECT_EQ(people[0].getDataField().at(0).int_b10, 65);
-    // assert(people[0].getDataField().at(0).int_b10 == 65);
-  } else if (thisIndex == numPeoplePartitions - 1) {
-    EXPECT_EQ(people[numPeoplePartitions - 1].getDataField().at(0).int_b10, 21);
-    // assert( == 21);people[0].getDataField().at(0
-  }
-  #endif
 } 
 
 /**
@@ -358,8 +343,6 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
   );
 }
 
-
-
 void People::EndofDayStateUpdate() {
   // Get ready to count today's states
   int totalStates = diseaseModel->getNumberOfStates();
@@ -371,11 +354,33 @@ void People::EndofDayStateUpdate() {
   for (Person &person: people) {
     
     ProcessInteractions(person);
-    person.MakeDiseaseTransition(diseaseModel, &generator);
     
-    int resultantState = person.state;
-    stateSummaries[resultantState + offset + 1]++;
-    if (diseaseModel->isInfectious(resultantState)) {
+    int currState = person.state;
+    int secondsLeftInState = person.secondsLeftInState;
+
+    // TODO(iancostello): Move into start of day for visits.
+    // Transition to next state or mark the passage of time
+    secondsLeftInState -= DAY_LENGTH;
+    if (secondsLeftInState <= 0) {
+      // If they have already been infected
+      if (person.next_state != -1) {
+        person.state = person.next_state;
+        std::tie(person.next_state, person.secondsLeftInState) = 
+          diseaseModel->transitionFromState(person.state, &generator);
+      } else {
+        // Get which exposed state they should transition to.
+        std::tie(person.state, std::ignore) = 
+          diseaseModel->transitionFromState(person.state, &generator);
+        // See where they will transition next.
+        std::tie(person.next_state, person.secondsLeftInState) =
+          diseaseModel->transitionFromState(person.state, &generator);
+      }
+    } else {
+      person.secondsLeftInState = secondsLeftInState;
+    }
+
+    stateSummaries[currState + offset + 1]++;
+    if (diseaseModel->isInfectious(currState)) {
       infectiousCount++;
     }
   }
@@ -429,7 +434,10 @@ void People::ProcessInteractions(Person &person) {
 
   person.interactions.clear();
 }
+<<<<<<< HEAD
 
 uint32_t People::GetTestParameter(int parameter) {
   return people[0].getDataField()[parameter].int_b10;
 }
+=======
+>>>>>>> More simplification

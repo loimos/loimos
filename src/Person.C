@@ -8,7 +8,7 @@
 
 #include "Person.h"
 #include "readers/data.pb.h"
-#include "DiseaseModel.h"
+
 /**
  * Defines attributes of a single person.
  */ 
@@ -29,28 +29,6 @@ void Person::setUniqueId(int idx) {
 
 std::vector<union Data> &Person::getDataField() {
     return this->personData;
-}
-
-void Person::MakeDiseaseTransition(DiseaseModel *diseaseModel, std::default_random_engine *generator) {
-  // Transition to next state or mark the passage of time
-  secondsLeftInState -= DAY_LENGTH;
-  if (secondsLeftInState <= 0) {
-    // If they have already been infected
-    if (next_state != -1) {
-      state = next_state;
-      std::tie(next_state, secondsLeftInState) = 
-        diseaseModel->transitionFromState(state, generator);
-    } else {
-      // Get which exposed state they should transition to.
-      std::tie(state, std::ignore) = 
-        diseaseModel->transitionFromState(state, generator);
-      // See where they will transition next.
-      std::tie(next_state, secondsLeftInState) =
-        diseaseModel->transitionFromState(state, generator);
-    }
-  } else {
-    secondsLeftInState = secondsLeftInState;
-  }
 }
 
 void Person::_print_information(loimos::proto::CSVDefinition *personDef) {
