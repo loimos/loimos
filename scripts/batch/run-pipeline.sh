@@ -67,7 +67,7 @@ run_script combine-household-data.sh ${BASE_TIME} standard 1 ${BASE_MEMORY}
 # From here on we no longer need any of all the raw data, so move all the
 # processed data (which will be at the top level of the input dir) over to
 # the otput dir
-#mv ${IN_DIR}/*.csv ${OUT_DIR}
+mv ${IN_DIR}/*.csv ${OUT_DIR}
 
 run_script merge-location-data.py ${BASE_TIME} standard 1 ${BASE_MEMORY}
 run_script location-heuristics.py $((2 * ${BASE_TIME})) parallel 40 ${BASE_MEMORY}
