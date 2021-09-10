@@ -146,7 +146,7 @@ Main::Main(CkArgMsg* msg) {
 
   // Instantiate DiseaseModel nodegroup (One for each physical processor).
   CkPrintf("Loading diseaseModel at %s.\n", pathToDiseaseModel.c_str());
-  globDiseaseModel = CProxy_DiseaseModel::ckNew(pathToDiseaseModel);
+  globDiseaseModel = CProxy_DiseaseModel::ckNew(pathToDiseaseModel, scenarioPath);
   diseaseModel = globDiseaseModel.ckLocalBranch();
   accumulated.resize(diseaseModel->getNumberOfStates(), 0);
   delete msg;

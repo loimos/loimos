@@ -4,11 +4,19 @@
  * SPDX-License-Identifier: MIT
  */
 
+/**
+ * The disease model class 
+ * 
+ * The disease model class provides the a timed finite state automata
+ * 
+ * This class provides an abstraction over the core proto definition. 
+ * .transition
+ */ 
+
+#include "loimos.decl.h"
 #include "Defs.h"
 #include "DiseaseModel.h"
 #include "Event.h"
-#include "loimos.decl.h"
-
 #include "disease_model/disease.pb.h"
 #include "disease_model/distribution.pb.h"
 #include "readers/DataReader.h"
