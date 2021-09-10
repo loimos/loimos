@@ -7,6 +7,10 @@ CHARMC      = $(CHARM_HOME)/bin/charmc
 PROTOBUF_HOME ?= /usr/local/protobuf
 PROTOC        = $(PROTOBUF_HOME)/bin/protoc
 
+# Set the environment variable GTEST_HOME to the googletest installation to
+# overide this default
+GTEST_HOME ?= /usr/local/gtest
+
 CXX       = g++
 OPTS      = -g -O2
 CXXFLAGS  = $(OPTS) -std=c++11 -Wall -I$(PROTOBUF_HOME)/include

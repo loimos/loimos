@@ -17,8 +17,7 @@
 #include <iostream>
 #include <fstream>
 
-#define LOIMOS_TESTING
-#ifdef LOIMOS_TESTING
+#ifdef ENABLE_UNIT_TESTING
 #include "gtest/gtest.h"
 #endif
 
@@ -144,6 +143,11 @@ Main::Main(CkArgMsg* msg) {
     CkPrintf("Synthetic run with (%d, %d) person grid and (%d, %d) location grid. Average degree of %d\n\n", synPeopleGridWidth, synPeopleGridHeight, synLocationGridWidth, synLocationGridHeight, averageDegreeOfVisit);
   }
 
+  #ifdef ENABLE_UNIT_TESTING
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+  #endif
+
   // Instantiate DiseaseModel nodegroup (One for each physical processor).
   CkPrintf("Loading diseaseModel at %s.\n", pathToDiseaseModel.c_str());
   globDiseaseModel = CProxy_DiseaseModel::ckNew(pathToDiseaseModel, scenarioPath);
@@ -158,14 +162,6 @@ Main::Main(CkArgMsg* msg) {
   
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
-
-  // Run pre-run unit tests.
-  #ifdef LOIMOS_TESTING
-  testing::InitGoogleTest(&msg->argc, msg->argv);
-  if (RUN_ALL_TESTS() != 0) {
-    CkAbort("Failed unit tests!\n");
-  }
-  #endif
 
   // run
   CkPrintf("Running ...\n\n");

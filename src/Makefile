@@ -15,6 +15,7 @@ DECLS  = loimos.decl.h
 BIN    = loimos
 
 SUBDIRS := disease_model contact_model readers
+UNIT_TESTS = tests/DiseaseModelTest.o
 
 .PHONY:all
 all: all-sub $(BIN)
@@ -50,6 +51,17 @@ clean:
 		$(MAKE) clean; \
 		cd ..; \
 	done
+
+# Unit testing.
+$(UNIT_TESTS): %.o: %.C $(DECLS) $(DEFS) $(OBJS)
+	$(CHARMC) $(CXXFLAGS) -o $@ $< $(OBJS) \ 
+	-I$(GTEST_HOME)googletest/include -L$(GTEST_HOME)/lib -lgtest
+
+unit_tests: all-sub $(OBJS) $(UNIT_TESTS) $(DECLS)
+	$(CHARMC) -o $@ $(OBJS) $(UNIT_TESTS) -language charm++ -module CkMulticast \
+	-module NDMeshStreamer -lpthread -L$(PROTOBUF_HOME)/lib -lprotobuf \ 
+	-I$(GTEST_HOME)googletest/include -L$(GTEST_HOME)/lib -lgtest \ 
+	-DENABLE_UNIT_TESTING
 
 # All test names start with "test-"
 TEST_NAMES= -small -syn -large
