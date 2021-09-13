@@ -7,6 +7,7 @@
 #include "loimos.decl.h"
 
 #include "Person.h"
+#include "DiseaseModel.h"
 #include "readers/data.pb.h"
 
 /**
