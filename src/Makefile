@@ -64,7 +64,7 @@ unit_tests: all-sub $(OBJS) $(DECLS)
 	# -DENABLE_UNIT_TESTING
 
 # All test names start with "test-"
-TEST_NAMES= -small -syn -large
+TEST_NAMES= -small -syn -large -validation
 TESTS=$(subst -,test-,$(TEST_NAMES))
 
 # Run all tests with test rule
