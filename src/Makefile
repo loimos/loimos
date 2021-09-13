@@ -14,7 +14,7 @@ DEFS   = Defs.h loimos.def.h readers/DataReader.h
 DECLS  = loimos.decl.h
 BIN    = loimos
 
-SUBDIRS = disease_model contact_model readers
+SUBDIRS = disease_model contact_model readers tests
 
 .PHONY:all
 all: all-sub $(BIN)
@@ -59,12 +59,10 @@ $(UNIT_TEST_OBJS): %.o: %.C $(DECLS) $(DEFS) $(OBJS)
 		-L/$(GTEST_HOME)/lib -lgtest
 
 unit_tests: all-sub $(OBJS) $(DECLS) $(UNIT_TEST_OBJS)
-	$(CHARMC) -o $@ $(OBJS) $(UNIT_TEST_OBJS) -language charm++ \
+	$(CHARMC) -o loimos $(OBJS) $(UNIT_TEST_OBJS) -language charm++ \
 	-module CkMulticast -module NDMeshStreamer -lpthread \
 	-L$(PROTOBUF_HOME)/lib -lprotobuf -I$(GTEST_HOME)/include \
-	-L$(GTEST_HOME)/lib -lgtest
-	# \
-	# -DENABLE_UNIT_TESTING
+	-L$(GTEST_HOME)/lib -lgtest -DENABLE_UNIT_TESTING
 
 # All test names start with "test-"
 TEST_NAMES= -small -syn -large -validation

@@ -32,7 +32,7 @@ std::vector<union Data> &Person::getDataField() {
     return this->personData;
 }
 
-void Person::EndofDayStateUpdate(DiseaseModel *diseaseModel, std::default_random_engine *generator) {
+void Person::EndOfDayStateUpdate(DiseaseModel *diseaseModel, std::default_random_engine *generator) {
   // Transition to next state or mark the passage of time
   secondsLeftInState -= DAY_LENGTH;
   if (secondsLeftInState <= 0) {

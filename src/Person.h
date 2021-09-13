@@ -41,7 +41,7 @@ class Person : public DataInterface {
         ~Person() = default;
 
         // Disease model functions.
-        void EndofDayStateUpdate(DiseaseModel *diseaseModel,
+        void EndOfDayStateUpdate(DiseaseModel *diseaseModel,
                                    std::default_random_engine *generator);
 
         // Override DataInterfect abstract methods

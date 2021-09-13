@@ -343,7 +343,7 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
   );
 }
 
-void People::EndofDayStateUpdate() {
+void People::EndOfDayStateUpdate() {
   // Get ready to count today's states
   int totalStates = diseaseModel->getNumberOfStates();
   int offset = (totalStates + 1) * day;
@@ -353,7 +353,7 @@ void People::EndofDayStateUpdate() {
   int infectiousCount = 0;
   for (Person &person : people) {
     ProcessInteractions(person);
-    person.EndofDayStateUpdate(diseaseModel, &generator);
+    person.EndOfDayStateUpdate(diseaseModel, &generator);
 
     int resultantState = person.state;
     stateSummaries[resultantState + offset + 1]++;
