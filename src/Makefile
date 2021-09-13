@@ -54,14 +54,14 @@ clean:
 
 # Unit testing.
 disease_model_test: $(DECLS) $(DEFS) $(OBJS)
-	$(CHARMC) $(CXXFLAGS) -o tests/DiseaseModelTest.o tests/DiseaseModelTest.C \
-	-I$(GTEST_HOME)/googletest/include -L$(GTEST_HOME)/lib -lgtest
+	$(CHARMC) $(CXXFLAGS) -o tests/DiseaseModelTest.o tests/DiseaseModelTest.C -I/Users/iancostello/lib/googletest-release-1.10.0/googletest/include -L/Users/iancostello/lib/googletest-release-1.10.0/lib -lgtest
 
-unit_tests: all-sub $(OBJS) disease_model_test $(DECLS)
+unit_tests: all-sub $(OBJS) $(DECLS)
 	$(CHARMC) -o $@ $(OBJS) $(UNIT_TESTS) -language charm++ -module CkMulticast \
 	-module NDMeshStreamer -lpthread -L$(PROTOBUF_HOME)/lib -lprotobuf \ 
-	-I$(GTEST_HOME)/googletest/include -L$(GTEST_HOME)/lib -lgtest \ 
-	-DENABLE_UNIT_TESTING
+	-I$(GTEST_HOME)/include -L$(GTEST_HOME)/lib -lgtest 
+	# \ 
+	# -DENABLE_UNIT_TESTING
 
 # All test names start with "test-"
 TEST_NAMES= -small -syn -large

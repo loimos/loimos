@@ -19,7 +19,8 @@ num_locations = num_safe + 1
 # Single column csv for locations with no attributes.
 pd.DataFrame(range(num_locations)).rename({0: "lid"}, axis=1).to_csv('locations.csv', index=False)
 
-# Create people dataframe st risky people are 21 and safe are 65
+# Create people dataframe st risky people are 21 and safe are 65.
+# Used to make sure chares are reading the proper data attributes.
 people = pd.DataFrame(range(num_safe + num_risky)).rename({0: "pid"}, axis=1)
 people['age'] = 21
 people.loc[people.index[:num_safe], 'age'] = 65

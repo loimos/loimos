@@ -14,8 +14,8 @@
  */ 
 
 #include "loimos.decl.h"
-#include "Defs.h"
 #include "DiseaseModel.h"
+#include "Defs.h"
 #include "Event.h"
 #include "disease_model/disease.pb.h"
 #include "disease_model/distribution.pb.h"
