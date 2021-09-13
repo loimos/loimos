@@ -5,8 +5,8 @@
 
 include Makefile.include
 
-OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o Defs.o \
-         Event.o Interaction.o readers/Preprocess.o \
+OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o \
+         Defs.o Event.o Interaction.o readers/Preprocess.o \
          disease_model/disease.pb.o disease_model/distribution.pb.o \
 		     readers/data.pb.o contact_model/ContactModel.o \
 				 contact_model/MinMaxAlphaModel.o
@@ -14,8 +14,7 @@ DEFS   = Defs.h loimos.def.h readers/DataReader.h
 DECLS  = loimos.decl.h
 BIN    = loimos
 
-SUBDIRS := disease_model contact_model readers
-UNIT_TESTS = tests/DiseaseModelTest.o
+SUBDIRS = disease_model contact_model readers
 
 .PHONY:all
 all: all-sub $(BIN)
@@ -53,14 +52,18 @@ clean:
 	done
 
 # Unit testing.
-disease_model_test: $(DECLS) $(DEFS) $(OBJS)
-	$(CHARMC) $(CXXFLAGS) -o tests/DiseaseModelTest.o tests/DiseaseModelTest.C -I/Users/iancostello/lib/googletest-release-1.10.0/googletest/include -L/Users/iancostello/lib/googletest-release-1.10.0/lib -lgtest
+UNIT_TEST_OBJS = tests/DiseaseModelTest.o
 
-unit_tests: all-sub $(OBJS) $(DECLS)
-	$(CHARMC) -o $@ $(OBJS) $(UNIT_TESTS) -language charm++ -module CkMulticast \
-	-module NDMeshStreamer -lpthread -L$(PROTOBUF_HOME)/lib -lprotobuf \ 
-	-I$(GTEST_HOME)/include -L$(GTEST_HOME)/lib -lgtest 
-	# \ 
+$(UNIT_TEST_OBJS): %.o: %.C $(DECLS) $(DEFS) $(OBJS)
+	$(CHARMC) $(CXXFLAGS) -o $@ $< -I/$(GTEST_HOME)/include \
+		-L/$(GTEST_HOME)/lib -lgtest
+
+unit_tests: all-sub $(OBJS) $(DECLS) $(UNIT_TEST_OBJS)
+	$(CHARMC) -o $@ $(OBJS) $(UNIT_TEST_OBJS) -language charm++ \
+	-module CkMulticast -module NDMeshStreamer -lpthread \
+	-L$(PROTOBUF_HOME)/lib -lprotobuf -I$(GTEST_HOME)/include \
+	-L$(GTEST_HOME)/lib -lgtest
+	# \
 	# -DENABLE_UNIT_TESTING
 
 # All test names start with "test-"
