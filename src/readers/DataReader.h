@@ -169,4 +169,4 @@ class DataReader {
             return std::make_tuple(personId, locationId, startTime, duration);
         }
 };
-#endif
+#endif //__DATA_READER_H__
