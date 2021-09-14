@@ -14,15 +14,20 @@ DEFS   = Defs.h loimos.def.h readers/DataReader.h
 DECLS  = loimos.decl.h
 BIN    = loimos
 
+# Set the ENABLE_UNIT_TESTING environment variable to compile for unit testing
+ifdef ENABLE_UNIT_TESTING
+UNIT_TEST_OBJS = tests/DiseaseModelTest.o
+endif
+
 SUBDIRS = disease_model contact_model readers tests
 
 .PHONY:all
 all: all-sub $(BIN)
 
 # Build the executable (and implicitly charmrun) from the object files
-$(BIN): $(OBJS) $(DECLS)
-	$(CHARMC) -o $@ $(OBJS) -language charm++ -module CkMulticast \
-	-module NDMeshStreamer -lpthread -L$(PROTOBUF_HOME)/lib -lprotobuf
+$(BIN): $(OBJS) $(UNIT_TEST_OBJS) $(DECLS)
+	$(CHARMC) -o $@ $(OBJS) $(UNIT_TEST_OBJS) -language charm++ \
+	-module CkMulticast -module NDMeshStreamer $(LIBS)
 
 # Build .decl.h (and implicitly .def.h) files from the corresponding
 # .ci files
@@ -31,6 +36,11 @@ $(DECLS): %.decl.h: %.ci
 
 # Build .o files from the corresponding .C and .h files
 $(OBJS): %.o: %.C %.h $(DECLS) $(DEFS)
+	$(CHARMC) $(CXXFLAGS) -o $@ $<
+
+# Build .o files from just the .C files for unit tests 
+# (they don't have .h files)
+$(UNIT_TEST_OBJS): %.o: %.C $(DECLS) $(DEFS)
 	$(CHARMC) $(CXXFLAGS) -o $@ $<
 
 # Subdirs will build the protobuf object files
@@ -50,19 +60,6 @@ clean:
 		$(MAKE) clean; \
 		cd ..; \
 	done
-
-# Unit testing.
-UNIT_TEST_OBJS = tests/DiseaseModelTest.o
-
-$(UNIT_TEST_OBJS): %.o: %.C $(DECLS) $(DEFS) $(OBJS)
-	$(CHARMC) $(CXXFLAGS) -o $@ $< -I/$(GTEST_HOME)/include \
-		-L/$(GTEST_HOME)/lib -lgtest
-
-unit_tests: all-sub $(OBJS) $(DECLS) $(UNIT_TEST_OBJS)
-	$(CHARMC) -o loimos $(OBJS) $(UNIT_TEST_OBJS) -language charm++ \
-	-module CkMulticast -module NDMeshStreamer -lpthread \
-	-L$(PROTOBUF_HOME)/lib -lprotobuf -I$(GTEST_HOME)/include \
-	-L$(GTEST_HOME)/lib -lgtest -DENABLE_UNIT_TESTING
 
 # All test names start with "test-"
 TEST_NAMES= -small -syn -large -validation

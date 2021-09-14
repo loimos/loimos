@@ -143,12 +143,11 @@ Main::Main(CkArgMsg* msg) {
     CkPrintf("Synthetic run with (%d, %d) person grid and (%d, %d) location grid. Average degree of %d\n\n", synPeopleGridWidth, synPeopleGridHeight, synLocationGridWidth, synLocationGridHeight, averageDegreeOfVisit);
   }
 
-  // #define ENABLE_UNIT_TESTING
-  // #ifdef ENABLE_UNIT_TESTING
-  printf("Executing unit testing.");
-  ::testing::InitGoogleTest(&msg->argc, msg->argv);
-  RUN_ALL_TESTS();
-  // #endif
+  #ifdef ENABLE_UNIT_TESTING
+    printf("Executing unit testing.");
+    testing::InitGoogleTest(&msg->argc, msg->argv);
+    RUN_ALL_TESTS();
+  #endif
 
   // Instantiate DiseaseModel nodegroup (One for each physical processor).
   CkPrintf("Loading diseaseModel at %s.\n", pathToDiseaseModel.c_str());

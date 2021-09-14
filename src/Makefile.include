@@ -12,6 +12,15 @@ PROTOC        = $(PROTOBUF_HOME)/bin/protoc
 GTEST_HOME ?= /usr/local/gtest
 
 CXX       = g++
-OPTS      = -g -O2
-CXXFLAGS  = $(OPTS) -std=c++11 -Wall -I$(PROTOBUF_HOME)/include
+OPTS     += -g -O2
+INCLUDES  = -I$(PROTOBUF_HOME)/include
+LIBS      = -lpthread -L$(PROTOBUF_HOME)/lib -lprotobuf 
 
+# Set the ENABLE_UNIT_TESTING environment variable to compile for unit testing
+ifdef ENABLE_UNIT_TESTING
+INCLUDES +=	-I$(GTEST_HOME)/include
+LIBS     += -L$(GTEST_HOME)/lib -lgtest
+OPTS     += -DENABLE_UNIT_TESTING
+endif
+
+CXXFLAGS  = $(OPTS) -std=c++11 -Wall $(INCLUDES)
