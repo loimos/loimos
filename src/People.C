@@ -105,14 +105,14 @@ void People::loadPeopleData() {
   // Load preprocessing meta data.
   uint32_t *buf = (uint32_t *) malloc(sizeof(uint32_t) * numDays);
   for (int c = 0; c < numLocalPeople; c++) {
-    std::vector<uint32_t> *data_pos = &people[c].interactionsByDay;
+    std::vector<uint32_t> *data_pos = &people[c].visitOffsetByDay;
     int curr_id = people[c].uniqueId;
 
     // Read in their activity data offsets.
     // activityCache.seekg(0);
-    activityCache.seekg(sizeof(uint32_t) * numDays * (curr_id - firstPersonIdx));
-    activityCache.read((char *) buf, sizeof(uint32_t) * numDays);
-    for (int day = 0; day < numDays; day++) {
+    activityCache.seekg(sizeof(uint32_t) * DAYS_IN_WEEK * (curr_id - firstPersonIdx));
+    activityCache.read((char *) buf, sizeof(uint32_t) * DAYS_IN_WEEK);
+    for (int day = 0; day < DAYS_IN_WEEK; day++) {
       data_pos->push_back(buf[day]);
     }
   }
@@ -281,9 +281,12 @@ void People::RealDataSendVisitMessages() {
   int nextDaySecs = (day + 1) * DAY_LENGTH;
   for (int localPersonId = 0; localPersonId < numLocalPeople; localPersonId++) {
     // Seek to correct position in file.
-    uint32_t seekPos = people[localPersonId].interactionsByDay[day];
-    if (seekPos == EMPTY_VISIT_SCHEDULE)
+    uint32_t seekPos = people[localPersonId]
+                       .visitOffsetByDay[day % DAYS_IN_WEEK];
+    if (seekPos == EMPTY_VISIT_SCHEDULE) {
+      //CkPrintf("No visits on day %d in people chare %d\n", day, thisIndex);
       continue;
+    }
     activityData->seekg(seekPos, std::ios_base::beg);
 
     // Start reading

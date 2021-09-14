@@ -143,11 +143,10 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
     csvConfigDefStream.close();
 
     // Create position vector for each person.
-    std::size_t totalDataSize = numPeople * numDays * sizeof(uint32_t);
+    std::size_t totalDataSize = numPeople * DAYS_IN_WEEK * sizeof(uint32_t);
     uint32_t *elements = (uint32_t *) malloc(totalDataSize);
     if (elements == NULL) {
-        printf("Failed to malloc enoough memory for preprocessing.\n");
-        exit(1);
+        CkAbort("Failed to malloc enoough memory for preprocessing.\n");
     }
     memset(elements, 0xFF, totalDataSize);
 
@@ -162,25 +161,34 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
     int nextTime = 0;
     int personId = -1;
     int duration = -1;
+    //int totalVisits = 0;
     // For better looping efficiency simulate one break of inner loop to start.
     std::tie(nextPerson, personId, nextTime, duration) = DataReader<Person>::parseActivityStream(&activityStream, &csvDefinition, NULL);
     nextTime = getDay(nextTime);
 
     // Loop over the entire activity file and note boundaries on people and days
+    int numVisits = 0;
     while (!activityStream.eof()) {
+        //CkPrintf("Person %d has %d visits on day %d (next byte is %d)\n",
+        //  lastPerson, numVisits, lastTime, current_position);
+        
         // Get details of new entry.
         lastPerson = nextPerson;
         lastTime = nextTime;
+        //numVisits = 0;
+        
+        elements[DAYS_IN_WEEK * (lastPerson - firstPersonIdx) + lastTime] = current_position;
 
-        elements[numDays * (lastPerson - firstPersonIdx) + lastTime] = current_position;
-    
         // Scan until the next boundary.
         while (!activityStream.eof() && lastTime == nextTime && lastPerson == nextPerson) {
             current_position = activityStream.tellg();
             std::tie(nextPerson, personId, nextTime, duration) = DataReader<Person>::parseActivityStream(&activityStream, &csvDefinition, NULL);
             nextTime = getDay(nextTime);
+            //numVisits++;
+            //totalVisits++;
         }
     }
+    //CkPrintf("Parsed a total of %d visits\n", totalVisits);
 
     // Output
     std::ofstream outputStream(outputPath, std::ios::out | std::ios::binary);
@@ -189,5 +197,5 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
 }
 
 int getDay(int timeInSeconds) {
-    return (timeInSeconds / (3600*24));
+    return timeInSeconds / DAY_LENGTH;
 }
