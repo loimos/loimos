@@ -9,6 +9,8 @@
 *.o
 charmrun
 loimos
+loimos-*
+*.out
 
 # No temporary versions of files
 *.old.*
@@ -21,4 +23,5 @@ settings.json
 
 # Large data files shouldn't be commited
 data/populations/coc/*.csv
+data/populations/??/*.csv # real data
 *.cache
