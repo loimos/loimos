@@ -52,17 +52,17 @@ jobs:
         ../configure --prefix=$GITHUB_WORKSPACE/protobuf/install
         make -j4 && make install
 
-    # Build googletest
-    - name: build-gtest
-      run: |
-        git clone https://github.com/google/googletest.git
-        cd googletest
-        mkdir build install
-        cd build
-        export CMAKE_INSTALL_LIBDIR=$GITHUB_WORKSPACE/googletest/install
-        cmake ..
-        make -j4
-        make install
+#    # Build googletest
+#    - name: build-gtest
+#      run: |
+#        git clone https://github.com/google/googletest.git
+#        cd googletest
+#        mkdir build install
+#        cd build
+#        export CMAKE_INSTALL_LIBDIR=$GITHUB_WORKSPACE/googletest/install
+#        cmake ..
+#        make -j4
+#        make install
 
     # Build and test Loimos
     - name: build-loimos
@@ -75,12 +75,12 @@ jobs:
         # Test non-SMP
         export CHARM_HOME=$GITHUB_WORKSPACE/charm-nonsmp
         export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
-        ENABLE_UNIT_TESTING=1 make
+        make
         ./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 ci-test-non-smp.csv ../data/disease_models/covid19_onepath.textproto +setcpuaffinity ++local
         make clean
         # Test SMP
         export CHARM_HOME=$GITHUB_WORKSPACE/charm-smp
         export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
-        ENABLE_UNIT_TESTING=1 make
+        make
         ./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 ci-test-smp.csv ../data/disease_models/covid19_onepath.textproto +setcpuaffinity ++local
         make clean
