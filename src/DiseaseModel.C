@@ -4,21 +4,29 @@
  * SPDX-License-Identifier: MIT
  */
 
+/**
+ * The disease model class 
+ * 
+ * The disease model class provides the a timed finite state automata
+ * 
+ * This class provides an abstraction over the core proto definition. 
+ * .transition
+ */ 
+
 #include "loimos.decl.h"
 #include "DiseaseModel.h"
-#include "Event.h"
 #include "Defs.h"
-
+#include "Event.h"
 #include "disease_model/disease.pb.h"
 #include "disease_model/distribution.pb.h"
 #include "readers/DataReader.h"
 
-#include <cstdio>
 #include <cmath>
+#include <cstdio>
 #include <fstream>
 #include <google/protobuf/text_format.h>
-#include <random>
 #include <limits>
+#include <random>
 
 using NameIndexLookupType = std::unordered_map<std::string, int>;
 
@@ -32,43 +40,53 @@ const long double TRANSMISSIBILITY = 7.5E-6 / DAY_LENGTH;
  * Constructor which loads in disease file from text proto file.
  * On failure, aborts the entire simulation.
  */
-DiseaseModel::DiseaseModel(std::string pathToModel) {
+DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath) {
   // Load in text proto definition.
   // TODO(iancostello): Load directly without string.
+
+  // Load Disease model
   model = new loimos::proto::DiseaseModel();
   std::ifstream diseaseModelStream(pathToModel);
   if (!diseaseModelStream) {
     CkAbort("Could not read disease model at %s.", pathToModel.c_str());
   }
   std::string str((std::istreambuf_iterator<char>(diseaseModelStream)),
-                  std::istreambuf_iterator<char>());
+      std::istreambuf_iterator<char>());
   if (!google::protobuf::TextFormat::ParseFromString(str, model)) {
     CkAbort("Could not parse protobuf!");
   }
   diseaseModelStream.close();
 
   // Setup other shared PE objects.
+  
+  // Handle people...
   personDef = new loimos::proto::CSVDefinition();
   std::ifstream personInputStream(scenarioPath + "people.textproto");
   std::string strPerson((std::istreambuf_iterator<char>(personInputStream)),
-                  std::istreambuf_iterator<char>());
+      std::istreambuf_iterator<char>());
   if (!google::protobuf::TextFormat::ParseFromString(strPerson, personDef)) {
     CkAbort("Could not parse protobuf!");
   }
   personInputStream.close();
+
+  // ...locations...
   locationDef = new loimos::proto::CSVDefinition();
   std::ifstream locationInputStream(scenarioPath + "locations.textproto");
   std::string strLocation((std::istreambuf_iterator<char>(locationInputStream)),
-                  std::istreambuf_iterator<char>());
-  if (!google::protobuf::TextFormat::ParseFromString(strLocation, locationDef)) {
+      std::istreambuf_iterator<char>());
+  if (!google::protobuf::TextFormat::ParseFromString(strLocation,
+        locationDef)) {
     CkAbort("Could not parse protobuf!");
   }
   locationInputStream.close();
+  
+  // ...and visits
   activityDef = new loimos::proto::CSVDefinition();
   std::ifstream activityInputStream(scenarioPath + "visits.textproto");
   std::string strActivity((std::istreambuf_iterator<char>(activityInputStream)),
-                  std::istreambuf_iterator<char>());
-  if (!google::protobuf::TextFormat::ParseFromString(strActivity, activityDef)) {
+      std::istreambuf_iterator<char>());
+  if (!google::protobuf::TextFormat::ParseFromString(strActivity,
+        activityDef)) {
     CkAbort("Could not parse protobuf!");
   }
   activityInputStream.close();
@@ -87,22 +105,21 @@ std::string DiseaseModel::lookupStateName(int state) const {
  *
  * When people enter a new state, they need to determine both the next state
  * and the time until they will transition to that new state.
- * 
+ *
  * Args:
  *  fromState: The state the person is currently in.
- *  nextState: The state that the person is transitioning into. 
- *  
+ *  nextState: The state that the person is transitioning into.
+ *
  * Returns:
  *  What state they will transition out of fromState into and how much time
- * they will spend there. 
+ * they will spend there.
  */
-std::tuple<int, int> DiseaseModel::transitionFromState(
-  int fromState,
-  std::default_random_engine *generator
-) const {
+std::tuple<int, int>
+DiseaseModel::transitionFromState(int fromState,
+    std::default_random_engine *generator) const {
   // Get current state and next transition set to use.
   const loimos::proto::DiseaseModel_DiseaseState *currState =
-      &model->disease_state(fromState);
+    &model->disease_state(fromState);
 
   // Two cases
   if (currState->has_timed_transition()) {
@@ -110,21 +127,24 @@ std::tuple<int, int> DiseaseModel::transitionFromState(
     // Get the next transition set to use.
     // Currently for timed transitions we only support one set edge.
     const loimos::proto::DiseaseModel_DiseaseState_TimedTransitionSet
-        *transition_set = &(currState->timed_transition());
+      *transition_set = &(currState->timed_transition());
+    
     // Check if any transitions to be made.
     int transitionSetSize = transition_set->transition_size();
     if (transitionSetSize == 0) {
       return std::make_tuple(fromState, std::numeric_limits<Time>::max());
     }
 
-    // Randomly choose a state transition from the set and return the next state.
+    // Randomly choose a state transition from the set and return the next
+    // state.
     float cdfSoFar = 0;
     std::uniform_real_distribution<float> uniform_dist(0, 1);
     float randomCutoff = uniform_dist(*generator);
     for (int i = 0; i < transitionSetSize; i++) {
       const loimos::proto::
-          DiseaseModel_DiseaseState_TimedTransitionSet_StateTransition
-              *transition = &transition_set->transition(i);
+        DiseaseModel_DiseaseState_TimedTransitionSet_StateTransition
+        *transition = &transition_set->transition(i);
+      
       // TODO: Create a CDF vector in initialization.
       cdfSoFar += transition->with_prob();
       if (randomCutoff <= cdfSoFar) {
@@ -135,9 +155,11 @@ std::tuple<int, int> DiseaseModel::transitionFromState(
     }
     // A state transition should be made.
     CkAbort("No state transition made! From state %d.", fromState);
+  
   } else if (currState->has_exposure_transition()) {
     return std::make_tuple(
-      currState->exposure_transition().transition(0).next_state(), 0);
+        currState->exposure_transition().transition(0).next_state(), 0);
+  
   } else {
     return std::make_tuple(fromState, std::numeric_limits<Time>::max());
   }
@@ -147,9 +169,11 @@ std::tuple<int, int> DiseaseModel::transitionFromState(
  * Calculates the time to spend in the next state.
  */
 Time DiseaseModel::getTimeInNextState(
-  const loimos::proto::DiseaseModel_DiseaseState_TimedTransitionSet_StateTransition *transitionSet,
-  std::default_random_engine *generator
-) const {
+    const loimos::proto::
+    DiseaseModel_DiseaseState_TimedTransitionSet_StateTransition
+    *transitionSet,
+    std::default_random_engine *generator) const {
+  
   if (transitionSet->has_fixed()) {
     return timeDefToSeconds(transitionSet->fixed().time_in_state());
 
@@ -159,22 +183,24 @@ Time DiseaseModel::getTimeInNextState(
   } else if (transitionSet->has_uniform()) {
     // TODO(iancostello): Avoid reinitializing the distribution each time.
     std::uniform_real_distribution<double> uniform_dist(
-      timeDefToSeconds(transitionSet->uniform().tmin()),
-      timeDefToSeconds(transitionSet->uniform().tmax())
-    );
+        timeDefToSeconds(transitionSet->uniform().tmin()),
+        timeDefToSeconds(transitionSet->uniform().tmax()));
     return uniform_dist(*generator);
+
   } else if (transitionSet->has_normal()) {
     std::normal_distribution<double> normal_dist(
-      timeDefToSeconds(transitionSet->normal().tmean()),
-      timeDefToSeconds(transitionSet->normal().tvariance())
-    );
+        timeDefToSeconds(transitionSet->normal().tmean()),
+        timeDefToSeconds(transitionSet->normal().tvariance()));
     return normal_dist(*generator);
+
   } else if (transitionSet->has_discrete()) {
     std::uniform_real_distribution<float> uniform_dist(0, 1);
     float randomCutoff = uniform_dist(*generator);
     float cdfSoFar = 0;
+    
     for (int i = 0; i < transitionSet->discrete().bin_size(); i++) {
       cdfSoFar += transitionSet->discrete().bin(i).with_prob();
+      
       if (randomCutoff < cdfSoFar) {
         return timeDefToSeconds(transitionSet->discrete().bin(i).tval());
       }
@@ -185,9 +211,9 @@ Time DiseaseModel::getTimeInNextState(
 
 /** Converts a protobuf time definition into a seconds as an integer */
 Time DiseaseModel::timeDefToSeconds(Time_Def time) const {
-  return static_cast<Time>(time.days() * DAY_LENGTH +
-         time.hours() * HOUR_LENGTH + 
-         time.minutes() * MINUTE_LENGTH);
+  return static_cast<Time>(time.days() * DAY_LENGTH
+      + time.hours() * HOUR_LENGTH
+      + time.minutes() * MINUTE_LENGTH);
 }
 
 /** Returns the total number of disease states */
@@ -196,24 +222,24 @@ int DiseaseModel::getNumberOfStates() const {
 }
 
 /** Returns the initial starting healthy and exposed state */
-int DiseaseModel::getHealthyState(std::vector<Data> dataField) const { 
+int DiseaseModel::getHealthyState(std::vector<Data> dataField) const {
   // Age based transition.
   int personAge = dataField[AGE_CSV_INDEX].int_b10;
   int numStartingStates = model->starting_states_size();
   for (int stateNum = 0; stateNum < numStartingStates; stateNum++) {
-    const loimos::proto::DiseaseModel_StartingCondition state = 
-      model->starting_states(stateNum); 
+    const loimos::proto::DiseaseModel_StartingCondition state =
+      model->starting_states(stateNum);
 
-    if (state.lower() <= personAge &&
-        personAge <= state.upper()) {
+    if (state.lower() <= personAge && personAge <= state.upper()) {
       return state.starting_state();
     }
   }
-  CkAbort("No starting state for person of age %d. Read %d states total.", personAge, numStartingStates);  
+  CkAbort("No starting state for person of age %d. Read %d states total.",
+      personAge, numStartingStates);
 }
 
 /** Returns if someone is infectious */
-bool DiseaseModel::isInfectious(int personState) const { 
+bool DiseaseModel::isInfectious(int personState) const {
   return model->disease_state(personState).infectivity() != 0.0;
 }
 
@@ -223,28 +249,27 @@ bool DiseaseModel::isSusceptible(int personState) const {
 }
 
 /** Returns the name of the person's state, as a C-style string */
-const char * DiseaseModel::getStateLabel(int personState) const {
+const char *DiseaseModel::getStateLabel(int personState) const {
   return model->disease_state(personState).state_label().c_str();
 }
 
-/** 
+/**
  * Returns the natural log of the probability of a suspectible person not being
  * infected by an infectious person after a period of time
  */
-double DiseaseModel::getLogProbNotInfected(
-  Event susceptibleEvent,
-  Event infectiousEvent
-) const {
-  
+double DiseaseModel::getLogProbNotInfected(Event susceptibleEvent,
+    Event infectiousEvent) const {
+
   // The chance of being infected in a unit of time depends on...
-  double baseProb = 1.0 -
+  double baseProb =
+    1.0 -
     // ...a scaling factor (normalizes based on the unit of time)...
     TRANSMISSIBILITY
     // ...the susceptibility of the susceptible person...
     * model->disease_state(susceptibleEvent.personState).susceptibility()
     // ...and the infectivity of the infectious person
     * model->disease_state(infectiousEvent.personState).infectivity();
-  
+
   // The probability of not being infected in a period of time is decided based
   // on a geometric probability distribution, with the lenght of time the two
   // people are in the same location serving as the number of trials
@@ -253,23 +278,18 @@ double DiseaseModel::getLogProbNotInfected(
 }
 
 /**
- * Returns the propesity of a person in susceptibleState becoming infected 
+ * Returns the propesity of a person in susceptibleState becoming infected
  * after exposure to a person in infectiousState for the period from startTime
  * to endTime
  */
-double DiseaseModel::getPropensity(
-  int susceptibleState,
-  int infectiousState,
-  int startTime,
-  int endTime
-) const {
+double DiseaseModel::getPropensity(int susceptibleState, int infectiousState,
+    int startTime, int endTime) const {
   int dt = endTime - startTime;
 
-  // EpiHiper had a number of weights/scaling constants that we may add in 
+  // EpiHiper had a number of weights/scaling constants that we may add in
   // later, but for now we ommit most of them (which is equivalent to setting
   // them all to one)
-  return TRANSMISSIBILITY
-    * dt
+  return TRANSMISSIBILITY * dt
     * model->disease_state(susceptibleState).susceptibility()
     * model->disease_state(infectiousState).infectivity();
 }

@@ -32,7 +32,7 @@ class DiseaseModel : public CBase_DiseaseModel {
         int healthyState;
         int exposedState;
     public:
-        DiseaseModel(std::string pathToModel);
+        DiseaseModel(std::string pathToModel, std::string scenarioPath);
         int getIndexOfState(std::string stateLabel) const;
         // TODO(iancostello): Change interventionStategies to index based.
         std::tuple<int, int> transitionFromState(int fromState, std::default_random_engine *generator) const;

@@ -7,7 +7,20 @@ CHARMC      = $(CHARM_HOME)/bin/charmc
 PROTOBUF_HOME ?= /usr/local/protobuf
 PROTOC        = $(PROTOBUF_HOME)/bin/protoc
 
-CXX       = g++
-OPTS      = -g -O2
-CXXFLAGS  = $(OPTS) -std=c++11 -Wall -I$(PROTOBUF_HOME)/include
+# Set the environment variable GTEST_HOME to the googletest installation to
+# overide this default
+GTEST_HOME ?= /usr/local/gtest
 
+CXX       = g++
+OPTS     += -g -O2
+INCLUDES  = -I$(PROTOBUF_HOME)/include
+LIBS      = -lpthread -L$(PROTOBUF_HOME)/lib -lprotobuf 
+
+# Set the ENABLE_UNIT_TESTING environment variable to compile for unit testing
+ifdef ENABLE_UNIT_TESTING
+INCLUDES +=	-I$(GTEST_HOME)/include
+LIBS     += -L$(GTEST_HOME)/lib -lgtest
+OPTS     += -DENABLE_UNIT_TESTING
+endif
+
+CXXFLAGS  = $(OPTS) -std=c++11 -Wall $(INCLUDES)

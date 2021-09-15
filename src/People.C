@@ -109,8 +109,8 @@ void People::loadPeopleData() {
     int curr_id = people[c].uniqueId;
 
     // Read in their activity data offsets.
-    // activityCache.seekg(0);
-    activityCache.seekg(sizeof(uint32_t) * DAYS_IN_WEEK * (curr_id - firstPersonIdx));
+    activityCache.seekg(sizeof(uint32_t) * DAYS_IN_WEEK
+                        * (curr_id - firstPersonIdx));
     activityCache.read((char *) buf, sizeof(uint32_t) * DAYS_IN_WEEK);
     for (int day = 0; day < DAYS_IN_WEEK; day++) {
       data_pos->push_back(buf[day]);
@@ -287,6 +287,7 @@ void People::RealDataSendVisitMessages() {
       //CkPrintf("No visits on day %d in people chare %d\n", day, thisIndex);
       continue;
     }
+    
     activityData->seekg(seekPos, std::ios_base::beg);
 
     // Start reading
@@ -333,44 +334,21 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
   );
 }
 
-void People::EndofDayStateUpdate() {
+void People::EndOfDayStateUpdate() {
   // Get ready to count today's states
   int totalStates = diseaseModel->getNumberOfStates();
   int offset = (totalStates + 1) * day;
   stateSummaries[offset] = totalVisitsForDay;
-  
+
   // Handle state transitions at the end of the day.
   int infectiousCount = 0;
-  for (Person &person: people) {
-    
+  for (Person &person : people) {
     ProcessInteractions(person);
-    
-    int currState = person.state;
-    int secondsLeftInState = person.secondsLeftInState;
+    person.EndOfDayStateUpdate(diseaseModel, &generator);
 
-    // TODO(iancostello): Move into start of day for visits.
-    // Transition to next state or mark the passage of time
-    secondsLeftInState -= DAY_LENGTH;
-    if (secondsLeftInState <= 0) {
-      // If they have already been infected
-      if (person.next_state != -1) {
-        person.state = person.next_state;
-        std::tie(person.next_state, person.secondsLeftInState) = 
-          diseaseModel->transitionFromState(person.state, &generator);
-      } else {
-        // Get which exposed state they should transition to.
-        std::tie(person.state, std::ignore) = 
-          diseaseModel->transitionFromState(person.state, &generator);
-        // See where they will transition next.
-        std::tie(person.next_state, person.secondsLeftInState) =
-          diseaseModel->transitionFromState(person.state, &generator);
-      }
-    } else {
-      person.secondsLeftInState = secondsLeftInState;
-    }
-
-    stateSummaries[currState + offset + 1]++;
-    if (diseaseModel->isInfectious(currState)) {
+    int resultantState = person.state;
+    stateSummaries[resultantState + offset + 1]++;
+    if (diseaseModel->isInfectious(resultantState)) {
       infectiousCount++;
     }
   }

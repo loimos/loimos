@@ -68,7 +68,7 @@ mainmodule loimos {
         when ComputedInteractions() {
           serial {
             // CkPrintf("Reporting Stats\n");
-            peopleArray.EndofDayStateUpdate();
+            peopleArray.EndOfDayStateUpdate();
           }
         }
         when ReceiveInfectiousCount(int infectiousCount) {
@@ -113,7 +113,7 @@ mainmodule loimos {
 #else
     entry void ReceiveInteractions(InteractionMessage);
 #endif
-    entry void EndofDayStateUpdate(); // contribute call to ReceiveInfectiousCount
+    entry void EndOfDayStateUpdate(); // contribute call to ReceiveInfectiousCount
     entry void SendStats(); // contribute call to ReceiveStats
   };
 
@@ -128,6 +128,6 @@ mainmodule loimos {
   };
 
   nodegroup DiseaseModel {
-      entry DiseaseModel(std::string pathToModel);
+      entry DiseaseModel(std::string pathToModel, std::string scenarioPath);
   };
 };

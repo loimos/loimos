@@ -41,7 +41,7 @@ class People : public CBase_People {
     void SyntheticSendVisitMessages();
     void RealDataSendVisitMessages();
     void ReceiveInteractions(InteractionMessage interMsg);
-    void EndofDayStateUpdate();
+    void EndOfDayStateUpdate();
     void SendStats();
 };
 

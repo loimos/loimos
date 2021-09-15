@@ -18,4 +18,4 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
 // Main entry point.
 std::tuple<int, int, std::string> buildCache(std::string scenarioPath, int numPeople, int peopleChares, int numLocations, int numLocationChares, int numDays);
 
-#endif
+#endif //__PREPROCESS_H__

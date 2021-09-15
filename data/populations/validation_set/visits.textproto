@@ -1,0 +1,16 @@
+field {
+    field_name: "pid"
+    uniqueId {}
+}
+field {
+    field_name: "activity_number"
+    foreignId {}
+}
+field {
+    field_name: "start_time"
+    startTime {}
+}
+field {
+    field_name: "duration"
+    duration {}
+}
