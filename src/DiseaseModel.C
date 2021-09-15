@@ -62,7 +62,7 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath) {
   // Handle people...
   personDef = new loimos::proto::CSVDefinition();
   std::ifstream personInputStream(scenarioPath + "people.textproto");
-  std::string strPerson(std::istreambuf_iterator<char>(personInputStream),
+  std::string strPerson((std::istreambuf_iterator<char>(personInputStream)),
       std::istreambuf_iterator<char>());
   if (!google::protobuf::TextFormat::ParseFromString(strPerson, personDef)) {
     CkAbort("Could not parse protobuf!");
@@ -72,7 +72,7 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath) {
   // ...locations...
   locationDef = new loimos::proto::CSVDefinition();
   std::ifstream locationInputStream(scenarioPath + "locations.textproto");
-  std::string strLocation(std::istreambuf_iterator<char>(locationInputStream),
+  std::string strLocation((std::istreambuf_iterator<char>(locationInputStream)),
       std::istreambuf_iterator<char>());
   if (!google::protobuf::TextFormat::ParseFromString(strLocation,
         locationDef)) {
@@ -83,7 +83,7 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath) {
   // ...and visits
   activityDef = new loimos::proto::CSVDefinition();
   std::ifstream activityInputStream(scenarioPath + "visits.textproto");
-  std::string strActivity(std::istreambuf_iterator<char>(activityInputStream),
+  std::string strActivity((std::istreambuf_iterator<char>(activityInputStream)),
       std::istreambuf_iterator<char>());
   if (!google::protobuf::TextFormat::ParseFromString(strActivity,
         activityDef)) {

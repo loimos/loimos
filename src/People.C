@@ -281,22 +281,13 @@ void People::RealDataSendVisitMessages() {
   int nextDaySecs = (day + 1) * DAY_LENGTH;
   for (int localPersonId = 0; localPersonId < numLocalPeople; localPersonId++) {
     // Seek to correct position in file.
-<<<<<<< HEAD
     uint32_t seekPos = people[localPersonId]
                        .visitOffsetByDay[day % DAYS_IN_WEEK];
     if (seekPos == EMPTY_VISIT_SCHEDULE) {
       //CkPrintf("No visits on day %d in people chare %d\n", day, thisIndex);
       continue;
     }
-=======
-    uint32_t seekPos = people[localPersonId].interactionsByDay[day];
-<<<<<<< HEAD
-    if (seekPos == EMPTY_VISIT_SCHEDULE) continue;
->>>>>>> Refactors and adding initial tests
-=======
-    if (seekPos == EMPTY_VISIT_SCHEDULE)
-      continue;
->>>>>>> Undo wider changes
+    
     activityData->seekg(seekPos, std::ios_base::beg);
 
     // Start reading
@@ -411,10 +402,3 @@ void People::ProcessInteractions(Person &person) {
 
   person.interactions.clear();
 }
-<<<<<<< HEAD
-
-uint32_t People::GetTestParameter(int parameter) {
-  return people[0].getDataField()[parameter].int_b10;
-}
-=======
->>>>>>> More simplification
