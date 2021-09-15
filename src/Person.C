@@ -8,6 +8,7 @@
 
 #include "Person.h"
 #include "DiseaseModel.h"
+#include "Message.h"
 #include "readers/data.pb.h"
 
 /**
@@ -21,6 +22,7 @@ Person::Person(int numAttributes, int startingState, int timeLeftInState) {
     this->state = startingState;
     this->secondsLeftInState = timeLeftInState;
     this->visitOffsetByDay = std::vector<uint32_t>();
+    this->visitsByDay = std::vector<std::vector<VisitMessage> >();
     this->next_state = -1;
 }
 
