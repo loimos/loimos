@@ -59,7 +59,7 @@ jobs:
         cd googletest
         mkdir build install
         cd build
-        export CMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/googletest/install
+        export CMAKE_INSTALL_LIBDIR=$GITHUB_WORKSPACE/googletest/install
         cmake ..
         make -j4
         make install
@@ -69,7 +69,7 @@ jobs:
       run: |
         cd src
         export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
-        export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install
+        export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
         export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
         export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
         # Test non-SMP
