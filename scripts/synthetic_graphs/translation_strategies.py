@@ -41,6 +41,7 @@ class CSVWriter():
 
 
 def graph_to_disease_model(graph):
+    """Translates a standard graph to a bi-partite population model for loimos."""
     # Create dataframes holding visit information.
     location_writer = CSVWriter("locations.csv", ['lid'])
     people_writer = CSVWriter("people.csv", ['pid'])

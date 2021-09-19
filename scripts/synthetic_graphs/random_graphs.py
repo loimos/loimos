@@ -7,6 +7,9 @@ import snap
 import random
 
 
+"""Defines generation of random paramerized graphs."""
+
+
 def generate_barabasi_albert(num_nodes, edges_added_per_node):
     """Constructs a barabasi albert graph.
 
