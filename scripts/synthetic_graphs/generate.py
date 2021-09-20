@@ -24,7 +24,9 @@ python3 generate.py --strategy=watts_strogatz --parameters=100,5,0.3
 Note: By default, this saves the generated files to
 ../../data/populations/{strategy}_{parameters} and copies over the textproto
 templates found in ../../data/textproto_templates/generated_data_templates.
-In order to save to antoehr directory, pass --out_dir
+In order to save to another directory, pass in --out_dir <path to dir>, or
+pass in --out_dir "" to skip this step entirely and just save to the current
+directory.
 """
 
 import random_graphs
