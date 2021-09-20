@@ -13,6 +13,14 @@ time between home location and "allowed" other locations.
 import random
 import pandas as pd
 from typing import Any, List
+import os
+import shutil
+from absl import flags
+
+TEMPLATE_DIR = flags.DEFINE_string(
+    "template_dir", "../../data/textproto_templates/generated_data_templates",
+    "specifies where to find the textproto templates which should be copied" +
+    " over to <out_dir>")
 
 RANDOM_SEED = 42
 random.seed(RANDOM_SEED)
@@ -27,8 +35,12 @@ DAY_LENGTH = 60 * 60 * 24
 
 class CSVWriter():
     """Lightweight wrapper to write continously to a CSV file."""
-    def __init__(self, filename, headers):
-        self.file = open(filename, "w")
+    def __init__(self, filename, headers, out_dir):
+        if out_dir:
+            self.file = open(os.path.join(out_dir, filename), "w")
+        else:
+            self.file = open(filename, "w")
+
         if not self.file:
             raise OSError("Error opening file.")
         self.write_row(headers)
@@ -40,13 +52,26 @@ class CSVWriter():
         self.file.write(','.join(map(str, objects)) + '\n')
 
 
-def graph_to_disease_model(graph):
+def graph_to_disease_model(graph, out_dir):
     """Translates a standard graph to a bi-partite population model for loimos."""
+    # Create output folder if it doesn't exist
+    if out_dir and not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+        # ...and copy over textproto templates
+        for template in ['people', 'visits', 'locations']:
+            filename = f'{template}.textproto'
+            shutil.copyfile(
+                    os.path.join(TEMPLATE_DIR.value, filename),
+                    os.path.join(out_dir, filename))
+    
     # Create dataframes holding visit information.
-    location_writer = CSVWriter("locations.csv", ['lid'])
-    people_writer = CSVWriter("people.csv", ['pid'])
+    location_writer = CSVWriter("locations.csv", ['lid'], out_dir)
+    people_writer = CSVWriter("people.csv", ['pid'], out_dir)
     visit_writer = CSVWriter("visits.csv",
-                             ['pid', 'lid', 'start_time', 'duration'])
+                             ['pid', 'lid', 'start_time', 'duration'],
+                             out_dir)
+
     people_created = 0
     for home_location in graph.Nodes():
         location_id = home_location.GetId()

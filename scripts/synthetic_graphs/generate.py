@@ -35,24 +35,35 @@ TRANSLATION_STRATEGY = flags.DEFINE_string(
 PARAMETERS = flags.DEFINE_string(
     "parameters", "",
     "The random graph parameters for the chosen strategy.")
+OUT_DIR = flags.DEFINE_string(
+    "out_dir", "../../data/populations/{strategy}_{parameters}",
+    "directory to save output files to [{strategy} and {parameters} will be " +
+    " replaced with the values passed to those respective flags")
 
 def main(unused_argv):
     del unused_argv
+
     parameters = PARAMETERS.value.split(",")
+
+    # replace CLI arguements with their actual values to ensure a unique
+    # name for the output directory
+    out_dir = OUT_DIR.value.format(strategy=TRANSLATION_STRATEGY.value,
+        parameters="_".join(parameters))
+
     if TRANSLATION_STRATEGY.value == "barabasi_albert":
         if len(parameters) != 2:
             raise ValueError("Incorrect number of parameters provided.")
         num_nodes, mean_degree = parameters
         graph = random_graphs.generate_barabasi_albert(
             int(num_nodes), int(mean_degree))
-        translation_strategies.graph_to_disease_model(graph)
+        translation_strategies.graph_to_disease_model(graph, out_dir)
     elif TRANSLATION_STRATEGY.value == "watts_strogatz":
         if len(parameters) != 3:
                 raise ValueError("Incorrect number of parameters provided.")
         num_nodes, mean_degree_k, beta  = parameters
         graph = random_graphs.generate_watts_strogatz(
             int(num_nodes), int(mean_degree_k), float(beta))
-        translation_strategies.graph_to_disease_model(graph)
+        translation_strategies.graph_to_disease_model(graph, out_dir)
     else:
         raise ValueError("Unknown translation strategy: %s",
                          TRANSLATION_STRATEGY.value)
