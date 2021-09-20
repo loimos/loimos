@@ -21,6 +21,10 @@ and then transcribes this to a 100 location population graph with approximately
 Example Usage 2
 python3 generate.py --strategy=watts_strogatz --parameters=100,5,0.3
 
+Note: By default, this saves the generated files to
+../../data/populations/{strategy}_{parameters} and copies over the textproto
+templates found in ../../data/textproto_templates/generated_data_templates.
+In order to save to antoehr directory, pass --out_dir
 """
 
 import random_graphs
@@ -39,6 +43,10 @@ OUT_DIR = flags.DEFINE_string(
     "out_dir", "../../data/populations/{strategy}_{parameters}",
     "directory to save output files to [{strategy} and {parameters} will be " +
     " replaced with the values passed to those respective flags")
+TEMPLATE_DIR = flags.DEFINE_string(
+    "template_dir", "../../data/textproto_templates/generated_data_templates",
+    "specifies where to find the textproto templates which should be copied" +
+    " over to <out_dir>")
 
 def main(unused_argv):
     del unused_argv
@@ -56,14 +64,16 @@ def main(unused_argv):
         num_nodes, mean_degree = parameters
         graph = random_graphs.generate_barabasi_albert(
             int(num_nodes), int(mean_degree))
-        translation_strategies.graph_to_disease_model(graph, out_dir)
+        translation_strategies.graph_to_disease_model(graph, out_dir,
+                                                      TEMPLATE_DIR.value)
     elif TRANSLATION_STRATEGY.value == "watts_strogatz":
         if len(parameters) != 3:
                 raise ValueError("Incorrect number of parameters provided.")
         num_nodes, mean_degree_k, beta  = parameters
         graph = random_graphs.generate_watts_strogatz(
             int(num_nodes), int(mean_degree_k), float(beta))
-        translation_strategies.graph_to_disease_model(graph, out_dir)
+        translation_strategies.graph_to_disease_model(graph, out_dir,
+                                                      TEMPLATE_DIR.value)
     else:
         raise ValueError("Unknown translation strategy: %s",
                          TRANSLATION_STRATEGY.value)

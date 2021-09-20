@@ -15,12 +15,6 @@ import pandas as pd
 from typing import Any, List
 import os
 import shutil
-from absl import flags
-
-TEMPLATE_DIR = flags.DEFINE_string(
-    "template_dir", "../../data/textproto_templates/generated_data_templates",
-    "specifies where to find the textproto templates which should be copied" +
-    " over to <out_dir>")
 
 RANDOM_SEED = 42
 random.seed(RANDOM_SEED)
@@ -52,7 +46,7 @@ class CSVWriter():
         self.file.write(','.join(map(str, objects)) + '\n')
 
 
-def graph_to_disease_model(graph, out_dir):
+def graph_to_disease_model(graph, out_dir, template_dir):
     """Translates a standard graph to a bi-partite population model for loimos."""
     # Create output folder if it doesn't exist
     if out_dir and not os.path.exists(out_dir):
@@ -62,7 +56,7 @@ def graph_to_disease_model(graph, out_dir):
         for template in ['people', 'visits', 'locations']:
             filename = f'{template}.textproto'
             shutil.copyfile(
-                    os.path.join(TEMPLATE_DIR.value, filename),
+                    os.path.join(template_dir, filename),
                     os.path.join(out_dir, filename))
     
     # Create dataframes holding visit information.
