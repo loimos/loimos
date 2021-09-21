@@ -129,7 +129,7 @@ void People::loadPeopleData() {
 void People::loadVisitData() {
   for (int day = 0; day < DAYS_IN_WEEK; ++day) {
     int nextDaySecs = (day + 1) * DAY_LENGTH;
-    for (Person person: people) {
+    for (Person &person: people) {
       
       // Seek to correct position in file.
       uint32_t seekPos = person
@@ -318,7 +318,7 @@ void People::SyntheticSendVisitMessages() {
 
 void People::RealDataSendVisitMessages() {
   // Send activities for each person.
-  for (const Person person: people) {
+  for (const Person &person: people) {
     for (VisitMessage visitMessage: person.visitsByDay[day % DAYS_IN_WEEK]) {
       visitMessage.personState = person.state;
 
