@@ -35,6 +35,7 @@ class People : public CBase_People {
 
     void ProcessInteractions(Person &person);
     void loadPeopleData();
+    void loadVisitData();
   public:
     People();
     void SendVisitMessages(); 

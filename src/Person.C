@@ -8,6 +8,7 @@
 
 #include "Person.h"
 #include "DiseaseModel.h"
+#include "Message.h"
 #include "readers/data.pb.h"
 
 /**
@@ -19,9 +20,13 @@ Person::Person(int numAttributes, int startingState, int timeLeftInState) {
         this->personData.resize(numAttributes);
     }
     this->state = startingState;
+    this->next_state = -1;
     this->secondsLeftInState = timeLeftInState;
     this->visitOffsetByDay = std::vector<uint32_t>();
-    this->next_state = -1;
+
+    // Create an entry for each day we have data for    
+    this->visitsByDay = std::vector<std::vector<VisitMessage> >();
+    this->visitsByDay.resize(DAYS_IN_WEEK);
 }
 
 void Person::setUniqueId(int idx) {

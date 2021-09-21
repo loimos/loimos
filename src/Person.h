@@ -8,6 +8,7 @@
 #define __PERSON_H__
 
 #include "Defs.h"
+#include "Message.h"
 #include "readers/DataInterface.h"
 #include "readers/DataReader.h"
 
@@ -28,6 +29,9 @@ class Person : public DataInterface {
         // For example, fseek(visitOffsetByDay[2]) would seek to the start
         // of this person's visits on day 3.
         std::vector<uint32_t> visitOffsetByDay;
+
+        // Holds visit messages for each day
+        std::vector<std::vector<VisitMessage> > visitsByDay;
         
         // Various dynamic attributes of the person
         std::vector<union Data> personData;

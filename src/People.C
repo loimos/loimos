@@ -122,7 +122,47 @@ void People::loadPeopleData() {
   for (Person &person: people) {
     person.state = diseaseModel->getHealthyState(person.getDataField());
   }
+
+  loadVisitData();
 } 
+
+void People::loadVisitData() {
+  for (int day = 0; day < DAYS_IN_WEEK; ++day) {
+    int nextDaySecs = (day + 1) * DAY_LENGTH;
+    for (Person &person: people) {
+      
+      // Seek to correct position in file.
+      uint32_t seekPos = person
+        .visitOffsetByDay[day % DAYS_IN_WEEK];
+      if (seekPos == EMPTY_VISIT_SCHEDULE) {
+        //CkPrintf("No visits on day %d in people chare %d\n", day, thisIndex);
+        continue;
+      }
+
+      activityData->seekg(seekPos, std::ios_base::beg);
+
+      // Start reading
+      int personId = -1; 
+      int locationId = -1;
+      int visitStart = -1;
+      int visitDuration = -1;
+      std::tie(personId, locationId, visitStart, visitDuration) =
+        DataReader<Person>::parseActivityStream(activityData,
+            diseaseModel->activityDef, NULL);
+
+      // Seek while same person on same day
+      while(personId == person.uniqueId && visitStart < nextDaySecs) {
+        // Save visit info
+        person.visitsByDay[day].emplace_back(locationId, personId, -1,
+            visitStart, visitStart + visitDuration);
+
+        std::tie(personId, locationId, visitStart, visitDuration) =
+          DataReader<Person>::parseActivityStream(activityData,
+              diseaseModel->activityDef, NULL);
+      }
+    }
+  }
+}
 
 /**
  * Randomly generates an itinerary (number of visits to random locations)
@@ -277,41 +317,15 @@ void People::SyntheticSendVisitMessages() {
 }
 
 void People::RealDataSendVisitMessages() {
-  // Send of activities for each person.
-  int nextDaySecs = (day + 1) * DAY_LENGTH;
-  for (int localPersonId = 0; localPersonId < numLocalPeople; localPersonId++) {
-    // Seek to correct position in file.
-    uint32_t seekPos = people[localPersonId]
-                       .visitOffsetByDay[day % DAYS_IN_WEEK];
-    if (seekPos == EMPTY_VISIT_SCHEDULE) {
-      //CkPrintf("No visits on day %d in people chare %d\n", day, thisIndex);
-      continue;
-    }
-    
-    activityData->seekg(seekPos, std::ios_base::beg);
+  // Send activities for each person.
+  for (const Person &person: people) {
+    for (VisitMessage visitMessage: person.visitsByDay[day % DAYS_IN_WEEK]) {
+      visitMessage.personState = person.state;
 
-    // Start reading
-    int personId = -1; 
-    int locationId = -1;
-    int visitStart = -1;
-    int visitDuration = -1;
-    std::tie(personId, locationId, visitStart, visitDuration) = DataReader<Person>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
-
-    // Seek while same person on same day.
-    while(personId == people[localPersonId].uniqueId && visitStart < nextDaySecs) {
-      // Find process that owns that location.
-      int locationSubset = getPartitionIndex(
-          locationId,
-          numLocations,
-          numLocationPartitions,
-          firstLocationIdx
-      );
-      
-      // Send off the visit message.
-      VisitMessage visitMsg(locationId, personId, people[localPersonId].state, visitStart, visitStart + visitDuration);
-      locationsArray[locationSubset].ReceiveVisitMessages(visitMsg);
-      totalVisitsForDay += 1;
-      std::tie(personId, locationId, visitStart, visitDuration) = DataReader<Person>::parseActivityStream(activityData, diseaseModel->activityDef, NULL);
+      // Find process that owns that location
+      int locationPartition = getPartitionIndex(visitMessage.locationIdx,
+          numLocations, numLocationPartitions, firstLocationIdx);
+      locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
     }
   }
 }
