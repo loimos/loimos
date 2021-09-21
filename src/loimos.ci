@@ -13,6 +13,8 @@ mainmodule loimos {
   #define PROFILING_INTERVAL 28
   #define LB_START_DAY 6
   #define LB_INTERVAL DAYS_IN_WEEK
+  
+  include "AggregatorParam.h";
 
   include "vector";
   include "sys/time.h";
@@ -21,6 +23,7 @@ mainmodule loimos {
   readonly CProxy_Main mainProxy;
   readonly CProxy_People peopleArray;
   readonly CProxy_Locations locationsArray;
+  readonly CProxy_Aggregator aggregatorProxy;
   readonly CProxy_DiseaseModel globDiseaseModel;
   readonly CProxy_TraceSwitcher traceArray;
   readonly int numPeople;
@@ -190,10 +193,12 @@ mainmodule loimos {
     #endif // ENABLE_LB
   };
 
+  group Aggregator {
+    entry Aggregator(AggregatorParam p1, AggregatorParam p2, CkCallback cb);
+  };
+
   array [1D] People {
     entry People();
-    entry void CreateAggregator(bool useAggregator, size_t bufferSize, double threshold,
-        double flushPeriod, bool nodeLevel, CkCallback cb);
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
     entry void ReceiveInteractions(InteractionMessage);
     entry void EndOfDayStateUpdate(); // contribute call to ReceiveInfectiousCount
@@ -203,8 +208,6 @@ mainmodule loimos {
 
   array [1D] Locations {
     entry Locations();
-    entry void CreateAggregator(bool useAggregator, size_t bufferSize, double threshold,
-        double flushPeriod, bool nodeLevel, CkCallback cb);
     entry void ReceiveVisitMessages(VisitMessage);
     entry void ComputeInteractions(); // calls ReceiveInteractions
     entry void AtSync();

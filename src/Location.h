@@ -22,9 +22,6 @@ class Location;
 #include <set>
 #include <unordered_map>
 
-#include <hypercomm/routing.hpp>
-#include <hypercomm/aggregation.hpp>
-
 // Represents a single location where people can interact
 // Not to be confused with Locations, which represents a group of
 // intances of this class
@@ -87,10 +84,6 @@ class Location : public DataInterface {
     // specified person to the appropriate People chare
     inline void sendInteractions(int personIdx);
 
-    using aggregator_t = aggregation::array_aggregator<
-      aggregation::direct_buffer, aggregation::routing::direct, InteractionMessage>;
-    std::shared_ptr<aggregator_t> aggregator;
-
   public:
     // Represents all of the arrivals and departures of people
     // from this location on a given day
@@ -104,7 +97,7 @@ class Location : public DataInterface {
     // Provide default constructor operations.
     Location() = default;
     Location(CkMigrateMessage *msg);
-    Location(std::shared_ptr<aggregator_t> aggregator, int numAttributes, int uniqueIdx, std::default_random_engine *generator);
+    Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator);
     Location(const Location&) = default;
     Location(Location&&) = default;
     ~Location() = default;

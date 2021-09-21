@@ -31,7 +31,6 @@ People::People() {
 
   newCases = 0;
   day = 0;
-  useAggregator = false;
   generator.seed(thisIndex);
 
   // Initialize disease model

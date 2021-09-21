@@ -15,9 +15,6 @@
 #include <vector>
 #include <set>
 
-#include <hypercomm/routing.hpp>
-#include <hypercomm/aggregation.hpp>
-
 class Locations : public CBase_Locations {
   private:
     int numLocalLocations;
@@ -26,11 +23,6 @@ class Locations : public CBase_Locations {
     DiseaseModel *diseaseModel;
     ContactModel *contactModel;
     int day;
-
-    using aggregator_t = aggregation::array_aggregator<
-      aggregation::direct_buffer, aggregation::routing::direct, InteractionMessage>;
-    std::shared_ptr<aggregator_t> aggregator;
-    bool useAggregator;
 
   public:
     Locations();

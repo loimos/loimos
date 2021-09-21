@@ -6,6 +6,7 @@
 
 #include "loimos.decl.h"
 #include "Main.h"
+#include "Aggregator.h"
 #include "People.h"
 #include "Locations.h"
 #include "DiseaseModel.h"
@@ -30,6 +31,7 @@
 /* readonly */ CProxy_Main mainProxy;
 /* readonly */ CProxy_People peopleArray;
 /* readonly */ CProxy_Locations locationsArray;
+/* readonly */ CProxy_Aggregator aggregatorProxy;
 /* readonly */ CProxy_DiseaseModel globDiseaseModel;
 /* readonly */ CProxy_TraceSwitcher traceArray;
 /* readonly */ int numPeople;
@@ -235,6 +237,8 @@ Main::Main(CkArgMsg* msg) {
 void Main::ArraysCreated() {
   if (++createdCount == arrayCount) {
     // Create Hypercomm message aggregators using env variables
+    AggregatorParam visitParams;
+    AggregatorParam interactParams;
     char* env_p;
     if (env_p = std::getenv("HC_VISIT_PARAMS")) {
       std::string env_str(env_p);
@@ -253,18 +257,8 @@ void Main::ArraysCreated() {
       double threshold = std::stod(tokens[idx++]);
       double flushPeriod = std::stod(tokens[idx++]);
       bool nodeLevel = static_cast<bool>(std::stoi(tokens[idx++]));
-
-      if (useAggregator) {
-        CkPrintf("Creating VisitMessage aggregator with buffer size %lu, threshold %.2lf, "
-            "flush period %.2lf, node-level %d\n", bufferSize, threshold, flushPeriod,
-            static_cast<int>(nodeLevel));
-      } else {
-        CkPrintf("Not using VisitMessage aggregator\n");
-      }
-      peopleArray.CreateAggregator(useAggregator, bufferSize, threshold, flushPeriod,
-          nodeLevel, CkCallbackResumeThread());
-    } else {
-      CkPrintf("Not using VisitMessage aggregator\n");
+      visitParams = AggregatorParam(useAggregator, bufferSize, threshold,
+          flushPeriod, nodeLevel);
     }
     if (env_p = std::getenv("HC_INTERACT_PARAMS")) {
       std::string env_str(env_p);
@@ -283,19 +277,12 @@ void Main::ArraysCreated() {
       double threshold = std::stod(tokens[idx++]);
       double flushPeriod = std::stod(tokens[idx++]);
       bool nodeLevel = static_cast<bool>(std::stoi(tokens[idx++]));
-
-      if (useAggregator) {
-        CkPrintf("Creating InteractionMessage aggregator with buffer size %lu, threshold %.2lf, "
-            "flush period %.2lf, node-level %d\n", bufferSize, threshold, flushPeriod,
-            static_cast<int>(nodeLevel));
-      } else {
-        CkPrintf("Not using InteractionMessage aggregator\n");
-      }
-      locationsArray.CreateAggregator(useAggregator, bufferSize, threshold, flushPeriod,
-          nodeLevel, CkCallbackResumeThread());
-    } else {
-      CkPrintf("Not using InteractionMessage aggregator\n");
+      interactParams = AggregatorParam(useAggregator, bufferSize, threshold,
+          flushPeriod, nodeLevel);
     }
+
+    // Create aggregators
+    aggregatorProxy = CProxy_Aggregator::ckNew(visitParams, interactParams, CkCallbackResumeThread());
 
     // Run
     CkPrintf("Running ...\n\n");
