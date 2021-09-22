@@ -5,6 +5,7 @@
  */
 
 #include "loimos.decl.h"
+#include "Defs.h"
 #include "Aggregator.h"
 
 Aggregator::Aggregator(AggregatorParam p1, AggregatorParam p2, CkCallback cb) {

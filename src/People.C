@@ -11,6 +11,7 @@
 #include "DiseaseModel.h"
 #include "Person.h"
 #include "Message.h"
+#include "Aggregator.h"
 #include "readers/DataReader.h"
 
 #include <tuple>
@@ -90,7 +91,7 @@ void People::CreateAggregator(bool useAggregator, size_t bufferSize, double thre
   // We need to ensure that the Locations chare array has been created
   // and its proxy stored globally before creating the aggregator
   if (useAggregator) {
-    aggregator = std::make_shared<aggregator_t>(
+    aggregator = std::make_shared<Aggregator>(
         locationsArray, CkIndex_Locations::ReceiveVisitMessages(VisitMessage{}),
         bufferSize, threshold, flushPeriod, nodeLevel, CcdPROCESSOR_STILL_IDLE);
   } else {
@@ -356,8 +357,9 @@ void People::SyntheticSendVisitMessages() {
 
       // Send off visit message
       VisitMessage visitMsg(destinationIdx, personIdx, p.state, visitStart, visitEnd);
-      if (useAggregator) {
-        aggregator->send(locationsArray[locationPartition], visitMsg);
+      Aggregator* agg = aggregatorProxy.ckLocalBranch();
+      if (agg->visit_aggregator) {
+        agg->visit_aggregator->send(locationsArray[locationPartition], visitMsg);
       } else {
         locationsArray[locationPartition].ReceiveVisitMessages(visitMsg);
       }
@@ -374,9 +376,10 @@ void People::RealDataSendVisitMessages() {
       // Find process that owns that location
       int locationPartition = getPartitionIndex(visitMessage.locationIdx,
           numLocations, numLocationPartitions, firstLocationIdx);
-      locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
-      if (useAggregator) {
-        aggregator->send(locationsArray[locationPartition], visitMessage);
+      // Send off the visit message.
+      Aggregator* agg = aggregatorProxy.ckLocalBranch();
+      if (agg->visit_aggregator) {
+        agg->visit_aggregator->send(locationsArray[locationPartition], visitMessage);
       } else {
         locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
       }

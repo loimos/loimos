@@ -10,6 +10,7 @@
 #include "Event.h"
 #include "Defs.h"
 #include "DiseaseModel.h"
+#include "Aggregator.h"
 #include "contact_model/ContactModel.h"
 
 #include <random>
@@ -236,8 +237,9 @@ inline void Location::sendInteractions(int personIdx) {
         );
   }
   InteractionMessage interMsg(personIdx, interactions[personIdx]);
-  if (aggregator) {
-    aggregator->send(peopleArray[peoplePartitionIdx], interMsg);
+  Aggregator* agg = aggregatorProxy.ckLocalBranch();
+  if (agg->interact_aggregator) {
+    agg->interact_aggregator->send(peopleArray[peoplePartitionIdx], interMsg);
   } else {
     peopleArray[peoplePartitionIdx].ReceiveInteractions(interMsg);
   }

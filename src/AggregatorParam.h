@@ -1,3 +1,9 @@
+/* Copyright 2020 The Loimos Project Developers.
+ * See the top-level LICENSE file for details.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #ifndef __AGGREGATOR_PARAM_H__
 #define __AGGREGATOR_PARAM_H__
 
@@ -16,5 +22,6 @@ struct AggregatorParam {
     useAggregator(useAggregator_), bufferSize(bufferSize_), threshold(threshold_),
     flushPeriod(flushPeriod_), nodeLevel(nodeLevel_) {}
 };
+PUPbytes(AggregatorParam);
 
 #endif // __AGGREGATOR_PARAM_H__

@@ -45,6 +45,7 @@ const Time MINUTE_LENGTH = 60;
 extern /* readonly */ CProxy_Main mainProxy;
 extern /* readonly */ CProxy_People peopleArray;
 extern /* readonly */ CProxy_Locations locationsArray;
+extern /* readonly */ CProxy_Aggregator aggregatorProxy;
 extern /* readonly */ CProxy_DiseaseModel globDiseaseModel;
 extern /* readonly */ int numPeople;
 extern /* readonly */ int numLocations;

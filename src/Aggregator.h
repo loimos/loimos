@@ -1,3 +1,9 @@
+/* Copyright 2020 The Loimos Project Developers.
+ * See the top-level LICENSE file for details.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #ifndef __AGGREGATOR_H__
 #define __AGGREGATOR_H__
 
