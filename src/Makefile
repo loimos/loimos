@@ -38,8 +38,7 @@ all: all-sub $(BIN)
 # Build the executable (and implicitly charmrun) from the object files
 $(BIN): $(OBJS) $(UNIT_TEST_OBJS) $(DECLS)
 	$(CHARMC) -o $@ $(OBJS) $(UNIT_TEST_OBJS) $(PROJECTION_FLAGS) -language charm++ \
-	-module CkMulticast -module NDMeshStreamer $(LIBS)
-
+	$(LIBS) -module CkMulticast #-module NDMeshStreamer 
 
 # Build .decl.h (and implicitly .def.h) files from the corresponding
 # .ci files
