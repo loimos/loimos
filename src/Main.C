@@ -226,64 +226,63 @@ Main::Main(CkArgMsg* msg) {
   if (!syntheticRun) {
     CkPrintf("Loading people and locations from %s.\n", scenarioPath.c_str());
   }
-  
+
+  chareCount = 3; // Number of chare arrays/groups
+  createdCount = 0;
+
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
-  traceArray = CProxy_TraceSwitcher::ckNew();
-  arrayCount = 2; // Number of chare arrays
-  createdCount = 0;
+
+  // Create Hypercomm message aggregators using env variables
+  AggregatorParam visitParams;
+  AggregatorParam interactParams;
+  char* env_p;
+  if (env_p = std::getenv("HC_VISIT_PARAMS")) {
+    std::string env_str(env_p);
+    std::vector<std::string> tokens;
+    std::stringstream env_ss(env_str);
+    std::string token;
+
+    while (getline(env_ss, token, ',')) {
+      tokens.push_back(token);
+    }
+
+    CkAssert(tokens.size() == 5);
+    int idx = 0;
+    bool useAggregator = static_cast<bool>(std::stoi(tokens[idx++]));
+    size_t bufferSize = static_cast<size_t>(std::stoi(tokens[idx++]));
+    double threshold = std::stod(tokens[idx++]);
+    double flushPeriod = std::stod(tokens[idx++]);
+    bool nodeLevel = static_cast<bool>(std::stoi(tokens[idx++]));
+    visitParams = AggregatorParam(useAggregator, bufferSize, threshold,
+        flushPeriod, nodeLevel);
+  }
+  if (env_p = std::getenv("HC_INTERACT_PARAMS")) {
+    std::string env_str(env_p);
+    std::vector<std::string> tokens;
+    std::stringstream env_ss(env_str);
+    std::string token;
+
+    while (getline(env_ss, token, ',')) {
+      tokens.push_back(token);
+    }
+
+    CkAssert(tokens.size() == 5);
+    int idx = 0;
+    bool useAggregator = static_cast<bool>(std::stoi(tokens[idx++]));
+    size_t bufferSize = static_cast<size_t>(std::stoi(tokens[idx++]));
+    double threshold = std::stod(tokens[idx++]);
+    double flushPeriod = std::stod(tokens[idx++]);
+    bool nodeLevel = static_cast<bool>(std::stoi(tokens[idx++]));
+    interactParams = AggregatorParam(useAggregator, bufferSize, threshold,
+        flushPeriod, nodeLevel);
+  }
+
+  aggregatorProxy = CProxy_Aggregator::ckNew(visitParams, interactParams);
 }
 
-void Main::ArraysCreated() {
-  if (++createdCount == arrayCount) {
-    // Create Hypercomm message aggregators using env variables
-    AggregatorParam visitParams;
-    AggregatorParam interactParams;
-    char* env_p;
-    if (env_p = std::getenv("HC_VISIT_PARAMS")) {
-      std::string env_str(env_p);
-      std::vector<std::string> tokens;
-      std::stringstream env_ss(env_str);
-      std::string token;
-
-      while (getline(env_ss, token, ',')) {
-        tokens.push_back(token);
-      }
-
-      CkAssert(tokens.size() == 5);
-      int idx = 0;
-      bool useAggregator = static_cast<bool>(std::stoi(tokens[idx++]));
-      size_t bufferSize = static_cast<size_t>(std::stoi(tokens[idx++]));
-      double threshold = std::stod(tokens[idx++]);
-      double flushPeriod = std::stod(tokens[idx++]);
-      bool nodeLevel = static_cast<bool>(std::stoi(tokens[idx++]));
-      visitParams = AggregatorParam(useAggregator, bufferSize, threshold,
-          flushPeriod, nodeLevel);
-    }
-    if (env_p = std::getenv("HC_INTERACT_PARAMS")) {
-      std::string env_str(env_p);
-      std::vector<std::string> tokens;
-      std::stringstream env_ss(env_str);
-      std::string token;
-
-      while (getline(env_ss, token, ',')) {
-        tokens.push_back(token);
-      }
-
-      CkAssert(tokens.size() == 5);
-      int idx = 0;
-      bool useAggregator = static_cast<bool>(std::stoi(tokens[idx++]));
-      size_t bufferSize = static_cast<size_t>(std::stoi(tokens[idx++]));
-      double threshold = std::stod(tokens[idx++]);
-      double flushPeriod = std::stod(tokens[idx++]);
-      bool nodeLevel = static_cast<bool>(std::stoi(tokens[idx++]));
-      interactParams = AggregatorParam(useAggregator, bufferSize, threshold,
-          flushPeriod, nodeLevel);
-    }
-
-    // Create aggregators
-    aggregatorProxy = CProxy_Aggregator::ckNew(visitParams, interactParams, CkCallbackResumeThread());
-
+void Main::CharesCreated() {
+  if (++createdCount == chareCount) {
     // Run
     CkPrintf("Running ...\n\n");
     simulationStartTime = CkWallTimer();

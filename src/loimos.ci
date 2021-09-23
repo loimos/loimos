@@ -55,7 +55,7 @@ mainmodule loimos {
 
   mainchare Main {
     entry Main(CkArgMsg*);
-    entry [reductiontarget, threaded] void ArraysCreated();
+    entry [reductiontarget] void CharesCreated();
     entry void run() {
       // We only want to collect instumentation on the main loop
       #ifdef ENABLE_LB
@@ -194,7 +194,7 @@ mainmodule loimos {
   };
 
   group Aggregator {
-    entry Aggregator(AggregatorParam p1, AggregatorParam p2, CkCallback cb);
+    entry Aggregator(AggregatorParam p1, AggregatorParam p2);
   };
 
   array [1D] People {

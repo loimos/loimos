@@ -8,7 +8,7 @@
 #include "Defs.h"
 #include "Aggregator.h"
 
-Aggregator::Aggregator(AggregatorParam p1, AggregatorParam p2, CkCallback cb) {
+Aggregator::Aggregator(AggregatorParam p1, AggregatorParam p2) {
   if (p1.useAggregator) {
     if (CkMyPe() == 0) {
       CkPrintf("Creating VisitMessage aggregator with buffer size %lu, threshold %.6lf, "
@@ -41,6 +41,6 @@ Aggregator::Aggregator(AggregatorParam p1, AggregatorParam p2, CkCallback cb) {
     interact_aggregator = nullptr;
   }
 
-  // Return to Main
-  contribute(cb);
+  // Notify Main
+  contribute(CkCallback(CkReductionTarget(Main, CharesCreated), mainProxy));
 }

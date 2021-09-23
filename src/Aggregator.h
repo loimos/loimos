@@ -21,7 +21,7 @@ class Aggregator : public CBase_Aggregator {
     std::shared_ptr<visit_aggregator_t> visit_aggregator;
     std::shared_ptr<interact_aggregator_t> interact_aggregator;
 
-    Aggregator(AggregatorParam p1, AggregatorParam p2, CkCallback cb);
+    Aggregator(AggregatorParam p1, AggregatorParam p2);
 };
 
 #endif // __AGGREGATOR_H__

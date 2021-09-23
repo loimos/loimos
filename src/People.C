@@ -79,8 +79,7 @@ People::People() {
   }
 
   // Notify Main
-  contribute(CkCallback(CkReductionTarget(Main, ArraysCreated), mainProxy));
-
+  contribute(CkCallback(CkReductionTarget(Main, CharesCreated), mainProxy));
 }
 
 void People::CreateAggregator(bool useAggregator, size_t bufferSize, double threshold,

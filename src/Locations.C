@@ -58,7 +58,7 @@ Locations::Locations() {
   contactModel->setGenerator(&generator);
 
   // Notify Main
-  contribute(CkCallback(CkReductionTarget(Main, ArraysCreated), mainProxy));
+  contribute(CkCallback(CkReductionTarget(Main, CharesCreated), mainProxy));
 }
     
 Locations::Locations(CkMigrateMessage *msg) {};
