@@ -13,8 +13,10 @@
 #include <hypercomm/routing.hpp>
 #include <hypercomm/aggregation.hpp>
 
-using visit_aggregator_t = aggregation::array_aggregator<aggregation::direct_buffer, aggregation::routing::direct, VisitMessage>;
-using interact_aggregator_t = aggregation::array_aggregator<aggregation::direct_buffer, aggregation::routing::direct, InteractionMessage>;
+using buffer_t = aggregation::direct_buffer;
+using routing_t = aggregation::routing::mesh<2>;
+using visit_aggregator_t = aggregation::array_aggregator<buffer_t, routing_t, VisitMessage>;
+using interact_aggregator_t = aggregation::array_aggregator<buffer_t, routing_t, InteractionMessage>;
 
 class Aggregator : public CBase_Aggregator {
   public:
