@@ -13,7 +13,9 @@ mainmodule loimos {
   readonly CProxy_People peopleArray;
   readonly CProxy_Locations locationsArray;
   readonly CProxy_DiseaseModel globDiseaseModel;
+#ifdef USE_PROJECTIONS
   readonly CProxy_TraceSwitcher traceArray;
+#endif
   readonly int numPeople;
   readonly int numLocations;
   readonly int numPeoplePartitions;
@@ -48,10 +50,12 @@ mainmodule loimos {
     entry Main(CkArgMsg*);
     entry void run() {
       for(day = 0; day < numDays; day++) {
+      #ifdef USE_PROJECTIONS
         if (day==3){
             serial{traceArray.traceOn();}
             when traceSwitchOn() {}
         }
+      #endif
         serial {
           iterationStartTime = CkWallTimer();
           // CkPrintf("Sending Visit Messages\n");
@@ -91,11 +95,12 @@ mainmodule loimos {
             
           }
         }
-
+    #ifdef USE_PROJECTIONS
         if(day==6){
             serial{traceArray.traceOff();}
             when traceSwitchOff(){}
         }
+    #endif
       }
       serial { 
         CkPrintf("\nFinished data loading in %lf seconds.\n", simulationStartTime);
@@ -117,17 +122,20 @@ mainmodule loimos {
     entry void ComputedInteractions();
     entry [reductiontarget] void ReceiveInfectiousCount(int infectiousCount);
     entry [reductiontarget] void ReceiveStats(CkReductionMsg *summary);
+    #ifdef USE_PROJECTIONS
     entry [reductiontarget] void traceSwitchOn();
     entry [reductiontarget] void traceSwitchOff();
+    #endif
   };
 
 
-
+#ifdef USE_PROJECTIONS
   group TraceSwitcher{
     entry TraceSwitcher();
     entry void traceOn();
     entry void traceOff();   
   };
+#endif
 
   array [1D] People {
     entry People();

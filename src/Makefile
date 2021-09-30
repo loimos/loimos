@@ -19,8 +19,11 @@ ifdef ENABLE_UNIT_TESTING
 UNIT_TEST_OBJS = tests/DiseaseModelTest.o
 endif
 
-ifdef ENABLE_PROJECTIONS
+# set the USE_PROJECTIONS environment variable to compile for projections
+ifdef USE_PROJECTIONS
 PROJECTION_FLAGS = -tracemode projections
+else
+PROJECTION_FLAGS = 
 endif
 
 SUBDIRS = disease_model contact_model readers tests
@@ -30,7 +33,7 @@ all: all-sub $(BIN)
 
 # Build the executable (and implicitly charmrun) from the object files
 $(BIN): $(OBJS) $(UNIT_TEST_OBJS) $(DECLS)
-	$(CHARMC) -o $@ $(OBJS) $(UNIT_TEST_OBJS) $(ENABLE_PROJECTIONS) -language charm++ \
+	$(CHARMC) -o $@ $(OBJS) $(UNIT_TEST_OBJS) $(PROJECTION_FLAGS) -language charm++ \
 	-module CkMulticast -module NDMeshStreamer $(LIBS)
 
 
