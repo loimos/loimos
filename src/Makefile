@@ -19,6 +19,10 @@ ifdef ENABLE_UNIT_TESTING
 UNIT_TEST_OBJS = tests/DiseaseModelTest.o
 endif
 
+ifdef ENABLE_PROJECTIONS
+PROJECTION_FLAGS = -tracemode projections
+endif
+
 SUBDIRS = disease_model contact_model readers tests
 
 .PHONY:all
@@ -26,8 +30,9 @@ all: all-sub $(BIN)
 
 # Build the executable (and implicitly charmrun) from the object files
 $(BIN): $(OBJS) $(UNIT_TEST_OBJS) $(DECLS)
-	$(CHARMC) -o $@ $(OBJS) $(UNIT_TEST_OBJS) -language charm++ \
+	$(CHARMC) -o $@ $(OBJS) $(UNIT_TEST_OBJS) $(ENABLE_PROJECTIONS) -language charm++ \
 	-module CkMulticast -module NDMeshStreamer $(LIBS)
+
 
 # Build .decl.h (and implicitly .def.h) files from the corresponding
 # .ci files
