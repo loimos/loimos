@@ -25,6 +25,9 @@
 /* readonly */ CProxy_People peopleArray;
 /* readonly */ CProxy_Locations locationsArray;
 /* readonly */ CProxy_DiseaseModel globDiseaseModel;
+#ifdef USE_PROJECTIONS
+/* readonly */ CProxy_TraceSwitcher traceArray;
+#endif
 /* readonly */ int numPeople;
 /* readonly */ int numLocations;
 /* readonly */ int numPeoplePartitions;
@@ -50,6 +53,22 @@
 /* readonly */ int synLocationPartitionGridWidth;
 /* readonly */ int synLocationPartitionGridHeight;
 /* readonly */ int averageDegreeOfVisit;
+
+#ifdef USE_PROJECTIONS
+class TraceSwitcher : public CBase_TraceSwitcher {
+public:
+    TraceSwitcher() : CBase_TraceSwitcher(){}
+    void traceOn(){
+        traceBegin();
+        contribute(CkCallback(CkReductionTarget(Main, traceSwitchOn),mainProxy));
+    };
+    void traceOff(){
+        traceEnd();    
+        contribute(CkCallback(CkReductionTarget(Main, traceSwitchOff),mainProxy));
+    };   
+    
+};
+#endif
 
 Main::Main(CkArgMsg* msg) {
   // parsing command line arguments
@@ -163,6 +182,9 @@ Main::Main(CkArgMsg* msg) {
   
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
+#ifdef USE_PROJECTIONS
+  traceArray = CProxy_TraceSwitcher::ckNew();
+#endif
 
   // run
   CkPrintf("Running ...\n\n");
@@ -204,5 +226,7 @@ void Main::SaveStats(int *data) {
 
   outFile.close();
 }
+
+
 
 #include "loimos.def.h"
