@@ -56,17 +56,21 @@
 
 #ifdef USE_PROJECTIONS
 class TraceSwitcher : public CBase_TraceSwitcher {
-public:
+  public:
     TraceSwitcher() : CBase_TraceSwitcher(){}
     void traceOn(){
-        traceBegin();
-        contribute(CkCallback(CkReductionTarget(Main, traceSwitchOn),mainProxy));
+      traceBegin();
+      contribute(CkCallback(CkReductionTarget(Main, traceSwitchOn),mainProxy));
     };
     void traceOff(){
-        traceEnd();    
-        contribute(CkCallback(CkReductionTarget(Main, traceSwitchOff),mainProxy));
+      traceEnd();    
+      contribute(CkCallback(CkReductionTarget(Main, traceSwitchOff),mainProxy));
     };   
-    
+    void traceFlush(){
+      traceEnd();
+      traceLogFlush();
+      traceBegin();
+    } 
 };
 #endif
 

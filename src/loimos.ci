@@ -96,6 +96,10 @@ mainmodule loimos {
           }
         }
     #ifdef USE_PROJECTIONS
+        if(3 >= day && 6 <= day) {
+            serial{traceArray.traceFlush();}
+            when traceFlushDone(){}
+        }
         if(day==6){
             serial{traceArray.traceOff();}
             when traceSwitchOff(){}
@@ -133,7 +137,8 @@ mainmodule loimos {
   group TraceSwitcher{
     entry TraceSwitcher();
     entry void traceOn();
-    entry void traceOff();   
+    entry void traceOff();
+    entry void traceFlush();
   };
 #endif
 
