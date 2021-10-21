@@ -44,6 +44,7 @@ class People : public CBase_People {
     void ReceiveInteractions(InteractionMessage interMsg);
     void EndOfDayStateUpdate();
     void SendStats();
+    void ReportMemoryUsage();
 };
 
 #endif // __PEOPLE_H__

@@ -8,6 +8,8 @@ mainmodule loimos {
   include "Message.h";
 
   include "vector";
+  include "sys/time.h";
+  include "sys/resource.h";
 
   readonly CProxy_Main mainProxy;
   readonly CProxy_People peopleArray;
@@ -42,9 +44,6 @@ mainmodule loimos {
   readonly int synLocationPartitionGridWidth;
   readonly int synLocationPartitionGridHeight;
   readonly int averageDegreeOfVisit;
-
-
-
 
   mainchare Main {
     entry Main(CkArgMsg*);
@@ -92,17 +91,24 @@ mainmodule loimos {
               "Iteration %d Execution Time: %lf seconds.\n",
               day, CkWallTimer() - iterationStartTime
             );
-            
           }
         }
     #ifdef USE_PROJECTIONS
         if(3 >= day && 6 <= day) {
-            serial{traceArray.traceFlush();}
-            when traceFlushDone(){}
+            //serial{traceArray.traceFlush();}
+            //when traceFlushDone(){}
         }
         if(day==6){
             serial{traceArray.traceOff();}
             when traceSwitchOff(){}
+        }
+        serial{traceArray.reportMemoryUsage();}
+        //serial{peopleArray.ReportMemoryUsage();}
+        when doneMemoryReduction(CkReductionMsg *msg) {
+          serial {
+            CkPrintf("Got to doneMemoryReduction\n");
+            PrintMemoryUsage(msg);
+          }
         }
     #endif
       }
@@ -129,6 +135,7 @@ mainmodule loimos {
     #ifdef USE_PROJECTIONS
     entry [reductiontarget] void traceSwitchOn();
     entry [reductiontarget] void traceSwitchOff();
+    entry void doneMemoryReduction(CkReductionMsg *msg);
     #endif
   };
 
@@ -139,6 +146,7 @@ mainmodule loimos {
     entry void traceOn();
     entry void traceOff();
     entry void traceFlush();
+    entry void reportMemoryUsage();
   };
 #endif
 
@@ -152,6 +160,9 @@ mainmodule loimos {
 #endif
     entry void EndOfDayStateUpdate(); // contribute call to ReceiveInfectiousCount
     entry void SendStats(); // contribute call to ReceiveStats
+#ifdef USE_PROJECTIONS
+    entry void ReportMemoryUsage();
+#endif
   };
 
   array [1D] Locations {

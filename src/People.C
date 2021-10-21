@@ -379,6 +379,14 @@ void People::SendStats() {
   contribute(stateSummaries, CkReduction::sum_int, cb);
 }
 
+void People::ReportMemoryUsage() {
+  struct rusage self_usage;
+  getrusage(RUSAGE_SELF, &self_usage);
+      
+  //CkCallback cb(CkReductionTarget(Main, doneMemoryReduction), mainProxy);
+  //contribute(sizeof(self_usage.ru_maxrss), &self_usage.ru_maxrss, CkReduction::sum_long, cb);
+}
+
 void People::ProcessInteractions(Person &person) {
   double totalPropensity = 0.0;
   int numInteractions = (int) person.interactions.size();
