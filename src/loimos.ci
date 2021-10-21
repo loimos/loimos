@@ -129,6 +129,7 @@ mainmodule loimos {
     #ifdef USE_PROJECTIONS
     entry [reductiontarget] void traceSwitchOn();
     entry [reductiontarget] void traceSwitchOff();
+    entry [reductiontarget] void traceFlushDone();
     #endif
   };
 

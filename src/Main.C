@@ -68,7 +68,7 @@ class TraceSwitcher : public CBase_TraceSwitcher {
     };   
     void traceFlush(){
       traceEnd();
-      traceLogFlush();
+      traceFlushLog();
       traceBegin();
     } 
 };
