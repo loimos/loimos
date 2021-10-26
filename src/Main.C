@@ -75,30 +75,26 @@ class TraceSwitcher : public CBase_TraceSwitcher {
       traceBegin();
     }
     void reportMemoryUsage(){ 
-      CkPrintf("Got to reportMemoryUsage\n");
+      // Find this process's memory usage
       struct rusage self_usage;
       getrusage(RUSAGE_SELF, &self_usage);
       
+      // Account for the fact that multiple threads may be run on this process
+      self_usage.ru_maxrss /= CkNodeSize(CkMyNode());
+
       pid_t pid = getpid();
       long result[2];
       result[0] = pid;
       result[1] = self_usage.ru_maxrss;
       
-      CkCallback cb(CkIndex_Main::doneMemoryReduction(NULL), mainProxy);
-      contribute(2*sizeof(long), result, CkReduction::set, cb);
+      CkCallback cb(CkReductionTarget(Main, printMemoryUsage), mainProxy);
+      contribute(2*sizeof(long), &self_usage.ru_maxrss, CkReduction::sum_long, cb);
 
       //CkPrintf("  Process %ld is using %ld kb\n",
       //    (int) pid, self_usage.ru_maxrss);
     }
 };
 #endif
-
-//class MemoryTracker : public CBase_MemoryTracker {
-//  public:
-//    void getUsage() {
-//      getr
-//    }
-//}
 
 Main::Main(CkArgMsg* msg) {
   // parsing command line arguments
@@ -255,37 +251,6 @@ void Main::SaveStats(int *data) {
   }
 
   outFile.close();
-}
-
-void Main::PrintMemoryUsage(CkReductionMsg *msg) {
-  CkPrintf("Got to PrintMemoryUsage\n");
-  
-  std::unordered_map<long, long> processMemoryUsage;
-  CkReduction::setElement *cur =
-    (CkReduction::setElement *) msg->getData();
-  return;
-  for (; cur != NULL; cur = cur->next()) {
-    long *result = reinterpret_cast<long *>(&cur->data);
-    long pid = result[0];
-    long usage = result[1];
-
-    // If we already have a value for pid, use the larger one
-    if (processMemoryUsage.count(pid)) {
-      processMemoryUsage[pid] = std::max(usage, processMemoryUsage[pid]);
-    } else {
-      processMemoryUsage[pid] = usage;
-    }
-  }
-
-  long totalUsage = 0;
-  for (auto &p: processMemoryUsage) {
-    totalUsage += p.second;
-    CkPrintf("  process %ld is using %ld kb\n", p.first, p.second);
-  }
-
-  CkPrintf("Currently using %ld kb in total\n", totalUsage);
-  //delete msg;
-  //processMemoryUsage.clear();
 }
 
 #include "loimos.def.h"

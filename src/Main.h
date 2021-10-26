@@ -21,7 +21,6 @@ class Main : public CBase_Main {
   public:
     Main(CkArgMsg* msg);
     void SaveStats(int *data);
-    void PrintMemoryUsage(CkReductionMsg *msg);
 };
 
 #endif // __MAIN_H__

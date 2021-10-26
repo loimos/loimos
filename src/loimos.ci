@@ -103,11 +103,9 @@ mainmodule loimos {
             when traceSwitchOff(){}
         }
         serial{traceArray.reportMemoryUsage();}
-        //serial{peopleArray.ReportMemoryUsage();}
-        when doneMemoryReduction(CkReductionMsg *msg) {
+        when printMemoryUsage(long usage) {
           serial {
-            CkPrintf("Got to doneMemoryReduction\n");
-            PrintMemoryUsage(msg);
+            CkPrintf("Currently using %ld kb in total\n", usage);
           }
         }
     #endif
@@ -135,7 +133,7 @@ mainmodule loimos {
     #ifdef USE_PROJECTIONS
     entry [reductiontarget] void traceSwitchOn();
     entry [reductiontarget] void traceSwitchOff();
-    entry void doneMemoryReduction(CkReductionMsg *msg);
+    entry [reductiontarget] void printMemoryUsage(long usage);
     #endif
   };
 
