@@ -15,9 +15,7 @@ mainmodule loimos {
   readonly CProxy_People peopleArray;
   readonly CProxy_Locations locationsArray;
   readonly CProxy_DiseaseModel globDiseaseModel;
-#ifdef USE_PROJECTIONS
   readonly CProxy_TraceSwitcher traceArray;
-#endif
   readonly int numPeople;
   readonly int numLocations;
   readonly int numPeoplePartitions;
@@ -102,13 +100,13 @@ mainmodule loimos {
             serial{traceArray.traceOff();}
             when traceSwitchOff(){}
         }
+    #endif
         serial{traceArray.reportMemoryUsage();}
         when printMemoryUsage(long usage) {
           serial {
             CkPrintf("Currently using %ld kb in total\n", usage);
           }
         }
-    #endif
       }
       serial { 
         CkPrintf("\nFinished data loading in %lf seconds.\n", simulationStartTime);
@@ -133,20 +131,20 @@ mainmodule loimos {
     #ifdef USE_PROJECTIONS
     entry [reductiontarget] void traceSwitchOn();
     entry [reductiontarget] void traceSwitchOff();
-    entry [reductiontarget] void printMemoryUsage(long usage);
     #endif
+    entry [reductiontarget] void printMemoryUsage(long usage);
   };
 
 
-#ifdef USE_PROJECTIONS
   group TraceSwitcher{
     entry TraceSwitcher();
+#ifdef USE_PROJECTIONS
     entry void traceOn();
     entry void traceOff();
     entry void traceFlush();
+#endif
     entry void reportMemoryUsage();
   };
-#endif
 
   array [1D] People {
     entry People();

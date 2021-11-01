@@ -124,6 +124,9 @@ void People::loadPeopleData() {
   }
 
   loadVisitData();
+
+  activityData->close();
+  delete activityData;
 } 
 
 void People::loadVisitData() {

@@ -28,9 +28,7 @@
 /* readonly */ CProxy_People peopleArray;
 /* readonly */ CProxy_Locations locationsArray;
 /* readonly */ CProxy_DiseaseModel globDiseaseModel;
-#ifdef USE_PROJECTIONS
 /* readonly */ CProxy_TraceSwitcher traceArray;
-#endif
 /* readonly */ int numPeople;
 /* readonly */ int numLocations;
 /* readonly */ int numPeoplePartitions;
@@ -57,10 +55,10 @@
 /* readonly */ int synLocationPartitionGridHeight;
 /* readonly */ int averageDegreeOfVisit;
 
-#ifdef USE_PROJECTIONS
 class TraceSwitcher : public CBase_TraceSwitcher {
   public:
     TraceSwitcher() : CBase_TraceSwitcher(){}
+#ifdef USE_PROJECTIONS
     void traceOn(){
       traceBegin();
       contribute(CkCallback(CkReductionTarget(Main, traceSwitchOn),mainProxy));
@@ -73,7 +71,8 @@ class TraceSwitcher : public CBase_TraceSwitcher {
       traceEnd();
       traceFlushLog();
       traceBegin();
-    }
+    };
+#endif
     void reportMemoryUsage(){ 
       // Find this process's memory usage
       struct rusage self_usage;
@@ -88,13 +87,12 @@ class TraceSwitcher : public CBase_TraceSwitcher {
       result[1] = self_usage.ru_maxrss;
       
       CkCallback cb(CkReductionTarget(Main, printMemoryUsage), mainProxy);
-      contribute(2*sizeof(long), &self_usage.ru_maxrss, CkReduction::sum_long, cb);
+      contribute(sizeof(long), &self_usage.ru_maxrss, CkReduction::sum_long, cb);
 
       //CkPrintf("  Process %ld is using %ld kb\n",
       //    (int) pid, self_usage.ru_maxrss);
-    }
+    };
 };
-#endif
 
 Main::Main(CkArgMsg* msg) {
   // parsing command line arguments
