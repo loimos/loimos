@@ -72,7 +72,7 @@ class TraceSwitcher : public CBase_TraceSwitcher {
       traceFlushLog();
       traceBegin();
     };
-#endif
+#endif // USE_PROJECTIONS
     void reportMemoryUsage(){ 
       // Find this process's memory usage
       struct rusage self_usage;

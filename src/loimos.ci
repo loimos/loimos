@@ -156,9 +156,6 @@ mainmodule loimos {
 #endif
     entry void EndOfDayStateUpdate(); // contribute call to ReceiveInfectiousCount
     entry void SendStats(); // contribute call to ReceiveStats
-#ifdef USE_PROJECTIONS
-    entry void ReportMemoryUsage();
-#endif
   };
 
   array [1D] Locations {
