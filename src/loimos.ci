@@ -131,18 +131,18 @@ mainmodule loimos {
     #ifdef USE_PROJECTIONS
     entry [reductiontarget] void traceSwitchOn();
     entry [reductiontarget] void traceSwitchOff();
-    #endif
+    #endif // USE_PROJECTIONS
     entry [reductiontarget] void printMemoryUsage(long usage);
   };
 
 
   group TraceSwitcher{
     entry TraceSwitcher();
-#ifdef USE_PROJECTIONS
+    #ifdef USE_PROJECTIONS
     entry void traceOn();
     entry void traceOff();
     entry void traceFlush();
-#endif
+    #endif // USE_PROJECTIONS
     entry void reportMemoryUsage();
   };
 

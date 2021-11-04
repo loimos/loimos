@@ -18,7 +18,7 @@ GTEST_HOME ?= /usr/local/gtest
 CXX       = g++
 OPTS     += -g -O2
 INCLUDES  = -I$(PROTOBUF_HOME)/include
-LIBS      = -lpthread -L$(PROTOBUF_HOME)/lib -lprotobuf 
+LIBS      = -lpthread -L$(PROTOBUF_HOME)/lib64 -lprotobuf 
 
 # Set the ENABLE_UNIT_TESTING environment variable to compile for unit testing
 ifdef ENABLE_UNIT_TESTING

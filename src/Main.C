@@ -57,8 +57,8 @@
 
 class TraceSwitcher : public CBase_TraceSwitcher {
   public:
+    #ifdef USE_PROJECTIONS
     TraceSwitcher() : CBase_TraceSwitcher(){}
-#ifdef USE_PROJECTIONS
     void traceOn(){
       traceBegin();
       contribute(CkCallback(CkReductionTarget(Main, traceSwitchOn),mainProxy));
@@ -72,7 +72,7 @@ class TraceSwitcher : public CBase_TraceSwitcher {
       traceFlushLog();
       traceBegin();
     };
-#endif // USE_PROJECTIONS
+    #endif // USE_PROJECTIONS
     void reportMemoryUsage(){ 
       // Find this process's memory usage
       struct rusage self_usage;
@@ -206,9 +206,7 @@ Main::Main(CkArgMsg* msg) {
   
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
-#ifdef USE_PROJECTIONS
   traceArray = CProxy_TraceSwitcher::ckNew();
-#endif
 
   // run
   CkPrintf("Running ...\n\n");
