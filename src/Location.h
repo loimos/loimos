@@ -27,9 +27,6 @@ class Location;
 // intances of this class
 class Location : public DataInterface {
   private:
-    // Represents all of the arrivals and departures of people
-    // from this location on a given day
-    std::vector<Event> events;
 
     // For random generation.
     std::uniform_real_distribution<float> uniform_dist;
@@ -85,6 +82,10 @@ class Location : public DataInterface {
     int day;
     
   public:
+    // Represents all of the arrivals and departures of people
+    // from this location on a given day
+    std::vector<Event> events;
+    
     // Provide default constructor operations.
     Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator);
     Location(const Location&) = default;

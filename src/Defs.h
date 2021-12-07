@@ -56,7 +56,6 @@ extern /* readonly */ uint64_t totalVisits;
 extern /* readonly */ double simulationStartTime;
 extern /* readonly */ double iterationStartTime;
 
-
 // For real data run.
 extern /* readonly */ std::string scenarioPath;
 extern /* readonly */ std::string scenarioId;

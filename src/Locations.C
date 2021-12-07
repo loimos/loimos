@@ -23,6 +23,8 @@
 #include <fstream>
 
 Locations::Locations() {
+  day = 0;
+  
   // Getting number of locations assigned to this chare
   numLocalLocations = getNumLocalElements(
     numLocations,
@@ -129,9 +131,15 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   locations[localLocIdx].addEvent(departure);
 }
 
-void Locations::ComputeInteractions() {
+void Locations::ComputeInteractions() { 
   // traverses list of locations
+  int numVisits = 0;
   for (Location &loc : locations) {
+    numVisits += loc.events.size() / 2;
     loc.processEvents(diseaseModel, contactModel);
   }
+
+  CkPrintf("\tDay %d, process %d, thread %d: %d visits, %d locations\n",
+    day, CkMyNode(), CkMyPe(), numVisits, (int) locations.size());
+  day++;
 }
