@@ -15,6 +15,7 @@
 #include "Defs.h"
 #include "readers/DataReader.h"
 #include "Person.h"
+#include "pup_stl.h"
 
 #include <algorithm>
 #include <queue>
@@ -105,6 +106,23 @@ void Locations::loadLocationData() {
   // Let contact model add any attributes it needs to the locations
   for (Location &location: locations) {
     contactModel->computeLocationValues(location);
+  }
+}
+
+void Locations::pup(PUP::er &p) {
+  p | numLocalLocations;
+  p | locations;
+  p | generator;
+  p | day;
+  
+  if (p.isUnpacking()) {
+    diseaseModel = globDiseaseModel.ckLocalBranch();
+    contactModel = new ContactModel();
+    contactModel->setGenerator(&generator);
+
+    for (Location &loc: locations) {
+      loc.setGenerator(&generator);
+    }
   }
 }
 

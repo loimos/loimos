@@ -17,7 +17,7 @@
 #include <cmath>
 #include <algorithm>
 
-Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator) : uniform_dist(0, 1) {
+Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator) {
   if (numAttributes != 0) {
     this->locationData.resize(numAttributes);
   }
@@ -40,9 +40,26 @@ Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine 
     }
   } else {
     // For non-synthetic set just seed completely at random.
-    isDiseaseSeeder = uniform_dist(*generator) < PERCENTAGE_OF_SEEDING_LOCATIONS;
+    isDiseaseSeeder = unitDistrib(*generator) < PERCENTAGE_OF_SEEDING_LOCATIONS;
   }
   
+}
+
+void Location::pup(PUP::er &p) {
+  p | infectiousArrivals;
+  p | susceptibleArrivals;
+  p | interactions;
+  p | locationData;
+  p | isDiseaseSeeder;
+  p | day;
+  p | uniqueId;
+  p | events;
+}
+
+// Lets location partition refresh generator after migration, since pointers
+// probably won't survive the migration
+void Location::setGenerator(std::default_random_engine *generator) {
+  this->generator = generator;
 }
 
 // DataInterface overrides. 
@@ -201,7 +218,7 @@ inline void Location::sendInteractions(int personIdx) {
 
   // Randomly seed some people for infection.
   if (isDiseaseSeeder && day < DAYS_TO_SEED_INFECTION 
-      && uniform_dist(*generator) < INITIAL_INFECTIOUS_PROBABILITY) {
+      && unitDistrib(*generator) < INITIAL_INFECTIOUS_PROBABILITY) {
         // Add a super contagious visit for that person.
         interactions[personIdx].emplace_back(
           std::numeric_limits<double>::max(),
