@@ -31,4 +31,6 @@ ifdef USE_PROJECTIONS
 OPTS    += -DUSE_PROJECTIONS
 endif
 
+LIBS += -balancer GreedyLB -balancer RefineLB
+
 CXXFLAGS  = $(OPTS) -std=c++11 -Wall $(INCLUDES)
