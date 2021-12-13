@@ -53,6 +53,8 @@ Locations::Locations() {
   contactModel = createContactModel();
   contactModel->setGenerator(&generator);
 }
+    
+Locations::Locations(CkMigrateMessage *msg) {};
 
 void Locations::loadLocationData() {
   // Init local.

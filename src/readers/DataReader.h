@@ -26,7 +26,7 @@ union Data {
     bool boolean;
     uint32_t uint_32;
     double probability;
-    uint16_t category; 
+    uint16_t category;
 };
 PUPbytes(union Data);
 

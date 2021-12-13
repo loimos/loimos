@@ -23,6 +23,7 @@ Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine 
   }
   day = 0;
   this->generator = generator;
+  unitDistrib = std::uniform_real_distribution<>(0.0,1.0);
 
   // Determine if this location should seed the disease.
   if (syntheticRun) {
@@ -45,6 +46,8 @@ Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine 
   
 }
 
+Location::Location(CkMigrateMessage *msg) {};
+
 void Location::pup(PUP::er &p) {
   p | infectiousArrivals;
   p | susceptibleArrivals;
@@ -54,6 +57,10 @@ void Location::pup(PUP::er &p) {
   p | day;
   p | uniqueId;
   p | events;
+
+  if (p.isUnpacking()) {
+    unitDistrib = std::uniform_real_distribution<>(0.0,1.0);
+  }
 }
 
 // Lets location partition refresh generator after migration, since pointers

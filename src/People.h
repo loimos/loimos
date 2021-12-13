@@ -27,7 +27,6 @@ class People : public CBase_People {
     int newCases;
     int totalVisitsForDay;
 
-    std::ifstream *activityData;
     std::vector<Person> people;
     std::default_random_engine generator;
     DiseaseModel *diseaseModel;
@@ -35,9 +34,11 @@ class People : public CBase_People {
 
     void ProcessInteractions(Person &person);
     void loadPeopleData();
-    void loadVisitData();
+    void loadVisitData(std::ifstream *activityData);
   public:
     People();
+    People(CkMigrateMessage *msg);
+    void pup(PUP::er &p);
     void SendVisitMessages(); 
     void SyntheticSendVisitMessages();
     void RealDataSendVisitMessages();

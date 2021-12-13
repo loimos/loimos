@@ -29,7 +29,7 @@ class Location : public DataInterface {
   private:
 
     // For random generation.
-    //std::uniform_real_distribution<float> uniform_dist;
+    std::uniform_real_distribution<> unitDistrib;
     std::default_random_engine *generator;
 
     // Each Event in one of these containers is the arrival event for a
@@ -92,10 +92,11 @@ class Location : public DataInterface {
     // This distribution should always be the same - not sure how well
     // static variables work with Charm++, so this may need to be put
     // on the stack somewhere later on
-    static std::uniform_real_distribution<> unitDistrib;
+    // static std::uniform_real_distribution<> unitDistrib;
     
     // Provide default constructor operations.
     Location() = default;
+    Location(CkMigrateMessage *msg);
     Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator);
     Location(const Location&) = default;
     Location(Location&&) = default;
@@ -123,7 +124,5 @@ class Location : public DataInterface {
       ContactModel *contactModel
     );
 };
-// Constant intialisation
-std::uniform_real_distribution<> Location::unitDistrib(0,1);
   
 #endif // __LOCATION_H__

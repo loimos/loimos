@@ -74,6 +74,8 @@ People::People() {
   }
 }
 
+People::People(CkMigrateMessage *msg) {}
+
 /**
  * Loads real people data from file.
  */
@@ -96,7 +98,7 @@ void People::loadPeopleData() {
   peopleCache.close();
 
   // Open activity data and cache. 
-  activityData = new std::ifstream(scenarioPath + "visits.csv");
+  std::ifstream activityData(scenarioPath + "visits.csv");
   std::ifstream activityCache(scenarioPath + scenarioId + "_interactions.cache", std::ios_base::binary);
   if (!activityData || !activityCache) {
     CkAbort("Could not open activity input.");
@@ -123,13 +125,12 @@ void People::loadPeopleData() {
     person.state = diseaseModel->getHealthyState(person.getDataField());
   }
 
-  loadVisitData();
+  loadVisitData(&activityData);
 
-  activityData->close();
-  delete activityData;
+  activityData.close();
 } 
 
-void People::loadVisitData() {
+void People::loadVisitData(std::ifstream *activityData) {
   for (int day = 0; day < DAYS_IN_WEEK; ++day) {
     int nextDaySecs = (day + 1) * DAY_LENGTH;
     for (Person &person: people) {
@@ -164,6 +165,20 @@ void People::loadVisitData() {
               diseaseModel->activityDef, NULL);
       }
     }
+  }
+}
+
+void People::pup(PUP::er &p) {
+  p | numLocalPeople;
+  p | day;
+  p | newCases;
+  p | totalVisitsForDay;
+  p | people;
+  p | generator;
+  p | stateSummaries;
+
+  if (p.isUnpacking()) {
+    diseaseModel = globDiseaseModel.ckLocalBranch();
   }
 }
 

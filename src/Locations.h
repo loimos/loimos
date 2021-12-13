@@ -26,6 +26,7 @@ class Locations : public CBase_Locations {
 
   public:
     Locations();
+    Locations(CkMigrateMessage *msg);
     void pup(PUP::er &p);
     void ReceiveVisitMessages(VisitMessage visitMsg);
     void ComputeInteractions(); // calls ReceiveInfections
