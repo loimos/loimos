@@ -25,6 +25,9 @@ std::uniform_real_distribution<> unitDistrib(0,1);
 #define DEFAULT_
 
 People::People() {
+  //Must be set to true to make AtSync work
+  usesAtSync = true;
+
   newCases = 0;
   day = 0;
   generator.seed(thisIndex);
@@ -388,6 +391,8 @@ void People::EndOfDayStateUpdate() {
   // contributing to reduction
   CkCallback cb(CkReductionTarget(Main, ReceiveInfectiousCount), mainProxy);
   contribute(sizeof(int), &infectiousCount, CkReduction::sum_int, cb);
+  
+  // Get ready for the next day
   day++;
   newCases = 0;
 }
@@ -433,4 +438,9 @@ void People::ProcessInteractions(Person &person) {
   }
 
   person.interactions.clear();
+}
+
+void People::ResumeFromSync() {
+  CkCallback cb(CkReductionTarget(Main, peopleLBComplete), mainProxy);
+  contribute(cb);
 }

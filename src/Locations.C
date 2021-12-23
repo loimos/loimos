@@ -25,7 +25,10 @@
 
 Locations::Locations() {
   day = 0;
-  
+
+  //Must be set to true to make AtSync work
+  usesAtSync = true;
+
   // Getting number of locations assigned to this chare
   numLocalLocations = getNumLocalElements(
     numLocations,
@@ -161,5 +164,13 @@ void Locations::ComputeInteractions() {
 
   CkPrintf("\tDay %d, process %d, thread %d: %d visits, %d locations\n",
     day, CkMyNode(), CkMyPe(), numVisits, (int) locations.size());
+  
   day++;
+}
+
+void Locations::ResumeFromSync() {
+  CkPrintf("\tDone load balancing on location chare %d\n", thisIndex);
+
+  CkCallback cb(CkReductionTarget(Main, locationsLBComplete), mainProxy);
+  contribute(cb);
 }

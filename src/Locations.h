@@ -33,6 +33,8 @@ class Locations : public CBase_Locations {
     
     // Load location data from CSV.
     void loadLocationData();
+
+    void ResumeFromSync();
 };
 
 #endif // __LOCATIONS_H__

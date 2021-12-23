@@ -68,6 +68,7 @@ mainmodule loimos {
             // CkPrintf("Compute Interactions\n");
             locationsArray.ComputeInteractions();
             // CkPrintf("QD Compute Interactions\n");
+            
             CkStartQD(CkCallback(
               CkIndex_Main::ComputedInteractions(),
               mainProxy
@@ -89,6 +90,18 @@ mainmodule loimos {
               "Iteration %d Execution Time: %lf seconds.\n",
               day, CkWallTimer() - iterationStartTime
             );
+          }
+        }
+        if (3 >= day) {
+          serial {
+            locationsArray.AtSync();
+            peopleArray.AtSync();
+          }
+
+          // We don't want to continue until load balancing is complete for
+          // *both* locations and people chares
+          when locationsLBComplete() {
+            when peopleLBComplete() {}
           }
         }
     #ifdef USE_PROJECTIONS
@@ -133,6 +146,8 @@ mainmodule loimos {
     entry [reductiontarget] void traceSwitchOff();
     #endif // USE_PROJECTIONS
     entry [reductiontarget] void printMemoryUsage(long usage);
+    entry [reductiontarget] void locationsLBComplete();
+    entry [reductiontarget] void peopleLBComplete();
   };
 
 
@@ -156,6 +171,7 @@ mainmodule loimos {
 #endif
     entry void EndOfDayStateUpdate(); // contribute call to ReceiveInfectiousCount
     entry void SendStats(); // contribute call to ReceiveStats
+    entry void AtSync();
   };
 
   array [1D] Locations {
@@ -166,6 +182,7 @@ mainmodule loimos {
     entry void ReceiveVisitMessages(VisitMessage);
 #endif
     entry void ComputeInteractions(); // calls ReceiveInteractions
+    entry void AtSync();
   };
 
   nodegroup DiseaseModel {
