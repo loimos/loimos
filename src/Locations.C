@@ -162,14 +162,14 @@ void Locations::ComputeInteractions() {
     loc.processEvents(diseaseModel, contactModel);
   }
 
-  CkPrintf("\tDay %d, process %d, thread %d: %d visits, %d locations\n",
-    day, CkMyNode(), CkMyPe(), numVisits, (int) locations.size());
+  //CkPrintf("\tDay %d, process %d, thread %d: %d visits, %d locations\n",
+  //  day, CkMyNode(), CkMyPe(), numVisits, (int) locations.size());
   
   day++;
 }
 
 void Locations::ResumeFromSync() {
-  CkPrintf("\tDone load balancing on location chare %d\n", thisIndex);
+  //CkPrintf("\tDone load balancing on location chare %d\n", thisIndex);
 
   CkCallback cb(CkReductionTarget(Main, locationsLBComplete), mainProxy);
   contribute(cb);
