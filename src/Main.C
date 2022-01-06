@@ -59,20 +59,36 @@ class TraceSwitcher : public CBase_TraceSwitcher {
   public:
     #ifdef USE_PROJECTIONS
     TraceSwitcher() : CBase_TraceSwitcher(){}
+    
     void traceOn(){
       traceBegin();
       contribute(CkCallback(CkReductionTarget(Main, traceSwitchOn),mainProxy));
     };
+    
     void traceOff(){
       traceEnd();    
       contribute(CkCallback(CkReductionTarget(Main, traceSwitchOff),mainProxy));
     };   
+    
     void traceFlush(){
       traceEnd();
       traceFlushLog();
       traceBegin();
     };
     #endif // USE_PROJECTIONS
+    
+    void instrumentOn(){
+      LBTurnInstrumentOn();
+      contribute(CkCallback(CkReductionTarget(Main, instrumentSwitchOn),
+            mainProxy));
+    }
+    
+    void instrumentOff(){
+      LBTurnInstrumentOff();
+      contribute(CkCallback(CkReductionTarget(Main, instrumentSwitchOff),
+            mainProxy));
+    }
+    
     void reportMemoryUsage(){ 
       // Find this process's memory usage
       struct rusage self_usage;

@@ -46,6 +46,10 @@ mainmodule loimos {
   mainchare Main {
     entry Main(CkArgMsg*);
     entry void run() {
+      // We only want to collect instumentation on the main loop
+      serial{traceArray.instrumentOn();}
+      when instrumentSwitchOn() {}      
+
       for(day = 0; day < numDays; day++) {
       #ifdef USE_PROJECTIONS
         if (day==3){
@@ -92,7 +96,14 @@ mainmodule loimos {
             );
           }
         }
-        if (3 >= day) {
+
+        // Turn off instrumentation before we start load balancing
+        if (4 == day) {
+          serial{traceArray.instrumentOff();}
+          when instrumentSwitchOff() {}
+        }
+
+        if (4 <= day) {
           serial {
             locationsArray.AtSync();
             peopleArray.AtSync();
@@ -104,8 +115,9 @@ mainmodule loimos {
             when peopleLBComplete() {}
           }
         }
+
     #ifdef USE_PROJECTIONS
-        if(3 >= day && 6 <= day) {
+        if(3 <= day && 6 >= day) {
             //serial{traceArray.traceFlush();}
             //when traceFlushDone(){}
         }
@@ -145,6 +157,8 @@ mainmodule loimos {
     entry [reductiontarget] void traceSwitchOn();
     entry [reductiontarget] void traceSwitchOff();
     #endif // USE_PROJECTIONS
+    entry [reductiontarget] void instrumentSwitchOn();
+    entry [reductiontarget] void instrumentSwitchOff();
     entry [reductiontarget] void printMemoryUsage(long usage);
     entry [reductiontarget] void locationsLBComplete();
     entry [reductiontarget] void peopleLBComplete();
@@ -158,6 +172,8 @@ mainmodule loimos {
     entry void traceOff();
     entry void traceFlush();
     #endif // USE_PROJECTIONS
+    entry void instrumentOn();
+    entry void instrumentOff();
     entry void reportMemoryUsage();
   };
 
