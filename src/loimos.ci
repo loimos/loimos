@@ -6,6 +6,13 @@
 mainmodule loimos {
   include "Interaction.h";
   include "Message.h";
+  
+  // Profiling/LB parameters (these are here because Defs.h depends on having
+  // CBase_* classes defined, and these constants are only used in this file)
+  #define PROFILING_START_DAY DAYS_IN_WEEK
+  #define PROFILING_INTERVAL 28
+  #define LB_START_DAY 6
+  #define LB_INTERVAL DAYS_IN_WEEK
 
   include "vector";
   include "sys/time.h";
@@ -52,7 +59,7 @@ mainmodule loimos {
 
       for(day = 0; day < numDays; day++) {
       #ifdef USE_PROJECTIONS
-        if (day==3){
+        if ((day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0){
             serial{traceArray.traceOn();}
             when traceSwitchOn() {}
         }
@@ -98,12 +105,12 @@ mainmodule loimos {
         }
 
         // Turn off instrumentation before we start load balancing
-        if (4 == day) {
+        if (0) {
           serial{traceArray.instrumentOff();}
           when instrumentSwitchOff() {}
         }
 
-        if (4 <= day) {
+        if ((day - LB_START_DAY) % LB_INTERVAL == 0) {
           serial {
             locationsArray.AtSync();
             peopleArray.AtSync();
@@ -117,11 +124,9 @@ mainmodule loimos {
         }
 
     #ifdef USE_PROJECTIONS
-        if(3 <= day && 6 >= day) {
+        if ((day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0) {
             //serial{traceArray.traceFlush();}
             //when traceFlushDone(){}
-        }
-        if(day==6){
             serial{traceArray.traceOff();}
             when traceSwitchOff(){}
         }
