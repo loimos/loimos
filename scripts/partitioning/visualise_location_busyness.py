@@ -9,6 +9,10 @@ import os
 import sys
 import math
 
+# Use a non-interactive backend so we don't have to worry about getting missing
+# displays on remote systems (or setting up x-forwarding)
+plt.switch_backend('Agg')
+
 #input_dir = os.path.join('..', '..', 'data', 'populations', 'coc')
 #n_partitions = 40
 input_dir = sys.argv[1]
