@@ -9,10 +9,6 @@ import os
 import sys
 import math
 
-# Use a non-interactive backend so we don't have to worry about getting missing
-# displays on remote systems (or setting up x-forwarding)
-plt.switch_backend('Agg')
-
 #input_dir = os.path.join('..', '..', 'data', 'populations', 'coc')
 #n_partitions = 40
 input_dir = sys.argv[1]
@@ -31,12 +27,12 @@ partitions = pd.DataFrame(locations.groupby(by='lid_partition').sum())
 
 # Show how heavy each partition is
 fig, ax = plt.subplots(figsize=(10,6))
-sns.barplot(data=locations, x='lid_partition', y='max_simultaneous_visits', ax=ax, ci=None)
-plt.savefig('partition_weights.pdf')
+sns.barplot(data=locations, x='lid_partition', y='max_simultaneous_visits', ax=ax)
+plt.savefig('partition_weights.png')
 
 # Show the distribution in each partition (also shows outliers)
 fig, ax = plt.subplots(figsize=(10,6))
 sns.boxplot(data=locations, x='lid_partition', y='max_simultaneous_visits', ax=ax)
-plt.savefig('partition_distribution.pdf')
+plt.savefig('partition_distribution.png')
 
 #plt.fill_between(partitions.index, partitions['max_simultaneous_visits'])
