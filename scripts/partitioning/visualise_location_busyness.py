@@ -28,11 +28,11 @@ partitions = pd.DataFrame(locations.groupby(by='lid_partition').sum())
 # Show how heavy each partition is
 fig, ax = plt.subplots(figsize=(10,6))
 sns.barplot(data=locations, x='lid_partition', y='max_simultaneous_visits', ax=ax)
-plt.savefig('partition_weights.png')
+plt.savefig('partition_weights.pdf')
 
 # Show the distribution in each partition (also shows outliers)
 fig, ax = plt.subplots(figsize=(10,6))
 sns.boxplot(data=locations, x='lid_partition', y='max_simultaneous_visits', ax=ax)
-plt.savefig('partition_distribution.png')
+plt.savefig('partition_distribution.pdf')
 
 #plt.fill_between(partitions.index, partitions['max_simultaneous_visits'])
