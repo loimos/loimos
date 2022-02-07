@@ -25,14 +25,14 @@ from multiprocessing import Pool, set_start_method
 def find_max_simultaneous_visits(visits, lid):
     max_in_visit = 0
     end_times = []
-    for _, row in visits[visits[LOCATION_ID_COLUMN_NAME] == lid][['start_time','end_time']].iterrows():
+    for _, row in visits[visits[LOCATION_ID_COLUMN_NAME] == lid][['start_time','duration']].iterrows():
         # Filter out end_times not in range.
         start_time = row['start_time']
         while len(end_times) and end_times[0] <= start_time:
             heapq.heappop(end_times)
 
         # Append in sorted order.
-        heapq.heappush(end_times, row['end_time'])
+        heapq.heappush(end_times, start_time + row['duration'])
         max_in_visit = max(max_in_visit, len(end_times))
     
     return max_in_visit
@@ -88,28 +88,29 @@ if __name__ == '__main__':
             .count()
             .rename({OTHER_COLUMN: 'total_visits'}, axis=1)
     )
-
-    # Calculate total visits for each day per location.
-    daily_summaries = visits[['lid','daynum','start_time']].groupby(['lid','daynum']).count().unstack().fillna(0)
-    # Rename columns.
-    renaming = []
-    for column in daily_summaries.columns:
-        renaming.append(f'total_on_day_{column[1]}')
-    daily_summaries.columns = renaming
-    
     end_time = time.perf_counter()
     print('Calculating total visits:', end_time - start_time)
 
-    # Calculate some additional statistics.
-    start_time = time.perf_counter()
-    daily_summaries['average_daily_total'] = daily_summaries.mean(axis=1)
-    daily_summaries['median_daily_total'] = daily_summaries.median(axis=1)
-    daily_summaries['max_daily_total'] = daily_summaries.max(axis=1)
-    # Merge in.
-    max_visits = max_visits.merge(daily_summaries, left_index=True, right_index=True)
-    
-    end_time = time.perf_counter()
-    print('Calculating daily summaries:', end_time - start_time)
+    renaming = []
+    if 'daynum' in visits:
+        # Calculate total visits for each day per location.
+        start_time = time.perf_counter()
+        daily_summaries = visits[['lid','daynum','start_time']] \
+            .groupby(['lid','daynum']).count().unstack().fillna(0)
+        # Rename columns.
+        for column in daily_summaries.columns:
+            renaming.append(f'total_on_day_{column[1]}')
+        daily_summaries.columns = renaming
+        
+        # Calculate some additional statistics.
+        daily_summaries['average_daily_total'] = daily_summaries.mean(axis=1)
+        daily_summaries['median_daily_total'] = daily_summaries.median(axis=1)
+        daily_summaries['max_daily_total'] = daily_summaries.max(axis=1)
+        # Merge in.
+        max_visits = max_visits.merge(daily_summaries, left_index=True, right_index=True)
+        
+        end_time = time.perf_counter()
+        print('Calculating daily summaries:', end_time - start_time)
 
     # Calculate the maximum simulatenous visits using as many processes
     # as possible
@@ -149,11 +150,13 @@ if __name__ == '__main__':
     
     # Fix types of heuristic coluns so that we can read in integer attributes
     # properly in loimos
-    output_dtypes = {
-        'median_daily_total': int,
-        'max_daily_total': int,
-        'max_simultaneous_visits': int
-    }
+    output_dtypes = {}
+    if 'daynum' in visits:
+        output_dtypes.update({
+            'median_daily_total': int,
+            'max_daily_total': int,
+            'max_simultaneous_visits': int
+        })
     output_dtypes.update({c: int for c in renaming})
     output_df = output_df.astype(output_dtypes)
     print(output_df.dtypes)
