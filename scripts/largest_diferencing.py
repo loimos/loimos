@@ -50,8 +50,9 @@ def folding_partition(locations, num_partitions):
     # so fill in the earlier out of bounds elements with elements from it
     out_of_bounds_mask = permutation >= locations.shape[0]
     num_out_of_bounds = np.sum(out_of_bounds_mask)
-    permutation[out_of_bounds_mask] = permutation[-num_out_of_bounds:]
-    permutation = permutation[:-num_out_of_bounds]
+    if num_out_of_bounds > 0:
+        permutation[out_of_bounds_mask] = permutation[-num_out_of_bounds:]
+        permutation = permutation[:-num_out_of_bounds]
 
     #print('out of bounds ids:\n', permutation[out_of_bounds_mask])
     #print('out of bounds partitions:\n', np.where(out_of_bounds_mask)[0]
