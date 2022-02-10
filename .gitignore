@@ -21,7 +21,13 @@ settings.json
 .vscode
 *.dSYM
 
-# Large data files shouldn't be commited
-data/populations/coc/*.csv
-data/populations/??/*.csv # real data
+# Large data files shouldn't be commited by default
+# If you really want to add a one to the repo, though, use
+#   git add --force -- <file0> <file1> ...
+#data/populations/coc/*.csv
+#data/populations/??/*.csv # real data
+data/populations/*
+*.csv
 *.cache
+*.pdf
+*__pycache__*
