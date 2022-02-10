@@ -74,6 +74,56 @@ def folding_partition(locations, num_partitions):
     print(permutation)
     return permutation
 
+def get_partition_mean(locations, num_partitions,
+        partition_col='lid',
+        agg_col='max_simultaneous_visits'):
+    # Partition data
+    partition_width = int(math.ceil(locations.shape[0] / num_partitions))
+    locations['lid_partition'] = \
+            pd.cut(locations[partition_col], num_partitions).cat.codes
+    partitions = pd.DataFrame(locations.groupby(by='lid_partition').mean())
+    return locations[['lid_partition', partition_col, agg_col]]
+
+# TODO: make sure this works by applying a custom permutation
+def permute_locations(people, locations, visits, permutation):
+    # Remap expects an array of new indices in the same order as the orignal
+    # dataframe, so we need to convert from the order the indices appear in
+    # the output to the order they appear in the input
+    num_locations = locations.shape[0]
+    new_lids = np.fromiter(range(num_locations), int)
+    #print(locations.shape, permutation.shape, new_lids.shape)
+    cauchy_perm = np.array([locations.iloc[permutation]['lid'],
+        new_lids])
+    #print(cauchy_perm)
+    cauchy_perm = cauchy_perm.transpose()
+    #print(cauchy_perm)
+    cauchy_perm = cauchy_perm[cauchy_perm[:, 0].argsort()]
+    #print('(old lid, new lid) pairs:')
+    print(cauchy_perm)
+
+    locations['old_lid'] = cauchy_perm[:,0]
+    locations['new_lid'] = cauchy_perm[:,1]
+    locations['old_lid_partition'] = locations['lid_partition']
+    #print(get_partition_mean(locations, num_partitions, partition_col='new_lid'))
+    #print(cauchy_perm[:,0] - cauchy_perm[:,1])
+
+    old_locations = locations
+
+    #print('indices:', locations.index)
+    #print('permutation:', permutation)
+    #print('permuted indices:', locations.index[permutation])
+    people, locations, visits = remap(people, locations, visits,
+            new_location_ids=cauchy_perm[:,1])
+    # Loimos expects partitions to be in order, so we need to sort the data
+    # to reflect the new indicies before writing everythign out
+    #locations.sort_values(by='lid', inplace=True)
+    #locations.reset_index(inplace=True, drop=True)
+
+    print(locations)
+    print(old_locations)
+
+    return people, locations, visits
+
 def main():
     path = sys.argv[1]
     people = pd.read_csv(os.path.join(path, 'people.csv'))
@@ -90,35 +140,17 @@ def main():
 
     locations.sort_values(by='max_simultaneous_visits', inplace=True,
             ascending=False)
+    locations.reset_index(inplace=True, drop=True)
+    print(get_partition_mean(locations, num_partitions))
     
     permutation = folding_partition(locations, num_partitions)
-    print(permutation)
+    #print(permutation)
 
-    # Remap expects an array of new indices in the same order as the orignal
-    # dataframe, so we need to convert from the order the indices appear in
-    # the output to the order they appear in the input
-    num_locations = locations.shape[0]
-    new_lids = np.fromiter(range(num_locations), int)
-    print(locations.shape, permutation.shape, new_lids.shape)
-    cauchy_perm = np.array([locations.iloc[permutation]['lid'],
-        new_lids])
-    print(cauchy_perm)
-    cauchy_perm = cauchy_perm.transpose()
-    print(cauchy_perm)
-    cauchy_perm = cauchy_perm[cauchy_perm[:, 0].argsort()]
-    print('(old lid, new lid) pairs:')
-    print(cauchy_perm)
-
-    #print('indices:', locations.index)
-    #print('permutation:', permutation)
-    #print('permuted indices:', locations.index[permutation])
-    people, locations, visits = remap(people, locations, visits, people['pid'],
-            cauchy_perm[:,1])
-    # Loimos expects partitions to be in order, so we need to sort the data
-    # to reflect the new indicies before writing everythign out
-    locations.sort_values(by='lid', inplace=True)
-
-    print(locations['lid'])
+    people, locations, visits = \
+            permute_locations(people, locations, visits, permutation)
+    
+    print('final means:\n', get_partition_mean(locations, num_partitions))
+    locations['new_lid_partition'] = locations['lid_partition']
 
     #print(locations.columns)
     #print(locations)
