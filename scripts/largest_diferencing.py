@@ -11,8 +11,13 @@ import pprint
 from numberpartitioning import karmarkar_karp
 from utils.id_remapper import remap
 
-def folding_partition(locations, num_partitions):
-    partition_width = int(math.ceil(locations.shape[0] / num_partitions))
+# This implemntation of the folding partition alorithm is based on the
+# description of the algortihm given in:
+#   Babel, L., Kellerer, H., & Kotov, V. (1998). The k-partitioning problem.
+#   Mathematical Methods of Operations Research, 47(1), 59–82.
+#   https://doi.org/10.1007/BF01193837
+def folding_partition(num_elements, num_partitions):
+    partition_width = int(math.ceil(num_elements / num_partitions))
     
     # Note: the folding partition assumes that the elements are sorted in
     # descending order of weight, however, if we compose the sorting
@@ -37,124 +42,80 @@ def folding_partition(locations, num_partitions):
 
         partitions.append(cur_partition)
 
-    #print('parition lengths:', [len(p) for p in partitions])
-
+    # Using a single array simiplifies things from here on out
     permutation = np.fromiter(itertools.chain(*partitions), int)
-    print(permutation)
-
-    #We shouldn't have any duplicate ids
-    #duplicate_ids = ids[id_counts > 1]
-    #print('duplicate ids:\n', duplicate_ids)
 
     # The last partition is the only one which can be less than partition_width
     # so fill in the earlier out of bounds elements with elements from it
-    out_of_bounds_mask = permutation >= locations.shape[0]
+    out_of_bounds_mask = permutation >= num_elements
     num_out_of_bounds = np.sum(out_of_bounds_mask)
     if num_out_of_bounds > 0:
         permutation[out_of_bounds_mask] = permutation[-num_out_of_bounds:]
         permutation = permutation[:-num_out_of_bounds]
-
-    #print('out of bounds ids:\n', permutation[out_of_bounds_mask])
-    #print('out of bounds partitions:\n', np.where(out_of_bounds_mask)[0]
-    #    // partition_width)
    
     # Make sure we took care of all the out of bounds elements
-    out_of_bounds_mask = permutation >= locations.shape[0]
+    out_of_bounds_mask = permutation >= num_elements
     assert(np.sum(out_of_bounds_mask) == 0)
     
-    # Make sure the permutation is a bijection onto locations
+    # Make sure the permutation is a bijection onto elements
     ids, id_counts = np.unique(permutation, return_counts=True)
     assert(not np.any(id_counts > 1))
-    assert(permutation.shape[0] == locations.shape[0])
+    assert(permutation.shape[0] == num_elements)
     
-    #print(permutation.shape, locations.shape)
-    #print('unique ids:\n', np.unique(permutation).shape[0],
-    #    'total ids:', permutation.shape[0])
-
-    print(permutation)
     return permutation
 
-def get_partition_mean(locations, num_partitions,
-        partition_col='lid',
+# Helper function which reports the aggregate values in each partition.
+# Implmented here for debuging purposes
+def get_partition_mean(df, num_partitions,
+        partition_by='lid',
+        partition_col='partition',
         agg_col='max_simultaneous_visits'):
     # Partition data
-    partition_width = int(math.ceil(locations.shape[0] / num_partitions))
-    locations['lid_partition'] = \
-            pd.cut(locations[partition_col], num_partitions).cat.codes
-    partitions = pd.DataFrame(locations.groupby(by='lid_partition').mean())
-    return locations[['lid_partition', partition_col, agg_col]]
+    partition_width = int(math.ceil(df.shape[0] / num_partitions))
+    df[partition_col] = \
+            pd.cut(df[partition_by], num_partitions).cat.codes
+    partitions = pd.DataFrame(df.groupby(by=partition_col).mean())
+    
+    return df[[partition_col, partition_by, agg_col]]
 
-# TODO: make sure this works by applying a custom permutation
-def permute_locations(people, locations, visits, permutation):
-    # Remap expects an array of new indices in the same order as the orignal
-    # dataframe, so we need to convert from the order the indices appear in
-    # the output to the order they appear in the input
-    num_locations = locations.shape[0]
-    new_lids = np.fromiter(range(num_locations), int)
-    #print(locations.shape, permutation.shape, new_lids.shape)
-    cauchy_perm = np.array([locations.iloc[permutation]['lid'],
-        new_lids])
-    #print(cauchy_perm)
+# Remap expects an array of new indices in the same order as the orignal
+# dataframe, whereas the folding partition algorithm gives us the order
+# the idnices appear in the final partitioned version. This helper function
+# lets us convert between these two orderings
+def invert_permutation(df, permutation, id_col='lid'):
+    num_elements = df.shape[0]
+    old_ids = df.iloc[permutation][id_col]
+    new_ids = np.fromiter(range(num_elements), int)
+
+    # The argsort trick requires a column vector, but it's much easier
+    # to create the array row-wise, hence the transpose
+    cauchy_perm = np.array([old_ids, new_ids])
     cauchy_perm = cauchy_perm.transpose()
-    #print(cauchy_perm)
     cauchy_perm = cauchy_perm[cauchy_perm[:, 0].argsort()]
-    #print('(old lid, new lid) pairs:')
-    print(cauchy_perm)
 
-    locations['old_lid'] = cauchy_perm[:,0]
-    locations['new_lid'] = cauchy_perm[:,1]
-    locations['old_lid_partition'] = locations['lid_partition']
-    #print(get_partition_mean(locations, num_partitions, partition_col='new_lid'))
-    #print(cauchy_perm[:,0] - cauchy_perm[:,1])
-
-    old_locations = locations
-
-    #print('indices:', locations.index)
-    #print('permutation:', permutation)
-    #print('permuted indices:', locations.index[permutation])
-    people, locations, visits = remap(people, locations, visits,
-            new_location_ids=cauchy_perm[:,1])
-    # Loimos expects partitions to be in order, so we need to sort the data
-    # to reflect the new indicies before writing everythign out
-    #locations.sort_values(by='lid', inplace=True)
-    #locations.reset_index(inplace=True, drop=True)
-
-    print(locations)
-    print(old_locations)
-
-    return people, locations, visits
+    return cauchy_perm[:,1]
 
 def main():
+    # Parse args and read data
     path = sys.argv[1]
     people = pd.read_csv(os.path.join(path, 'people.csv'))
     locations = pd.read_csv(os.path.join(path, 'locations.csv'))
     visits = pd.read_csv(os.path.join(path, 'visits.csv'))
     num_partitions = int(sys.argv[2])
 
-    # Partition data and combine new indices into a single list for easier
-    # indexing
-    #results = karmarkar_karp(list(locations['max_simultaneous_visits']),
-    #        num_partitions=num_partitions, return_indices=True)
-    #print('parition lengths:', [len(p) for p in results.partition])
-    #permutation = np.fromiter(itertools.chain(*results.partition), int)
-
+    # The folding partition algroithm expects the data to be pre-sorted
     locations.sort_values(by='max_simultaneous_visits', inplace=True,
             ascending=False)
     locations.reset_index(inplace=True, drop=True)
-    print(get_partition_mean(locations, num_partitions))
     
-    permutation = folding_partition(locations, num_partitions)
-    #print(permutation)
-
-    people, locations, visits = \
-            permute_locations(people, locations, visits, permutation)
+    permutation = folding_partition(locations.shape[0], num_partitions)
+    inverted_permutation = invert_permutation(locations, permutation)
+    people, locations, visits = remap(people, locations, visits,
+            new_location_ids=inverted_permutation)
     
-    print('final means:\n', get_partition_mean(locations, num_partitions))
-    locations['new_lid_partition'] = locations['lid_partition']
-
-    #print(locations.columns)
-    #print(locations)
-
+    # We need to save the new version of visits.csv as remap updates the lids
+    # of each visit to reflect each location's new lid and position in
+    # locations.csv
     people.to_csv('people.csv', index=False)
     locations.to_csv('locations.csv', index=False)
     visits.to_csv('visits.csv', index=False)
