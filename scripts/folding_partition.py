@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 import pprint
 
-from numberpartitioning import karmarkar_karp
 from utils.id_remapper import remap
 
 # This implemntation of the folding partition alorithm is based on the
