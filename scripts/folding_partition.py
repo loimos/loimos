@@ -41,6 +41,9 @@ def folding_partition(num_elements, num_partitions):
 
         partitions.append(cur_partition)
 
+    return partitions
+
+def partitions_to_permutation(partitions, num_elements):
     # Using a single array simiplifies things from here on out
     permutation = np.fromiter(itertools.chain(*partitions), int)
 
@@ -101,13 +104,15 @@ def main():
     locations = pd.read_csv(os.path.join(path, 'locations.csv'))
     visits = pd.read_csv(os.path.join(path, 'visits.csv'))
     num_partitions = int(sys.argv[2])
+    num_elements = locations.shape[0]
 
     # The folding partition algroithm expects the data to be pre-sorted
     locations.sort_values(by='max_simultaneous_visits', inplace=True,
             ascending=False)
     locations.reset_index(inplace=True, drop=True)
     
-    permutation = folding_partition(locations.shape[0], num_partitions)
+    partitions = folding_partition(num_elements, num_partitions)
+    permutation = partitions_to_permutation(partitions, num_elements)
     inverted_permutation = invert_permutation(locations, permutation)
     people, locations, visits = remap(people, locations, visits,
             new_location_ids=inverted_permutation)
