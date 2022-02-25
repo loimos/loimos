@@ -13,6 +13,8 @@ import people_partitioners as pp
 
 import sys
 import os
+
+# Python modules need to either be in/below this dir or in the path
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)

@@ -6,8 +6,12 @@ import math
 import itertools
 import numpy as np
 import pandas as pd
-import pprint
+import argparse
 
+# Python modules need to either be in/below this dir or in the path
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.append(parentdir)
 from utils.id_remapper import remap
 
 # This implemntation of the folding partition alorithm is based on the
@@ -129,7 +133,6 @@ def main():
     # Build partitions seperately for home and non-home locations, as they
     # have drastically different numbers of visits
     home_partitions, num_extra = folding_partition(num_homes, num_partitions)
-    #home_permutation = partitions_to_permutation(home_partitions, num_homes)
     
     # For the sake of convience, just fill out the home_partitions completely
     # using a few non-home locations rather than doing any complicated indexing
@@ -137,11 +140,8 @@ def main():
             num_partitions,
             i_0 = num_homes + num_extra)
     for i in range(num_partitions):
-        #print('partition {}: {} homes, {} other locations' \
-        #    .format(i, len(home_partitions[i]), len(non_home_partitions[i])))
         home_partitions[i].extend(non_home_partitions[i])
     partitions = home_partitions
-    #print(np.array(partitions))
 
     permutation = partitions_to_permutation(partitions, num_elements)
     inverted_permutation = invert_permutation(locations, permutation)
