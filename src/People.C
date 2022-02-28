@@ -440,7 +440,9 @@ void People::ProcessInteractions(Person &person) {
   person.interactions.clear();
 }
 
+#ifdef ENABLE_LB
 void People::ResumeFromSync() {
   CkCallback cb(CkReductionTarget(Main, peopleLBComplete), mainProxy);
   contribute(cb);
 }
+#endif // ENABLE_LB

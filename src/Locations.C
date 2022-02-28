@@ -168,9 +168,11 @@ void Locations::ComputeInteractions() {
   day++;
 }
 
+#ifdef ENABLE_LB
 void Locations::ResumeFromSync() {
   //CkPrintf("\tDone load balancing on location chare %d\n", thisIndex);
 
   CkCallback cb(CkReductionTarget(Main, locationsLBComplete), mainProxy);
   contribute(cb);
 }
+#endif // ENABLE_LB

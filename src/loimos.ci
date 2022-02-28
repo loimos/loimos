@@ -54,8 +54,10 @@ mainmodule loimos {
     entry Main(CkArgMsg*);
     entry void run() {
       // We only want to collect instumentation on the main loop
-      serial{traceArray.instrumentOn();}
-      when instrumentSwitchOn() {}      
+      #ifdef ENABLE_LB
+        serial{traceArray.instrumentOn();}
+        when instrumentSwitchOn() {}
+      #endif // ENABLE_LB
 
       for(day = 0; day < numDays; day++) {
       #ifdef USE_PROJECTIONS
@@ -104,39 +106,40 @@ mainmodule loimos {
           }
         }
 
-        // Turn off instrumentation before we start load balancing
-        if (0) {
+        #ifdef ENABLE_LB
+          // Turn off instrumentation before we start load balancing
           serial{traceArray.instrumentOff();}
           when instrumentSwitchOff() {}
-        }
+          
+          if ((day - LB_START_DAY) % LB_INTERVAL == 0) {
+            serial {
+              locationsArray.AtSync();
+              peopleArray.AtSync();
+            }
 
-        if ((day - LB_START_DAY) % LB_INTERVAL == 0) {
-          serial {
-            locationsArray.AtSync();
-            peopleArray.AtSync();
+            // We don't want to continue until load balancing is complete for
+            // *both* locations and people chares
+            when locationsLBComplete() {
+              when peopleLBComplete() {}
+            }
           }
+        #endif // ENABLE_LB
+      
 
-          // We don't want to continue until load balancing is complete for
-          // *both* locations and people chares
-          when locationsLBComplete() {
-            when peopleLBComplete() {}
+        #ifdef USE_PROJECTIONS
+          if ((day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0) {
+              serial{traceArray.traceOff();}
+              when traceSwitchOff(){}
           }
-        }
-
-    #ifdef USE_PROJECTIONS
-        if ((day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0) {
-            //serial{traceArray.traceFlush();}
-            //when traceFlushDone(){}
-            serial{traceArray.traceOff();}
-            when traceSwitchOff(){}
-        }
-    #endif
-        serial{traceArray.reportMemoryUsage();}
-        when printMemoryUsage(long usage) {
-          serial {
-            CkPrintf("Currently using %ld kb in total\n", usage);
+          
+          // Toggled by USE_PROJECTIONS to group profiling code
+          serial{traceArray.reportMemoryUsage();}
+          when printMemoryUsage(long usage) {
+            serial {
+              CkPrintf("Currently using %ld kb in total\n", usage);
+            }
           }
-        }
+        #endif // USE_PROJECTIONS
       }
       serial { 
         CkPrintf("\nFinished data loading in %lf seconds.\n", simulationStartTime);
@@ -161,12 +164,14 @@ mainmodule loimos {
     #ifdef USE_PROJECTIONS
     entry [reductiontarget] void traceSwitchOn();
     entry [reductiontarget] void traceSwitchOff();
+    entry [reductiontarget] void printMemoryUsage(long usage);
     #endif // USE_PROJECTIONS
+    #ifdef ENABLE_LB
     entry [reductiontarget] void instrumentSwitchOn();
     entry [reductiontarget] void instrumentSwitchOff();
-    entry [reductiontarget] void printMemoryUsage(long usage);
     entry [reductiontarget] void locationsLBComplete();
     entry [reductiontarget] void peopleLBComplete();
+    #endif // ENABLE_LB
   };
 
 
@@ -176,10 +181,12 @@ mainmodule loimos {
     entry void traceOn();
     entry void traceOff();
     entry void traceFlush();
+    entry void reportMemoryUsage();
     #endif // USE_PROJECTIONS
+    #ifdef ENABLE_LB
     entry void instrumentOn();
     entry void instrumentOff();
-    entry void reportMemoryUsage();
+    #endif // ENABLE_LB
   };
 
   array [1D] People {

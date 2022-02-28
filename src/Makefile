@@ -19,6 +19,9 @@ ifdef ENABLE_UNIT_TESTING
 UNIT_TEST_OBJS = tests/DiseaseModelTest.o
 endif
 
+# Set the ENABLE_LB environment variable to compile for Charm++'s in-built
+# dynamic load balancing
+
 # set the USE_PROJECTIONS environment variable to compile for projections
 ifdef USE_PROJECTIONS
 PROJECTION_FLAGS = -tracemode projections

@@ -45,7 +45,9 @@ class People : public CBase_People {
     void ReceiveInteractions(InteractionMessage interMsg);
     void EndOfDayStateUpdate();
     void SendStats();
+    #ifdef ENABLE_LB
     void ResumeFromSync();
+    #endif // ENABLE_LB
 };
 
 #endif // __PEOPLE_H__

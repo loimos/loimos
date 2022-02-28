@@ -75,19 +75,6 @@ class TraceSwitcher : public CBase_TraceSwitcher {
       traceFlushLog();
       traceBegin();
     };
-    #endif // USE_PROJECTIONS
-    
-    void instrumentOn(){
-      LBTurnInstrumentOn();
-      contribute(CkCallback(CkReductionTarget(Main, instrumentSwitchOn),
-            mainProxy));
-    }
-    
-    void instrumentOff(){
-      LBTurnInstrumentOff();
-      contribute(CkCallback(CkReductionTarget(Main, instrumentSwitchOff),
-            mainProxy));
-    }
     
     void reportMemoryUsage(){ 
       // Find this process's memory usage
@@ -108,6 +95,21 @@ class TraceSwitcher : public CBase_TraceSwitcher {
       //CkPrintf("  Process %ld is using %ld kb\n",
       //    (int) pid, self_usage.ru_maxrss);
     };
+    #endif // USE_PROJECTIONS
+   
+    #ifdef ENABLE_LB
+    void instrumentOn(){
+      LBTurnInstrumentOn();
+      contribute(CkCallback(CkReductionTarget(Main, instrumentSwitchOn),
+            mainProxy));
+    }
+    
+    void instrumentOff(){
+      LBTurnInstrumentOff();
+      contribute(CkCallback(CkReductionTarget(Main, instrumentSwitchOff),
+            mainProxy));
+    }
+    #endif // ENABLE_LB
 };
 
 Main::Main(CkArgMsg* msg) {
