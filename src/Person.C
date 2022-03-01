@@ -29,6 +29,17 @@ Person::Person(int numAttributes, int startingState, int timeLeftInState) {
     this->visitsByDay.resize(DAYS_IN_WEEK);
 }
 
+void Person::pup(PUP::er &p) {
+    p | uniqueId;
+    p | state;
+    p | next_state;
+    p | secondsLeftInState;
+    p | interactions;
+    p | visitOffsetByDay;
+    p | visitsByDay;
+    p | personData;
+}
+
 void Person::setUniqueId(int idx) {
     this->uniqueId = idx;
 }

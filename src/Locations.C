@@ -15,6 +15,7 @@
 #include "Defs.h"
 #include "readers/DataReader.h"
 #include "Person.h"
+#include "pup_stl.h"
 
 #include <algorithm>
 #include <queue>
@@ -23,6 +24,11 @@
 #include <fstream>
 
 Locations::Locations() {
+  day = 0;
+
+  //Must be set to true to make AtSync work
+  usesAtSync = true;
+
   // Getting number of locations assigned to this chare
   numLocalLocations = getNumLocalElements(
     numLocations,
@@ -50,6 +56,8 @@ Locations::Locations() {
   contactModel = createContactModel();
   contactModel->setGenerator(&generator);
 }
+    
+Locations::Locations(CkMigrateMessage *msg) {};
 
 void Locations::loadLocationData() {
   // Init local.
@@ -106,6 +114,23 @@ void Locations::loadLocationData() {
   }
 }
 
+void Locations::pup(PUP::er &p) {
+  p | numLocalLocations;
+  p | locations;
+  p | generator;
+  p | day;
+  
+  if (p.isUnpacking()) {
+    diseaseModel = globDiseaseModel.ckLocalBranch();
+    contactModel = new ContactModel();
+    contactModel->setGenerator(&generator);
+
+    for (Location &loc: locations) {
+      loc.setGenerator(&generator);
+    }
+  }
+}
+
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   
   // adding person to location visit list
@@ -129,9 +154,25 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   locations[localLocIdx].addEvent(departure);
 }
 
-void Locations::ComputeInteractions() {
+void Locations::ComputeInteractions() { 
   // traverses list of locations
+  int numVisits = 0;
   for (Location &loc : locations) {
+    numVisits += loc.events.size() / 2;
     loc.processEvents(diseaseModel, contactModel);
   }
+
+  //CkPrintf("\tDay %d, process %d, thread %d: %d visits, %d locations\n",
+  //  day, CkMyNode(), CkMyPe(), numVisits, (int) locations.size());
+  
+  day++;
 }
+
+#ifdef ENABLE_LB
+void Locations::ResumeFromSync() {
+  //CkPrintf("\tDone load balancing on location chare %d\n", thisIndex);
+
+  CkCallback cb(CkReductionTarget(Main, locationsLBComplete), mainProxy);
+  contribute(cb);
+}
+#endif // ENABLE_LB

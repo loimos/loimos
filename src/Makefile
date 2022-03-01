@@ -19,6 +19,9 @@ ifdef ENABLE_UNIT_TESTING
 UNIT_TEST_OBJS = tests/DiseaseModelTest.o
 endif
 
+# Set the ENABLE_LB environment variable to compile for Charm++'s in-built
+# dynamic load balancing
+
 # set the USE_PROJECTIONS environment variable to compile for projections
 ifdef USE_PROJECTIONS
 PROJECTION_FLAGS = -tracemode projections
@@ -44,12 +47,12 @@ $(DECLS): %.decl.h: %.ci
 
 # Build .o files from the corresponding .C and .h files
 $(OBJS): %.o: %.C %.h $(DECLS) $(DEFS)
-	$(CHARMC) $(CXXFLAGS) -o $@ $<
+	$(CHARMC) $(CXXFLAGS) -c -o $@ $<
 
 # Build .o files from just the .C files for unit tests 
 # (they don't have .h files)
 $(UNIT_TEST_OBJS): %.o: %.C $(DECLS) $(DEFS)
-	$(CHARMC) $(CXXFLAGS) -o $@ $<
+	$(CHARMC) $(CXXFLAGS) -c -o $@ $<
 
 # Subdirs will build the protobuf object files
 .PHONY: all-sub

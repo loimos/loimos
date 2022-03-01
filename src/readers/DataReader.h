@@ -26,13 +26,9 @@ union Data {
     bool boolean;
     uint32_t uint_32;
     double probability;
-    uint16_t category; 
-
-    void pup(PUP::er& p) {
-        p | probability;
-    }
+    uint16_t category;
 };
-
+PUPbytes(union Data);
 
 /**
  * Defines a generic data reader for any child class of DataInterface.

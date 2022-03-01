@@ -6,7 +6,7 @@
 
 #include "loimos.decl.h"
 #include "Event.h"
-
+  
 // This is just so that we can order Events in the Location queues
 bool Event::operator<(const Event& rhs) const {
   // First compare times...

@@ -22,14 +22,21 @@ class Locations : public CBase_Locations {
     std::default_random_engine generator;
     DiseaseModel *diseaseModel;
     ContactModel *contactModel;
+    int day;
 
   public:
     Locations();
+    Locations(CkMigrateMessage *msg);
+    void pup(PUP::er &p);
     void ReceiveVisitMessages(VisitMessage visitMsg);
     void ComputeInteractions(); // calls ReceiveInfections
     
     // Load location data from CSV.
     void loadLocationData();
+
+    #ifdef ENABLE_LB
+    void ResumeFromSync();
+    #endif // ENABLE_LB
 };
 
 #endif // __LOCATIONS_H__

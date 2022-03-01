@@ -16,6 +16,9 @@
 #include <tuple>
 #include <iostream>
 #include <fstream>
+#include <unordered_map>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 #ifdef ENABLE_UNIT_TESTING
 #include "gtest/gtest.h"
@@ -25,9 +28,7 @@
 /* readonly */ CProxy_People peopleArray;
 /* readonly */ CProxy_Locations locationsArray;
 /* readonly */ CProxy_DiseaseModel globDiseaseModel;
-#ifdef USE_PROJECTIONS
 /* readonly */ CProxy_TraceSwitcher traceArray;
-#endif
 /* readonly */ int numPeople;
 /* readonly */ int numLocations;
 /* readonly */ int numPeoplePartitions;
@@ -54,21 +55,62 @@
 /* readonly */ int synLocationPartitionGridHeight;
 /* readonly */ int averageDegreeOfVisit;
 
-#ifdef USE_PROJECTIONS
 class TraceSwitcher : public CBase_TraceSwitcher {
-public:
+  public:
+    #ifdef USE_PROJECTIONS
     TraceSwitcher() : CBase_TraceSwitcher(){}
+    
     void traceOn(){
-        traceBegin();
-        contribute(CkCallback(CkReductionTarget(Main, traceSwitchOn),mainProxy));
+      traceBegin();
+      contribute(CkCallback(CkReductionTarget(Main, traceSwitchOn),mainProxy));
     };
+    
     void traceOff(){
-        traceEnd();    
-        contribute(CkCallback(CkReductionTarget(Main, traceSwitchOff),mainProxy));
+      traceEnd();    
+      contribute(CkCallback(CkReductionTarget(Main, traceSwitchOff),mainProxy));
     };   
     
+    void traceFlush(){
+      traceEnd();
+      traceFlushLog();
+      traceBegin();
+    };
+    
+    void reportMemoryUsage(){ 
+      // Find this process's memory usage
+      struct rusage self_usage;
+      getrusage(RUSAGE_SELF, &self_usage);
+      
+      // Account for the fact that multiple threads may be run on this process
+      self_usage.ru_maxrss /= CkNodeSize(CkMyNode());
+
+      pid_t pid = getpid();
+      long result[2];
+      result[0] = pid;
+      result[1] = self_usage.ru_maxrss;
+      
+      CkCallback cb(CkReductionTarget(Main, printMemoryUsage), mainProxy);
+      contribute(sizeof(long), &self_usage.ru_maxrss, CkReduction::sum_long, cb);
+
+      //CkPrintf("  Process %ld is using %ld kb\n",
+      //    (int) pid, self_usage.ru_maxrss);
+    };
+    #endif // USE_PROJECTIONS
+   
+    #ifdef ENABLE_LB
+    void instrumentOn(){
+      LBTurnInstrumentOn();
+      contribute(CkCallback(CkReductionTarget(Main, instrumentSwitchOn),
+            mainProxy));
+    }
+    
+    void instrumentOff(){
+      LBTurnInstrumentOff();
+      contribute(CkCallback(CkReductionTarget(Main, instrumentSwitchOff),
+            mainProxy));
+    }
+    #endif // ENABLE_LB
 };
-#endif
 
 Main::Main(CkArgMsg* msg) {
   // parsing command line arguments
@@ -182,9 +224,7 @@ Main::Main(CkArgMsg* msg) {
   
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
-#ifdef USE_PROJECTIONS
   traceArray = CProxy_TraceSwitcher::ckNew();
-#endif
 
   // run
   CkPrintf("Running ...\n\n");
@@ -226,7 +266,5 @@ void Main::SaveStats(int *data) {
 
   outFile.close();
 }
-
-
 
 #include "loimos.def.h"

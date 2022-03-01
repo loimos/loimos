@@ -9,7 +9,7 @@ endif
 # Set the environment variable PROTOBUF_HOME to the protobuf installation to
 # overide this default
 PROTOBUF_HOME ?= /usr/local/protobuf
-PROTOC        = $(PROTOBUF_HOME)/bin/protoc
+PROTOC         = $(PROTOBUF_HOME)/bin/protoc
 
 # Set the environment variable GTEST_HOME to the googletest installation to
 # overide this default
@@ -28,7 +28,11 @@ OPTS     += -DENABLE_UNIT_TESTING
 endif
 
 ifdef USE_PROJECTIONS
-OPTS    += -DUSE_PROJECTIONS
+OPTS     += -DUSE_PROJECTIONS
+endif
+
+ifdef ENABLE_LB
+LIBS     += -balancer GreedyLB -balancer RefineLB
 endif
 
 CXXFLAGS  = $(OPTS) -std=c++11 -Wall $(INCLUDES)
