@@ -62,6 +62,16 @@ def FileReport(filename, message) :
     else :
         print(f"Using {message}:  <{filename}>")
 
+# Assumes the values in column 'by' are of a numerical type
+def partition_df(df, by='hid', num_partitions=10):
+    # Add one so that we don't loose the rows with the last id
+    bounds = np.linspace(df[by].min(), df[by].max()+1, num=num_partitions,
+            dtype=int)
+    bounded_dfs = []
+    for i in range(num_partitions-1):
+        bounds_mask = (bounds[i] <= df[by]) & (df[by] < bounds[i+1])
+        bounded_dfs.append(df[bounds_mask])
+    return bounded_dfs
 
 def main() :
     print('starting run')
@@ -131,15 +141,29 @@ def main() :
     hra_df = pd.read_csv(hra_filename, usecols=['hid', 'lid', 'longitude',
         'latitude', 'admin1', 'admin2','admin3', 'admin4'])
     print('hra df memory usage:', hra_df.memory_usage(deep=True).sum())
-    #print(locals())
     print(memory_usage(all_vars=locals()))
 
-    gidi_person_df = p_h_df.merge(hra_df, how='left', left_on='hid',
-            right_on='hid', copy=False)
-    print('gidi person df memory usage:', gidi_person_df.memory_usage(deep=True))
-    #print(memory_usage())
+    print('min:', p_h_df['hid'].min(), 'max:', p_h_df['hid'].max())
+    print('min:', hra_df['hid'].min(), 'max:', hra_df['hid'].max())
 
-    # Zero out any missing columns
+    # We get memory errors from tryign to merge the full dataset, so try
+    # merging along partitions
+    num_partitions = 16
+    p_h_partitioned = partition_df(p_h_df, num_partitions=num_partitions)
+    hra_partitioned = partition_df(hra_df, num_partitions=num_partitions)
+
+    gidi_person_partitioned = [p_h_partitioned[i].merge(
+        hra_partitioned[i], how='left', left_on='hid', right_on='hid',
+        copy=False
+    ) for i in range(num_partitions-1)]
+    gidi_person_df = pd.concat(gidi_person_partitioned)
+
+    # min: 0 max: 12848291
+    #gidi_person_df = p_h_df.merge(hra_df, how='left', left_on='hid',
+    #        right_on='hid', copy=False)
+    #print('gidi person df memory usage:', gidi_person_df.memory_usage(deep=True))
+
+    ## Zero out any missing columns
     gidi_person_df.fillna(0, inplace=True)
 
     # Convert categorical variables to ints (ones with missing data were
