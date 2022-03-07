@@ -8,6 +8,7 @@ import pandas as pd
 import random
 import sys
 
+from utils.ids import partition_df
 from utils.memory import memory_usage
 
 # ----------------------------------------------------------------------
@@ -61,17 +62,6 @@ def FileReport(filename, message) :
         #sys.exit(-1)
     else :
         print(f"Using {message}:  <{filename}>")
-
-# Assumes the values in column 'by' are of a numerical type
-def partition_df(df, by='hid', num_partitions=10):
-    # Add one so that we don't loose the rows with the last id
-    bounds = np.linspace(df[by].min(), df[by].max()+1, num=num_partitions,
-            dtype=int)
-    bounded_dfs = []
-    for i in range(num_partitions-1):
-        bounds_mask = (bounds[i] <= df[by]) & (df[by] < bounds[i+1])
-        bounded_dfs.append(df[bounds_mask])
-    return bounded_dfs
 
 def main() :
     print('starting run')
@@ -129,22 +119,22 @@ def main() :
     #p_h_df = None
     household_df = pd.read_csv(h_filename, usecols=['hid', 'hh_size',
         'hh_income', 'workers_in_family'])
-    print('household df memory usage:', household_df.memory_usage(deep=True).sum())
+    #print('household df memory usage:', household_df.memory_usage(deep=True).sum())
 
     p_h_df = person_df.merge(household_df, how='left', left_on='hid',
             right_on='hid', copy=False)
-    print('p-h combined df memory usage:', p_h_df.memory_usage(deep=True).sum())
+    #print('p-h combined df memory usage:', p_h_df.memory_usage(deep=True).sum())
     #print(memory_usage())
 
     # hid,lid,longitude,latitude,altitude,admin1,admin2,admin3,admin4,area_sqm,associate_link_func_class,pub_pk,pub_kg,pub_01,pub_02,pub_03,pub_04,pub_05,pub_06,pub_07,pub_08,pub_09,pub_10,pub_11,pub_12
     #gidi_person_df = None
     hra_df = pd.read_csv(hra_filename, usecols=['hid', 'lid', 'longitude',
         'latitude', 'admin1', 'admin2','admin3', 'admin4'])
-    print('hra df memory usage:', hra_df.memory_usage(deep=True).sum())
-    print(memory_usage(all_vars=locals()))
+    #print('hra df memory usage:', hra_df.memory_usage(deep=True).sum())
+    #print(memory_usage(all_vars=locals()))
 
-    print('min:', p_h_df['hid'].min(), 'max:', p_h_df['hid'].max())
-    print('min:', hra_df['hid'].min(), 'max:', hra_df['hid'].max())
+    #print('min:', p_h_df['hid'].min(), 'max:', p_h_df['hid'].max())
+    #print('min:', hra_df['hid'].min(), 'max:', hra_df['hid'].max())
 
     # We get memory errors from tryign to merge the full dataset, so try
     # merging along partitions

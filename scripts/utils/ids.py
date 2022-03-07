@@ -4,6 +4,17 @@
 # SPDX-License-Identifier: MIT
 #
 
+# Assumes the values in column 'by' are of a numerical type
+def partition_df(df, by='hid', num_partitions=10):
+    # Add one so that we don't loose the rows with the last id
+    bounds = np.linspace(df[by].min(), df[by].max()+1, num=num_partitions,
+            dtype=int)
+    bounded_dfs = []
+    for i in range(num_partitions-1):
+        bounds_mask = (bounds[i] <= df[by]) & (df[by] < bounds[i+1])
+        bounded_dfs.append(df[bounds_mask])
+    return bounded_dfs
+
 # Sets the 'pid' column in people and the 'lid' column in locations
 # to the given array/series of values passed as new_people_ids and
 # new_location_ids, respectively, and adjusts the corresponding column(s)
