@@ -15,6 +15,7 @@ import sys
 import pandas as pd
 
 from utils.memory import memory_usage
+from utils.ids import remap
 
 _DEFAULT_VALUES = {
     "work": 0,
@@ -69,6 +70,7 @@ def id_remapper(people, locations, visits):
     all_vars.update(globals())
     all_vars.update(locals())
     memory_usage(all_vars=all_vars)
+
     # Remap location ids.
     for to_remap, key, external_references in groups:
         # Remaps the dataframes existing index to a new dense index.
