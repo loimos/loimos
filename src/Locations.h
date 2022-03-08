@@ -23,6 +23,7 @@ class Locations : public CBase_Locations {
     DiseaseModel *diseaseModel;
     ContactModel *contactModel;
     int day;
+    bool useAggregator;
 
   public:
     Locations();
