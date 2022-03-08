@@ -6,7 +6,7 @@
 include Makefile.include
 
 OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o \
-         Defs.o Event.o Interaction.o readers/Preprocess.o \
+         Defs.o Event.o Interaction.o readers/Preprocess.o Aggregator.o \
          disease_model/disease.pb.o disease_model/distribution.pb.o \
 		     readers/data.pb.o contact_model/ContactModel.o \
 				 contact_model/MinMaxAlphaModel.o
@@ -37,8 +37,7 @@ all: all-sub $(BIN)
 # Build the executable (and implicitly charmrun) from the object files
 $(BIN): $(OBJS) $(UNIT_TEST_OBJS) $(DECLS)
 	$(CHARMC) -o $@ $(OBJS) $(UNIT_TEST_OBJS) $(PROJECTION_FLAGS) -language charm++ \
-	-module CkMulticast -module NDMeshStreamer $(LIBS)
-
+	-module CkMulticast $(LIBS)
 
 # Build .decl.h (and implicitly .def.h) files from the corresponding
 # .ci files

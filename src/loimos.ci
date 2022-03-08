@@ -13,6 +13,8 @@ mainmodule loimos {
   #define PROFILING_INTERVAL 28
   #define LB_START_DAY 6
   #define LB_INTERVAL DAYS_IN_WEEK
+  
+  include "AggregatorParam.h";
 
   include "vector";
   include "sys/time.h";
@@ -21,6 +23,7 @@ mainmodule loimos {
   readonly CProxy_Main mainProxy;
   readonly CProxy_People peopleArray;
   readonly CProxy_Locations locationsArray;
+  readonly CProxy_Aggregator aggregatorProxy;
   readonly CProxy_DiseaseModel globDiseaseModel;
   readonly CProxy_TraceSwitcher traceArray;
   readonly int numPeople;
@@ -52,6 +55,7 @@ mainmodule loimos {
 
   mainchare Main {
     entry Main(CkArgMsg*);
+    entry [reductiontarget] void CharesCreated();
     entry void run() {
       // We only want to collect instumentation on the main loop
       #ifdef ENABLE_LB
@@ -189,14 +193,14 @@ mainmodule loimos {
     #endif // ENABLE_LB
   };
 
+  group Aggregator {
+    entry Aggregator(AggregatorParam p1, AggregatorParam p2);
+  };
+
   array [1D] People {
     entry People();
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
-#ifdef USE_TRAM
-    entry [aggregate] void ReceiveInteractions(InteractionMessage);
-#else
     entry void ReceiveInteractions(InteractionMessage);
-#endif
     entry void EndOfDayStateUpdate(); // contribute call to ReceiveInfectiousCount
     entry void SendStats(); // contribute call to ReceiveStats
     entry void AtSync();
@@ -204,11 +208,7 @@ mainmodule loimos {
 
   array [1D] Locations {
     entry Locations();
-#ifdef USE_TRAM
-    entry [aggregate] void ReceiveVisitMessages(VisitMessage);
-#else
     entry void ReceiveVisitMessages(VisitMessage);
-#endif
     entry void ComputeInteractions(); // calls ReceiveInteractions
     entry void AtSync();
   };
@@ -216,4 +216,8 @@ mainmodule loimos {
   nodegroup DiseaseModel {
       entry DiseaseModel(std::string pathToModel, std::string scenarioPath);
   };
+
+  namespace aggregation {
+    initproc void initialize(void);
+  }
 };

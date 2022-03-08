@@ -83,7 +83,7 @@ class Location : public DataInterface {
     // Simple helper function which send the list of interactions with the
     // specified person to the appropriate People chare
     inline void sendInteractions(int personIdx);
-    
+
   public:
     // Represents all of the arrivals and departures of people
     // from this location on a given day

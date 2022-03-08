@@ -6,6 +6,7 @@
 
 #include "loimos.decl.h"
 #include "Main.h"
+#include "Aggregator.h"
 #include "People.h"
 #include "Locations.h"
 #include "DiseaseModel.h"
@@ -16,9 +17,12 @@
 #include <tuple>
 #include <iostream>
 #include <fstream>
+#include <cstdlib>
+#include <sstream>
 #include <unordered_map>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <hypercomm/registration.hpp>
 
 #ifdef ENABLE_UNIT_TESTING
 #include "gtest/gtest.h"
@@ -27,6 +31,7 @@
 /* readonly */ CProxy_Main mainProxy;
 /* readonly */ CProxy_People peopleArray;
 /* readonly */ CProxy_Locations locationsArray;
+/* readonly */ CProxy_Aggregator aggregatorProxy;
 /* readonly */ CProxy_DiseaseModel globDiseaseModel;
 /* readonly */ CProxy_TraceSwitcher traceArray;
 /* readonly */ int numPeople;
@@ -221,15 +226,68 @@ Main::Main(CkArgMsg* msg) {
   if (!syntheticRun) {
     CkPrintf("Loading people and locations from %s.\n", scenarioPath.c_str());
   }
-  
+
+  chareCount = 3; // Number of chare arrays/groups
+  createdCount = 0;
+
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
-  traceArray = CProxy_TraceSwitcher::ckNew();
 
-  // run
-  CkPrintf("Running ...\n\n");
-  simulationStartTime = CkWallTimer();
-  mainProxy.run();
+  // Create Hypercomm message aggregators using env variables
+  AggregatorParam visitParams;
+  AggregatorParam interactParams;
+  char* env_p;
+  if (env_p = std::getenv("HC_VISIT_PARAMS")) {
+    std::string env_str(env_p);
+    std::vector<std::string> tokens;
+    std::stringstream env_ss(env_str);
+    std::string token;
+
+    while (getline(env_ss, token, ',')) {
+      tokens.push_back(token);
+    }
+
+    CkAssert(tokens.size() == 5);
+    int idx = 0;
+    bool useAggregator = static_cast<bool>(std::stoi(tokens[idx++]));
+    size_t bufferSize = static_cast<size_t>(std::stoi(tokens[idx++]));
+    double threshold = std::stod(tokens[idx++]);
+    double flushPeriod = std::stod(tokens[idx++]);
+    bool nodeLevel = static_cast<bool>(std::stoi(tokens[idx++]));
+    visitParams = AggregatorParam(useAggregator, bufferSize, threshold,
+        flushPeriod, nodeLevel);
+  }
+  if (env_p = std::getenv("HC_INTERACT_PARAMS")) {
+    std::string env_str(env_p);
+    std::vector<std::string> tokens;
+    std::stringstream env_ss(env_str);
+    std::string token;
+
+    while (getline(env_ss, token, ',')) {
+      tokens.push_back(token);
+    }
+
+    CkAssert(tokens.size() == 5);
+    int idx = 0;
+    bool useAggregator = static_cast<bool>(std::stoi(tokens[idx++]));
+    size_t bufferSize = static_cast<size_t>(std::stoi(tokens[idx++]));
+    double threshold = std::stod(tokens[idx++]);
+    double flushPeriod = std::stod(tokens[idx++]);
+    bool nodeLevel = static_cast<bool>(std::stoi(tokens[idx++]));
+    interactParams = AggregatorParam(useAggregator, bufferSize, threshold,
+        flushPeriod, nodeLevel);
+  }
+
+  aggregatorProxy = CProxy_Aggregator::ckNew(visitParams, interactParams);
+}
+
+void Main::CharesCreated() {
+  if (++createdCount == chareCount) {
+    // Run
+    CkPrintf("Running ...\n\n");
+    simulationStartTime = CkWallTimer();
+    mainProxy.run();
+  }
 }
 
 void Main::SaveStats(int *data) {

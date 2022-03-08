@@ -67,6 +67,8 @@ jobs:
     # Build and test Loimos
     - name: build-loimos
       run: |
+        git submodule init
+        git submodule update
         cd src
         export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
         export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake

@@ -17,9 +17,12 @@ class Main : public CBase_Main {
   std::string pathToOutput;
   std::vector<int> accumulated;
   DiseaseModel* diseaseModel;
+  int chareCount;
+  int createdCount;
 
   public:
     Main(CkArgMsg* msg);
+    void CharesCreated();
     void SaveStats(int *data);
 };
 

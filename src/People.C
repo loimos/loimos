@@ -10,6 +10,7 @@
 #include "Interaction.h"
 #include "DiseaseModel.h"
 #include "Person.h"
+#include "Aggregator.h"
 #include "readers/DataReader.h"
 
 #include <tuple>
@@ -75,6 +76,9 @@ People::People() {
       // Load in people data from file.
       loadPeopleData();
   }
+
+  // Notify Main
+  contribute(CkCallback(CkReductionTarget(Main, CharesCreated), mainProxy));
 }
 
 People::People(CkMigrateMessage *msg) {}
@@ -332,7 +336,12 @@ void People::SyntheticSendVisitMessages() {
 
       // Send off visit message
       VisitMessage visitMsg(destinationIdx, personIdx, p.state, visitStart, visitEnd);
-      locationsArray[locationPartition].ReceiveVisitMessages(visitMsg);
+      Aggregator* agg = aggregatorProxy.ckLocalBranch();
+      if (agg->visit_aggregator) {
+        agg->visit_aggregator->send(locationsArray[locationPartition], visitMsg);
+      } else {
+        locationsArray[locationPartition].ReceiveVisitMessages(visitMsg);
+      }
     } 
   }
 }
@@ -346,7 +355,13 @@ void People::RealDataSendVisitMessages() {
       // Find process that owns that location
       int locationPartition = getPartitionIndex(visitMessage.locationIdx,
           numLocations, numLocationPartitions, firstLocationIdx);
-      locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
+      // Send off the visit message.
+      Aggregator* agg = aggregatorProxy.ckLocalBranch();
+      if (agg->visit_aggregator) {
+        agg->visit_aggregator->send(locationsArray[locationPartition], visitMessage);
+      } else {
+        locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
+      }
     }
   }
 }

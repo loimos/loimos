@@ -10,6 +10,7 @@
 #include "Event.h"
 #include "Defs.h"
 #include "DiseaseModel.h"
+#include "Aggregator.h"
 #include "contact_model/ContactModel.h"
 
 #include <random>
@@ -17,13 +18,12 @@
 #include <cmath>
 #include <algorithm>
 
-Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator) {
+Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator) : unitDistrib(0, 1) {
   if (numAttributes != 0) {
     this->locationData.resize(numAttributes);
   }
   day = 0;
   this->generator = generator;
-  unitDistrib = std::uniform_real_distribution<>(0.0,1.0);
 
   // Determine if this location should seed the disease.
   if (syntheticRun) {
@@ -236,7 +236,12 @@ inline void Location::sendInteractions(int personIdx) {
         );
   }
   InteractionMessage interMsg(personIdx, interactions[personIdx]);
-  peopleArray[peoplePartitionIdx].ReceiveInteractions(interMsg);
+  Aggregator* agg = aggregatorProxy.ckLocalBranch();
+  if (agg->interact_aggregator) {
+    agg->interact_aggregator->send(peopleArray[peoplePartitionIdx], interMsg);
+  } else {
+    peopleArray[peoplePartitionIdx].ReceiveInteractions(interMsg);
+  }
 
   /*  
   CkPrintf(
