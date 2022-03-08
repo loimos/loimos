@@ -10,7 +10,6 @@
 #include "Interaction.h"
 #include "DiseaseModel.h"
 #include "Person.h"
-#include "Message.h"
 #include "Aggregator.h"
 #include "readers/DataReader.h"
 
