@@ -12,7 +12,7 @@ import argparse
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
-from utils.id_remapper import remap
+from utils.ids import remap
 
 # This implemntation of the folding partition alorithm is based on the
 # description of the algortihm given in:
