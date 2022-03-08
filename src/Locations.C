@@ -28,7 +28,6 @@ Locations::Locations() {
 
   //Must be set to true to make AtSync work
   usesAtSync = true;
-  useAggregator = false;
 
   // Getting number of locations assigned to this chare
   numLocalLocations = getNumLocalElements(

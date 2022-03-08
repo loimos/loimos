@@ -19,7 +19,6 @@
 #include <algorithm>
 
 Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator) : unitDistrib(0, 1) {
-  this->aggregator = aggregator;
   if (numAttributes != 0) {
     this->locationData.resize(numAttributes);
   }

@@ -50,7 +50,7 @@ class Location : public DataInterface {
    
     // For DataInterface
     int uniqueId;
-    
+
     // Helper functions to handle when a person leaves this location
     // onDeparture branches to one of the two other functions
     inline void onDeparture(

@@ -12,6 +12,7 @@
 
 #include <hypercomm/routing.hpp>
 #include <hypercomm/aggregation.hpp>
+#include <memory>
 
 using buffer_t = aggregation::direct_buffer;
 using routing_t = aggregation::routing::mesh<2>;

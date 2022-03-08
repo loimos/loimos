@@ -11,14 +11,12 @@
 #include "Interaction.h"
 #include "Person.h"
 #include "Message.h"
-#include "Aggregator.h"
 
 #include <random>
 #include <vector>
 #include <tuple>
 #include <iostream>
 #include <fstream>
-#include <memory>
 
 #define LOCATION_LAMBDA 5.2
 
@@ -33,8 +31,6 @@ class People : public CBase_People {
     std::default_random_engine generator;
     DiseaseModel *diseaseModel;
     std::vector<int> stateSummaries;
-    bool useAggregator;
-    std::shared_ptr<Aggregator> aggregator;
 
     void ProcessInteractions(Person &person);
     void loadPeopleData();
@@ -43,8 +39,6 @@ class People : public CBase_People {
     People();
     People(CkMigrateMessage *msg);
     void pup(PUP::er &p);
-    void CreateAggregator(bool useAggregator, size_t bufferSize,
-        double threshold, double flushPeriod, bool nodeLevel, CkCallback cb);
     void SendVisitMessages(); 
     void SyntheticSendVisitMessages();
     void RealDataSendVisitMessages();

@@ -23,14 +23,11 @@ class Locations : public CBase_Locations {
     DiseaseModel *diseaseModel;
     ContactModel *contactModel;
     int day;
-    bool useAggregator;
 
   public:
     Locations();
     Locations(CkMigrateMessage *msg);
     void pup(PUP::er &p);
-    void CreateAggregator(bool useAggregator, size_t bufferSize, double threshold,
-        double flushPeriod, bool nodeLevel, CkCallback cb);
     void ReceiveVisitMessages(VisitMessage visitMsg);
     void ComputeInteractions(); // calls ReceiveInfections
     
