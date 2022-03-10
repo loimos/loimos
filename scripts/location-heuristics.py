@@ -10,22 +10,25 @@ simultaneous visits for all locations in the dataset.
 """
 
 # Column name that describes the location id being visited.
-LOCATION_ID_COLUMN_NAME = 'lid'
+LID_COL = 'lid'
 # Any other column in the dataset that is fully populated.
-OTHER_COLUMN = 'start_time'
+START_COL = 'start_time'
 
 import pandas as pd
 import heapq
 import argparse
 import os
 import time
+
+from utils.memory import memory_usage 
 from functools import partial
 from multiprocessing import Pool, set_start_method
     
-def find_max_simultaneous_visits(visits, lid):
+def find_max_simultaneous_visits(lid, visits):
     max_in_visit = 0
     end_times = []
-    for _, row in visits[visits[LOCATION_ID_COLUMN_NAME] == lid][['start_time','duration']].iterrows():
+    print('location {} has {} visits'.format(lid, len(visits)))
+    for _, row in visits.iterrows():
         # Filter out end_times not in range.
         start_time = row['start_time']
         while len(end_times) and end_times[0] <= start_time:
@@ -82,12 +85,14 @@ if __name__ == '__main__':
 
     # Calculate total visits to a location.
     start_time = time.perf_counter()
+    visits_by_location = (
+        visits[[LID_COL, 'start_time', 'duration']]
+            .groupby(LID_COL))
     max_visits = (
-        visits[[LOCATION_ID_COLUMN_NAME, OTHER_COLUMN]]
-            .groupby(LOCATION_ID_COLUMN_NAME)
+        visits[[LID_COL, 'start_time']]
+            .groupby(LID_COL)
             .count()
-            .rename({OTHER_COLUMN: 'total_visits'}, axis=1)
-    )
+            .rename({'start_time': 'total_visits'}, axis=1))
     end_time = time.perf_counter()
     print('Calculating total visits:', end_time - start_time)
 
@@ -123,19 +128,16 @@ if __name__ == '__main__':
         set_start_method('forkserver')
 
         with Pool(args.n_tasks) as pool:
-            max_visits['max_simultaneous_visits'] =\
-                pool.map(
-                    partial(find_max_simultaneous_visits, visits),
-                    max_visits.index
-                )
+            max_visits['max_simultaneous_visits'] = pool.starmap(
+                find_max_simultaneous_visits,
+                visits_by_location)
     else:
-        max_visits['max_simultaneous_visits'] =\
-            max_visits.index.map(
-                partial(find_max_simultaneous_visits, visits)
-            )
+        max_visits['max_simultaneous_visits'] = [
+                find_max_simultaneous_visits(lid, group)
+                for lid, group in visits_by_location]
 
     end_time = time.perf_counter()
-    print('Calculating maximum simulatneous visits:', end_time - start_time)
+    print('Calculating maximum simultaneous visits:', end_time - start_time)
     
     print(max_visits.columns)
     print(max_visits.index)
