@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: MIT
 #
 
+import numpy as np
+
 # Assumes the values in column 'by' are of a numerical type
 def partition_df(df, by='hid', num_partitions=10):
     # Add one so that we don't loose the rows with the last id
@@ -27,8 +29,10 @@ def remap(people, locations, visits,
         people = people.reset_index(drop=True)
         people['temp_id'] = people.index
         person_remapper = people[['pid', 'temp_id']].copy()
+        
         people['pid'] = people['temp_id']
         people.drop(["temp_id"], axis=1, inplace=True)
+        
         visits = visits.merge(person_remapper, left_on='pid', right_on='pid')
         visits['pid']= visits['temp_id']
         visits.drop(["temp_id"], axis = 1, inplace=True)
@@ -39,10 +43,16 @@ def remap(people, locations, visits,
         locations = locations.reset_index(drop=True)
         locations['temp_id'] = locations.index
         loc_remapper = locations[['lid', 'temp_id']].copy()
+
         locations['lid'] = locations['temp_id']
         locations.drop(["temp_id"], axis=1, inplace=True)
+        
         visits = visits.merge(loc_remapper, left_on='lid', right_on='lid')
         visits['lid']= visits['temp_id']
         visits.drop(["temp_id"], axis = 1, inplace=True)
+        
+        people = people.merge(loc_remapper, left_on='hid', right_on='lid')
+        people['hid']= people['temp_id']
+        people.drop(["temp_id"], axis = 1, inplace=True)
 
     return people, locations, visits
