@@ -11,7 +11,7 @@ function run_script() {
   BATCH_SCRIPT=run-${SCRIPT/.py/.sh}
   TIME=$2
   QUEUE=$3
-  TASKS_PER_NODE=$4
+  export TASKS_PER_NODE=$4
   MEM=$5
 
   ARGS="--export=ALL -t ${TIME} -p ${QUEUE} --ntasks-per-node ${TASKS_PER_NODE} --wait"
@@ -77,8 +77,8 @@ run_script combine-household-data.sh ${BASE_TIME} standard 1 ${BASE_MEMORY}
 # the otput dir
 #mv ${IN_DIR}/*.csv ${OUT_DIR}
 
-run_script merge-location-data.py ${BASE_TIME} standard 1 ${BASE_MEMORY}
-run_script location-heuristics.py $((2 * ${BASE_TIME})) parallel 40 ${BASE_MEMORY}
+run_script merge-location-data.py ${BASE_TIME} largemem 1 ${BASE_MEMORY}
+run_script location-heuristics.py ${BASE_TIME} parallel 40 ${BASE_MEMORY}
 
 # Copy the neccessary textproto files over
-cp ${PROJECT_ROOT}/loimos/data/textproto_templates/*.textproto ${OUT_DIR}
+cp ${PROJECT_ROOT}/loimos/data/textproto_templates/real_data_templates/*.textproto ${OUT_DIR}
