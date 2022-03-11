@@ -128,7 +128,7 @@ if __name__ == '__main__':
         # entire process - including its memory footprint - so let's choose
         # another method (see https://stackoverflow.com/questions/42584525/
         # python-multiprocessing-debugging-oserror-errno-12-cannot-allocate-memory
-        set_start_method('spawn')
+        set_start_method('forkserver')
 
         with Pool(args.n_tasks) as pool:
             max_visits['max_simultaneous_visits'] = pool.starmap(
