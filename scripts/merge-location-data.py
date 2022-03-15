@@ -14,8 +14,6 @@ import os
 import sys
 import pandas as pd
 
-from utils.memory import memory_usage
-
 _DEFAULT_VALUES = {
     "work": 0,
     "school": 0,
@@ -56,9 +54,7 @@ def combine_residences_and_activities(activity_locations, residence_locations):
     residence_locations["home"] = 1
     activity_locations["home"] = 0
     
-    return activity_locations.append(residence_locations) \
-            .reset_index() \
-            .drop("index", axis=1)
+    return activity_locations.append(residence_locations).reset_index().drop("index", axis=1)
 
 def id_remapper(people, locations, visits):
     groups = [
@@ -66,11 +62,6 @@ def id_remapper(people, locations, visits):
         (locations, 'lid', ['visits', 'people'])
     ]
     data = {'people': people, 'locations': locations, 'visits': visits}
-
-    all_vars = {}
-    all_vars.update(globals())
-    all_vars.update(locals())
-    memory_usage(all_vars=all_vars)
 
     # Remap location ids.
     for to_remap, key, external_references in groups:
@@ -136,15 +127,15 @@ if __name__ == "__main__":
     visits = pd.read_csv(visits_file)
 
     # Combines activity and residence locations.
-    locations = combine_residences_and_activities(activity_locations, residences)
+    combined = combine_residences_and_activities(activity_locations, residences)
 
     # Remap all ids
-    people, locations, visits = id_remapper(people, locations, visits)
-
+    people, combined, visits = id_remapper(people, combined, visits)
+    
     # Fix types
-    locations.fillna(0, inplace=True)
-    locations = locations.astype({'shopping': int})
-    print(locations.dtypes)
+    combined.fillna(0, inplace=True)
+    combined = combined.astype({'shopping': int})
+    print(combined.dtypes)
 
     # Make sure all the visits are in the right order
     visits.sort_values(by=['pid', 'start_time'], inplace=True)
@@ -162,5 +153,5 @@ if __name__ == "__main__":
 
     # Output
     people.to_csv(people_file, index=False)
-    locations.to_csv(locations_file, index=False)
+    combined.to_csv(locations_file, index=False)
     visits.to_csv(visits_file, index=False)     
