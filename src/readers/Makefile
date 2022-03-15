@@ -5,7 +5,7 @@
 
 include ../Makefile.include
 
-PROTOS      = data.proto interventions.proto
+PROTOS      = data.proto
 TMP_SRCS    = $(subst .proto,.pb.cc,$(PROTOS)) 
 SRCS        = $(subst .proto,.pb.C,$(PROTOS)) 
 OBJS        = $(subst .proto,.pb.o,$(PROTOS)) 

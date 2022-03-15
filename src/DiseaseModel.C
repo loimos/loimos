@@ -20,7 +20,7 @@
 #include "readers/DataReader.h"
 #include "disease_model/disease.pb.h"
 #include "disease_model/distribution.pb.h"
-#include "readers/interventions.pb.h"
+#include "intervention_model/interventions.pb.h"
 
 #include <cmath>
 #include <cstdio>

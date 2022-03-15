@@ -29,7 +29,7 @@ else
 PROJECTION_FLAGS = 
 endif
 
-SUBDIRS = disease_model contact_model readers tests
+SUBDIRS = disease_model contact_model intervention_model readers tests
 
 .PHONY:all
 all: all-sub $(BIN)
