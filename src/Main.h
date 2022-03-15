@@ -22,7 +22,9 @@ class Main : public CBase_Main {
 
   public:
     Main(CkArgMsg* msg);
+    #ifdef USE_HYPERCOMM
     void CharesCreated();
+    #endif
     void SaveStats(int *data);
 };
 

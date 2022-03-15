@@ -6,7 +6,6 @@
 
 #include "loimos.decl.h"
 #include "Main.h"
-#include "Aggregator.h"
 #include "People.h"
 #include "Locations.h"
 #include "DiseaseModel.h"
@@ -22,7 +21,11 @@
 #include <unordered_map>
 #include <sys/time.h>
 #include <sys/resource.h>
+
+#ifdef USE_HYPERCOMM
+#include "Aggregator.h"
 #include <hypercomm/registration.hpp>
+#endif
 
 #ifdef ENABLE_UNIT_TESTING
 #include "gtest/gtest.h"
@@ -31,7 +34,9 @@
 /* readonly */ CProxy_Main mainProxy;
 /* readonly */ CProxy_People peopleArray;
 /* readonly */ CProxy_Locations locationsArray;
+#ifdef USE_HYPERCOMM
 /* readonly */ CProxy_Aggregator aggregatorProxy;
+#endif
 /* readonly */ CProxy_DiseaseModel globDiseaseModel;
 /* readonly */ CProxy_TraceSwitcher traceArray;
 /* readonly */ int numPeople;
@@ -233,6 +238,7 @@ Main::Main(CkArgMsg* msg) {
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
 
+#ifdef USE_HYPERCOMM
   // Create Hypercomm message aggregators using env variables
   AggregatorParam visitParams;
   AggregatorParam interactParams;
@@ -283,11 +289,14 @@ Main::Main(CkArgMsg* msg) {
 
 void Main::CharesCreated() {
   if (++createdCount == chareCount) {
+#endif //USE_HYPERCOMM
     // Run
     CkPrintf("Running ...\n\n");
     simulationStartTime = CkWallTimer();
     mainProxy.run();
+#ifdef USE_HYPERCOMM
   }
+#endif
 }
 
 void Main::SaveStats(int *data) {

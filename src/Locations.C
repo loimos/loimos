@@ -57,7 +57,9 @@ Locations::Locations() {
   contactModel->setGenerator(&generator);
 
   // Notify Main
+  #ifdef USE_HYPERCOMM
   contribute(CkCallback(CkReductionTarget(Main, CharesCreated), mainProxy));
+  #endif
 }
     
 Locations::Locations(CkMigrateMessage *msg) {};

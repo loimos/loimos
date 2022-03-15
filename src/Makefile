@@ -6,17 +6,23 @@
 include Makefile.include
 
 OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o \
-         Defs.o Event.o Interaction.o readers/Preprocess.o Aggregator.o \
+         Defs.o Event.o Interaction.o readers/Preprocess.o \
          disease_model/disease.pb.o disease_model/distribution.pb.o \
 		     readers/data.pb.o contact_model/ContactModel.o \
 				 contact_model/MinMaxAlphaModel.o
-DEFS   = Defs.h loimos.def.h readers/DataReader.h
+DEFS   = loimos.def.h Defs.h readers/DataReader.h
 DECLS  = loimos.decl.h
 BIN    = loimos
 
 # Set the ENABLE_UNIT_TESTING environment variable to compile for unit testing
 ifdef ENABLE_UNIT_TESTING
 UNIT_TEST_OBJS = tests/DiseaseModelTest.o
+endif
+
+# Set the USE_HYPERCOMM environment variable to compile for Charm++'s in-built
+# dynamic load balancing
+ifdef USE_HYPERCOMM
+OBJS += Aggregator.o
 endif
 
 # Set the ENABLE_LB environment variable to compile for Charm++'s in-built
@@ -42,7 +48,7 @@ $(BIN): $(OBJS) $(UNIT_TEST_OBJS) $(DECLS)
 # Build .decl.h (and implicitly .def.h) files from the corresponding
 # .ci files
 $(DECLS): %.decl.h: %.ci
-	$(CHARMC) $<
+	$(CHARMC) $< $(OPTS)
 
 # Build .o files from the corresponding .C and .h files
 $(OBJS): %.o: %.C %.h $(DECLS) $(DEFS)
