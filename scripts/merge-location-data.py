@@ -59,7 +59,8 @@ def combine_residences_and_activities(activity_locations, residence_locations):
 def id_remapper(people, locations, visits):
     groups = [
         (people, 'pid', {'pid': 'visits'}),
-        (locations, 'lid', {'lid': 'visits', 'hid': 'people'})
+        (locations, 'lid', {'lid': 'visits'}),
+        #(locations, 'lid', {'lid': 'visits', 'lid': 'people'})
     ]
     data = {'people': people, 'locations': locations, 'visits': visits}
 
@@ -74,7 +75,7 @@ def id_remapper(people, locations, visits):
         # Replace all references of the old keys with the new ones
         for ref_key, ref_name in external_references.items():
             ref = data[ref_name]
-            ref = ref.merge(remapper, how='left', left_on=ref_key, right_on=key)
+            ref = ref.merge(remapper, left_on=ref_key, right_on=key)
             ref[ref_key]= ref['new_id']
             ref.drop(["new_id"], axis = 1, inplace=True)
             data[ref_name] = ref
@@ -137,8 +138,10 @@ if __name__ == "__main__":
 
     # Fix types
     combined.fillna(0, inplace=True)
-    combined = combined.astype({'shopping': int})
+    combined = combined.astype({'shopping': int}, copy=False)
     print(combined.dtypes)
+    people.fillna(0, inplace=True)
+    people = people.astype({'hid': int}, copy=False)
 
     # Make sure all the visits are in the right order
     visits.sort_values(by=['pid', 'start_time'], inplace=True)
