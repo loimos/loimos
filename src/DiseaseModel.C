@@ -105,7 +105,7 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
   }
   
   if (interventionStategy) {
-    interventionDef = new loimos::proto::Intervention();
+    interventionDef = new loimos::proto::InterventionModel();
     std::ifstream interventionActivityStream(pathToIntervention);
     if (!interventionActivityStream)
       CkAbort("Could not open intervention textproto!");
@@ -341,24 +341,30 @@ double DiseaseModel::getPropensity(int susceptibleState, int infectiousState,
 void DiseaseModel::toggleIntervention(int newDailyInfections) {
   if (!interventionToggled) {
     if (static_cast<double>(newDailyInfections) / numPeople >= 
-          interventionDef->newdailycasestriggeron()) {
+          interventionDef->trigger().new_daily_cases().trigger_on()) {
       interventionToggled = true;
       printf("Intervention toggled!\n");
     }
   } else {
     if (static_cast<double>(newDailyInfections) / numPeople <=
-          interventionDef->newdailycasestriggeroff()) {
+          interventionDef->trigger().new_daily_cases().trigger_off()) {
       interventionToggled = false;
     }
   }
 }
 
-/**
- * For now only the self-siolation intervention has a compilance value
- */
+/*
 double DiseaseModel::getCompilance() const {
-  if (interventionStategy && interventionDef->stayathome()) {
-    return interventionDef->isolationcompliance();
+  if (interventionStategy && interventionDef->has_self_isolation()) {
+    return interventionDef->self_isolation().compliance();
+  } else {
+    return 0;
+  }
+}
+*/
+double DiseaseModel::getCompilance() const {
+  if (interventionStategy && interventionDef->has_self_isolation()) {
+    return interventionDef->self_isolation().compliance();
   } else {
     return 0;
   }
@@ -370,7 +376,7 @@ double DiseaseModel::getCompilance() const {
  */ 
 bool DiseaseModel::shouldPersonIsolate(int healthState) {
   return interventionToggled
-    && interventionDef->stayathome()
+    && interventionDef->has_self_isolation()
     && model->disease_state(healthState).symptomatic();
 }
 
@@ -378,17 +384,19 @@ bool DiseaseModel::shouldPersonIsolate(int healthState) {
  * Location closed if it is a school and intervention is triggered.
  */ 
 bool DiseaseModel::isLocationOpen(std::vector<Data> *locAttr) const {
-  return !(interventionToggled && interventionDef->schoolclosures() &&
-   locAttr->at(interventionDef->csvlocationofschool()).int_b10 > 0);
+  return !(interventionToggled && interventionDef->has_school_closures() &&
+   locAttr->at(interventionDef->school_closures().school_closures()
+     .csv_location_of_school()).int_b10 > 0);
 }
 
 bool DiseaseModel::complyingWithLockdown(std::default_random_engine *generator) const {
   std::uniform_real_distribution<double> uniform_dist(0,1);
-  return uniform_dist(*generator) < interventionDef->schoolclosurecompliance();
+  return uniform_dist(*generator) < interventionDef
+    ->school_closures().compliance();
 }
 
 bool DiseaseModel::isLocationSeeder(std::vector<Data> *locAttr) const {
   // printf("got %d is %d\n", locAttr->at(interventionDef->csvlocationofseederbool()).int_b10, interventionDef->seedingadmincode());
-  return locAttr->at(interventionDef->csvlocationofseederbool()).int_b10
-    == interventionDef->seedingadmincode();
+  return locAttr->at(interventionDef->csv_location_of_seeder_bool()).int_b10
+    == interventionDef->seeding_admin_code();
 }

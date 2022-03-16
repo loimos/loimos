@@ -11,7 +11,7 @@
 #include "disease_model/disease.pb.h"
 #include "disease_model/distribution.pb.h"
 #include "readers/DataReader.h"
-#include "readers/interventions.pb.h"
+#include "intervention_model/interventions.pb.h"
 
 #include "Event.h"
 #include "readers/data.pb.h"
@@ -60,7 +60,7 @@ class DiseaseModel : public CBase_DiseaseModel {
         loimos::proto::CSVDefinition *personDef;
         loimos::proto::CSVDefinition *locationDef;
         loimos::proto::CSVDefinition *activityDef;
-        loimos::proto::Intervention *interventionDef;
+        loimos::proto::InterventionModel *interventionDef;
 
         // Intervention methods
         void toggleIntervention(int newDailyInfections);
