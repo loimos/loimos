@@ -10,6 +10,7 @@ nodes representing where people in that home location are "allowed" to travel to
 3) For each day and for each person, randomly create a schedule that splits
 time between home location and "allowed" other locations.
 """
+import numpy as np
 import random
 import pandas as pd
 from typing import Any, List
@@ -46,7 +47,7 @@ class CSVWriter():
         self.file.write(','.join(map(str, objects)) + '\n')
 
 
-def graph_to_disease_model(graph, out_dir, template_dir):
+def graph_to_disease_model(graph, out_dir, template_dir,num_nodes, mean_people):
     """Translates a standard graph to a bi-partite population model for loimos."""
     # Create output folder if it doesn't exist
     if out_dir and not os.path.exists(out_dir):
@@ -65,7 +66,11 @@ def graph_to_disease_model(graph, out_dir, template_dir):
     visit_writer = CSVWriter("visits.csv",
                              ['pid', 'lid', 'start_time', 'duration'],
                              out_dir)
-
+    #Generated Poisson distribution centered around mean_people-1. This -1 
+    # used so that then we can add +1 to each number of people per location to avoid
+    # having locations with 0 people in them.    
+    people_per_location = np.random.poisson(lam=mean_people-1,size=num_nodes)
+    people_per_location = people_per_location+1
     people_created = 0
     for home_location in graph.Nodes():
         location_id = home_location.GetId()
@@ -73,7 +78,8 @@ def graph_to_disease_model(graph, out_dir, template_dir):
         allowed_visit_locations = ([location_id] +
                                    list(home_location.GetOutEdges()))
         # Generate schedule for each person.
-        for _ in range(PEOPLE_PER_LOCATION()):
+        #for _ in range(PEOPLE_PER_LOCATION()):
+        for _ in range(people_per_location[location_id]):
             person_id = people_created
             people_created += 1
             people_writer.write_row([person_id])
@@ -100,3 +106,4 @@ def graph_to_disease_model(graph, out_dir, template_dir):
                     visit_writer.write_row([
                         person_id, location_id, absolute_start_time, duration
                     ])
+    print("Number of people created is ",people_created)
