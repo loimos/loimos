@@ -1,0 +1,20 @@
+trigger: {
+  day: {
+    trigger_on: 10;
+    trigger_off: 2147483647;
+  }
+}
+
+vaccination: {
+  compliance: 1;
+  vaccination: {
+    per_day: 2000;
+    infection_protection: 0.85;
+    severe_disease_protection: 0.85;
+    transmission_protection: 0;
+    delay: 30;
+  }
+}  
+
+csv_location_of_seeder_bool: 0;
+seeding_admin_code: 600;

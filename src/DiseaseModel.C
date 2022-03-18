@@ -22,6 +22,7 @@
 #include "disease_model/distribution.pb.h"
 #include "intervention_model/interventions.pb.h"
 
+#include <vector>
 #include <cmath>
 #include <cstdio>
 #include <fstream>
@@ -105,18 +106,7 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
   }
   
   if (interventionStategy) {
-    interventionDef = new loimos::proto::InterventionModel();
-    std::ifstream interventionActivityStream(pathToIntervention);
-    if (!interventionActivityStream)
-      CkAbort("Could not open intervention textproto!");
-    std::string interventionString((std::istreambuf_iterator<char>(
-            interventionActivityStream)),
-                    std::istreambuf_iterator<char>());
-    if (!google::protobuf::TextFormat::ParseFromString(interventionString,
-          interventionDef)) {
-      CkAbort("Could not parse protobuf!");
-    }
-    interventionActivityStream.close();
+    initIntervention(pathToIntervention);
   }
   
   // Always toggle intervention off to start.
@@ -338,30 +328,74 @@ double DiseaseModel::getPropensity(int susceptibleState, int infectiousState,
  * Intervention Methods
  * TODO: Move to own chare as these become more complex.
  */
-void DiseaseModel::toggleIntervention(int newDailyInfections) {
-  if (!interventionToggled) {
-    if (static_cast<double>(newDailyInfections) / numPeople >= 
-          interventionDef->trigger().new_daily_cases().trigger_on()) {
-      interventionToggled = true;
-      printf("Intervention toggled!\n");
+void DiseaseModel::initIntervention(std::string pathToIntervention) {
+  // Read in interventions
+  interventionDef = new loimos::proto::InterventionModel();
+  std::ifstream interventionActivityStream(pathToIntervention);
+  if (!interventionActivityStream)
+    CkAbort("Could not open intervention textproto!");
+  std::string interventionString((std::istreambuf_iterator<char>(
+          interventionActivityStream)),
+                  std::istreambuf_iterator<char>());
+  if (!google::protobuf::TextFormat::ParseFromString(interventionString,
+        interventionDef)) {
+    CkAbort("Could not parse protobuf!");
+  }
+  interventionActivityStream.close();
+  
+  std::default_random_engine generator(time(NULL));
+ 
+  // Set up specific inteventions specified in the the file we read in
+  if (interventionDef->has_vaccination()) {
+    // Everyone starts out unvaccinated, and should be vaccinated in a random
+    // order, which we can precompute
+    unvaccinatedPeople.reserve(numPeople);
+    for (int i = 0; i < numPeople; ++i) {
+      unvaccinatedPeople.emplace_back(i);
     }
-  } else {
-    if (static_cast<double>(newDailyInfections) / numPeople <=
-          interventionDef->trigger().new_daily_cases().trigger_off()) {
-      interventionToggled = false;
+    std::shuffle(unvaccinatedPeople.begin(), unvaccinatedPeople.end(), generator);
+  }
+}
+
+void DiseaseModel::updateIntervention(int newDailyInfections) {
+  day++;
+  
+  switch(interventionDef->trigger().trigger_type_case()) {
+    case loimos::proto::InterventionModel::Trigger::TriggerTypeCase::kNewDailyCases:
+      if (!interventionToggled) {
+        if (static_cast<double>(newDailyInfections) / numPeople >= 
+              interventionDef->trigger().new_daily_cases().trigger_on()) {
+          interventionToggled = true;
+          printf("Intervention toggled!\n");
+        }
+      } else {
+        if (static_cast<double>(newDailyInfections) / numPeople <=
+              interventionDef->trigger().new_daily_cases().trigger_off()) {
+          interventionToggled = false;
+        }
+      }
+      break;
+
+    case loimos::proto::InterventionModel::Trigger::TriggerTypeCase::kDay:
+      interventionToggled = (
+          interventionDef->trigger().day().trigger_on() <= day
+          && interventionDef->trigger().day().trigger_off() > day);
+      break;
+    
+    // By default, let the intervention run if we have one
+    case loimos::proto::InterventionModel::Trigger::TriggerTypeCase::TRIGGER_TYPE_NOT_SET:
+      interventionToggled = true;
+  }
+
+  // Run/update any global aspects of the intervention
+  if (interventionToggled) {
+    // ...which for now just means vaccinations
+    if (interventionDef->has_vaccination()) {
+      vaccinate();
     }
   }
 }
 
-/*
-double DiseaseModel::getCompilance() const {
-  if (interventionStategy && interventionDef->has_self_isolation()) {
-    return interventionDef->self_isolation().compliance();
-  } else {
-    return 0;
-  }
-}
-*/
 double DiseaseModel::getCompilance() const {
   if (interventionStategy && interventionDef->has_self_isolation()) {
     return interventionDef->self_isolation().compliance();
@@ -399,4 +433,30 @@ bool DiseaseModel::isLocationSeeder(std::vector<Data> *locAttr) const {
   // printf("got %d is %d\n", locAttr->at(interventionDef->csvlocationofseederbool()).int_b10, interventionDef->seedingadmincode());
   return locAttr->at(interventionDef->csv_location_of_seeder_bool()).int_b10
     == interventionDef->seeding_admin_code();
+}
+
+// Should only be called if the intervention includes vaccination
+void DiseaseModel::vaccinate() {
+  int vaccinationsPerDay = interventionDef->vaccination()
+    .vaccination()
+    .per_day();
+  std::vector<std::vector<int> > vaccinationsByPartition(numPeoplePartitions);
+
+  for (int i = 0; i < vaccinationsPerDay; ++i) {
+    int nextPerson = unvaccinatedPeople.back();
+    unvaccinatedPeople.pop_back();
+    int nextPartition = getPartitionIndex(i, numPeople, numPeoplePartitions, 0);
+
+    vaccinationsByPartition[nextPartition].emplace_back(nextPerson);
+  }
+
+  for (int i = 0; i < numPeoplePartitions; ++i) {
+    if (0 < vaccinationsByPartition[i].size()) {
+      peopleArray[i].Vaccinate(vaccinationsByPartition[i]);
+    }
+  }
+}
+
+void DiseaseModel::vaccinate(Person &person) const {
+  //CkPrintf("Vaccinating person %d\n", person.uniqueId);
 }

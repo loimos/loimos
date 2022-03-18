@@ -43,6 +43,7 @@ class People : public CBase_People {
     void RealDataSendVisitMessages();
     void ReceiveInteractions(InteractionMessage interMsg);
     void EndOfDayStateUpdate();
+    void Vaccinate(std::vector<int> peopleToVaccinate);
     void SendStats();
     #ifdef ENABLE_LB
     void ResumeFromSync();

@@ -19,6 +19,7 @@ class Main : public CBase_Main {
   DiseaseModel* diseaseModel;
   int chareCount;
   int createdCount;
+  int infectiousCount = 0;
 
   public:
     Main(CkArgMsg* msg);

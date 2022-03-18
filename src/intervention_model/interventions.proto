@@ -34,7 +34,11 @@ message InterventionModel {
     }
     
     message InterventionType_Vaccination {
-      double vaccination_rate = 1;
+      int32  per_day = 1;
+      double infection_protection = 2;
+      double severe_disease_protection = 3;
+      double transmission_protection = 4;
+      int32  delay = 5;
     }
     
     oneof intervention_type {

@@ -1,7 +1,7 @@
 trigger: {
   new_daily_cases: {
-    trigger_on = 0.004;
-    trigger_off = 0.001;
+    trigger_on: 0.004;
+    trigger_off: 0.001;
   }
 }  
 

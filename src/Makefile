@@ -72,7 +72,7 @@ clean:
 	done
 
 # All test names start with "test-"
-TEST_NAMES= -small -syn -large -validation -intervention -intervention-syn
+TEST_NAMES= -small -syn -large -validation -intervention -intervention-syn -intervetion-vax
 TESTS=$(subst -,test-,$(TEST_NAMES))
 
 # Run all tests with test rule
@@ -97,6 +97,8 @@ test-intervention: all
 test-intervention-syn: all
 	./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 test-intervention-syn.csv ../data/disease_models/covid19_onepath.textproto -i ../data/interventions/only_isolation.text_proto ++local
 
+test-intervention-vax: all
+	./charmrun +p4 ./loimos 0 41119 19203 60 40 30 7 test-intervention.csv ../data/disease_models/covid19_onepath.textproto ../data/populations/coc/ -i ../data/interventions/only_vaccination.textproto ++local
 
 clean-cache:
 	rm ../data/populations/coc/*.cache ../data/populations/synthetic_small_city/*.cache

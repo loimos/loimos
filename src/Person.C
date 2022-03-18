@@ -23,6 +23,7 @@ Person::Person(int numAttributes, int startingState, int timeLeftInState) {
     this->next_state = -1;
     this->isIsolating = false;
     this->willComply = false;
+    this->isVaccinated = false;
     this->secondsLeftInState = timeLeftInState;
     this->visitOffsetByDay = std::vector<uint32_t>();
 
@@ -76,6 +77,10 @@ void Person::EndOfDayStateUpdate(DiseaseModel *diseaseModel,
         diseaseModel->transitionFromState(state, generator);
     }
   }
+}
+
+void Person::vaccinate() {
+  isVaccinated = true;
 }
 
 void Person::_print_information(loimos::proto::CSVDefinition *personDef) {

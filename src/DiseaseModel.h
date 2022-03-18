@@ -13,10 +13,12 @@
 #include "readers/DataReader.h"
 #include "intervention_model/interventions.pb.h"
 
+#include "Person.h"
 #include "Event.h"
 #include "readers/data.pb.h"
 
 #include <random>
+#include <vector>
 
 using Time = int32_t;
 
@@ -30,8 +32,12 @@ class DiseaseModel : public CBase_DiseaseModel {
         std::vector<std::unordered_map<std::string, int> *> *strategyLookup;  
         Time getTimeInNextState(const loimos::proto::DiseaseModel_DiseaseState_TimedTransitionSet_StateTransition *transitionSet, std::default_random_engine *generator) const;
         Time timeDefToSeconds(Time_Def time) const;
+        
+        std::vector<int> unvaccinatedPeople;
+
         int healthyState;
         int exposedState;
+        int day = 0;
         
         // Intervention related.
         bool interventionToggled;
@@ -63,12 +69,15 @@ class DiseaseModel : public CBase_DiseaseModel {
         loimos::proto::InterventionModel *interventionDef;
 
         // Intervention methods
-        void toggleIntervention(int newDailyInfections);
+        void initIntervention(std::string pathToIntervention);
+        void updateIntervention(int newDailyInfections);
         double getCompilance() const;
         bool shouldPersonIsolate(int healthState);
         bool isLocationOpen(std::vector<Data> *locAttr) const;
         bool complyingWithLockdown(std::default_random_engine *generator) const;
         bool isLocationSeeder(std::vector<Data> *locAttr) const;
+        void vaccinate();
+        void vaccinate(Person &person) const;
 };
 
 #endif // __DiseaseModel_H__

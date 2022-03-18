@@ -477,6 +477,19 @@ void People::ProcessInteractions(Person &person) {
 
   person.interactions.clear();
 }
+    
+void People::Vaccinate(std::vector<int> peopleToVaccinate) {
+  for (int i = 0; i < peopleToVaccinate.size(); ++i) {
+    int localIdx = getLocalIndex(
+      peopleToVaccinate[i],
+      numPeople,
+      numPeoplePartitions,
+      firstPersonIdx
+    );
+    
+    diseaseModel->vaccinate(people[i]);
+  }
+}
 
 #ifdef ENABLE_LB
 void People::ResumeFromSync() {
