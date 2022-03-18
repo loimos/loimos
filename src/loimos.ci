@@ -14,7 +14,9 @@ mainmodule loimos {
   #define LB_START_DAY 6
   #define LB_INTERVAL DAYS_IN_WEEK
   
+  #ifdef USE_HYPERCOMM
   include "AggregatorParam.h";
+  #endif // USE_HYPERCOMM
 
   include "vector";
   include "sys/time.h";
@@ -23,7 +25,9 @@ mainmodule loimos {
   readonly CProxy_Main mainProxy;
   readonly CProxy_People peopleArray;
   readonly CProxy_Locations locationsArray;
+  #ifdef USE_HYPERCOMM
   readonly CProxy_Aggregator aggregatorProxy;
+  #endif // USE_HYPERCOMM
   readonly CProxy_DiseaseModel globDiseaseModel;
   readonly CProxy_TraceSwitcher traceArray;
   readonly int numPeople;
@@ -55,7 +59,9 @@ mainmodule loimos {
 
   mainchare Main {
     entry Main(CkArgMsg*);
+    #ifdef USE_HYPERCOMM
     entry [reductiontarget] void CharesCreated();
+    #endif // USE_HYPERCOMM
     entry void run() {
       // We only want to collect instumentation on the main loop
       #ifdef ENABLE_LB
@@ -193,9 +199,11 @@ mainmodule loimos {
     #endif // ENABLE_LB
   };
 
+  #ifdef USE_HYPERCOMM
   group Aggregator {
     entry Aggregator(AggregatorParam p1, AggregatorParam p2);
   };
+  #endif // USE_HYPERCOMM
 
   array [1D] People {
     entry People();
@@ -217,7 +225,9 @@ mainmodule loimos {
       entry DiseaseModel(std::string pathToModel, std::string scenarioPath);
   };
 
+  #ifdef USE_HYPERCOMM
   namespace aggregation {
     initproc void initialize(void);
   }
+  #endif // USE_HYPERCOMM
 };

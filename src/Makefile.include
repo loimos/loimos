@@ -20,7 +20,7 @@ HYPERCOMM_HOME ?= ../hypercomm-aggregation
 
 CXX       = g++
 OPTS     += -g -O2
-INCLUDES  = -I$(PROTOBUF_HOME)/include -I$(HYPERCOMM_HOME)/include
+INCLUDES  = -I$(PROTOBUF_HOME)/include
 LIBS      = -lpthread -L$(PROTOBUF_HOME)/lib -lprotobuf 
 
 # Set the ENABLE_UNIT_TESTING environment variable to compile for unit testing
@@ -32,6 +32,11 @@ endif
 
 ifdef USE_PROJECTIONS
 OPTS     += -DUSE_PROJECTIONS
+endif
+
+ifdef USE_HYPERCOMM
+OPTS     += -DUSE_HYPERCOMM
+INCLUDES += -I$(HYPERCOMM_HOME)/include
 endif
 
 ifdef ENABLE_LB

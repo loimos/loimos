@@ -10,8 +10,11 @@
 #include "Interaction.h"
 #include "DiseaseModel.h"
 #include "Person.h"
-#include "Aggregator.h"
 #include "readers/DataReader.h"
+
+#ifdef USE_HYPERCOMM
+  #include "Aggregator.h"
+#endif // USE_HYPERCOMM
 
 #include <tuple>
 #include <limits>
@@ -78,7 +81,9 @@ People::People() {
   }
 
   // Notify Main
+  #ifdef USE_HYPERCOMM
   contribute(CkCallback(CkReductionTarget(Main, CharesCreated), mainProxy));
+  #endif
 }
 
 People::People(CkMigrateMessage *msg) {}
@@ -336,12 +341,16 @@ void People::SyntheticSendVisitMessages() {
 
       // Send off visit message
       VisitMessage visitMsg(destinationIdx, personIdx, p.state, visitStart, visitEnd);
+      #ifdef USE_HYPERCOMM
       Aggregator* agg = aggregatorProxy.ckLocalBranch();
       if (agg->visit_aggregator) {
         agg->visit_aggregator->send(locationsArray[locationPartition], visitMsg);
       } else {
+      #endif // USE_HYPERCOMM
         locationsArray[locationPartition].ReceiveVisitMessages(visitMsg);
+      #ifdef USE_HYPERCOMM
       }
+      #endif // USE_HYPERCOMM
     } 
   }
 }
@@ -356,12 +365,16 @@ void People::RealDataSendVisitMessages() {
       int locationPartition = getPartitionIndex(visitMessage.locationIdx,
           numLocations, numLocationPartitions, firstLocationIdx);
       // Send off the visit message.
+      #ifdef USE_HYPERCOMM
       Aggregator* agg = aggregatorProxy.ckLocalBranch();
       if (agg->visit_aggregator) {
         agg->visit_aggregator->send(locationsArray[locationPartition], visitMessage);
       } else {
+      #endif // USE_HYPERCOMM
         locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
+      #ifdef USE_HYPERCOMM
       }
+      #endif // USE_HYPERCOMM
     }
   }
 }

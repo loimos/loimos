@@ -10,8 +10,11 @@
 #include "Event.h"
 #include "Defs.h"
 #include "DiseaseModel.h"
-#include "Aggregator.h"
 #include "contact_model/ContactModel.h"
+
+#ifdef USE_HYPERCOMM
+  #include "Aggregator.h"
+#endif // USE_HYPERCOMM
 
 #include <random>
 #include <vector>
@@ -236,12 +239,16 @@ inline void Location::sendInteractions(int personIdx) {
         );
   }
   InteractionMessage interMsg(personIdx, interactions[personIdx]);
+  #ifdef USE_HYPERCOMM
   Aggregator* agg = aggregatorProxy.ckLocalBranch();
   if (agg->interact_aggregator) {
     agg->interact_aggregator->send(peopleArray[peoplePartitionIdx], interMsg);
   } else {
+  #endif // USE_HYPERCOMM
     peopleArray[peoplePartitionIdx].ReceiveInteractions(interMsg);
+  #ifdef USE_HYPERCOMM
   }
+  #endif // USE_HYPERCOMM
 
   /*  
   CkPrintf(
