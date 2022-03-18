@@ -1,0 +1,16 @@
+trigger: {
+  new_daily_cases: {
+    trigger_on: 0.004;
+    trigger_off: 0.001;
+  }
+}  
+
+school_closures: {
+  compliance: 0.95;
+  school_closures: {
+    csv_location: 1;
+  }
+}
+
+csv_location_of_seeder_bool: 0;
+seeding_admin_code: 600;

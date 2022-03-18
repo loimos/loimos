@@ -8,6 +8,7 @@ starting_states: {
 disease_state: {
 	state_label: "S_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 1
 	exposure_transition: {
 		transition: {
@@ -18,26 +19,22 @@ disease_state: {
 disease_state: {
 	state_label: "HypRxFail_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 1
-	timed_transition: {
+	exposure_transition: {
 		transition: {
 			next_state: 3
-			with_prob: 1
-			fixed: {
-				time_in_state: {
-					days: 3
-				}
-			}
 		}
 	}
 }
 disease_state: {
 	state_label: "HypRxProt_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
-			next_state: 16
+			next_state: 15
 			with_prob: 1
 			fixed: {
 				time_in_state: {
@@ -50,6 +47,7 @@ disease_state: {
 disease_state: {
 	state_label: "E_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
@@ -78,6 +76,7 @@ disease_state: {
 disease_state: {
 	state_label: "Ipresymp_a"
 	infectivity: 0.8
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
@@ -94,6 +93,7 @@ disease_state: {
 disease_state: {
 	state_label: "Isymp_a"
 	infectivity: 1
+	symptomatic: true
 	susceptibility: 0
 	timed_transition: {
 		transition: {
@@ -194,10 +194,11 @@ disease_state: {
 disease_state: {
 	state_label: "Iasymp_a"
 	infectivity: 1.0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
-			next_state: 16
+			next_state: 15
 			with_prob: 1
 			normal: {
 				tmean: {
@@ -213,10 +214,11 @@ disease_state: {
 disease_state: {
 	state_label: "rMedAttend_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
-			next_state: 16
+			next_state: 15
 			with_prob: 1
 			normal: {
 				tmean: {
@@ -232,10 +234,11 @@ disease_state: {
 disease_state: {
 	state_label: "hMedAttend_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
-			next_state: 11
+			next_state: 10
 			with_prob: 1
 			normal: {
 				tmean: {
@@ -251,10 +254,11 @@ disease_state: {
 disease_state: {
 	state_label: "dMedAttend_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
-			next_state: 12
+			next_state: 11
 			with_prob: 0.95
 			discrete: {
 				bin: {
@@ -272,7 +276,7 @@ disease_state: {
 			}
 		}
 		transition: {
-			next_state: 10
+			next_state: 14
 			with_prob: 0.05
 			discrete: {
 				bin: {
@@ -342,10 +346,11 @@ disease_state: {
 disease_state: {
 	state_label: "Hosp_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
-			next_state: 13
+			next_state: 12
 			with_prob: 0.06
 			normal: {
 				tmean: {
@@ -357,7 +362,7 @@ disease_state: {
 			}
 		}
 		transition: {
-			next_state: 16
+			next_state: 15
 			with_prob: 0.94
 			normal: {
 				tmean: {
@@ -373,10 +378,11 @@ disease_state: {
 disease_state: {
 	state_label: "dHosp_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
-			next_state: 14
+			next_state: 13
 			with_prob: 0.06
 			discrete: {
 				bin: {
@@ -406,7 +412,7 @@ disease_state: {
 			}
 		}
 		transition: {
-			next_state: 10
+			next_state: 14
 			with_prob: 0.94
 			discrete: {
 				bin: {
@@ -464,10 +470,11 @@ disease_state: {
 disease_state: {
 	state_label: "Vent_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
-			next_state: 16
+			next_state: 15
 			with_prob: 1
 			normal: {
 				tmean: {
@@ -483,10 +490,11 @@ disease_state: {
 disease_state: {
 	state_label: "dVent_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
-			next_state: 10
+			next_state: 14
 			with_prob: 1
 			discrete: {
 				bin: {
@@ -520,17 +528,17 @@ disease_state: {
 disease_state: {
 	state_label: "Death_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
-	timed_transition: {
-	}
 }
 disease_state: {
 	state_label: "R_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
 	timed_transition: {
 		transition: {
-			next_state: 17
+			next_state: 16
 			with_prob: 0
 			normal: {
 				tmean: {
@@ -542,7 +550,7 @@ disease_state: {
 			}
 		}
 		transition: {
-			next_state: 18
+			next_state: 17
 			with_prob: 1
 			fixed: {
 				time_in_state: {
@@ -555,23 +563,17 @@ disease_state: {
 disease_state: {
 	state_label: "RyetS_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 1
-	timed_transition: {
+	exposure_transition: {
 		transition: {
 			next_state: 3
-			with_prob: 1
-			fixed: {
-				time_in_state: {
-					days: 3
-				}
-			}
 		}
 	}
 }
 disease_state: {
 	state_label: "Rimmune_a"
 	infectivity: 0
+	symptomatic: false
 	susceptibility: 0
-	timed_transition: {
-			}
 }

@@ -46,6 +46,8 @@ class Location : public DataInterface {
 
     // If this location should be an infection seeding location.
     bool isDiseaseSeeder;
+    
+    bool complysWithShutdown;
     int day;
    
     // For DataInterface
@@ -97,7 +99,9 @@ class Location : public DataInterface {
     // Provide default constructor operations.
     Location() = default;
     Location(CkMigrateMessage *msg);
-    Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator);
+    Location(int numAttributes, int uniqueIdx,
+             std::default_random_engine *generator,
+             const DiseaseModel *diseaseModel);
     Location(const Location&) = default;
     Location(Location&&) = default;
     ~Location() = default;
@@ -112,6 +116,10 @@ class Location : public DataInterface {
     // Override abstract DataInterface getters and setters.
     void setUniqueId(int idx);
     std::vector<union Data> &getDataField();
+    
+    void setLocationAsSpreader() {
+      isDiseaseSeeder = true;
+    }
     
     // Adds an event represnting a person either arriving or departing
     // from this location

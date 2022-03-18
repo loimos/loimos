@@ -31,6 +31,7 @@ mainmodule loimos {
   readonly int numPeoplePartitions;
   readonly int numLocationPartitions;
   readonly int numDays;
+  readonly int numDaysWithRealData;
 
   readonly bool syntheticRun;
   readonly int contactModelType;
@@ -52,6 +53,8 @@ mainmodule loimos {
   readonly int synLocationPartitionGridWidth;
   readonly int synLocationPartitionGridHeight;
   readonly int averageDegreeOfVisit;
+
+  readonly bool interventionStategy;
 
   mainchare Main {
     entry Main(CkArgMsg*);
@@ -100,14 +103,17 @@ mainmodule loimos {
         }
         when ReceiveInfectiousCount(int infectiousCount) {
           serial {
-            // Use this count as desired here
-            
             // Print how long this iteration took to run
             CkPrintf(
-              "Iteration %d Execution Time: %lf seconds.\n",
-              day, CkWallTimer() - iterationStartTime
+              "Iteration %d Execution Time: %lf seconds. Infectious Count: %d.\n",
+              day, CkWallTimer() - iterationStartTime, infectiousCount
             );
-          }
+            
+            // Trigger intervention updates.
+            if (interventionStategy) {
+              globDiseaseModel.updateIntervention(infectiousCount);
+            }
+          }          
         }
 
         #ifdef ENABLE_LB
@@ -202,6 +208,7 @@ mainmodule loimos {
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
     entry void ReceiveInteractions(InteractionMessage);
     entry void EndOfDayStateUpdate(); // contribute call to ReceiveInfectiousCount
+    entry void Vaccinate(std::vector<int> peopleToVaccinate);
     entry void SendStats(); // contribute call to ReceiveStats
     entry void AtSync();
   };
@@ -214,7 +221,9 @@ mainmodule loimos {
   };
 
   nodegroup DiseaseModel {
-      entry DiseaseModel(std::string pathToModel, std::string scenarioPath);
+      entry DiseaseModel(std::string pathToModel, std::string scenarioPath,
+          std::string pathToIntervention);
+      entry void updateIntervention(int newDailyInfections);
   };
 
   namespace aggregation {

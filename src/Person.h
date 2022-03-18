@@ -20,6 +20,9 @@ class Person : public DataInterface {
         int state;
         int next_state;
         int secondsLeftInState;
+        bool willComply;
+        bool isIsolating;
+        bool isVaccinated;
 
         // If this is a susceptible person, this is a list of all of their
         // interactions with infectious people in the past day
@@ -51,6 +54,7 @@ class Person : public DataInterface {
         // Disease model functions.
         void EndOfDayStateUpdate(DiseaseModel *diseaseModel,
                                    std::default_random_engine *generator);
+        void vaccinate();
 
         // Override DataInterfect abstract methods
         void setUniqueId(int idx);
