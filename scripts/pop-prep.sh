@@ -49,14 +49,16 @@ network_tasks="512"
 unset -v region
 in_dir=$(pwd)
 out_dir=$(pwd)
+NO_RESIDENCE_OFFSET=false
 
-while getopts "hs:i:o:?" opt
+while getopts "hns:i:o:?" opt
 do
   case "$opt" in
     h ) help_function; exit ;;
     s ) region=$OPTARG ;;
     i ) in_dir=$OPTARG ;;
     o ) out_dir=$OPTARG ;;
+    n ) NO_RESIDENCE_OFFSET=true ;;
     ? ) echo "Unrecognized commandline option <${opt}>" ; help_function ;;
   esac
 done
@@ -76,7 +78,13 @@ fixed_residence_locations_filename=${out_dir}/${region}_residence_locations_fina
 fixed_activity_locations_filename=${out_dir}/${region}_activity_locations_final.csv
 fixed_residence_assignment_filename=${out_dir}/${region}_household_residence_assignment_final.csv
 
-HOME_SHIFT=1000000000
+# Some states seem to have the shift already applied to home indices
+if ${NO_RESIDENCE_OFFSET}; then
+  HOME_SHIFT=0
+else
+  HOME_SHIFT=1000000000
+fi
+echo Using HOME_SHIFT of ${HOME_SHIFT}
 
 # Combine activity files into one. Could check that line counts match.
 # has format: hid,pid,activity_number,activity_type,start_time,duration,lid,longitude,latitude,travel_mode

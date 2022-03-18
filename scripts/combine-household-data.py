@@ -112,7 +112,7 @@ def main() :
     # hid,pid,serialno,person_number,record_type,age,relationship,sex,school_enrollment,grade_level_attending,employment_status,occupation_socp,race,hispanic,designation
     person_df = pd.read_csv(p_filename, usecols=['pid', 'hid', 'age', 'sex',
         'employment_status', 'designation', 'race', 'hispanic'])
-    print('person df memory usage:', person_df.memory_usage(deep=True).sum())
+    #print('person df memory usage:', person_df.memory_usage(deep=True).sum())
     #print(memory_usage())
 
     # admin1,admin2,admin3,admin4,hid,serialno,puma,record_type,hh_unit_wt,hh_size,vehicles,hh_income,units_in_structure,business,heating_fuel,household_language,family_type_and_employment_status,workers_in_family
@@ -122,7 +122,7 @@ def main() :
     #print('household df memory usage:', household_df.memory_usage(deep=True).sum())
 
     p_h_df = person_df.merge(household_df, how='left', left_on='hid',
-            right_on='hid', copy=False)
+            right_on='hid')
     #print('p-h combined df memory usage:', p_h_df.memory_usage(deep=True).sum())
     #print(memory_usage())
 
@@ -144,7 +144,6 @@ def main() :
 
     gidi_person_partitioned = [p_h_partitioned[i].merge(
         hra_partitioned[i], how='left', left_on='hid', right_on='hid',
-        copy=False
     ) for i in range(num_partitions-1)]
     gidi_person_df = pd.concat(gidi_person_partitioned)
 
