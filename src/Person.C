@@ -21,6 +21,8 @@ Person::Person(int numAttributes, int startingState, int timeLeftInState) {
     }
     this->state = startingState;
     this->next_state = -1;
+    this->isIsolating = false;
+    this->willComply = false;
     this->secondsLeftInState = timeLeftInState;
     this->visitOffsetByDay = std::vector<uint32_t>();
 
@@ -38,6 +40,7 @@ void Person::pup(PUP::er &p) {
     p | visitOffsetByDay;
     p | visitsByDay;
     p | personData;
+    p | isIsolating;
 }
 
 void Person::setUniqueId(int idx) {
@@ -48,7 +51,8 @@ std::vector<union Data> &Person::getDataField() {
     return this->personData;
 }
 
-void Person::EndOfDayStateUpdate(DiseaseModel *diseaseModel, std::default_random_engine *generator) {
+void Person::EndOfDayStateUpdate(DiseaseModel *diseaseModel,
+    std::default_random_engine *generator) {
   // Transition to next state or mark the passage of time
   secondsLeftInState -= DAY_LENGTH;
   if (secondsLeftInState <= 0) {
@@ -57,6 +61,12 @@ void Person::EndOfDayStateUpdate(DiseaseModel *diseaseModel, std::default_random
       state = next_state;
       std::tie(next_state, secondsLeftInState) = 
         diseaseModel->transitionFromState(state, generator);
+        
+      // Check if person will begin isolating.
+      if (willComply) {
+        isIsolating = diseaseModel->shouldPersonIsolate(state);
+      }
+
     } else {
       // Get which exposed state they should transition to.
       std::tie(state, std::ignore) = 

@@ -20,6 +20,8 @@ class Person : public DataInterface {
         int state;
         int next_state;
         int secondsLeftInState;
+        bool willComply;
+        bool isIsolating;
 
         // If this is a susceptible person, this is a list of all of their
         // interactions with infectious people in the past day

@@ -21,7 +21,7 @@
 #include <cmath>
 #include <algorithm>
 
-Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator) : unitDistrib(0, 1) {
+Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator, const DiseaseModel *diseaseModel) : unitDistrib(0, 1) {
   if (numAttributes != 0) {
     this->locationData.resize(numAttributes);
   }
@@ -42,11 +42,17 @@ Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine 
         && (locationY < seedSize || (synLocationGridHeight - locationY) <= seedSize)) {
       isDiseaseSeeder = true;
     }
+  
   } else {
     // For non-synthetic set just seed completely at random.
-    isDiseaseSeeder = unitDistrib(*generator) < PERCENTAGE_OF_SEEDING_LOCATIONS;
+    //isDiseaseSeeder = unitDistrib(*generator) < PERCENTAGE_OF_SEEDING_LOCATIONS;
+    // For non-synthetic set, we need to load the data before determining.
+    isDiseaseSeeder = false;
   }
   
+  if (interventionStategy) {
+    complysWithShutdown = diseaseModel->complyingWithLockdown(generator);
+  }
 }
 
 Location::Location(CkMigrateMessage *msg) {};
@@ -60,10 +66,6 @@ void Location::pup(PUP::er &p) {
   p | day;
   p | uniqueId;
   p | events;
-
-  if (p.isUnpacking()) {
-    unitDistrib = std::uniform_real_distribution<>(0.0,1.0);
-  }
 }
 
 // Lets location partition refresh generator after migration, since pointers
@@ -74,11 +76,11 @@ void Location::setGenerator(std::default_random_engine *generator) {
 
 // DataInterface overrides. 
 void Location::setUniqueId(int idx) {
-    this->uniqueId = idx;
+  this->uniqueId = idx;
 }
 
 std::vector<union Data> &Location::getDataField() {
-    return this->locationData;
+  return this->locationData;
 }
 
 // Event processing.
@@ -91,34 +93,35 @@ void Location::processEvents(
   ContactModel *contactModel
 ) {
   std::vector<Event> *arrivals;
-  
-  std::sort(events.begin(), events.end());
-  for (const Event &event: events) {
-    if (diseaseModel->isSusceptible(event.personState)) {
-      arrivals = &susceptibleArrivals;
 
-    } else if (diseaseModel->isInfectious(event.personState)) {
-      arrivals = &infectiousArrivals;
+  if (!interventionStategy || !complysWithShutdown || diseaseModel->isLocationOpen(&locationData)) {
+    std::sort(events.begin(), events.end());
+    for (const Event &event: events) {
+      if (diseaseModel->isSusceptible(event.personState)) {
+        arrivals = &susceptibleArrivals;
 
-    // If a person can niether infect other people nor be infected themself,
-    // we can just ignore their comings and goings
-    } else {
-      continue;
-    }
+      } else if (diseaseModel->isInfectious(event.personState)) {
+        arrivals = &infectiousArrivals;
 
-    if (ARRIVAL == event.type) {
-      arrivals->push_back(event);
-      std::push_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
+      // If a person can niether infect other people nor be infected themself,
+      // we can just ignore their comings and goings
+      } else {
+        continue;
+      }
 
-    } else if (DEPARTURE == event.type) {
-      // Remove the arrival event corresponding to this departure 
-      std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
-      arrivals->pop_back();
+      if (ARRIVAL == event.type) {
+        arrivals->push_back(event);
+        std::push_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
 
-      onDeparture(diseaseModel, contactModel, event);
+      } else if (DEPARTURE == event.type) {
+        // Remove the arrival event corresponding to this departure 
+        std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
+        arrivals->pop_back();
+
+        onDeparture(diseaseModel, contactModel, event);
+      }
     }
   }
-
   events.clear();
   interactions.clear();
   day++;

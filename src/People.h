@@ -24,7 +24,6 @@ class People : public CBase_People {
   private:
     int numLocalPeople;
     int day;
-    int newCases;
     int totalVisitsForDay;
 
     std::vector<Person> people;
