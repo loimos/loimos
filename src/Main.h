@@ -16,6 +16,7 @@ class Main : public CBase_Main {
   int day;
   std::string pathToOutput;
   std::vector<int> accumulated;
+  std::vector<int> initialInfections;
   DiseaseModel* diseaseModel;
   int chareCount;
   int createdCount;
@@ -25,6 +26,7 @@ class Main : public CBase_Main {
     #ifdef USE_HYPERCOMM
     void CharesCreated();
     #endif
+    void SeedInfections();
     void SaveStats(int *data);
 };
 

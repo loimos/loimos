@@ -41,6 +41,8 @@ const Time MINUTE_LENGTH = 60;
 #define PERCENTAGE_OF_SEEDING_LOCATIONS 0.001
 #define INITIAL_INFECTIOUS_PROBABILITY 0.01
 #define DAYS_TO_SEED_INFECTION 3
+#define INITIAL_INFECTIONS_PER_DAY 2
+#define INITIAL_INFECTIONS (INITIAL_INFECTIONS_PER_DAY * DAYS_TO_SEED_INFECTION)
 
 extern /* readonly */ CProxy_Main mainProxy;
 extern /* readonly */ CProxy_People peopleArray;

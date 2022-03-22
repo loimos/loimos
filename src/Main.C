@@ -18,6 +18,9 @@
 #include <fstream>
 #include <cstdlib>
 #include <sstream>
+#include <vector>
+#include <random>
+#include <unordered_set>
 #include <unordered_map>
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -329,6 +332,63 @@ void Main::CharesCreated() {
 #ifdef USE_HYPERCOMM
   }
 #endif
+}
+
+void Main::SeedInfections() {
+  std::default_random_engine generator(time(NULL));
+  
+  // Determine all of the intitial infections on the first day so we can
+  // guarentee they are unique (not checking this quickly runs into birthday
+  // problem issues, even for sizable datasets)
+  if (0 == day) {
+    std::uniform_int_distribution<> personDistrib(0, numPeople);
+    std::unordered_set<int> initialInfectionsSet;
+    initialInfections.reserve(INITIAL_INFECTIONS);
+    // Use set to check membership becuase it's faster and we can spare the
+    // memory; INITIAL_INFECTIONS should be fairly small
+    initialInfectionsSet.reserve(INITIAL_INFECTIONS);
+    while (initialInfectionsSet.size() < INITIAL_INFECTIONS) {
+      int personIdx = personDistrib(generator);
+      if (initialInfectionsSet.count(personIdx) == 0) {
+        initialInfections.emplace_back(personIdx);
+        initialInfectionsSet.emplace(personIdx);
+      }
+    }
+  }
+
+  for (int i = 0; i < INITIAL_INFECTIONS_PER_DAY; ++i) {
+    int personIdx = initialInfections.back();
+    initialInfections.pop_back();
+  
+    int peoplePartitionIdx = getPartitionIndex(
+      personIdx,
+      numPeople,
+      numPeoplePartitions,
+      firstPersonIdx
+    );
+
+    // Make a super contagious visit for that person.
+    std::vector<Interaction> interactions;
+    interactions.emplace_back(
+      std::numeric_limits<double>::max(),
+      0,
+      0,
+      0,
+      std::numeric_limits<int>::max()
+    );
+
+    InteractionMessage interMsg(personIdx, interactions);
+    #ifdef USE_HYPERCOMM
+    Aggregator* agg = aggregatorProxy.ckLocalBranch();
+    if (agg->interact_aggregator) {
+      agg->interact_aggregator->send(peopleArray[peoplePartitionIdx], interMsg);
+    } else {
+    #endif // USE_HYPERCOMM
+      peopleArray[peoplePartitionIdx].ReceiveInteractions(interMsg);
+    #ifdef USE_HYPERCOMM
+    }
+    #endif // USE_HYPERCOMM
+  }
 }
 
 void Main::SaveStats(int *data) {
