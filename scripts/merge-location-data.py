@@ -76,7 +76,7 @@ def id_remapper(people, locations, visits):
         # Replace all references of the old keys with the new ones
         for ref_name in external_references:
             ref = data[ref_name]
-            ref = ref.merge(remapper, left_on=key, right_on=key)
+            ref = ref.merge(remapper, how='left', left_on=key, right_on=key)
             ref[key]= ref['new_id']
             ref.drop(["new_id"], axis = 1, inplace=True)
             data[ref_name] = ref
