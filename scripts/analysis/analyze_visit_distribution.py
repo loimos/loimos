@@ -43,6 +43,7 @@ def main():
     visited_location_counts = visit_counts[visited_locations_mask]
     print(visited_location_counts.shape, visit_counts.shape)
 
+    fig, ax = plt.subplots(figsize=(10,6))
     sns.histplot(visited_location_counts, bins=50, kde=False, log_scale=(True,True))
     plt.savefig(os.path.join(output_dir, 'visits_hist.pdf'))
     #sns.kdeplot(visited_location_counts, log_scale=(True,True))
@@ -55,6 +56,7 @@ def main():
             for lid, grouped in visits_by_location]
     print(visit_counts_by_location)
 
+    fig, ax = plt.subplots(figsize=(10,6))
     sns.histplot(visit_counts_by_location, bins=50, x='num_visit_sources', kde=False, log_scale=(True,True))
     plt.savefig(os.path.join(output_dir, 'visit_sources_hist.pdf'))
 
