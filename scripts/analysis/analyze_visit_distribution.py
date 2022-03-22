@@ -38,6 +38,7 @@ def main():
 
     visit_counts = np.array(locations[cols]).flatten()
     print(np.mean(visit_counts), np.std(visit_counts))
+    print(np.quantile(visit_counts, [.25,.5,.75]))
 
     visited_locations_mask = visit_counts != 0
     visited_location_counts = visit_counts[visited_locations_mask]
