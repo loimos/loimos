@@ -21,7 +21,15 @@ HYPERCOMM_HOME ?= ../hypercomm-aggregation
 CXX       = g++
 OPTS     += -g -O2
 INCLUDES  = -I$(PROTOBUF_HOME)/include
-LIBS      = -lpthread -L$(PROTOBUF_HOME)/lib -lprotobuf 
+LIBS      = -lpthread -lprotobuf
+
+# Protobuf is installed under lib64 on Rivanna
+HOSTNAME = $(shell hostname -a)
+ifneq (,$(findstring .hpc.virginia.edu,$(HOSTNAME)))
+LIBS += -L$(PROTOBUF_HOME)/lib64
+else
+LIBS += -L$(PROTOBUF_HOME)/lib
+endif
 
 # Set the ENABLE_UNIT_TESTING environment variable to compile for unit testing
 ifdef ENABLE_UNIT_TESTING
