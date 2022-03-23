@@ -12,7 +12,7 @@ if [ -z ${NUM_PARTITIONS} ]; then
 fi
 ARGS=${3}
 if [ -z ${ARGS} ]; then
-  ARGS='-p "average_daily_total"'
+  ARGS="-p average_daily_total"
 fi
 
 RAW_DIR=../../data/populations/${STATE}

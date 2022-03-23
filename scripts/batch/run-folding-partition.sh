@@ -12,7 +12,7 @@ if [ -z ${NUM_PARTITIONS} ]; then
 fi
 ARGS=${3}
 if [ -z ${ARGS} ]; then
-  ARGS='-p "average_daily_total"'
+  ARGS="-p average_daily_total"
 fi
 
 RAW_DIR=../../data/populations/${STATE}
@@ -28,7 +28,7 @@ fi
 # are missing
 for file in ${RAW_DIR}/*; do
  filename=$(basename ${file})
- if [[ ${filename} != *".csv"* && ! -e ${PARTITIONED_DIR}/${filename} ]]; then
+ if [[ ${filename} == *".textproto" && ! -e ${PARTITIONED_DIR}/${filename} ]]; then
    ln -s ${RAW_DIR}/${filename} ${PARTITIONED_DIR}/${filename}
    echo "  Created link from ${RAW_DIR}/${filename} to ${PARTITIONED_DIR}/${filename}"
  fi
