@@ -94,6 +94,9 @@ mainmodule loimos {
             // CkPrintf("Compute Interactions\n");
             locationsArray.ComputeInteractions();
             // CkPrintf("QD Compute Interactions\n");
+            if (DAYS_TO_SEED_INFECTION >= day) {
+              SeedInfections();
+            } 
             
             CkStartQD(CkCallback(
               CkIndex_Main::ComputedInteractions(),
@@ -178,6 +181,7 @@ mainmodule loimos {
         CkExit(); 
       }
     };
+    entry void SeedInfections();
     entry void StartComputingInteractions(); 
     entry void ComputedInteractions();
     entry [reductiontarget] void ReceiveInfectiousCount(int infectiousCount);
