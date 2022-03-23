@@ -386,9 +386,3 @@ bool DiseaseModel::complyingWithLockdown(std::default_random_engine *generator) 
   std::uniform_real_distribution<double> uniform_dist(0,1);
   return uniform_dist(*generator) < interventionDef->schoolclosurecompliance();
 }
-
-bool DiseaseModel::isLocationSeeder(std::vector<Data> *locAttr) const {
-  // printf("got %d is %d\n", locAttr->at(interventionDef->csvlocationofseederbool()).int_b10, interventionDef->seedingadmincode());
-  return locAttr->at(interventionDef->csvlocationofseederbool()).int_b10
-    == interventionDef->seedingadmincode();
-}

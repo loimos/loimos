@@ -24,7 +24,7 @@ disease_state: {
 }
 disease_state: {
 	state_label: "infectious_safe"
-	infectivity: 0
+	infectivity: 1
 	susceptibility: 100000
 	timed_transition: {
 		transition: {
@@ -57,7 +57,7 @@ disease_state: {
 }
 disease_state: {
 	state_label: "infectious_risky"
-	infectivity: 0
+	infectivity: 1
 	susceptibility: 100000
 	timed_transition: {
 		transition: {

@@ -28,28 +28,6 @@ Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine 
   day = 0;
   this->generator = generator;
 
-  // Determine if this location should seed the disease.
-  if (syntheticRun) {
-    // For synthetic runs start seed in corner.
-    // Determine grid size in each corner s.t. randomly selecting 50%
-    // of these locations will result
-    int seedSize = 
-      std::max((int) std::sqrt((numLocations * PERCENTAGE_OF_SEEDING_LOCATIONS) / 4), 1);
-    
-    int locationX = uniqueIdx % synLocationGridWidth;
-    int locationY = uniqueIdx / synLocationGridWidth;
-    if ((locationX < seedSize || (synLocationGridWidth - locationX) <= seedSize)
-        && (locationY < seedSize || (synLocationGridHeight - locationY) <= seedSize)) {
-      isDiseaseSeeder = true;
-    }
-  
-  } else {
-    // For non-synthetic set just seed completely at random.
-    //isDiseaseSeeder = unitDistrib(*generator) < PERCENTAGE_OF_SEEDING_LOCATIONS;
-    // For non-synthetic set, we need to load the data before determining.
-    isDiseaseSeeder = false;
-  }
-  
   if (interventionStategy) {
     complysWithShutdown = diseaseModel->complyingWithLockdown(generator);
   }
@@ -62,7 +40,6 @@ void Location::pup(PUP::er &p) {
   p | susceptibleArrivals;
   p | interactions;
   p | locationData;
-  p | isDiseaseSeeder;
   p | day;
   p | uniqueId;
   p | events;
@@ -229,18 +206,6 @@ inline void Location::sendInteractions(int personIdx) {
     firstPersonIdx
   );
 
-  // Randomly seed some people for infection.
-  if (isDiseaseSeeder && day < DAYS_TO_SEED_INFECTION 
-      && unitDistrib(*generator) < INITIAL_INFECTIOUS_PROBABILITY) {
-        // Add a super contagious visit for that person.
-        interactions[personIdx].emplace_back(
-          std::numeric_limits<double>::max(),
-          0,
-          0,
-          0,
-          std::numeric_limits<int>::max()
-        );
-  }
   InteractionMessage interMsg(personIdx, interactions[personIdx]);
   #ifdef USE_HYPERCOMM
   Aggregator* agg = aggregatorProxy.ckLocalBranch();

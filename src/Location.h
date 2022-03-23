@@ -44,9 +44,6 @@ class Location : public DataInterface {
     // Various attributes of the location.
     std::vector<union Data> locationData;
 
-    // If this location should be an infection seeding location.
-    bool isDiseaseSeeder;
-    
     bool complysWithShutdown;
     int day;
    
@@ -116,10 +113,6 @@ class Location : public DataInterface {
     // Override abstract DataInterface getters and setters.
     void setUniqueId(int idx);
     std::vector<union Data> &getDataField();
-    
-    void setLocationAsSpreader() {
-      isDiseaseSeeder = true;
-    }
     
     // Adds an event represnting a person either arriving or departing
     // from this location

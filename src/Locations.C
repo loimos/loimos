@@ -108,9 +108,6 @@ void Locations::loadLocationData() {
   locationData.close();
   locationCache.close();
 
-  // Seed random number generator via branch ID for reproducibility.
-  generator.seed(thisIndex);
-  
   // Init contact model
   contactModel = new ContactModel();
   contactModel->setGenerator(&generator);
@@ -118,9 +115,6 @@ void Locations::loadLocationData() {
   // Let contact model add any attributes it needs to the locations
   for (Location &location: locations) {
     contactModel->computeLocationValues(location);
-    if (interventionStategy && diseaseModel->isLocationSeeder(&location.getDataField())) {
-      location.setLocationAsSpreader();
-    }
   }
 }
 
