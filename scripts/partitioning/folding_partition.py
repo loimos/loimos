@@ -14,6 +14,26 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 from utils.ids import remap
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    # Positional/required args
+    parser.add_argument('input_dir', metavar='I',
+            help='The path to the directory containing the input files')
+
+    # Named/optional args
+    parser.add_argument('-o', '--output-dir', default='.',
+            help='The path to the directory containing the input files')
+    parser.add_argument('-n', '--num-partitions', type=int, default=576,
+            help='The number of partitions to optimise for (should equal '+\
+                 'the location chare count you wish to run with)')
+    parser.add_argument('-p', '--partition-on',
+            default='max_simultaneous_visits',
+            help='The column in the input data which should be balanced ' +\
+                 'across partitions')
+
+    return parser.parse_args()
+
 # This implemntation of the folding partition alorithm is based on the
 # description of the algortihm given in:
 #   Babel, L., Kellerer, H., & Kotov, V. (1998). The k-partitioning problem.
@@ -112,12 +132,15 @@ def get_partition_mean(df, num_partitions,
 
 def main():
     # Parse args and read data
-    path = sys.argv[1]
-    people = pd.read_csv(os.path.join(path, 'people.csv'))
-    locations = pd.read_csv(os.path.join(path, 'locations.csv'))
-    visits = pd.read_csv(os.path.join(path, 'visits.csv'))
-    num_partitions = int(sys.argv[2])
+    args = parse_args()
+    input_dir = args.input_dir
+    output_dir = args.output_dir
+    people = pd.read_csv(os.path.join(input_dir, 'people.csv'))
+    locations = pd.read_csv(os.path.join(input_dir, 'locations.csv'))
+    visits = pd.read_csv(os.path.join(input_dir, 'visits.csv'))
+    num_partitions = args.num_partitions
     num_elements = locations.shape[0]
+    partition_on = args.partition_on
 
     homes_mask = locations['designation'].str.contains('home')
     num_homes = np.sum(homes_mask)
@@ -127,7 +150,7 @@ def main():
     # The folding partition algroithm expects the data to be pre-sorted
     # probably don't need to sort home and non-home locatiosn seperately,
     # as there shouldn't be much overlap, but might be safer to do so anyway
-    locations.sort_values(by='max_simultaneous_visits', ascending=False)
+    locations.sort_values(by=partition_on, ascending=False)
     locations.reset_index(inplace=True, drop=True)
     
     # Build partitions seperately for home and non-home locations, as they
@@ -151,9 +174,9 @@ def main():
     # We need to save the new version of visits.csv as remap updates the lids
     # of each visit to reflect each location's new lid and position in
     # locations.csv
-    people.to_csv('people.csv', index=False)
-    locations.to_csv('locations.csv', index=False)
-    visits.to_csv('visits.csv', index=False)
+    people.to_csv(os.path.join(output_dir, 'people.csv'), index=False)
+    locations.to_csv(os.path.join(output_dir,'locations.csv'), index=False)
+    visits.to_csv(os.path.join(output_dir, 'visits.csv'), index=False)
 
 if __name__ == '__main__':
     main()
