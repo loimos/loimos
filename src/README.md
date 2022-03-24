@@ -20,7 +20,7 @@ Where
 
 For real data, run with the command:
 
-```./loimos 0 NP NL NPP NLP ND O D S [-m]```
+```./loimos 0 NP NL NPP NLP ND NDV O D S [-m]```
 
 Where
 - `NP` is the number of people
@@ -28,6 +28,8 @@ Where
 - `NPP` is the number of people paritions
 - `NLP` is the number of location paritions
 - `ND` is the number of days to simulate
+- `NVD` is the number of days of visit data in the scenario (or equivalently, the number
+  how often to repeat people's visit schedules)
 - `O` is the path to the output file
 - `D` is the path to the disease model
 - `S` is the path to the directory containing the population data for the
