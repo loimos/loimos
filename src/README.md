@@ -20,7 +20,7 @@ Where
 
 For real data, run with the command:
 
-```./loimos 0 NP NL NPP NLP ND NDV O D S [-m]```
+```./loimos 0 NP NL NPP NLP ND NDV O D S [-m] [-i I]```
 
 Where
 - `NP` is the number of people
@@ -36,3 +36,5 @@ Where
   scenario
 - `-m` or `--min-max-alpha` is an optional flag which indicates that the
   min-max-alpha contact mdoel should be used
+- `-i` is an optional flag used when specifying an intervention. `I` should
+  be the path to a textproto file specifying the intervention to be used
