@@ -6,14 +6,14 @@
 
 import numpy as np
 
-# Assumes the values in column 'by' are of a numerical type
-def partition_df(df, by='hid', num_partitions=10):
+# Assumes the values in column 'on' are of a numerical type
+def partition_df(df, on='hid', num_partitions=10):
     # Add one so that we don't loose the rows with the last id
-    bounds = np.linspace(df[by].min(), df[by].max()+1, num=num_partitions,
+    bounds = np.linspace(df[on].min(), df[on].max()+1, num=num_partitions,
             dtype=int)
     bounded_dfs = []
     for i in range(num_partitions-1):
-        bounds_mask = (bounds[i] <= df[by]) & (df[by] < bounds[i+1])
+        bounds_mask = (bounds[i] <= df[on]) & (df[on] < bounds[i+1])
         bounded_dfs.append(df[bounds_mask])
     return bounded_dfs
 
