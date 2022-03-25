@@ -9,7 +9,7 @@ mainmodule loimos {
   
   // Profiling/LB parameters (these are here because Defs.h depends on having
   // CBase_* classes defined, and these constants are only used in this file)
-  #define PROFILING_START_DAY DAYS_IN_WEEK
+  #define PROFILING_START_DAY 7
   #define PROFILING_INTERVAL 28
   #define SHOULD_PROFILE(day) (day >= PROFILING_START_DAY &&\
     (day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0)
