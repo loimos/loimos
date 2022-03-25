@@ -143,7 +143,8 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
     csvConfigDefStream.close();
 
     // Create position vector for each person.
-    std::size_t totalDataSize = numPeople * DAYS_IN_WEEK * sizeof(uint32_t);
+    std::size_t totalDataSize = numPeople * numDaysWithRealData
+      * sizeof(uint32_t);
     uint32_t *elements = (uint32_t *) malloc(totalDataSize);
     if (elements == NULL) {
         CkAbort("Failed to malloc enoough memory for preprocessing.\n");
@@ -177,7 +178,8 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
         lastTime = nextTime;
         //numVisits = 0;
         
-        elements[DAYS_IN_WEEK * (lastPerson - firstPersonIdx) + lastTime] = current_position;
+        elements[numDaysWithRealData * (lastPerson - firstPersonIdx)
+          + lastTime] = current_position;
 
         // Scan until the next boundary.
         while (!activityStream.eof() && lastTime == nextTime && lastPerson == nextPerson) {
