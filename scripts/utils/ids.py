@@ -5,17 +5,71 @@
 #
 
 import numpy as np
+import pandas as pd
+import functools
+from multiprocessing import Pool, set_start_method
+
+multiprocessing_initialized = False
+def init_multiprocessing(start_method='spawn'):
+    global multiprocessing_initialized
+    if not multiprocessing_initialized:
+        set_start_method(start_method)
+        multiprocessing_initialized = True
+
+# Returns the boundaries for a given number of equally sized partitions on
+# the specified columns. Pass in both left and right cols to ensure both
+# datasets share partition bounds.
+def get_bounds(left_col, right_col=None, num_partitions=10):
+    col_min = left_col.min()
+    col_max = left_col.max()
+
+    if right_col is not None:
+        col_min = min(col_min, right_col.min())
+        col_max = max(col_max, right_col.max())
+    
+    # Add one so that we don't loose the rows with the last id
+    bounds = np.linspace(col_min, col_max + 1, num=num_partitions+1, dtype=int)
+
+    return bounds
 
 # Assumes the values in column 'on' are of a numerical type
-def partition_df(df, on='hid', num_partitions=10):
-    # Add one so that we don't loose the rows with the last id
-    bounds = np.linspace(df[on].min(), df[on].max()+1, num=num_partitions,
-            dtype=int)
+def partition_df(df, on='hid', num_partitions=10, bounds=None):
+    # Choose bounds from number of partitions, if no bounds are explcitly given
+    if bounds is None:
+        bounds = get_bounds(df[on], num_partitions=num_partitions)
+    else:
+        num_partitions = len(bounds) - 1
+    
     bounded_dfs = []
-    for i in range(num_partitions-1):
+    for i in range(num_partitions):
         bounds_mask = (bounds[i] <= df[on]) & (df[on] < bounds[i+1])
         bounded_dfs.append(df[bounds_mask])
     return bounded_dfs
+
+def partitioned_merge(left, right, on, num_tasks=1, num_partitions=128,
+        start_method='spawn', args={}):
+    # Both dataframes should share the same bounds, so that correpsonding
+    # ids are in the same partitions
+    bounds = get_bounds(left[on], right[on], num_partitions=num_partitions)
+
+    left_partitions = partition_df(left, on=on, bounds=bounds)
+    right_partitions = partition_df(right, on=on, bounds=bounds)
+
+    merged_partitions = []
+    if 1 == num_tasks:
+        merged_partitions = [left_partitions[i].merge(
+            right_partitions[i], on=on, **args
+        ) for i in range(num_partitions)]
+    else:
+        init_multiprocessing(start_method=start_method)
+        with Pool(num_tasks) as pool:
+            merged_partitions = pool.starmap(
+                functools.partial(pd.DataFrame.merge, on=on, **args),
+                zip(left_partitions, right_partitions))
+
+    merged_df = pd.concat(merged_partitions)
+
+    return merged_df
 
 # Sets the 'pid' column in people and the 'lid' column in locations
 # to the given array/series of values passed as new_people_ids and
