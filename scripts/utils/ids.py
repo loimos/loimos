@@ -9,12 +9,8 @@ import pandas as pd
 import functools
 from multiprocessing import Pool, set_start_method
 
-multiprocessing_initialized = False
 def init_multiprocessing(start_method='spawn'):
-    global multiprocessing_initialized
-    if not multiprocessing_initialized:
-        set_start_method(start_method)
-        multiprocessing_initialized = True
+    set_start_method(start_method)
 
 # Returns the boundaries for a given number of equally sized partitions on
 # the specified columns. Pass in both left and right cols to ensure both
@@ -47,13 +43,19 @@ def partition_df(df, on='hid', num_partitions=10, bounds=None):
     return bounded_dfs
 
 def partitioned_merge(left, right, on, num_tasks=1, num_partitions=128,
-        start_method='spawn', args={}):
+        args={}):
     # Both dataframes should share the same bounds, so that correpsonding
     # ids are in the same partitions
     bounds = get_bounds(left[on], right[on], num_partitions=num_partitions)
 
     left_partitions = partition_df(left, on=on, bounds=bounds)
     right_partitions = partition_df(right, on=on, bounds=bounds)
+    
+    #for i in range(num_partitions):
+    #    print(f'{i}-th left partition:')
+    #    print(left_partitions[i])
+    #    print(f'{i}-th right partition:')
+    #    print(right_partitions[i])
 
     merged_partitions = []
     if 1 == num_tasks:
@@ -61,15 +63,27 @@ def partitioned_merge(left, right, on, num_tasks=1, num_partitions=128,
             right_partitions[i], on=on, **args
         ) for i in range(num_partitions)]
     else:
-        init_multiprocessing(start_method=start_method)
         with Pool(num_tasks) as pool:
             merged_partitions = pool.starmap(
                 functools.partial(pd.DataFrame.merge, on=on, **args),
                 zip(left_partitions, right_partitions))
+    
+    #for i in range(num_partitions):
+    #    print(f'{i}-th merged partition:')
+    #    print(merged_partitions[i])
+
+    merged_partitions = filter(lambda p: p.shape[0] != 0, merged_partitions)
+    
+    #i = 0
+    #for p in merged_partitions:
+    #    print(f'{i}-th merged partition:')
+    #    print(p)
+    #    print(p.shape)
+    #    i += 1
 
     merged_df = pd.concat(merged_partitions)
 
-    return merged_df
+    return merged_df.reset_index().drop('index', axis=1)
 
 # Sets the 'pid' column in people and the 'lid' column in locations
 # to the given array/series of values passed as new_people_ids and
