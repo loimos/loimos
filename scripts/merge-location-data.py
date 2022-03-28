@@ -48,7 +48,7 @@ def parse_args():
         default='{prefix}_visits.csv')
     parser.add_argument('-n', '--num-tasks', default=1, type=int,
         help='Specifies the number of processes to use (default is serial)')
-    parser.add_argument('-np', '--num-partitions', default=32, type=int,
+    parser.add_argument('-np', '--num-partitions', default=1024, type=int,
         help='Specifies the number of partitions to seperate data into' + \
              'before merging')
 

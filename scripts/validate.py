@@ -37,6 +37,8 @@ def main():
     num_tasks = args.num_tasks
     num_partitions = args.num_partitions
 
+    print(f'Validating population at {input_dir}')
+
     # If a state is specified, we can also examine the initial activity
     # assignment and residence/activity location files
     if args.state is not None:
