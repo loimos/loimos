@@ -82,3 +82,5 @@ run_script location-heuristics.py ${BASE_TIME} largemem 16 ${BASE_MEMORY}
 
 # Copy the neccessary textproto files over
 cp ${PROJECT_ROOT}/loimos/data/textproto_templates/real_data_templates/*.textproto ${OUT_DIR}
+
+sbatch run-validate.sh ${STATE}
