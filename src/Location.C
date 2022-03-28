@@ -12,46 +12,52 @@
 #include "DiseaseModel.h"
 #include "contact_model/ContactModel.h"
 
+#ifdef USE_HYPERCOMM
+  #include "Aggregator.h"
+#endif // USE_HYPERCOMM
+
 #include <random>
 #include <vector>
 #include <cmath>
 #include <algorithm>
 
-Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator) : uniform_dist(0, 1) {
+Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator, const DiseaseModel *diseaseModel) : unitDistrib(0, 1) {
   if (numAttributes != 0) {
     this->locationData.resize(numAttributes);
   }
   day = 0;
   this->generator = generator;
 
-  // Determine if this location should seed the disease.
-  if (syntheticRun) {
-    // For synthetic runs start seed in corner.
-    // Determine grid size in each corner s.t. randomly selecting 50%
-    // of these locations will result
-    int seedSize = 
-      std::max((int) std::sqrt((numLocations * PERCENTAGE_OF_SEEDING_LOCATIONS) / 4), 1);
-    
-    int locationX = uniqueIdx % synLocationGridWidth;
-    int locationY = uniqueIdx / synLocationGridWidth;
-    if ((locationX < seedSize || (synLocationGridWidth - locationX) <= seedSize)
-        && (locationY < seedSize || (synLocationGridHeight - locationY) <= seedSize)) {
-      isDiseaseSeeder = true;
-    }
-  } else {
-    // For non-synthetic set just seed completely at random.
-    isDiseaseSeeder = uniform_dist(*generator) < PERCENTAGE_OF_SEEDING_LOCATIONS;
+  if (interventionStategy) {
+    complysWithShutdown = diseaseModel->complyingWithLockdown(generator);
   }
-  
+}
+
+Location::Location(CkMigrateMessage *msg) {};
+
+void Location::pup(PUP::er &p) {
+  p | infectiousArrivals;
+  p | susceptibleArrivals;
+  p | interactions;
+  p | locationData;
+  p | day;
+  p | uniqueId;
+  p | events;
+}
+
+// Lets location partition refresh generator after migration, since pointers
+// probably won't survive the migration
+void Location::setGenerator(std::default_random_engine *generator) {
+  this->generator = generator;
 }
 
 // DataInterface overrides. 
 void Location::setUniqueId(int idx) {
-    this->uniqueId = idx;
+  this->uniqueId = idx;
 }
 
 std::vector<union Data> &Location::getDataField() {
-    return this->locationData;
+  return this->locationData;
 }
 
 // Event processing.
@@ -64,34 +70,35 @@ void Location::processEvents(
   ContactModel *contactModel
 ) {
   std::vector<Event> *arrivals;
-  
-  std::sort(events.begin(), events.end());
-  for (const Event &event: events) {
-    if (diseaseModel->isSusceptible(event.personState)) {
-      arrivals = &susceptibleArrivals;
 
-    } else if (diseaseModel->isInfectious(event.personState)) {
-      arrivals = &infectiousArrivals;
+  if (!interventionStategy || !complysWithShutdown || diseaseModel->isLocationOpen(&locationData)) {
+    std::sort(events.begin(), events.end());
+    for (const Event &event: events) {
+      if (diseaseModel->isSusceptible(event.personState)) {
+        arrivals = &susceptibleArrivals;
 
-    // If a person can niether infect other people nor be infected themself,
-    // we can just ignore their comings and goings
-    } else {
-      continue;
-    }
+      } else if (diseaseModel->isInfectious(event.personState)) {
+        arrivals = &infectiousArrivals;
 
-    if (ARRIVAL == event.type) {
-      arrivals->push_back(event);
-      std::push_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
+      // If a person can niether infect other people nor be infected themself,
+      // we can just ignore their comings and goings
+      } else {
+        continue;
+      }
 
-    } else if (DEPARTURE == event.type) {
-      // Remove the arrival event corresponding to this departure 
-      std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
-      arrivals->pop_back();
+      if (ARRIVAL == event.type) {
+        arrivals->push_back(event);
+        std::push_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
 
-      onDeparture(diseaseModel, contactModel, event);
+      } else if (DEPARTURE == event.type) {
+        // Remove the arrival event corresponding to this departure 
+        std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
+        arrivals->pop_back();
+
+        onDeparture(diseaseModel, contactModel, event);
+      }
     }
   }
-
   events.clear();
   interactions.clear();
   day++;
@@ -199,20 +206,17 @@ inline void Location::sendInteractions(int personIdx) {
     firstPersonIdx
   );
 
-  // Randomly seed some people for infection.
-  if (isDiseaseSeeder && day < DAYS_TO_SEED_INFECTION 
-      && uniform_dist(*generator) < INITIAL_INFECTIOUS_PROBABILITY) {
-        // Add a super contagious visit for that person.
-        interactions[personIdx].emplace_back(
-          std::numeric_limits<double>::max(),
-          0,
-          0,
-          0,
-          std::numeric_limits<int>::max()
-        );
-  }
   InteractionMessage interMsg(personIdx, interactions[personIdx]);
-  peopleArray[peoplePartitionIdx].ReceiveInteractions(interMsg);
+  #ifdef USE_HYPERCOMM
+  Aggregator* agg = aggregatorProxy.ckLocalBranch();
+  if (agg->interact_aggregator) {
+    agg->interact_aggregator->send(peopleArray[peoplePartitionIdx], interMsg);
+  } else {
+  #endif // USE_HYPERCOMM
+    peopleArray[peoplePartitionIdx].ReceiveInteractions(interMsg);
+  #ifdef USE_HYPERCOMM
+  }
+  #endif // USE_HYPERCOMM
 
   /*  
   CkPrintf(

@@ -26,13 +26,10 @@ union Data {
     bool boolean;
     uint32_t uint_32;
     double probability;
-    uint16_t category; 
-
-    void pup(PUP::er& p) {
-        p | probability;
-    }
+    uint16_t category;
+    std::string *str;
 };
-
+PUPbytes(union Data);
 
 /**
  * Defines a generic data reader for any child class of DataInterface.
@@ -47,7 +44,7 @@ class DataReader {
             // TODO make this 2^16 and support longer lines through multiple reads.
             char buf[MAX_INPUT_lineLength];
             // Rows to read.
-            for (auto &obj: *dataObjs) {
+            for (T &obj : *dataObjs) {
                 // Get next line.
                 input->getline(buf, MAX_INPUT_lineLength);
 
@@ -83,8 +80,8 @@ class DataReader {
                                     objData[numDataFields].int_b10 = 
                                         std::stoi(std::string(start, dataLen));
                                 } else if (field->has_label()) {
-                                    // objData[numDataFields].str = 
-                                        // new std::string(start, dataLen);
+                                    objData[numDataFields].str = 
+                                        new std::string(start, dataLen);
                                 } else if (field->has_bool_()) {
                                     if (dataLen == 1) {
                                         objData[numDataFields].boolean = 
@@ -110,7 +107,7 @@ class DataReader {
                     count += 1;
                 }
             }
-            return count;
+            return count - 1;
         }
 
         static std::tuple<int, int, int, int> parseActivityStream(std::ifstream *input, loimos::proto::CSVDefinition *dataFormat, std::vector<union Data> *attributes) {

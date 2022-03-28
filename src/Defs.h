@@ -40,22 +40,28 @@ const Time MINUTE_LENGTH = 60;
 
 #define PERCENTAGE_OF_SEEDING_LOCATIONS 0.001
 #define INITIAL_INFECTIOUS_PROBABILITY 0.01
-#define DAYS_TO_SEED_INFECTION 3
+#define DAYS_TO_SEED_INFECTION 7
+#define INITIAL_INFECTIONS_PER_DAY 10
+#define INITIAL_INFECTIONS (INITIAL_INFECTIONS_PER_DAY * DAYS_TO_SEED_INFECTION)
 
 extern /* readonly */ CProxy_Main mainProxy;
 extern /* readonly */ CProxy_People peopleArray;
 extern /* readonly */ CProxy_Locations locationsArray;
+#ifdef USE_HYPERCOMM
+extern /* readonly */ CProxy_Aggregator aggregatorProxy;
+#endif
 extern /* readonly */ CProxy_DiseaseModel globDiseaseModel;
 extern /* readonly */ int numPeople;
 extern /* readonly */ int numLocations;
 extern /* readonly */ int numPeoplePartitions;
 extern /* readonly */ int numLocationPartitions;
 extern /* readonly */ int numDays;
+extern /* readonly */ int numDaysWithRealData;
 extern /* readonly */ bool syntheticRun;
+
 extern /* readonly */ uint64_t totalVisits;
 extern /* readonly */ double simulationStartTime;
 extern /* readonly */ double iterationStartTime;
-
 
 // For real data run.
 extern /* readonly */ std::string scenarioPath;
@@ -73,6 +79,9 @@ extern /* readonly */ int synLocalLocationGridHeight;
 extern /* readonly */ int synLocationPartitionGridWidth;
 extern /* readonly */ int synLocationPartitionGridHeight;
 extern /* readonly */ int averageDegreeOfVisit;
+
+// Intervention
+extern /* readonly */ bool interventionStategy;
 
 int getNumElementsPerPartition(int numElements, int numPartitions);
 

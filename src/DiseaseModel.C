@@ -17,9 +17,10 @@
 #include "DiseaseModel.h"
 #include "Defs.h"
 #include "Event.h"
+#include "readers/DataReader.h"
 #include "disease_model/disease.pb.h"
 #include "disease_model/distribution.pb.h"
-#include "readers/DataReader.h"
+#include "readers/interventions.pb.h"
 
 #include <cmath>
 #include <cstdio>
@@ -35,12 +36,14 @@ using NameIndexLookupType = std::unordered_map<std::string, int>;
 // (i.e. it normalizes for the size of the smallest time increment used
 // in the discrete event simulation and disease model)
 const long double TRANSMISSIBILITY = 7.5E-6 / DAY_LENGTH;
+//const long double TRANSMISSIBILITY = 4E-6 / DAY_LENGTH;
 
 /**
  * Constructor which loads in disease file from text proto file.
  * On failure, aborts the entire simulation.
  */
-DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath) {
+DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
+    std::string pathToIntervention) {
   // Load in text proto definition.
   // TODO(iancostello): Load directly without string.
 
@@ -56,40 +59,68 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath) {
     CkAbort("Could not parse protobuf!");
   }
   diseaseModelStream.close();
+  assert(model->disease_state_size() != 0);
 
   // Setup other shared PE objects.
-  
-  // Handle people...
-  personDef = new loimos::proto::CSVDefinition();
-  std::ifstream personInputStream(scenarioPath + "people.textproto");
-  std::string strPerson((std::istreambuf_iterator<char>(personInputStream)),
-      std::istreambuf_iterator<char>());
-  if (!google::protobuf::TextFormat::ParseFromString(strPerson, personDef)) {
-    CkAbort("Could not parse protobuf!");
-  }
-  personInputStream.close();
+  if (!syntheticRun) {
+    // Handle people...
+    personDef = new loimos::proto::CSVDefinition();
+    std::ifstream personInputStream(scenarioPath + "people.textproto");
+    if (!personInputStream)
+      CkAbort("Could not open people textproto!");
+    std::string strPerson((std::istreambuf_iterator<char>(personInputStream)),
+                    std::istreambuf_iterator<char>());
+    if (!google::protobuf::TextFormat::ParseFromString(strPerson, personDef)) {
+      CkAbort("Could not parse person protobuf!");
+    }
+    personInputStream.close();
 
-  // ...locations...
-  locationDef = new loimos::proto::CSVDefinition();
-  std::ifstream locationInputStream(scenarioPath + "locations.textproto");
-  std::string strLocation((std::istreambuf_iterator<char>(locationInputStream)),
-      std::istreambuf_iterator<char>());
-  if (!google::protobuf::TextFormat::ParseFromString(strLocation,
-        locationDef)) {
-    CkAbort("Could not parse protobuf!");
+    // ...locations...
+    locationDef = new loimos::proto::CSVDefinition();
+    std::ifstream locationInputStream(scenarioPath + "locations.textproto");
+    if (!locationInputStream)
+      CkAbort("Could not open location textproto!");
+    std::string strLocation((std::istreambuf_iterator<char>(
+            locationInputStream)),
+                    std::istreambuf_iterator<char>());
+    if (!google::protobuf::TextFormat::ParseFromString(strLocation,
+          locationDef)) {
+      CkAbort("Could not parse location protobuf!");
+    }
+    locationInputStream.close();
+
+    // ...and visits
+    activityDef = new loimos::proto::CSVDefinition();
+    std::ifstream activityInputStream(scenarioPath + "visits.textproto");
+    if (!activityInputStream)
+      CkAbort("Could not open activity textproto!");
+    std::string strActivity((std::istreambuf_iterator<char>(
+            activityInputStream)),
+                    std::istreambuf_iterator<char>());
+    if (!google::protobuf::TextFormat::ParseFromString(strActivity,
+          activityDef)) {
+      CkAbort("Could not parse activity protobuf!");
+    }
+    activityInputStream.close();
   }
-  locationInputStream.close();
   
-  // ...and visits
-  activityDef = new loimos::proto::CSVDefinition();
-  std::ifstream activityInputStream(scenarioPath + "visits.textproto");
-  std::string strActivity((std::istreambuf_iterator<char>(activityInputStream)),
-      std::istreambuf_iterator<char>());
-  if (!google::protobuf::TextFormat::ParseFromString(strActivity,
-        activityDef)) {
-    CkAbort("Could not parse protobuf!");
+  if (interventionStategy) {
+    interventionDef = new loimos::proto::Intervention();
+    std::ifstream interventionActivityStream(pathToIntervention);
+    if (!interventionActivityStream)
+      CkAbort("Could not open intervention textproto!");
+    std::string interventionString((std::istreambuf_iterator<char>(
+            interventionActivityStream)),
+                    std::istreambuf_iterator<char>());
+    if (!google::protobuf::TextFormat::ParseFromString(interventionString,
+          interventionDef)) {
+      CkAbort("Could not parse protobuf!");
+    }
+    interventionActivityStream.close();
   }
-  activityInputStream.close();
+  
+  // Always toggle intervention off to start.
+  interventionToggled = false;
 }
 
 /**
@@ -123,7 +154,6 @@ DiseaseModel::transitionFromState(int fromState,
 
   // Two cases
   if (currState->has_timed_transition()) {
-    // printf("Timed trans from %d\n", fromState);
     // Get the next transition set to use.
     // Currently for timed transitions we only support one set edge.
     const loimos::proto::DiseaseModel_DiseaseState_TimedTransitionSet
@@ -160,6 +190,16 @@ DiseaseModel::transitionFromState(int fromState,
     return std::make_tuple(
         currState->exposure_transition().transition(0).next_state(), 0);
   
+    /*
+    // If already infected then they are settling in this state so no transition.
+    if (alreadyInfected) {
+      return std::make_tuple(fromState, std::numeric_limits<Time>::max());
+    } else {
+      // Otherwise they are transitioning out of this state.
+      return std::make_tuple(
+        currState->exposure_transition().transition(0).next_state(), 0);
+    }
+    */
   } else {
     return std::make_tuple(fromState, std::numeric_limits<Time>::max());
   }
@@ -222,7 +262,7 @@ int DiseaseModel::getNumberOfStates() const {
 }
 
 /** Returns the initial starting healthy and exposed state */
-int DiseaseModel::getHealthyState(std::vector<Data> dataField) const {
+int DiseaseModel::getHealthyState(std::vector<Data> &dataField) const { 
   // Age based transition.
   int personAge = dataField[AGE_CSV_INDEX].int_b10;
   int numStartingStates = model->starting_states_size();
@@ -292,4 +332,57 @@ double DiseaseModel::getPropensity(int susceptibleState, int infectiousState,
   return TRANSMISSIBILITY * dt
     * model->disease_state(susceptibleState).susceptibility()
     * model->disease_state(infectiousState).infectivity();
+}
+
+/**
+ * Intervention Methods
+ * TODO: Move to own chare as these become more complex.
+ */
+void DiseaseModel::toggleIntervention(int newDailyInfections) {
+  if (!interventionToggled) {
+    if (static_cast<double>(newDailyInfections) / numPeople >= 
+          interventionDef->newdailycasestriggeron()) {
+      interventionToggled = true;
+      printf("Intervention toggled!\n");
+    }
+  } else {
+    if (static_cast<double>(newDailyInfections) / numPeople <=
+          interventionDef->newdailycasestriggeroff()) {
+      interventionToggled = false;
+    }
+  }
+}
+
+/**
+ * For now only the self-siolation intervention has a compilance value
+ */
+double DiseaseModel::getCompilance() const {
+  if (interventionStategy && interventionDef->stayathome()) {
+    return interventionDef->isolationcompliance();
+  } else {
+    return 0;
+  }
+}
+
+/**
+ * Only thing that causes person to self-isolate is if interventions are
+ * triggered, that intervention imposes stay at home, and person is symptomatic. 
+ */ 
+bool DiseaseModel::shouldPersonIsolate(int healthState) {
+  return interventionToggled
+    && interventionDef->stayathome()
+    && model->disease_state(healthState).symptomatic();
+}
+
+/**
+ * Location closed if it is a school and intervention is triggered.
+ */ 
+bool DiseaseModel::isLocationOpen(std::vector<Data> *locAttr) const {
+  return !(interventionToggled && interventionDef->schoolclosures() &&
+   locAttr->at(interventionDef->csvlocationofschool()).int_b10 > 0);
+}
+
+bool DiseaseModel::complyingWithLockdown(std::default_random_engine *generator) const {
+  std::uniform_real_distribution<double> uniform_dist(0,1);
+  return uniform_dist(*generator) < interventionDef->schoolclosurecompliance();
 }

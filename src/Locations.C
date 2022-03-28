@@ -15,6 +15,7 @@
 #include "Defs.h"
 #include "readers/DataReader.h"
 #include "Person.h"
+#include "pup_stl.h"
 
 #include <algorithm>
 #include <queue>
@@ -23,6 +24,11 @@
 #include <fstream>
 
 Locations::Locations() {
+  day = 0;
+
+  //Must be set to true to make AtSync work
+  usesAtSync = true;
+
   // Getting number of locations assigned to this chare
   numLocalLocations = getNumLocalElements(
     numLocations,
@@ -38,18 +44,27 @@ Locations::Locations() {
     locations.reserve(numLocalLocations);
     int firstIdx = thisIndex * getNumLocalElements(numLocations, numLocationPartitions, 0);
     for (int p = 0; p < numLocalLocations; p++) {
-      locations.emplace_back(0, firstIdx + p, &generator);
+      locations.emplace_back(0, firstIdx + p, &generator, diseaseModel);
     }
   } else {
     loadLocationData();
   }
 
   // Seed random number generator via branch ID for reproducibility
-  generator.seed(thisIndex);
+  generator.seed(time(NULL));
+  // generator.seed(thisIndex);
+
   // Init contact model
   contactModel = createContactModel();
   contactModel->setGenerator(&generator);
+
+  // Notify Main
+  #ifdef USE_HYPERCOMM
+  contribute(CkCallback(CkReductionTarget(Main, CharesCreated), mainProxy));
+  #endif
 }
+    
+Locations::Locations(CkMigrateMessage *msg) {};
 
 void Locations::loadLocationData() {
   // Init local.
@@ -58,7 +73,7 @@ void Locations::loadLocationData() {
   locations.reserve(numLocalLocations);
   int firstIdx = thisIndex * getNumLocalElements(numLocations, numLocationPartitions, 0);
   for (int p = 0; p < numLocalLocations; p++) {
-    locations.emplace_back(numAttributesPerLocation, firstIdx + p, &generator);
+    locations.emplace_back(numAttributesPerLocation, firstIdx + p, &generator, diseaseModel);
   }
 
   // Load in location information.
@@ -93,9 +108,6 @@ void Locations::loadLocationData() {
   locationData.close();
   locationCache.close();
 
-  // Seed random number generator via branch ID for reproducibility.
-  generator.seed(thisIndex);
-  
   // Init contact model
   contactModel = new ContactModel();
   contactModel->setGenerator(&generator);
@@ -103,6 +115,23 @@ void Locations::loadLocationData() {
   // Let contact model add any attributes it needs to the locations
   for (Location &location: locations) {
     contactModel->computeLocationValues(location);
+  }
+}
+
+void Locations::pup(PUP::er &p) {
+  p | numLocalLocations;
+  p | locations;
+  p | generator;
+  p | day;
+  
+  if (p.isUnpacking()) {
+    diseaseModel = globDiseaseModel.ckLocalBranch();
+    contactModel = new ContactModel();
+    contactModel->setGenerator(&generator);
+
+    for (Location &loc: locations) {
+      loc.setGenerator(&generator);
+    }
   }
 }
 
@@ -129,9 +158,25 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   locations[localLocIdx].addEvent(departure);
 }
 
-void Locations::ComputeInteractions() {
+void Locations::ComputeInteractions() { 
   // traverses list of locations
+  int numVisits = 0;
   for (Location &loc : locations) {
+    numVisits += loc.events.size() / 2;
     loc.processEvents(diseaseModel, contactModel);
   }
+
+  //CkPrintf("\tDay %d, process %d, thread %d: %d visits, %d locations\n",
+  //  day, CkMyNode(), CkMyPe(), numVisits, (int) locations.size());
+  
+  day++;
 }
+
+#ifdef ENABLE_LB
+void Locations::ResumeFromSync() {
+  //CkPrintf("\tDone load balancing on location chare %d\n", thisIndex);
+
+  CkCallback cb(CkReductionTarget(Main, locationsLBComplete), mainProxy);
+  contribute(cb);
+}
+#endif // ENABLE_LB

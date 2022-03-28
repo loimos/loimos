@@ -5,7 +5,7 @@
 
 include ../Makefile.include
 
-PROTOS      = data.proto
+PROTOS      = data.proto interventions.proto
 TMP_SRCS    = $(subst .proto,.pb.cc,$(PROTOS)) 
 SRCS        = $(subst .proto,.pb.C,$(PROTOS)) 
 OBJS        = $(subst .proto,.pb.o,$(PROTOS)) 
@@ -24,4 +24,4 @@ $(OBJS): %.pb.o: %.pb.C %.pb.h
 
 .PHONY:clean
 clean:
-	rm *.pb.C *.pb.h *.pb.o
+	rm -f *.pb.C *.pb.h *.pb.o

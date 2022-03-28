@@ -20,7 +20,7 @@ field {
 }
 field {
     field_name: "admin2"
-    ignore {}
+    b10int {}
 }
 field {
     field_name: "admin3"
@@ -40,7 +40,7 @@ field {
 }
 field {
     field_name: "school"
-    ignore {}
+    b10int {}
 }
 field {
     field_name: "other"

@@ -36,5 +36,6 @@ struct Event {
   // Makes two events each others' partners
   static void pair(Event *e0, Event *e1);
 };
+PUPbytes(Event);
 
 #endif // __EVENT_H__

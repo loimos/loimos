@@ -20,6 +20,8 @@ class Person : public DataInterface {
         int state;
         int next_state;
         int secondsLeftInState;
+        bool willComply;
+        bool isIsolating;
 
         // If this is a susceptible person, this is a list of all of their
         // interactions with infectious people in the past day
@@ -37,12 +39,16 @@ class Person : public DataInterface {
         std::vector<union Data> personData;
 
         // Constructors and assignment operators
+        Person() = default;
         Person(int numAttributes, int startingState, int timeLeftInState);
         Person(const Person&) = default;
         Person(Person&&) = default;
         Person& operator=(const Person&) = default;
         Person& operator=(Person&&) = default;
         ~Person() = default;
+
+        // Lets charm++ migrate objects
+        void pup(PUP::er &p);
 
         // Disease model functions.
         void EndOfDayStateUpdate(DiseaseModel *diseaseModel,

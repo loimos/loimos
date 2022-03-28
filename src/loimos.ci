@@ -6,21 +6,36 @@
 mainmodule loimos {
   include "Interaction.h";
   include "Message.h";
+  
+  // Profiling/LB parameters (these are here because Defs.h depends on having
+  // CBase_* classes defined, and these constants are only used in this file)
+  #define PROFILING_START_DAY DAYS_IN_WEEK
+  #define PROFILING_INTERVAL 28
+  #define LB_START_DAY 6
+  #define LB_INTERVAL DAYS_IN_WEEK
+  
+  #ifdef USE_HYPERCOMM
+  include "AggregatorParam.h";
+  #endif // USE_HYPERCOMM
 
   include "vector";
+  include "sys/time.h";
+  include "sys/resource.h";
 
   readonly CProxy_Main mainProxy;
   readonly CProxy_People peopleArray;
   readonly CProxy_Locations locationsArray;
+  #ifdef USE_HYPERCOMM
+  readonly CProxy_Aggregator aggregatorProxy;
+  #endif // USE_HYPERCOMM
   readonly CProxy_DiseaseModel globDiseaseModel;
-#ifdef USE_PROJECTIONS
   readonly CProxy_TraceSwitcher traceArray;
-#endif
   readonly int numPeople;
   readonly int numLocations;
   readonly int numPeoplePartitions;
   readonly int numLocationPartitions;
   readonly int numDays;
+  readonly int numDaysWithRealData;
 
   readonly bool syntheticRun;
   readonly int contactModelType;
@@ -43,15 +58,23 @@ mainmodule loimos {
   readonly int synLocationPartitionGridHeight;
   readonly int averageDegreeOfVisit;
 
-
-
+  readonly bool interventionStategy;
 
   mainchare Main {
     entry Main(CkArgMsg*);
+    #ifdef USE_HYPERCOMM
+    entry [reductiontarget] void CharesCreated();
+    #endif // USE_HYPERCOMM
     entry void run() {
+      // We only want to collect instumentation on the main loop
+      #ifdef ENABLE_LB
+        serial{traceArray.instrumentOn();}
+        when instrumentSwitchOn() {}
+      #endif // ENABLE_LB
+
       for(day = 0; day < numDays; day++) {
       #ifdef USE_PROJECTIONS
-        if (day==3){
+        if ((day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0){
             serial{traceArray.traceOn();}
             when traceSwitchOn() {}
         }
@@ -71,6 +94,10 @@ mainmodule loimos {
             // CkPrintf("Compute Interactions\n");
             locationsArray.ComputeInteractions();
             // CkPrintf("QD Compute Interactions\n");
+            if (DAYS_TO_SEED_INFECTION > day) {
+              SeedInfections();
+            } 
+            
             CkStartQD(CkCallback(
               CkIndex_Main::ComputedInteractions(),
               mainProxy
@@ -86,21 +113,57 @@ mainmodule loimos {
         when ReceiveInfectiousCount(int infectiousCount) {
           serial {
             // Use this count as desired here
-            
+            if (interventionStategy) {
+              globDiseaseModel.toggleIntervention(infectiousCount);
+            }
+
             // Print how long this iteration took to run
             CkPrintf(
-              "Iteration %d Execution Time: %lf seconds.\n",
-              day, CkWallTimer() - iterationStartTime
+              "Iteration %d Execution Time: %lf seconds. Infectious Count: %d.\n",
+              day, CkWallTimer() - iterationStartTime, infectiousCount
             );
             
+            // Trigger intervention updates.
+            if (interventionStategy) {
+              globDiseaseModel.toggleIntervention(infectiousCount);
+            }
           }
         }
-    #ifdef USE_PROJECTIONS
-        if(day==6){
-            serial{traceArray.traceOff();}
-            when traceSwitchOff(){}
-        }
-    #endif
+
+        #ifdef ENABLE_LB
+          // Turn off instrumentation before we start load balancing
+          serial{traceArray.instrumentOff();}
+          when instrumentSwitchOff() {}
+          
+          if ((day - LB_START_DAY) % LB_INTERVAL == 0) {
+            serial {
+              locationsArray.AtSync();
+              peopleArray.AtSync();
+            }
+
+            // We don't want to continue until load balancing is complete for
+            // *both* locations and people chares
+            when locationsLBComplete() {
+              when peopleLBComplete() {}
+            }
+          }
+        #endif // ENABLE_LB
+      
+
+        #ifdef USE_PROJECTIONS
+          if ((day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0) {
+              serial{traceArray.traceOff();}
+              when traceSwitchOff(){}
+          }
+          
+          // Toggled by USE_PROJECTIONS to group profiling code
+          serial{traceArray.reportMemoryUsage();}
+          when printMemoryUsage(long usage) {
+            serial {
+              CkPrintf("Currently using %ld kb in total\n", usage);
+            }
+          }
+        #endif // USE_PROJECTIONS
       }
       serial { 
         CkPrintf("\nFinished data loading in %lf seconds.\n", simulationStartTime);
@@ -118,6 +181,7 @@ mainmodule loimos {
         CkExit(); 
       }
     };
+    entry void SeedInfections();
     entry void StartComputingInteractions(); 
     entry void ComputedInteractions();
     entry [reductiontarget] void ReceiveInfectiousCount(int infectiousCount);
@@ -125,41 +189,62 @@ mainmodule loimos {
     #ifdef USE_PROJECTIONS
     entry [reductiontarget] void traceSwitchOn();
     entry [reductiontarget] void traceSwitchOff();
-    #endif
+    entry [reductiontarget] void printMemoryUsage(long usage);
+    #endif // USE_PROJECTIONS
+    #ifdef ENABLE_LB
+    entry [reductiontarget] void instrumentSwitchOn();
+    entry [reductiontarget] void instrumentSwitchOff();
+    entry [reductiontarget] void locationsLBComplete();
+    entry [reductiontarget] void peopleLBComplete();
+    #endif // ENABLE_LB
   };
 
 
-#ifdef USE_PROJECTIONS
   group TraceSwitcher{
     entry TraceSwitcher();
+    #ifdef USE_PROJECTIONS
     entry void traceOn();
-    entry void traceOff();   
+    entry void traceOff();
+    entry void traceFlush();
+    entry void reportMemoryUsage();
+    #endif // USE_PROJECTIONS
+    #ifdef ENABLE_LB
+    entry void instrumentOn();
+    entry void instrumentOff();
+    #endif // ENABLE_LB
   };
-#endif
+
+  #ifdef USE_HYPERCOMM
+  group Aggregator {
+    entry Aggregator(AggregatorParam p1, AggregatorParam p2);
+  };
+  #endif // USE_HYPERCOMM
 
   array [1D] People {
     entry People();
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
-#ifdef USE_TRAM
-    entry [aggregate] void ReceiveInteractions(InteractionMessage);
-#else
     entry void ReceiveInteractions(InteractionMessage);
-#endif
     entry void EndOfDayStateUpdate(); // contribute call to ReceiveInfectiousCount
     entry void SendStats(); // contribute call to ReceiveStats
+    entry void AtSync();
   };
 
   array [1D] Locations {
     entry Locations();
-#ifdef USE_TRAM
-    entry [aggregate] void ReceiveVisitMessages(VisitMessage);
-#else
     entry void ReceiveVisitMessages(VisitMessage);
-#endif
     entry void ComputeInteractions(); // calls ReceiveInteractions
+    entry void AtSync();
   };
 
   nodegroup DiseaseModel {
-      entry DiseaseModel(std::string pathToModel, std::string scenarioPath);
+      entry DiseaseModel(std::string pathToModel, std::string scenarioPath,
+          std::string pathToIntervention);
+      entry void toggleIntervention(int newDailyInfections);
   };
+
+  #ifdef USE_HYPERCOMM
+  namespace aggregation {
+    initproc void initialize(void);
+  }
+  #endif // USE_HYPERCOMM
 };

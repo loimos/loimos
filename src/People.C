@@ -12,6 +12,10 @@
 #include "Person.h"
 #include "readers/DataReader.h"
 
+#ifdef USE_HYPERCOMM
+  #include "Aggregator.h"
+#endif // USE_HYPERCOMM
+
 #include <tuple>
 #include <limits>
 #include <queue>
@@ -25,9 +29,12 @@ std::uniform_real_distribution<> unitDistrib(0,1);
 #define DEFAULT_
 
 People::People() {
-  newCases = 0;
+  //Must be set to true to make AtSync work
+  usesAtSync = true;
+
   day = 0;
-  generator.seed(thisIndex);
+  // generator.seed(thisIndex);
+  generator.seed(time(NULL));
 
   // Initialize disease model
   diseaseModel = globDiseaseModel.ckLocalBranch();
@@ -59,6 +66,9 @@ People::People() {
 
       people[p].uniqueId = firstPersonIdx + p;
       people[p].state = diseaseModel->getHealthyState(dataField);
+      // We set persons next state to equal current state to signify
+      // that they are not in a disease model progression.
+      people[p].next_state = people[p].state;
     } 
   } else {
       int numAttributesPerPerson = 
@@ -72,7 +82,14 @@ People::People() {
       // Load in people data from file.
       loadPeopleData();
   }
+
+  // Notify Main
+  #ifdef USE_HYPERCOMM
+  contribute(CkCallback(CkReductionTarget(Main, CharesCreated), mainProxy));
+  #endif
 }
+
+People::People(CkMigrateMessage *msg) {}
 
 /**
  * Loads real people data from file.
@@ -96,44 +113,48 @@ void People::loadPeopleData() {
   peopleCache.close();
 
   // Open activity data and cache. 
-  activityData = new std::ifstream(scenarioPath + "visits.csv");
+  std::ifstream activityData(scenarioPath + "visits.csv");
   std::ifstream activityCache(scenarioPath + scenarioId + "_interactions.cache", std::ios_base::binary);
   if (!activityData || !activityCache) {
     CkAbort("Could not open activity input.");
   }
 
   // Load preprocessing meta data.
-  uint32_t *buf = (uint32_t *) malloc(sizeof(uint32_t) * numDays);
+  uint32_t *buf = (uint32_t *) malloc(sizeof(uint32_t) * numDaysWithRealData);
   for (int c = 0; c < numLocalPeople; c++) {
     std::vector<uint32_t> *data_pos = &people[c].visitOffsetByDay;
     int curr_id = people[c].uniqueId;
 
     // Read in their activity data offsets.
-    activityCache.seekg(sizeof(uint32_t) * DAYS_IN_WEEK
-                        * (curr_id - firstPersonIdx));
-    activityCache.read((char *) buf, sizeof(uint32_t) * DAYS_IN_WEEK);
-    for (int day = 0; day < DAYS_IN_WEEK; day++) {
+    activityCache.seekg(sizeof(uint32_t) * numDaysWithRealData
+       * (curr_id - firstPersonIdx));
+    activityCache.read((char *) buf, sizeof(uint32_t) * numDaysWithRealData);
+    for (int day = 0; day < numDaysWithRealData; day++) {
       data_pos->push_back(buf[day]);
     }
   }
   free(buf);
 
   // Initialize intial states. (This will move in the DataLoaderPR)
+  double isolationCompliance = diseaseModel->getCompilance();
   for (Person &person: people) {
     person.state = diseaseModel->getHealthyState(person.getDataField());
+    person.willComply = unitDistrib(generator) < isolationCompliance;
   }
 
-  loadVisitData();
+  loadVisitData(&activityData);
+
+  activityData.close();
 } 
 
-void People::loadVisitData() {
-  for (int day = 0; day < DAYS_IN_WEEK; ++day) {
+void People::loadVisitData(std::ifstream *activityData) {
+  for (int day = 0; day < numDaysWithRealData; ++day) {
     int nextDaySecs = (day + 1) * DAY_LENGTH;
     for (Person &person: people) {
       
       // Seek to correct position in file.
       uint32_t seekPos = person
-        .visitOffsetByDay[day % DAYS_IN_WEEK];
+        .visitOffsetByDay[day % numDaysWithRealData];
       if (seekPos == EMPTY_VISIT_SCHEDULE) {
         //CkPrintf("No visits on day %d in people chare %d\n", day, thisIndex);
         continue;
@@ -161,6 +182,19 @@ void People::loadVisitData() {
               diseaseModel->activityDef, NULL);
       }
     }
+  }
+}
+
+void People::pup(PUP::er &p) {
+  p | numLocalPeople;
+  p | day;
+  p | totalVisitsForDay;
+  p | people;
+  p | generator;
+  p | stateSummaries;
+
+  if (p.isUnpacking()) {
+    diseaseModel = globDiseaseModel.ckLocalBranch();
   }
 }
 
@@ -213,8 +247,13 @@ void People::SyntheticSendVisitMessages() {
 
   // Calculate schedule for each person.
   for (Person &p : people) {
-    // Calculate "home" location coordinates.
+    // Check if person is self isolating.
     int personIdx = p.uniqueId;
+    if (p.isIsolating && diseaseModel->isInfectious(p.state)) {
+      continue;
+    }
+
+    // Calculate home location
     int localPersonIdx = (personIdx - firstLocationIdx) % homePartitionNumLocations;
     int homeX = homePartitionStartX + localPersonIdx % locationPartitionWidth;
     int homeY = homePartitionStartY + localPersonIdx / locationPartitionWidth;
@@ -311,7 +350,16 @@ void People::SyntheticSendVisitMessages() {
 
       // Send off visit message
       VisitMessage visitMsg(destinationIdx, personIdx, p.state, visitStart, visitEnd);
-      locationsArray[locationPartition].ReceiveVisitMessages(visitMsg);
+      #ifdef USE_HYPERCOMM
+      Aggregator* agg = aggregatorProxy.ckLocalBranch();
+      if (agg->visit_aggregator) {
+        agg->visit_aggregator->send(locationsArray[locationPartition], visitMsg);
+      } else {
+      #endif // USE_HYPERCOMM
+        locationsArray[locationPartition].ReceiveVisitMessages(visitMsg);
+      #ifdef USE_HYPERCOMM
+      }
+      #endif // USE_HYPERCOMM
     } 
   }
 }
@@ -319,13 +367,24 @@ void People::SyntheticSendVisitMessages() {
 void People::RealDataSendVisitMessages() {
   // Send activities for each person.
   for (const Person &person: people) {
-    for (VisitMessage visitMessage: person.visitsByDay[day % DAYS_IN_WEEK]) {
+    for (VisitMessage visitMessage:
+        person.visitsByDay[day % numDaysWithRealData]) {
       visitMessage.personState = person.state;
 
       // Find process that owns that location
       int locationPartition = getPartitionIndex(visitMessage.locationIdx,
           numLocations, numLocationPartitions, firstLocationIdx);
-      locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
+      // Send off the visit message.
+      #ifdef USE_HYPERCOMM
+      Aggregator* agg = aggregatorProxy.ckLocalBranch();
+      if (agg->visit_aggregator) {
+        agg->visit_aggregator->send(locationsArray[locationPartition], visitMessage);
+      } else {
+      #endif // USE_HYPERCOMM
+        locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
+      #ifdef USE_HYPERCOMM
+      }
+      #endif // USE_HYPERCOMM
     }
   }
 }
@@ -358,8 +417,9 @@ void People::EndOfDayStateUpdate() {
   int infectiousCount = 0;
   for (Person &person : people) {
     ProcessInteractions(person);
+    
     person.EndOfDayStateUpdate(diseaseModel, &generator);
-
+    
     int resultantState = person.state;
     stateSummaries[resultantState + offset + 1]++;
     if (diseaseModel->isInfectious(resultantState)) {
@@ -370,8 +430,9 @@ void People::EndOfDayStateUpdate() {
   // contributing to reduction
   CkCallback cb(CkReductionTarget(Main, ReceiveInfectiousCount), mainProxy);
   contribute(sizeof(int), &infectiousCount, CkReduction::sum_int, cb);
+  
+  // Get ready for the next day
   day++;
-  newCases = 0;
 }
 
 void People::SendStats() {
@@ -416,3 +477,10 @@ void People::ProcessInteractions(Person &person) {
 
   person.interactions.clear();
 }
+
+#ifdef ENABLE_LB
+void People::ResumeFromSync() {
+  CkCallback cb(CkReductionTarget(Main, peopleLBComplete), mainProxy);
+  contribute(cb);
+}
+#endif // ENABLE_LB

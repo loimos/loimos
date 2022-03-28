@@ -1,0 +1,9 @@
+newDailyCasesTriggerOn: 0.004
+newDailyCasesTriggerOff: 0.001;
+schoolClosures: true
+stayAtHome: false
+isolationCompliance: 1
+schoolClosureCompliance: 1
+csvLocationOfSchool: 1
+csvLocationOfSeederBool: 0
+seedingAdminCode: 600

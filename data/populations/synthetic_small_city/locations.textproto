@@ -40,7 +40,7 @@ field {
 }
 field {
     field_name: "school"
-    ignore {}
+    bool {}
 }
 field {
     field_name: "other"
