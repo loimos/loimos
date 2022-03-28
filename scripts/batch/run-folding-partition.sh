@@ -3,6 +3,8 @@
 #SBATCH -p largemem
 #SBATCH -t 20
 #SBATCH -N 1
+#SBATCH --ntasks-per-node 16
+#SBATCH --exclusive
 #SBATCH --account=biocomplexity
 
 STATE=${1}
@@ -12,7 +14,8 @@ if [ -z ${NUM_PARTITIONS} ]; then
 fi
 ARGS=${3}
 if [ -z ${ARGS} ]; then
-  ARGS="-p average_daily_total"
+  ARGS=
+  #ARGS="-p average_daily_total"
 fi
 
 RAW_DIR=../../data/populations/${STATE}
@@ -29,8 +32,8 @@ fi
 for file in ${RAW_DIR}/*; do
  filename=$(basename ${file})
  if [[ ${filename} == *".textproto" && ! -e ${PARTITIONED_DIR}/${filename} ]]; then
-   ln -s ${RAW_DIR}/${filename} ${PARTITIONED_DIR}/${filename}
-   echo "  Created link from ${RAW_DIR}/${filename} to ${PARTITIONED_DIR}/${filename}"
+   cp ${RAW_DIR}/${filename} ${PARTITIONED_DIR}/${filename}
+   echo "  Copied ${RAW_DIR}/${filename} to ${PARTITIONED_DIR}/${filename}"
  fi
 done
 
@@ -38,4 +41,4 @@ module load gcc/9.2.0 cuda/11.0.228 openmpi/3.1.6 mvapich2/2.3.3 \
   openmpi/3.1.6 python/3.8.8
 
 echo ../partitioning/folding_partition.py  ${RAW_DIR} -o ${PARTITIONED_DIR} -n ${NUM_PARTITIONS} ${ARGS}
-time ../partitioning/folding_partition.py  ${RAW_DIR} -o ${PARTITIONED_DIR} -n ${NUM_PARTITIONS} ${ARGS}
+time ../partitioning/folding_partition.py  ${RAW_DIR} -o ${PARTITIONED_DIR} -n ${NUM_PARTITIONS} ${ARGS} -nt 16

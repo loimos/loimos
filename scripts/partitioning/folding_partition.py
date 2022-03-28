@@ -12,7 +12,7 @@ import argparse
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
-from utils.ids import remap
+from utils.ids import remap, init_multiprocessing
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -31,6 +31,11 @@ def parse_args():
             default='max_simultaneous_visits',
             help='The column in the input data which should be balanced ' +\
                  'across partitions')
+    parser.add_argument('-nt', '--num-tasks', default=1, type=int,
+        help='Specifies the number of processes to use (default is serial)')
+    parser.add_argument('-np', '--num-merge-partitions', default=32, type=int,
+        help='Specifies the number of partitions to seperate data into' + \
+             'before merging')
 
     return parser.parse_args()
 
@@ -133,15 +138,23 @@ def get_partition_mean(df, num_partitions,
 def main():
     # Parse args and read data
     args = parse_args()
+    num_partitions = args.num_partitions
+    partition_on = args.partition_on
+    num_tasks = args.num_tasks
+    num_merge_partitions = args.num_merge_partitions
+
+    if num_tasks > 1:
+        init_multiprocessing()
+    
     input_dir = args.input_dir
     output_dir = args.output_dir
+    
     people = pd.read_csv(os.path.join(input_dir, 'people.csv'))
     locations = pd.read_csv(os.path.join(input_dir, 'locations.csv'))
     visits = pd.read_csv(os.path.join(input_dir, 'visits.csv'))
-    num_partitions = args.num_partitions
+    
     num_elements = locations.shape[0]
-    partition_on = args.partition_on
-
+    
     homes_mask = locations['designation'].str.contains('home')
     num_homes = np.sum(homes_mask)
     num_non_homes = num_elements - num_homes
@@ -169,8 +182,9 @@ def main():
     permutation = partitions_to_permutation(partitions, num_elements)
     inverted_permutation = invert_permutation(locations, permutation)
     people, locations, visits = remap(people, locations, visits,
-            new_location_ids=inverted_permutation)
-    
+            new_location_ids=inverted_permutation,
+            num_partitions=num_merge_partitions, num_tasks=num_tasks)
+
     # We need to save the new version of visits.csv as remap updates the lids
     # of each visit to reflect each location's new lid and position in
     # locations.csv

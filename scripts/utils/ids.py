@@ -89,8 +89,8 @@ def partitioned_merge(left, right, on, num_tasks=1, num_partitions=128,
 # to the given array/series of values passed as new_people_ids and
 # new_location_ids, respectively, and adjusts the corresponding column(s)
 # in visits accordingly
-def remap(people, locations, visits,
-        new_people_ids=None, new_location_ids=None):
+def remap(people, locations, visits, new_people_ids=None,
+        new_location_ids=None, num_partitions=1, num_tasks=1):
     if new_people_ids is not None:
         # Remap person ids
         people = people.reindex(new_people_ids) # makes a copy
@@ -101,8 +101,12 @@ def remap(people, locations, visits,
         people['pid'] = people['temp_id']
         people.drop(["temp_id"], axis=1, inplace=True)
         
-        visits = visits.merge(person_remapper, left_on='pid', right_on='pid')
-        visits['pid']= visits['temp_id']
+        if 1 == num_partitions:
+            visits = visits.merge(person_remapper, on='pid')
+        else:
+            visits = partitioned_merge(visits, person_remapper, 'pid',
+                    num_tasks=num_tasks, args={'how': 'left'})
+        visits['pid'] = visits['temp_id']
         visits.drop(["temp_id"], axis = 1, inplace=True)
 
     if new_location_ids is not None:
@@ -115,12 +119,24 @@ def remap(people, locations, visits,
         locations['lid'] = locations['temp_id']
         locations.drop(["temp_id"], axis=1, inplace=True)
         
-        visits = visits.merge(loc_remapper, left_on='lid', right_on='lid')
-        visits['lid']= visits['temp_id']
+        if 1 == num_partitions:
+            visits = visits.merge(loc_remapper, on='lid')
+        else:
+            visits = partitioned_merge(visits, loc_remapper, 'lid',
+                    num_tasks=num_tasks, args={'how': 'left'})
+        visits['lid'] = visits['temp_id']
         visits.drop(["temp_id"], axis = 1, inplace=True)
         
-        people = people.merge(loc_remapper, left_on='hid', right_on='lid')
-        people['hid']= people['temp_id']
+        if 1 == num_partitions:
+            people = people.merge(loc_remapper, on='lid')
+        else:
+            people = partitioned_merge(people, loc_remapper, 'lid',
+                    num_tasks=num_tasks, args={'how': 'left'})
+        people['hid'] = people['temp_id']
         people.drop(["temp_id"], axis = 1, inplace=True)
+
+    # Partitioned merges can sometimes mess up the order
+    people.sort_values(by='pid', inplace=True)
+    visits.sort_values(by=['pid', 'start_time'], inplace=True)
 
     return people, locations, visits
