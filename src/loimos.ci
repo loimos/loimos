@@ -92,9 +92,16 @@ mainmodule loimos {
       for(day = 0; day < numDays; day++) {
         serial{CkPrintf("  Starting iteration\n");}
       #ifdef USE_PROJECTIONS
+<<<<<<< HEAD
         if (SHOULD_PROFILE(day)){
           serial{traceArray.traceOn();}
           when traceSwitchOn() {}
+=======
+        if (day == 7){
+            serial{CkPrintf("\nStarting Projections Tracing.\n");}
+            serial{traceArray.traceOn();}
+            when traceSwitchOn() {serial{CkPrintf("\ntraceSwitchOn activated.\n");}}
+>>>>>>> There's an issue when USE_PROJECTIONS is on. The code hangs when projections is started. Looking for bug
         }
       #endif
         serial {
@@ -187,6 +194,7 @@ mainmodule loimos {
       
 
         #ifdef USE_PROJECTIONS
+<<<<<<< HEAD
           if (SHOULD_PROFILE(day)) {
             serial{traceArray.traceOff();}
             when traceSwitchOff(){}
@@ -200,6 +208,21 @@ mainmodule loimos {
             }
           }
           
+=======
+          if (day == 21) {
+              serial{CkPrintf("\nFinished Projections Tracing.\n");}
+              serial{traceArray.traceOff();}
+              when traceSwitchOff(){}
+          }
+          
+          // Toggled by USE_PROJECTIONS to group profiling code
+          //serial{traceArray.reportMemoryUsage();}
+          //when printMemoryUsage(long usage) {
+          //  serial {
+          //    CkPrintf("Currently using %ld kb in total\n", usage);
+          //  }
+          //}
+>>>>>>> There's an issue when USE_PROJECTIONS is on. The code hangs when projections is started. Looking for bug
         #endif // USE_PROJECTIONS
       }
       serial { 
@@ -231,7 +254,7 @@ mainmodule loimos {
     #ifdef USE_PROJECTIONS
     entry [reductiontarget] void traceSwitchOn();
     entry [reductiontarget] void traceSwitchOff();
-    entry [reductiontarget] void printMemoryUsage(long usage);
+    //entry [reductiontarget] void printMemoryUsage(long usage);
     #endif // USE_PROJECTIONS
     #ifdef ENABLE_LB
     entry [reductiontarget] void instrumentSwitchOn();
@@ -248,7 +271,7 @@ mainmodule loimos {
     entry void traceOn();
     entry void traceOff();
     entry void traceFlush();
-    entry void reportMemoryUsage();
+    //entry void reportMemoryUsage();
     #endif // USE_PROJECTIONS
     #ifdef ENABLE_LB
     entry void instrumentOn();
