@@ -174,8 +174,8 @@ void People::loadVisitData(std::ifstream *activityData) {
       // Seek while same person on same day
       while(personId == person.uniqueId && visitStart < nextDaySecs) {
         // Save visit info
-        CkPrintf("Saving visit data for person %d on day %d\n",
-            person.uniqueId, day);
+        //CkPrintf("Saving visit data for person %d on day %d\n",
+          //  person.uniqueId, day);
         person.visitsByDay[day].emplace_back(locationId, personId, -1,
             visitStart, visitStart + visitDuration);
 

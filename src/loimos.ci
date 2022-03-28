@@ -10,7 +10,7 @@ mainmodule loimos {
   // Profiling/LB parameters (these are here because Defs.h depends on having
   // CBase_* classes defined, and these constants are only used in this file)
   #define PROFILING_START_DAY 7
-  #define PROFILING_INTERVAL 28
+  #define PROFILING_INTERVAL 22
   #define LB_START_DAY 6
   #define LB_INTERVAL 7
   
@@ -74,9 +74,10 @@ mainmodule loimos {
 
       for(day = 0; day < numDays; day++) {
       #ifdef USE_PROJECTIONS
-        if ((day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0){
+        if (day == 7){
+            serial{CkPrintf("\nStarting Projections Tracing.\n");}
             serial{traceArray.traceOn();}
-            when traceSwitchOn() {}
+            when traceSwitchOn() {serial{CkPrintf("\ntraceSwitchOn activated.\n");}}
         }
       #endif
         serial {
@@ -151,18 +152,19 @@ mainmodule loimos {
       
 
         #ifdef USE_PROJECTIONS
-          if ((day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0) {
+          if (day == 21) {
+              serial{CkPrintf("\nFinished Projections Tracing.\n");}
               serial{traceArray.traceOff();}
               when traceSwitchOff(){}
           }
           
           // Toggled by USE_PROJECTIONS to group profiling code
-          serial{traceArray.reportMemoryUsage();}
-          when printMemoryUsage(long usage) {
-            serial {
-              CkPrintf("Currently using %ld kb in total\n", usage);
-            }
-          }
+          //serial{traceArray.reportMemoryUsage();}
+          //when printMemoryUsage(long usage) {
+          //  serial {
+          //    CkPrintf("Currently using %ld kb in total\n", usage);
+          //  }
+          //}
         #endif // USE_PROJECTIONS
       }
       serial { 
@@ -189,7 +191,7 @@ mainmodule loimos {
     #ifdef USE_PROJECTIONS
     entry [reductiontarget] void traceSwitchOn();
     entry [reductiontarget] void traceSwitchOff();
-    entry [reductiontarget] void printMemoryUsage(long usage);
+    //entry [reductiontarget] void printMemoryUsage(long usage);
     #endif // USE_PROJECTIONS
     #ifdef ENABLE_LB
     entry [reductiontarget] void instrumentSwitchOn();
@@ -206,7 +208,7 @@ mainmodule loimos {
     entry void traceOn();
     entry void traceOff();
     entry void traceFlush();
-    entry void reportMemoryUsage();
+    //entry void reportMemoryUsage();
     #endif // USE_PROJECTIONS
     #ifdef ENABLE_LB
     entry void instrumentOn();

@@ -91,7 +91,7 @@ class TraceSwitcher : public CBase_TraceSwitcher {
       traceBegin();
     };
     
-    void reportMemoryUsage(){ 
+    /*void reportMemoryUsage(){ 
       // Find this process's memory usage
       struct rusage self_usage;
       getrusage(RUSAGE_SELF, &self_usage);
@@ -109,7 +109,7 @@ class TraceSwitcher : public CBase_TraceSwitcher {
 
       //CkPrintf("  Process %ld is using %ld kb\n",
       //    (int) pid, self_usage.ru_maxrss);
-    };
+    };*/
     #endif // USE_PROJECTIONS
    
     #ifdef ENABLE_LB
