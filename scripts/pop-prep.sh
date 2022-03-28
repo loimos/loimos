@@ -78,30 +78,34 @@ fixed_residence_locations_filename=${out_dir}/${region}_residence_locations_fina
 fixed_activity_locations_filename=${out_dir}/${region}_activity_locations_final.csv
 fixed_residence_assignment_filename=${out_dir}/${region}_household_residence_assignment_final.csv
 
-# Some states seem to have the shift already applied to home indices
-if ${NO_RESIDENCE_OFFSET}; then
-  HOME_SHIFT=0
-else
-  HOME_SHIFT=1000000000
-fi
+HOME_SHIFT=1000000000
 echo Using HOME_SHIFT of ${HOME_SHIFT}
 
 # Combine activity files into one. Could check that line counts match.
 # has format: hid,pid,activity_number,activity_type,start_time,duration,lid,longitude,latitude,travel_mode
 # target format: daynum,pid,activity_number,activity_type,start_time,end_time,duration,lid
 
-awk -F, -v home_shift=${HOME_SHIFT} \
+# Some visits are not home activities, but still occur at locations with an lid
+# beyond that of the last activity location; we assume these are at home
+# locations
+max_activity_lid=$(($(wc -l < ${activity_locations_filename}) - 1))
+
+awk -F, -v home_shift=${HOME_SHIFT} -v max_activity_lid=${max_activity_lid} \
 'BEGIN{OFS=","} {
-if( $4 == 1 ){ $7+=home_shift };
+if( $4 == 1 || $7 > max_activity_lid ){ $7+=home_shift };
 if( NR == 1 ){ print "daynum,pid,activity_number,activity_type,start_time,end_time,duration,lid" };
 if( FNR > 1 ){ end_time=$5+$6; daynum=int($5/(24*60*60)); print daynum,$2,$3,$4,$5,end_time,$6,$7}
 }' ${adult_location_assignment_filename} ${child_location_assignment_filename} > ${fixed_location_assignment_filename} # ${region}_gidi_visits.csv
-
-# Create residence locations file with lid offsets:
-awk -F, -v home_shift=${HOME_SHIFT} 'BEGIN{ OFS=","} { if(NR>1){$1+=home_shift; print} else {$1="lid"; print } }' ${residence_locations_filename} > ${fixed_residence_locations_filename}
 
 # Fix the header of the activity location file:
 awk -F, 'BEGIN{OFS=","}; { if(FNR==1){ $1="lid"}; {print}}' ${activity_locations_filename} > ${fixed_activity_locations_filename}
 
 # Fix the household to residence assignment: update header name and add offset.
 awk -F, -v home_shift=${HOME_SHIFT} 'BEGIN{ OFS=","} { if(NR>1){$2+=home_shift; print} else {$2="lid"; print } }' ${residence_assignment_filename} > ${fixed_residence_assignment_filename}
+
+# Some states seem to have the shift already applied to home indices
+if ${NO_RESIDENCE_OFFSET}; then
+  HOME_SHIFT=0
+fi
+# Create residence locations file with lid offsets:
+awk -F, -v home_shift=${HOME_SHIFT} 'BEGIN{ OFS=","} { if(NR>1){$1+=home_shift; print} else {$1="lid"; print } }' ${residence_locations_filename} > ${fixed_residence_locations_filename}
