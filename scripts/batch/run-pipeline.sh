@@ -77,7 +77,7 @@ run_script combine-household-data.sh ${BASE_TIME} standard 1 ${BASE_MEMORY}
 # the otput dir
 #mv ${IN_DIR}/*.csv ${OUT_DIR}
 
-run_script merge-location-data.py ${BASE_TIME} largemem 1 ${BASE_MEMORY}
+run_script merge-location-data.py ${BASE_TIME} largemem 16 ${BASE_MEMORY}
 run_script location-heuristics.py ${BASE_TIME} largemem 16 ${BASE_MEMORY}
 
 # Copy the neccessary textproto files over

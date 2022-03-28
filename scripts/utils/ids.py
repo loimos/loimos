@@ -83,7 +83,7 @@ def partitioned_merge(left, right, on, num_tasks=1, num_partitions=128,
 
     merged_df = pd.concat(merged_partitions)
 
-    return merged_df.reset_index().drop('index', axis=1)
+    return merged_df
 
 # Sets the 'pid' column in people and the 'lid' column in locations
 # to the given array/series of values passed as new_people_ids and

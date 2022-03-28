@@ -8,7 +8,7 @@ import pandas as pd
 import random
 import sys
 
-from utils.ids import partition_df
+from utils.ids import partitioned_merge, init_multiprocessing
 from utils.memory import memory_usage
 
 # ----------------------------------------------------------------------
@@ -52,6 +52,11 @@ def CreateParser() :
                             default = '',
                             required = False,
                             help="output directory")
+    cli_parser.add_argument('-n', '--num_tasks', default=1, type=int,
+        help='Specifies the number of processes to use (default is serial)')
+    cli_parser.add_argument('-np', '--num_partitions', default=16, type=int,
+        help='Specifies the number of partitions to seperate data into' + \
+             'before merging')
     
     return cli_parser
 
@@ -77,6 +82,12 @@ def main() :
     output_dir = args.output_dir
     if output_dir == '':
         output_dir = os.getcwd()
+
+    num_partitions = args.num_partitions
+    num_tasks = args.num_tasks
+    
+    if num_tasks > 1:
+        init_multiprocessing()
 
     region_prefix = args.region_prefix
 
@@ -138,14 +149,16 @@ def main() :
 
     # We get memory errors from tryign to merge the full dataset, so try
     # merging along partitions
-    num_partitions = 16
-    p_h_partitioned = partition_df(p_h_df, num_partitions=num_partitions)
-    hra_partitioned = partition_df(hra_df, num_partitions=num_partitions)
+    gidi_person_df = partitioned_merge(p_h_df, hra_df, 'hid',
+            num_partitions=num_partitions, num_tasks=num_tasks,
+            args={'how': 'left'})
+    #p_h_partitioned = partition_df(p_h_df, num_partitions=num_partitions)
+    #hra_partitioned = partition_df(hra_df, num_partitions=num_partitions)
 
-    gidi_person_partitioned = [p_h_partitioned[i].merge(
-        hra_partitioned[i], how='left', left_on='hid', right_on='hid',
-    ) for i in range(num_partitions-1)]
-    gidi_person_df = pd.concat(gidi_person_partitioned)
+    #gidi_person_partitioned = [p_h_partitioned[i].merge(
+    #    hra_partitioned[i], how='left', left_on='hid', right_on='hid',
+    #) for i in range(num_partitions-1)]
+    #gidi_person_df = pd.concat(gidi_person_partitioned)
 
     # min: 0 max: 12848291
     #gidi_person_df = p_h_df.merge(hra_df, how='left', left_on='hid',
