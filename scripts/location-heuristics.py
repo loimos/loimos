@@ -10,22 +10,28 @@ simultaneous visits for all locations in the dataset.
 """
 
 # Column name that describes the location id being visited.
-LOCATION_ID_COLUMN_NAME = 'lid'
+LID_COL = 'lid'
 # Any other column in the dataset that is fully populated.
-OTHER_COLUMN = 'start_time'
+START_COL = 'start_time'
 
 import pandas as pd
+import numpy as np
 import heapq
 import argparse
 import os
 import time
+
+from utils.memory import memory_usage 
 from functools import partial
 from multiprocessing import Pool, set_start_method
     
-def find_max_simultaneous_visits(visits, lid):
+def find_max_simultaneous_visits(lid, visits):
     max_in_visit = 0
     end_times = []
-    for _, row in visits[visits[LOCATION_ID_COLUMN_NAME] == lid][['start_time','duration']].iterrows():
+    if lid % 1000000 == 0:
+        print('location {} has {} visits'.format(lid, len(visits)))
+        print(visits.memory_usage())
+    for _, row in visits.iterrows():
         # Filter out end_times not in range.
         start_time = row['start_time']
         while len(end_times) and end_times[0] <= start_time:
@@ -82,12 +88,15 @@ if __name__ == '__main__':
 
     # Calculate total visits to a location.
     start_time = time.perf_counter()
+    visits_by_location = (
+        visits[[LID_COL, 'start_time', 'duration']]
+            .groupby(LID_COL))
     max_visits = (
-        visits[[LOCATION_ID_COLUMN_NAME, OTHER_COLUMN]]
-            .groupby(LOCATION_ID_COLUMN_NAME)
+        visits[[LID_COL, 'start_time']]
+            .groupby(LID_COL)
             .count()
-            .rename({OTHER_COLUMN: 'total_visits'}, axis=1)
-    )
+            .rename({'start_time': 'total_visits'}, axis=1))
+    print(max_visits)
     end_time = time.perf_counter()
     print('Calculating total visits:', end_time - start_time)
 
@@ -115,27 +124,26 @@ if __name__ == '__main__':
     # Calculate the maximum simulatenous visits using as many processes
     # as possible
     start_time = time.perf_counter()
+    print(visits.memory_usage())
+    #max_visits = pd.DataFrame(max_visits)
     if args.n_tasks > 1:
         # The default way of starting new processes - fork - duplicates the
         # entire process - including its memory footprint - so let's choose
         # another method (see https://stackoverflow.com/questions/42584525/
         # python-multiprocessing-debugging-oserror-errno-12-cannot-allocate-memory
-        set_start_method('forkserver')
+        set_start_method('spawn')
 
         with Pool(args.n_tasks) as pool:
-            max_visits['max_simultaneous_visits'] =\
-                pool.map(
-                    partial(find_max_simultaneous_visits, visits),
-                    max_visits.index
-                )
+            max_visits['max_simultaneous_visits'] = pool.starmap(
+                find_max_simultaneous_visits,
+                visits_by_location)
     else:
-        max_visits['max_simultaneous_visits'] =\
-            max_visits.index.map(
-                partial(find_max_simultaneous_visits, visits)
-            )
+        max_visits['max_simultaneous_visits'] = [
+                find_max_simultaneous_visits(lid, group)
+                for lid, group in visits_by_location]
 
     end_time = time.perf_counter()
-    print('Calculating maximum simulatneous visits:', end_time - start_time)
+    print('Calculating maximum simultaneous visits:', end_time - start_time)
     
     print(max_visits.columns)
     print(max_visits.index)
@@ -143,7 +151,14 @@ if __name__ == '__main__':
     # We need the max visit data to be a location attribute, so combine it
     # with the location data
     locations = pd.read_csv(path_to_locations)
-    output_df = locations.join(max_visits, on='lid')
+    # If we've already calculated these heuristics before, we'll need to
+    # overwite the old values, so let's get rid of them before we merge the
+    # data
+    overlap = set(np.intersect1d(locations.columns, max_visits.columns))
+    locations.drop(axis='columns', labels=overlap - {LID_COL}, inplace=True)    
+    output_df = locations.merge(max_visits, how='left', on=LID_COL)
+    print(output_df)
+    print(output_df.columns)
 
     # Zero out the heuristic values for any location with no visits
     output_df.fillna(0, inplace=True)

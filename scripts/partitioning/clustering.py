@@ -18,7 +18,7 @@ import os
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
-from utils import id_remapper
+from utils import ids
 
 LOCATION_SCHEMES = ["VISIT", "GEO"]
 PEOPLE_SCHEMES = ["GREEDY"]
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     location_remapped_ids = []
     for l_cluster in location_clusters:
         location_remapped_ids.extend(l_cluster)
-    people, locations, visits = id_remapper.remap(people.reindex(people_remapped_ids), locations.reindex(people_remapped_ids), visits, people_remapped_ids, location_remapped_ids)    
+    people, locations, visits = ids.remap(people.reindex(people_remapped_ids), locations.reindex(people_remapped_ids), visits, people_remapped_ids, location_remapped_ids)    
 
     # Output
     people.to_csv(os.path.join(args.output_path, "people.csv"), index=False)

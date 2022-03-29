@@ -11,16 +11,18 @@ function run_script() {
   BATCH_SCRIPT=run-${SCRIPT/.py/.sh}
   TIME=$2
   QUEUE=$3
-  TASKS_PER_NODE=$4
+  export TASKS_PER_NODE=$4
   MEM=$5
 
   ARGS="--export=ALL -t ${TIME} -p ${QUEUE} --ntasks-per-node ${TASKS_PER_NODE} --wait"
   if [ ! -z ${MEM} ]; then
     ARGS="${ARGS} --mem ${MEM}"
+  else
+    ARGS="${ARGS} --exclusive"
   fi
 
   echo Running ${SCRIPT}
-  #echo sbatch ${ARGS} ${BATCH_DIR}/${BATCH_SCRIPT}
+  echo sbatch ${ARGS} ${BATCH_DIR}/${BATCH_SCRIPT}
   sbatch ${ARGS} ${BATCH_DIR}/${BATCH_SCRIPT}
 
   # Make sure the user knows if the job fails or not, and stop here if it does
@@ -28,6 +30,7 @@ function run_script() {
   EXIT_CODE=$?
   if [ ${EXIT_CODE} -eq 0 ]; then
     echo Done with ${SCRIPT}
+    echo
   else
     echo ${SCRIPT} failed with exit code ${EXIT_CODE}
     exit ${EXIT_CODE}
@@ -59,6 +62,11 @@ if [ ! -d ${OUT_DIR} ]; then
  mkdir ${OUT_DIR}
 fi
 
+if [ ! -d ${OUT_DIR}/base_population ]; then
+  ll ${OUT_DIR}/base_population
+  ln -s ${IN_DIR}/base_population ${OUT_DIR}/base_population 
+fi
+
 echo Processing data for ${STATE}
 
 run_script pop-prep.sh ${BASE_TIME} standard 1 ${BASE_MEMORY}
@@ -67,10 +75,12 @@ run_script combine-household-data.sh ${BASE_TIME} standard 1 ${BASE_MEMORY}
 # From here on we no longer need any of all the raw data, so move all the
 # processed data (which will be at the top level of the input dir) over to
 # the otput dir
-mv ${IN_DIR}/*.csv ${OUT_DIR}
+#mv ${IN_DIR}/*.csv ${OUT_DIR}
 
-run_script merge-location-data.py ${BASE_TIME} standard 1 ${BASE_MEMORY}
-run_script location-heuristics.py $((2 * ${BASE_TIME})) parallel 40 ${BASE_MEMORY}
+run_script merge-location-data.py ${BASE_TIME} largemem 16 ${BASE_MEMORY}
+run_script location-heuristics.py ${BASE_TIME} largemem 16 ${BASE_MEMORY}
 
 # Copy the neccessary textproto files over
-cp ${PROJECT_ROOT}/loimos/data/textproto_templates/*.textproto ${OUT_DIR}
+cp ${PROJECT_ROOT}/loimos/data/textproto_templates/real_data_templates/*.textproto ${OUT_DIR}
+
+sbatch run-validate.sh ${STATE}

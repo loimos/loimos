@@ -11,6 +11,7 @@ charmrun
 loimos
 loimos-*
 *.out
+*core.*
 
 # No temporary versions of files
 *.old.*
