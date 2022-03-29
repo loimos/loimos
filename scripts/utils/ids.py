@@ -127,16 +127,16 @@ def remap(people, locations, visits, new_people_ids=None,
         visits['lid'] = visits['temp_id']
         visits.drop(["temp_id"], axis = 1, inplace=True)
         
-        if 1 == num_partitions:
-            people = people.merge(loc_remapper, on='lid')
-        else:
-            people = partitioned_merge(people, loc_remapper, 'lid',
-                    num_tasks=num_tasks, args={'how': 'left'})
-        people['hid'] = people['temp_id']
-        people.drop(["temp_id"], axis = 1, inplace=True)
+        #if 1 == num_partitions:
+        #    people = people.merge(loc_remapper, on='lid')
+        #else:
+        #    people = partitioned_merge(people, loc_remapper, 'lid',
+        #            num_tasks=num_tasks, args={'how': 'left'})
+        #people['hid'] = people['temp_id']
+        #people.drop(["temp_id"], axis = 1, inplace=True)
 
     # Partitioned merges can sometimes mess up the order
-    people.sort_values(by='pid', inplace=True)
+    #people.sort_values(by='pid', inplace=True)
     visits.sort_values(by=['pid', 'start_time'], inplace=True)
 
     return people, locations, visits
