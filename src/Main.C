@@ -41,7 +41,9 @@
 /* readonly */ CProxy_Aggregator aggregatorProxy;
 #endif
 /* readonly */ CProxy_DiseaseModel globDiseaseModel;
+#if defined(USE_PROJECTIONS) || defined(ENABLE_LB)
 /* readonly */ CProxy_TraceSwitcher traceArray;
+#endif
 /* readonly */ int numPeople;
 /* readonly */ int numLocations;
 /* readonly */ int numPeoplePartitions;
@@ -73,11 +75,12 @@ double dataLoadingStartTime;
 /* readonly */ int averageDegreeOfVisit;
 /* readonly */ bool interventionStategy;
 
+#if defined(USE_PROJECTIONS) || defined(ENABLE_LB)
 class TraceSwitcher : public CBase_TraceSwitcher {
   public:
-    #ifdef USE_PROJECTIONS
     TraceSwitcher() : CBase_TraceSwitcher(){}
     
+    #ifdef USE_PROJECTIONS
     void traceOn(){
       traceBegin();
       contribute(CkCallback(CkReductionTarget(Main, traceSwitchOn),mainProxy));
@@ -129,6 +132,7 @@ class TraceSwitcher : public CBase_TraceSwitcher {
     }
     #endif // ENABLE_LB
 };
+#endif // defined(USE_PROJECTIONS) || defined(ENABLE_LB)
 
 Main::Main(CkArgMsg* msg) {
   // parsing command line arguments
@@ -282,7 +286,9 @@ Main::Main(CkArgMsg* msg) {
 
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
+#if defined(USE_PROJECTIONS) || defined(ENABLE_LB)
   traceArray = CProxy_TraceSwitcher::ckNew();
+#endif
 
 #ifdef USE_PROJECTIONS
   traceArray = CProxy_TraceSwitcher::ckNew();
