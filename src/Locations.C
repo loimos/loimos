@@ -162,7 +162,7 @@ void Locations::ComputeInteractions() {
   // traverses list of locations
   int numVisits = 0;
   for (Location &loc : locations) {
-    numVisits += loc.events.size() / 2;
+    numVisits += loc.getVisitsCount();
     loc.processEvents(diseaseModel, contactModel);
   }
 
