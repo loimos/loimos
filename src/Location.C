@@ -60,6 +60,10 @@ std::vector<union Data> &Location::getDataField() {
   return this->locationData;
 }
 
+int Location::getVisitsCount() {
+  return events.size() / 2;
+}
+
 // Event processing.
 void Location::addEvent(Event e) {
   events.push_back(e);
