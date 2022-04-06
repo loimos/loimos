@@ -93,26 +93,29 @@ def main() :
 
     print('parsed args')
 
-    p_filename = os.path.join(input_dir, 'base_population', region_prefix + '_person.csv')
-    h_filename = os.path.join(input_dir, 'base_population', region_prefix + '_household.csv')
-    rl_filename = os.path.join(input_dir, region_prefix + '_residence_locations_final.csv')
-    al_filename = os.path.join(input_dir, region_prefix + '_activity_locations_final.csv')
-    hra_filename = os.path.join(input_dir, region_prefix + '_household_residence_assignment_final.csv')
-    ala_filename = os.path.join(input_dir, region_prefix + '_activity_location_assignment_week_final.csv')
+    p_filename = os.path.join(input_dir, 'base_population',
+            region_prefix + '_person.csv')
+    h_filename = os.path.join(input_dir, 'base_population',
+            region_prefix + '_household.csv')
+    #rl_filename = os.path.join(input_dir, region_prefix + '_residence_locations_final.csv')
+    #al_filename = os.path.join(input_dir, region_prefix + '_activity_locations_final.csv')
+    hra_filename = os.path.join(input_dir, 'home_location_assignment',
+            region_prefix + '_household_residence_assignment.csv')
+    #ala_filename = os.path.join(input_dir, region_prefix + '_activity_location_assignment_week_final.csv')
 
     print('extracted file names')
 
-    print(f'#> Residences: {rl_filename}')
-    print(f'#> Activities: {al_filename}')
+    #print(f'#> Residences: {rl_filename}')
+    #print(f'#> Activities: {al_filename}')
     print(f'#> HRA: {hra_filename}')
-    print(f'#> ALA: {ala_filename}')
+    #print(f'#> ALA: {ala_filename}')
 
     FileReport(p_filename, 'person file')
     FileReport(h_filename, 'household file')
-    FileReport(rl_filename, 'residence location file')
-    FileReport(al_filename, 'activity location file')
+    #FileReport(rl_filename, 'residence location file')
+    #FileReport(al_filename, 'activity location file')
     FileReport(hra_filename, 'household-to-residence file')
-    FileReport(ala_filename, 'activity location assignment file')
+    #FileReport(ala_filename, 'activity location assignment file')
 
     print('starting to read in files')
 
@@ -123,6 +126,8 @@ def main() :
     # hid,pid,serialno,person_number,record_type,age,relationship,sex,school_enrollment,grade_level_attending,employment_status,occupation_socp,race,hispanic,designation
     person_df = pd.read_csv(p_filename, usecols=['pid', 'hid', 'age', 'sex',
         'employment_status', 'designation', 'race', 'hispanic'])
+    print('person_df:')
+    print(person_df)
     #print('person df memory usage:', person_df.memory_usage(deep=True).sum())
     #print(memory_usage())
 
@@ -130,17 +135,26 @@ def main() :
     #p_h_df = None
     household_df = pd.read_csv(h_filename, usecols=['hid', 'hh_size',
         'hh_income', 'workers_in_family'])
+    print('household_df:')
+    print(household_df)
     #print('household df memory usage:', household_df.memory_usage(deep=True).sum())
 
     p_h_df = person_df.merge(household_df, how='left', left_on='hid',
             right_on='hid')
+    print('p_h_df:')
+    print(p_h_df)
     #print('p-h combined df memory usage:', p_h_df.memory_usage(deep=True).sum())
     #print(memory_usage())
 
     # hid,lid,longitude,latitude,altitude,admin1,admin2,admin3,admin4,area_sqm,associate_link_func_class,pub_pk,pub_kg,pub_01,pub_02,pub_03,pub_04,pub_05,pub_06,pub_07,pub_08,pub_09,pub_10,pub_11,pub_12
     #gidi_person_df = None
-    hra_df = pd.read_csv(hra_filename, usecols=['hid', 'lid', 'longitude',
+    hra_df = pd.read_csv(hra_filename, usecols=['hid', 'rlid', 'longitude',
         'latitude', 'admin1', 'admin2','admin3', 'admin4'])
+    print('hra_df:')
+    print(hra_df)
+    hra_df.rename(columns={'rlid': 'lid'}, inplace=True)
+    print('hra_df after rename:')
+    print(hra_df)
     #print('hra df memory usage:', hra_df.memory_usage(deep=True).sum())
     #print(memory_usage(all_vars=locals()))
 
@@ -177,12 +191,11 @@ def main() :
     #print(memory_usage())
 
     gidi_person_df.to_csv(
-        os.path.join(output_dir, region_prefix + '_gidi_person.csv'),
+        os.path.join(output_dir, region_prefix + '_gidi_person.csv.gz'),
         index=False
     )
 
     sys.exit(0)
     #sys.exit(404)
-
 
 main()

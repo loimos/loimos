@@ -44,11 +44,11 @@ def parse_args():
         default='{prefix}_activity_locations.csv')
     parser.add_argument('-r', '--residence-locations-file',
         default='{prefix}_residence_locations.csv')
-    parser.add_argument('-v', '--visits-file',
-        default='{prefix}_visits.csv')
+    parser.add_argument('-v', '--visit-files', nargs='+',
+        default=['{prefix}_visits.csv'])
     parser.add_argument('-n', '--num-tasks', default=1, type=int,
         help='Specifies the number of processes to use (default is serial)')
-    parser.add_argument('-np', '--num-partitions', default=1024, type=int,
+    parser.add_argument('-np', '--num-partitions', default=2048, type=int,
         help='Specifies the number of partitions to seperate data into' + \
              'before merging')
 
@@ -75,8 +75,8 @@ def id_remapper(people, locations, visits, num_tasks=1, num_partitions=32):
     for to_remap_name, key, external_references in groups:
         to_remap = data[to_remap_name]
         
-        #print(f'{to_remap_name} before remap:')
-        #print(to_remap)
+        print(f'{to_remap_name} before remap:')
+        print(to_remap)
 
         # Remaps the dataframes existing index to a new dense index.
         to_remap['new_id'] = to_remap.index
@@ -84,8 +84,8 @@ def id_remapper(people, locations, visits, num_tasks=1, num_partitions=32):
         to_remap[key] = to_remap['new_id']
         to_remap.drop(["new_id"], axis=1, inplace=True)
 
-        #print(f'{to_remap_name} after remap:')
-        #print(to_remap)
+        print(f'{to_remap_name} after remap:')
+        print(to_remap)
         
         # Save changes t
         data[to_remap_name] = to_remap
@@ -138,20 +138,22 @@ if __name__ == "__main__":
     residence_locations_file = os.path.join(
             population_dir,
             args.residence_locations_file.format(prefix=prefix))
-    visits_file = os.path.join(
-            population_dir,
-            args.visits_file.format(prefix=prefix))
+    visit_files = map(
+            lambda f: os.path.join(population_dir, f.format(prefix=prefix)),
+            args.visit_files)
 
     print(people_file)
     print(activity_locations_file)
     print(residence_locations_file)
-    print(visits_file)
+    print(args.visit_files)
 
     # Read in all the datasetes.
     people = pd.read_csv(people_file)
     activity_locations = pd.read_csv(activity_locations_file)
+    activity_locations.rename(columns={'alid': 'lid'}, inplace=True)
     residences = pd.read_csv(residence_locations_file)
-    visits = pd.read_csv(visits_file)
+    residences.rename(columns={'rlid': 'lid'}, inplace=True)
+    visits = pd.concat(map(pd.read_csv, visit_files))
 
     # Combines activity and residence locations.
     combined = combine_residences_and_activities(activity_locations, residences)
