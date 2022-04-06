@@ -59,17 +59,25 @@ module load gcc/9.2.0 cuda/11.0.228 openmpi/3.1.6 mvapich2/2.3.3 \
 
 # Create a directory to hold all the processed data, if none already exists
 if [ ! -d ${OUT_DIR} ]; then
- mkdir ${OUT_DIR}
+  mkdir ${OUT_DIR}
 fi
 
-if [ ! -d ${OUT_DIR}/base_population ]; then
-  ll ${OUT_DIR}/base_population
-  ln -s ${IN_DIR}/base_population ${OUT_DIR}/base_population 
-fi
+#if [ ! -d ${OUT_DIR}/base_population ]; then
+#  ll ${OUT_DIR}/base_population
+#  ln -s ${IN_DIR}/base_population ${OUT_DIR}/base_population 
+#fi
+# Make simlinks to all important folders that might be needed later on,
+# so that we can pass a sinlge input path to the scripts
+for d in ${IN_DIR}/*; do
+  d=$(basename $d)
+  if [[ -d ${IN_DIR}/$d && ! -e ${OUT_DIR}/$d ]]; then
+    ln -s ${IN_DIR}/$d ${OUT_DIR}/$d
+  fi
+done
 
 echo Processing data for ${STATE}
 
-run_script pop-prep.sh ${BASE_TIME} standard 1 ${BASE_MEMORY}
+#run_script pop-prep.sh ${BASE_TIME} standard 1 ${BASE_MEMORY}
 run_script combine-household-data.sh ${BASE_TIME} standard 1 ${BASE_MEMORY}
 
 # From here on we no longer need any of all the raw data, so move all the
