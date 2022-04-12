@@ -11,7 +11,7 @@ mainmodule loimos {
   // CBase_* classes defined, and these constants are only used in this file)
   #define PROFILING_START_DAY 7
   #define PROFILING_INTERVAL 28
-  #define LB_START_DAY 6
+  #define LB_START_DAY 7
   #define LB_INTERVAL 7
   
   #ifdef USE_HYPERCOMM
@@ -139,6 +139,7 @@ mainmodule loimos {
           
           if ((day - LB_START_DAY) % LB_INTERVAL == 0) {
             serial {
+              //CkPrintf("\nEntering AtSync\n");
               locationsArray.AtSync();
               peopleArray.AtSync();
             }

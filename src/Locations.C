@@ -145,8 +145,10 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
     firstLocationIdx
   );
 
-  //CkPrintf("Visiting location %d (%d of %d locally)\r\n",
-  //  visitMsg.locationIdx, localLocIdx, numLocalLocations);
+  //if (0 == day && 0 == thisIndex) {
+  //  CkPrintf("Visiting location %d (%d of %d locally on chare %d)\r\n",
+  //    visitMsg.locationIdx, localLocIdx, numLocalLocations, thisIndex);
+  //}
 
   // Wrap vist info...
   Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.personState, visitMsg.visitStart };
