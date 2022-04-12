@@ -94,22 +94,12 @@ mainmodule loimos {
       for(day = 0; day < numDays; day++) {
         serial{CkPrintf("  Starting iteration\n");}
       #ifdef USE_PROJECTIONS
-<<<<<<< HEAD
-<<<<<<< HEAD
         if (SHOULD_PROFILE(day)){
           serial{traceArray.traceOn();}
           when traceSwitchOn() {}
-=======
-        if (day == 7){
-            serial{CkPrintf("\nStarting Projections Tracing.\n");}
-            serial{traceArray.traceOn();}
-            when traceSwitchOn() {serial{CkPrintf("\ntraceSwitchOn activated.\n");}}
->>>>>>> There's an issue when USE_PROJECTIONS is on. The code hangs when projections is started. Looking for bug
-=======
         if ((day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0){
             serial{traceArray.traceOn();}
             when traceSwitchOn() {}
->>>>>>> Bug fixed: the initialization of traceArray in Main.C was deleted at some point in time, so the constructor was never called.
         }
       #endif
         serial {
@@ -188,6 +178,7 @@ mainmodule loimos {
           
           if (SHOULD_LB(day)) {
             serial {
+              //CkPrintf("\nEntering AtSync\n");
               locationsArray.AtSync();
               peopleArray.AtSync();
             }
@@ -202,8 +193,6 @@ mainmodule loimos {
       
 
         #ifdef USE_PROJECTIONS
-<<<<<<< HEAD
-<<<<<<< HEAD
           if (SHOULD_PROFILE(day)) {
             serial{traceArray.traceOff();}
             when traceSwitchOff(){}
@@ -217,33 +206,18 @@ mainmodule loimos {
             }
           }
           
-=======
-          if (day == 21) {
-              serial{CkPrintf("\nFinished Projections Tracing.\n");}
-=======
           if ((day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0) {
->>>>>>> Bug fixed: the initialization of traceArray in Main.C was deleted at some point in time, so the constructor was never called.
               serial{traceArray.traceOff();}
               when traceSwitchOff(){}
           }
           
           // Toggled by USE_PROJECTIONS to group profiling code
-<<<<<<< HEAD
-          //serial{traceArray.reportMemoryUsage();}
-          //when printMemoryUsage(long usage) {
-          //  serial {
-          //    CkPrintf("Currently using %ld kb in total\n", usage);
-          //  }
-          //}
->>>>>>> There's an issue when USE_PROJECTIONS is on. The code hangs when projections is started. Looking for bug
-=======
           serial{traceArray.reportMemoryUsage();}
           when printMemoryUsage(long usage) {
             serial {
               CkPrintf("Currently using %ld kb in total\n", usage);
             }
           }
->>>>>>> Bug fixed: the initialization of traceArray in Main.C was deleted at some point in time, so the constructor was never called.
         #endif // USE_PROJECTIONS
       }
       serial { 

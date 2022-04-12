@@ -179,9 +179,23 @@ void People::loadVisitData(std::ifstream *activityData) {
       while(personId == person.uniqueId && visitStart < nextDaySecs) {
         // Save visit info
         //CkPrintf("Saving visit data for person %d on day %d\n",
-          //  person.uniqueId, day);
-        person.visitsByDay[day].emplace_back(locationId, personId, -1,
-            visitStart, visitStart + visitDuration);
+        //  person.uniqueId, day);
+        int visitEnd = visitStart + visitDuration;
+        //if (visitEnd < nextDaySecs) {
+        //  person.visitsByDay[day].emplace_back(locationId, personId, -1,
+        //      visitStart, visitEnd);
+        
+        int tmpDay = day;
+        int tmpNextDaySecs = nextDaySecs;
+        do {
+          person.visitsByDay[tmpDay].emplace_back(locationId, personId, -1,
+              visitStart, std::min(visitEnd, tmpNextDaySecs));
+
+          // Split up visits that span multiple days
+          visitStart = tmpNextDaySecs;
+          tmpDay++;
+          tmpNextDaySecs += DAY_LENGTH;
+        } while(visitEnd >= tmpNextDaySecs);
 
         std::tie(personId, locationId, visitStart, visitDuration) =
           DataReader<Person>::parseActivityStream(activityData,
