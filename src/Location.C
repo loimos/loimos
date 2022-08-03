@@ -65,8 +65,11 @@ int Location::getVisitsCount() {
 }
 
 // Event processing.
-void Location::addEvent(Event e) {
-  events.push_back(e);
+void Location::addVisit(Event &arrival, Event &departure) {
+  int numPriorEvents = events.size();
+  events.push_back(arrival);
+  events.push_back(departure);
+  Event::pair(&events[numPriorEvents], &events[numPriorEvents + 1]);
 }
 
 void Location::processEvents(

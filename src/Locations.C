@@ -144,20 +144,21 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
     numLocationPartitions,
     firstLocationIdx
   );
+  CkAssert(0 <= visitMsg.locationIdx);
+  CkAssert(0 <= localLocIdx);
 
   //if (0 == day && 0 == thisIndex) {
-  //  CkPrintf("Visiting location %d (%d of %d locally on chare %d)\r\n",
-  //    visitMsg.locationIdx, localLocIdx, numLocalLocations, thisIndex);
+  //  CkPrintf("Person %d visiting location %d (%d of %d locally on chare %d)\r\n",
+  //    visitMsg.personIdx, visitMsg.locationIdx, localLocIdx,
+  //    numLocalLocations, thisIndex);
   //}
 
   // Wrap vist info...
   Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.personState, visitMsg.visitStart };
   Event departure { DEPARTURE, visitMsg.personIdx, visitMsg.personState, visitMsg.visitEnd };
-  Event::pair(&arrival, &departure);
 
   // ...and queue it up at the appropriate location
-  locations[localLocIdx].addEvent(arrival);
-  locations[localLocIdx].addEvent(departure);
+  locations[localLocIdx].addVisit(arrival, departure);
 }
 
 void Locations::ComputeInteractions() { 
