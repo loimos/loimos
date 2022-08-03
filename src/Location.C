@@ -65,12 +65,16 @@ int Location::getVisitsCount() {
 }
 
 // Event processing.
-void Location::addVisit(Event &arrival, Event &departure) {
+void Location::addVisit(Event arrival, Event departure) {
   int numPriorEvents = events.size();
   events.push_back(arrival);
   events.push_back(departure);
   Event::pair(&events[numPriorEvents], &events[numPriorEvents + 1]);
 }
+
+//void Location::addEvent(Event &event) {
+//  events.push_back(event);
+//}
 
 void Location::processEvents(
   const DiseaseModel *diseaseModel,
