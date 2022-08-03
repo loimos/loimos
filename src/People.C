@@ -174,7 +174,7 @@ void People::loadVisitData(std::ifstream *activityData) {
       std::tie(personId, locationId, visitStart, visitDuration) =
         DataReader<Person>::parseActivityStream(activityData,
             diseaseModel->activityDef, NULL);
-
+      
       // Seek while same person on same day
       while(personId == person.uniqueId && visitStart < nextDaySecs) {
         // Save visit info
@@ -182,18 +182,40 @@ void People::loadVisitData(std::ifstream *activityData) {
         //  person.uniqueId, day);
         int visitEnd = visitStart + visitDuration;
         if (visitEnd < nextDaySecs) {
+          CkAssert(0 <= personId);
+          CkAssert(0 <= locationID);
+          CkAssert(0 <= visitStart);
+          CkAssert(0 <= visitEnd);
           person.visitsByDay[day].emplace_back(locationId, personId, -1,
               visitStart, visitEnd);
+          
+          if (0 > locationId) {
+            CkPrintf("    R: Person %d read message to visit location %d on day %d (on chare %d)\n",
+                person.uniqueId, locationId, day, thisIndex);
+            CkAbort("Read invalid message\n");
+          }
+
         
         } else {
           int tmpDay = day;
           int tmpNextDaySecs = nextDaySecs;
           do {
+            CkAssert(0 <= personId);
+            CkAssert(0 <= locationID);
+            CkAssert(0 <= visitStart);
+            CkAssert(0 <= visitEnd);
             person.visitsByDay[tmpDay].emplace_back(locationId, personId, -1,
-                visitStart, std::min(visitEnd, tmpNextDaySecs));
+                visitStart, visitEnd);
+            
+            if (0 > locationId) {
+              CkPrintf("    R: Person %d read message to visit location %d on day %d (on chare %d)\n",
+                  person.uniqueId, locationId, day, thisIndex);
+              CkAbort("Read invalid message\n");
+            }
 
             // Split up visits that span multiple days
             visitStart = tmpNextDaySecs;
+            visitEnd = std::min(visitEnd, tmpNextDaySecs);
             tmpDay++;
             tmpNextDaySecs += DAY_LENGTH;
           } while(visitEnd >= tmpNextDaySecs);
@@ -392,6 +414,12 @@ void People::RealDataSendVisitMessages() {
     for (VisitMessage visitMessage:
         person.visitsByDay[day % numDaysWithRealData]) {
       visitMessage.personState = person.state;
+  
+      if (0 > visitMessage.locationIdx) {
+        CkPrintf("    P: Person %d to visit location %d (on chare %d)\n",
+            person.uniqueId, visitMessage.locationIdx, thisIndex);
+        CkAbort("About to send invalid message\n");
+      }
 
       // Find process that owns that location
       int locationPartition = getPartitionIndex(visitMessage.locationIdx,

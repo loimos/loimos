@@ -116,8 +116,8 @@ class Location : public DataInterface {
     
     // Adds an event represnting a person either arriving or departing
     // from this location
-    //void addEvent(Event e);
-    void addVisit(Event &arrival, Event &departure);
+    void addVisit(Event arrival, Event departure);
+    //void addEvent(Event &e);
     
     int getVisitsCount();
 
