@@ -48,7 +48,7 @@ def parse_args():
         default=['{prefix}_visits.csv'])
     parser.add_argument('-n', '--num-tasks', default=1, type=int,
         help='Specifies the number of processes to use (default is serial)')
-    parser.add_argument('-np', '--num-partitions', default=2048, type=int,
+    parser.add_argument('-np', '--num-partitions', default=1024, type=int,
         help='Specifies the number of partitions to seperate data into' + \
              'before merging')
 
@@ -145,7 +145,7 @@ if __name__ == "__main__":
     print(people_file)
     print(activity_locations_file)
     print(residence_locations_file)
-    print(args.visit_files)
+    print(visit_files)
 
     # Read in all the datasetes.
     people = pd.read_csv(people_file)

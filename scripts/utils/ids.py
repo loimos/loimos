@@ -9,7 +9,7 @@ import pandas as pd
 import functools
 from multiprocessing import Pool, set_start_method
 
-def init_multiprocessing(start_method='spawn'):
+def init_multiprocessing(start_method='forkserver'):
     set_start_method(start_method)
 
 # Returns the boundaries for a given number of equally sized partitions on
