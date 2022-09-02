@@ -37,8 +37,8 @@ for file in ${RAW_DIR}/*; do
  fi
 done
 
-module load gcc/9.2.0 cuda/11.0.228 openmpi/3.1.6 mvapich2/2.3.3 \
-  openmpi/3.1.6 python/3.8.8
+module load gcc/9.2.0 cuda/11.0.228 openmpi/3.1.6 \
+  openmpi/3.1.6 python/3.8.8 # mvapich2/2.3.3 
 
 echo ../partitioning/folding_partition.py  ${RAW_DIR} -o ${PARTITIONED_DIR} -n ${NUM_PARTITIONS} ${ARGS}
 time ../partitioning/folding_partition.py  ${RAW_DIR} -o ${PARTITIONED_DIR} -n ${NUM_PARTITIONS} ${ARGS} -nt 16
