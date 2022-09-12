@@ -10,7 +10,7 @@ mainmodule loimos {
   // Profiling/LB parameters (these are here because Defs.h depends on having
   // CBase_* classes defined, and these constants are only used in this file)
   #define PROFILING_START_DAY 7
-  #define PROFILING_INTERVAL 28
+  #define PROFILING_INTERVAL 1
   #define LB_START_DAY 7
   #define LB_INTERVAL 7
   
@@ -68,15 +68,10 @@ mainmodule loimos {
     entry [reductiontarget] void CharesCreated();
     #endif // USE_HYPERCOMM
     entry void run() {
-      // We only want to collect instumentation on the main loop
-      #ifdef ENABLE_LB
-        serial{traceArray.instrumentOn();}
-        when instrumentSwitchOn() {}
-      #endif // ENABLE_LB
-
       for(day = 0; day < numDays; day++) {
       #ifdef USE_PROJECTIONS
-        if ((day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0){
+        if (PROFILING_START_DAY <= day &&
+          (day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0){
             serial{traceArray.traceOn();}
             when traceSwitchOn() {}
         }
@@ -137,7 +132,7 @@ mainmodule loimos {
           serial{traceArray.instrumentOff();}
           when instrumentSwitchOff() {}
           
-          if ((day - LB_START_DAY) % LB_INTERVAL == 0) {
+          if ( LB_START_DAY <= day && (day - LB_START_DAY) % LB_INTERVAL == 0) {
             serial {
               //CkPrintf("\nEntering AtSync\n");
               locationsArray.AtSync();
@@ -154,7 +149,8 @@ mainmodule loimos {
       
 
         #ifdef USE_PROJECTIONS
-          if ((day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0) {
+          if (PROFILING_START_DAY <= day &&
+            (day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0){
               serial{traceArray.traceOff();}
               when traceSwitchOff(){}
           }
