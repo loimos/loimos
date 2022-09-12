@@ -97,7 +97,6 @@ mainmodule loimos {
         if (SHOULD_PROFILE(day)){
           serial{traceArray.traceOn();}
           when traceSwitchOn() {}
-        if ((day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0){
             serial{traceArray.traceOn();}
             when traceSwitchOn() {}
         }
@@ -204,11 +203,6 @@ mainmodule loimos {
                 CkPrintf("Currently using %ld kb in total\n", usage);
               }
             }
-          }
-          
-          if ((day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0) {
-              serial{traceArray.traceOff();}
-              when traceSwitchOff(){}
           }
           
           // Toggled by USE_PROJECTIONS to group profiling code
