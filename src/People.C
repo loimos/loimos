@@ -201,7 +201,7 @@ void People::loadVisitData(std::ifstream *activityData) {
           int tmpNextDaySecs = nextDaySecs;
           do {
             CkAssert(0 <= personId);
-            CkAssert(0 <= locationID);
+            CkAssert(0 <= locationId);
             CkAssert(0 <= visitStart);
             CkAssert(0 <= visitEnd);
             person.visitsByDay[tmpDay].emplace_back(locationId, personId, -1,
