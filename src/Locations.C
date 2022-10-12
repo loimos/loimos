@@ -185,9 +185,9 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 }
 
 void Locations::ComputeInteractions() {
-  CkPrintf("  Encountered %d invalid visits on chare %d on day %d\n",
-    numInvalidVisits, thisIndex, day);
-  numInvalidVisits = 0;
+  //CkPrintf("  Encountered %d invalid visits on chare %d on day %d\n",
+  //  numInvalidVisits, thisIndex, day);
+  //numInvalidVisits = 0;
 
   // traverses list of locations
   int numVisits = 0;
@@ -196,10 +196,12 @@ void Locations::ComputeInteractions() {
     loc.processEvents(diseaseModel, contactModel);
   }
 
-  //if (0 == day) {
-  //  CkPrintf("    Process %d, thread %d: %d visits, %d locations\n",
-  //    CkMyNode(), CkMyPe(), numVisits, (int) locations.size());
-  //}
+  #ifdef DEBUG 
+    //CkPrintf("\tDay %d, process %d, thread %d: %d visits, %d locations\n",
+    //  day, CkMyNode(), CkMyPe(), numVisits, (int) locations.size());
+    CkPrintf("\tDay %d, process %d, thread %d, chare %d: %d visits, %d locations\n",
+      day, CkMyNode(), CkMyPe(), thisIndex, numVisits, (int) locations.size());
+  #endif
   
   day++;
 }

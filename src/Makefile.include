@@ -19,7 +19,7 @@ GTEST_HOME ?= /usr/local/gtest
 HYPERCOMM_HOME ?= ../hypercomm-aggregation
 
 CXX       = g++
-OPTS     += -g #-O2
+OPTS     += -O3
 INCLUDES  = -I$(PROTOBUF_HOME)/include
 LIBS      = -lpthread -lprotobuf
 
@@ -50,6 +50,10 @@ endif
 ifdef ENABLE_LB
 OPTS     += -DENABLE_LB
 LIBS     += -balancer GreedyLB -balancer RefineLB
+endif
+
+ifdef DEBUG
+OPTS     += -DDEBUG
 endif
 
 CXXFLAGS  = $(OPTS) -std=c++11 -Wall $(INCLUDES)

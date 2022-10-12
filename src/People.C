@@ -55,7 +55,7 @@ People::People() {
   // Create real or fake people
   if (syntheticRun) {
     // Make a default person and populate people with copies
-    Person tmp {0, 0, std::numeric_limits<Time>::max() };
+    Person tmp(0, 0, std::numeric_limits<Time>::max());
     people.resize(numLocalPeople, tmp);
 
     // Init peoples ids and randomly init ages.
@@ -75,11 +75,10 @@ People::People() {
   } else {
       int numAttributesPerPerson = 
         DataReader<Person>::getNonZeroAttributes(diseaseModel->personDef);
-      for (int p = 0; p < numLocalPeople; p++) {
-        people.emplace_back(Person(numAttributesPerPerson,
-          0, std::numeric_limits<Time>::max()
-        ));
-      }
+      
+      // Make a default person and populate people with copies
+      Person tmp(numAttributesPerPerson, 0, std::numeric_limits<Time>::max());
+      people.resize(numLocalPeople, tmp);
 
       // Load in people data from file.
       loadPeopleData();
@@ -152,6 +151,8 @@ void People::loadPeopleData() {
 } 
 
 void People::loadVisitData(std::ifstream *activityData) {
+  int totalVisits = 0;
+  int totalPeopleDays = 0;
   for (int day = 0; day < numDaysWithRealData; ++day) {
     int nextDaySecs = (day + 1) * DAY_LENGTH;
     for (Person &person: people) {
@@ -164,6 +165,7 @@ void People::loadVisitData(std::ifstream *activityData) {
         continue;
       }
 
+      totalPeopleDays++;
       activityData->seekg(seekPos, std::ios_base::beg);
 
       // Start reading
@@ -188,6 +190,7 @@ void People::loadVisitData(std::ifstream *activityData) {
           CkAssert(0 <= visitEnd);
           person.visitsByDay[day].emplace_back(locationId, personId, -1,
               visitStart, visitEnd);
+          totalVisits++;
           
           if (0 > locationId) {
             CkPrintf("    R: Person %d read message to visit location %d on day %d (on chare %d)\n",
@@ -206,6 +209,7 @@ void People::loadVisitData(std::ifstream *activityData) {
             CkAssert(0 <= visitEnd);
             person.visitsByDay[tmpDay].emplace_back(locationId, personId, -1,
                 visitStart, visitEnd);
+            totalVisits++;
             
             if (0 > locationId) {
               CkPrintf("    R: Person %d read message to visit location %d on day %d (on chare %d)\n",
@@ -227,6 +231,12 @@ void People::loadVisitData(std::ifstream *activityData) {
       }
     }
   }
+ 
+  #ifdef DEBUG 
+    CkPrintf("\tProcess %d, thread %d, chare %d: %d visits, %d people (%d PDs)\n",
+      CkMyNode(), CkMyPe(), thisIndex, totalVisits, (int) people.size(),
+      totalPeopleDays);
+  #endif
 }
 
 void People::pup(PUP::er &p) {
@@ -414,12 +424,14 @@ void People::RealDataSendVisitMessages() {
     for (VisitMessage visitMessage:
         person.visitsByDay[day % numDaysWithRealData]) {
       visitMessage.personState = person.state;
-  
-      if (0 > visitMessage.locationIdx) {
-        CkPrintf("    P: Person %d to visit location %d (on chare %d)\n",
-            person.uniqueId, visitMessage.locationIdx, thisIndex);
-        CkAbort("About to send invalid message\n");
-      }
+ 
+      #ifdef DEBUG 
+        if (0 > visitMessage.locationIdx) {
+          CkPrintf("    P: Person %d to visit location %d (on chare %d)\n",
+              person.uniqueId, visitMessage.locationIdx, thisIndex);
+          CkAbort("About to send invalid message\n");
+        }
+      #endif
 
       // Find process that owns that location
       int locationPartition = getPartitionIndex(visitMessage.locationIdx,

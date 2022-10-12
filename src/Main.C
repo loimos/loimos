@@ -82,11 +82,17 @@ class TraceSwitcher : public CBase_TraceSwitcher {
     
     #ifdef USE_PROJECTIONS
     void traceOn(){
+      #ifdef DEBUG
+        CkPrintf("Starting data collection on chare %d\n", thisIndex);
+      #endif
       traceBegin();
       contribute(CkCallback(CkReductionTarget(Main, traceSwitchOn),mainProxy));
     };
     
     void traceOff(){
+      #ifdef DEBUG
+        CkPrintf("Ending data collection on chare %d\n", thisIndex);
+      #endif
       traceEnd();    
       contribute(CkCallback(CkReductionTarget(Main, traceSwitchOff),mainProxy));
     };   
