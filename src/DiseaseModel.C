@@ -263,9 +263,20 @@ int DiseaseModel::getNumberOfStates() const {
 
 /** Returns the initial starting healthy and exposed state */
 int DiseaseModel::getHealthyState(std::vector<Data> &dataField) const { 
+  int numStartingStates = model->starting_states_size();
+
+  // Shouldn't need to check age if there's only one starting state
+  if (1 == numStartingStates) {
+    const loimos::proto::DiseaseModel_StartingCondition state =
+      model->starting_states(0);
+    return state.starting_state();
+
+  } else if (AGE_CSV_INDEX <= dataField.size()) {
+    CkAbort("No age data (needed for determinign healthy disease state\n");
+  }
+  
   // Age based transition.
   int personAge = dataField[AGE_CSV_INDEX].int_b10;
-  int numStartingStates = model->starting_states_size();
   for (int stateNum = 0; stateNum < numStartingStates; stateNum++) {
     const loimos::proto::DiseaseModel_StartingCondition state =
       model->starting_states(stateNum);
