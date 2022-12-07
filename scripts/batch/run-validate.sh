@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -q normal
 #SBATCH -p largemem
-#SBATCH -t 30
+#SBATCH -t 60
 #SBATCH -N 1
 #SBATCH --exclusive
 #SBATCH --account=biocomplexity

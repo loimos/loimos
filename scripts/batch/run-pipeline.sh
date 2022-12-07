@@ -54,18 +54,26 @@ fi
 
 BASE_MEMORY=$3
 
-module load gcc/9.2.0 cuda/11.0.228 openmpi/3.1.6 mvapich2/2.3.3 \
-  openmpi/3.1.6 python/3.8.8
+module load gcc/9.2.0 cuda/11.0.228 openmpi/3.1.6 \
+  openmpi/3.1.6 python/3.8.8 #mvapich2/2.3.3
 
 # Create a directory to hold all the processed data, if none already exists
 if [ ! -d ${OUT_DIR} ]; then
- mkdir ${OUT_DIR}
+  mkdir ${OUT_DIR}
 fi
 
-if [ ! -d ${OUT_DIR}/base_population ]; then
-  ll ${OUT_DIR}/base_population
-  ln -s ${IN_DIR}/base_population ${OUT_DIR}/base_population 
-fi
+#if [ ! -d ${OUT_DIR}/base_population ]; then
+#  ll ${OUT_DIR}/base_population
+#  ln -s ${IN_DIR}/base_population ${OUT_DIR}/base_population 
+#fi
+# Make simlinks to all important folders that might be needed later on,
+# so that we can pass a sinlge input path to the scripts
+for d in ${IN_DIR}/*; do
+  d=$(basename $d)
+  if [[ -d ${IN_DIR}/$d && ! -e ${OUT_DIR}/$d ]]; then
+    ln -s ${IN_DIR}/$d ${OUT_DIR}/$d
+  fi
+done
 
 echo Processing data for ${STATE}
 
@@ -75,12 +83,12 @@ run_script combine-household-data.sh ${BASE_TIME} standard 1 ${BASE_MEMORY}
 # From here on we no longer need any of all the raw data, so move all the
 # processed data (which will be at the top level of the input dir) over to
 # the otput dir
-#mv ${IN_DIR}/*.csv ${OUT_DIR}
+mv ${IN_DIR}/*.csv ${OUT_DIR}
 
 run_script merge-location-data.py ${BASE_TIME} largemem 16 ${BASE_MEMORY}
 run_script location-heuristics.py ${BASE_TIME} largemem 16 ${BASE_MEMORY}
 
 # Copy the neccessary textproto files over
-cp ${PROJECT_ROOT}/loimos/data/textproto_templates/real_data_templates/*.textproto ${OUT_DIR}
+#cp ${PROJECT_ROOT}/loimos/data/textproto_templates/real_data_templates/*.textproto ${OUT_DIR}
 
-sbatch run-validate.sh ${STATE}
+#sbatch run-validate.sh ${STATE}
