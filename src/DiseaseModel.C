@@ -280,23 +280,14 @@ int DiseaseModel::getHealthyState(std::vector<Data> &dataField) const {
     const loimos::proto::DiseaseModel_StartingCondition state =
       model->starting_states(stateNum);
 
-  } else if (1 == numStartingStates) {
-    return model->starting_states(0).starting_state();
-
-  } else {
-    // Age based transition.
-    int personAge = dataField[AGE_CSV_INDEX].int_b10;
-    for (int stateNum = 0; stateNum < numStartingStates; stateNum++) {
-      const loimos::proto::DiseaseModel_StartingCondition state =
-        model->starting_states(stateNum);
-
       if (state.lower() <= personAge && personAge <= state.upper()) {
         return state.starting_state();
       }
     }
-    CkAbort("No starting state for person of age %d. Read %d states total.",
-        personAge, numStartingStates);
   }
+
+  CkAbort("No starting state for person of age %d. Read %d states total.",
+      personAge, numStartingStates);
 }
 
 /** Returns if someone is infectious */
