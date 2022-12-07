@@ -49,6 +49,10 @@ class Location : public DataInterface {
    
     // For DataInterface
     int uniqueId;
+    
+    // Represents all of the arrivals and departures of people
+    // from this location on a given day
+    std::vector<Event> events;
 
     // Helper functions to handle when a person leaves this location
     // onDeparture branches to one of the two other functions
@@ -83,11 +87,7 @@ class Location : public DataInterface {
     // specified person to the appropriate People chare
     inline void sendInteractions(int personIdx);
 
-  public:
-    // Represents all of the arrivals and departures of people
-    // from this location on a given day
-    std::vector<Event> events;
-    
+  public: 
     // This distribution should always be the same - not sure how well
     // static variables work with Charm++, so this may need to be put
     // on the stack somewhere later on
@@ -116,8 +116,11 @@ class Location : public DataInterface {
     
     // Adds an event represnting a person either arriving or departing
     // from this location
-    void addEvent(Event e);
+    void addVisit(Event arrival, Event departure);
+    //void addEvent(Event &e);
     
+    int getVisitsCount();
+
     // Runs through all of the current events and return the indices of
     // any people who have been infected
     void processEvents(

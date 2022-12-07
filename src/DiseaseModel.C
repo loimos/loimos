@@ -35,8 +35,7 @@ using NameIndexLookupType = std::unordered_map<std::string, int>;
 // not everyone gets infected immediately given the small time units
 // (i.e. it normalizes for the size of the smallest time increment used
 // in the discrete event simulation and disease model)
-const long double TRANSMISSIBILITY = 7.5E-6 / DAY_LENGTH;
-//const long double TRANSMISSIBILITY = 4E-6 / DAY_LENGTH;
+const long double TRANSMISSIBILITY = 1E-7 / DAY_LENGTH;
 
 /**
  * Constructor which loads in disease file from text proto file.
@@ -265,14 +264,15 @@ int DiseaseModel::getNumberOfStates() const {
 int DiseaseModel::getHealthyState(std::vector<Data> &dataField) const { 
   int numStartingStates = model->starting_states_size();
 
+  if (0 == numStartingStates) {
+    CkAbort("No starting states in disease model");
+
   // Shouldn't need to check age if there's only one starting state
-  if (1 == numStartingStates) {
-    const loimos::proto::DiseaseModel_StartingCondition state =
-      model->starting_states(0);
-    return state.starting_state();
+  } else if (1 == numStartingStates) {
+    return model->starting_states(0).starting_state();
 
   } else if (AGE_CSV_INDEX <= dataField.size()) {
-    CkAbort("No age data (needed for determinign healthy disease state\n");
+    CkAbort("No age data (needed for determining healthy disease state\n");
   }
   
   // Age based transition.
@@ -285,6 +285,7 @@ int DiseaseModel::getHealthyState(std::vector<Data> &dataField) const {
       return state.starting_state();
     }
   }
+
   CkAbort("No starting state for person of age %d. Read %d states total.",
       personAge, numStartingStates);
 }

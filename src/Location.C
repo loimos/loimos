@@ -60,10 +60,21 @@ std::vector<union Data> &Location::getDataField() {
   return this->locationData;
 }
 
-// Event processing.
-void Location::addEvent(Event e) {
-  events.push_back(e);
+int Location::getVisitsCount() {
+  return events.size() / 2;
 }
+
+// Event processing.
+void Location::addVisit(Event arrival, Event departure) {
+  int numPriorEvents = events.size();
+  events.push_back(arrival);
+  events.push_back(departure);
+  Event::pair(&events[numPriorEvents], &events[numPriorEvents + 1]);
+}
+
+//void Location::addEvent(Event &event) {
+//  events.push_back(event);
+//}
 
 void Location::processEvents(
   const DiseaseModel *diseaseModel,

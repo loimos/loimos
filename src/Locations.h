@@ -23,6 +23,7 @@ class Locations : public CBase_Locations {
     DiseaseModel *diseaseModel;
     ContactModel *contactModel;
     int day;
+    int numInvalidVisits;
 
   public:
     Locations();

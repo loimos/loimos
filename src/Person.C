@@ -28,7 +28,7 @@ Person::Person(int numAttributes, int startingState, int timeLeftInState) {
 
     // Create an entry for each day we have data for    
     this->visitsByDay = std::vector<std::vector<VisitMessage> >();
-    this->visitsByDay.resize(DAYS_IN_WEEK);
+    this->visitsByDay.resize(numDaysWithRealData);
 }
 
 void Person::pup(PUP::er &p) {

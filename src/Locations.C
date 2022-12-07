@@ -25,6 +25,7 @@
 
 Locations::Locations() {
   day = 0;
+  numInvalidVisits = 0;
 
   //Must be set to true to make AtSync work
   usesAtSync = true;
@@ -144,25 +145,49 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
     numLocationPartitions,
     firstLocationIdx
   );
+  CkAssert(0 <= visitMsg.locationIdx);
+  CkAssert(0 <= visitMsg.personIdx);
+  CkAssert(0 <= visitMsg.personState);
+  CkAssert(0 <= visitMsg.visitStart);
+  CkAssert(0 <= visitMsg.visitEnd);
+  CkAssert(0 <= localLocIdx);
 
-  //CkPrintf("Visiting location %d (%d of %d locally)\r\n",
-  //  visitMsg.locationIdx, localLocIdx, numLocalLocations);
+  //if (0 == day && 0 == thisIndex) {
+  //  CkPrintf("Person %d visiting location %d (%d of %d locally on chare %d)\r\n",
+  //    visitMsg.personIdx, visitMsg.locationIdx, localLocIdx,
+  //    numLocalLocations, thisIndex);
+  //}
+
+  if (0 > visitMsg.locationIdx) {
+    numInvalidVisits++;
+    CkPrintf("    L: Person %d visiting location %d (%d of %d locally on chare %d)\n",
+      visitMsg.personIdx, visitMsg.locationIdx, localLocIdx,
+      numLocalLocations, thisIndex);
+    CkAbort("Recieved invalid message\n");
+    return;
+  }
 
   // Wrap vist info...
-  Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.personState, visitMsg.visitStart };
-  Event departure { DEPARTURE, visitMsg.personIdx, visitMsg.personState, visitMsg.visitEnd };
+  Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.personState, visitMsg.visitStart, 0 };
+  Event departure { DEPARTURE, visitMsg.personIdx, visitMsg.personState, visitMsg.visitEnd, 0 };
   Event::pair(&arrival, &departure);
 
   // ...and queue it up at the appropriate location
-  locations[localLocIdx].addEvent(arrival);
-  locations[localLocIdx].addEvent(departure);
+  //locations[localLocIdx].addEvent(arrival);
+  //locations[localLocIdx].addEvent(departure);
+
+  locations[localLocIdx].addVisit(arrival, departure);
 }
 
-void Locations::ComputeInteractions() { 
+void Locations::ComputeInteractions() {
+  CkPrintf("  Encountered %d invalid visits on chare %d on day %d\n",
+    numInvalidVisits, thisIndex, day);
+  numInvalidVisits = 0;
+
   // traverses list of locations
   int numVisits = 0;
   for (Location &loc : locations) {
-    numVisits += loc.events.size() / 2;
+    numVisits += loc.getVisitsCount();
     loc.processEvents(diseaseModel, contactModel);
   }
 
