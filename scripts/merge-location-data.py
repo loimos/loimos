@@ -14,6 +14,8 @@ import os
 import sys
 import pandas as pd
 
+from utils.ids import partitioned_merge, init_multiprocessing
+
 _DEFAULT_VALUES = {
     "work": 0,
     "school": 0,
@@ -42,8 +44,13 @@ def parse_args():
         default='{prefix}_activity_locations.csv')
     parser.add_argument('-r', '--residence-locations-file',
         default='{prefix}_residence_locations.csv')
-    parser.add_argument('-v', '--visits-file',
-        default='{prefix}_visits.csv')
+    parser.add_argument('-v', '--visit-files', nargs='+',
+        default=['{prefix}_visits.csv'])
+    parser.add_argument('-n', '--num-tasks', default=1, type=int,
+        help='Specifies the number of processes to use (default is serial)')
+    parser.add_argument('-np', '--num-partitions', default=1024, type=int,
+        help='Specifies the number of partitions to seperate data into' + \
+             'before merging')
 
     return parser.parse_args()
 
@@ -54,33 +61,48 @@ def combine_residences_and_activities(activity_locations, residence_locations):
     residence_locations["home"] = 1
     activity_locations["home"] = 0
     
-    return activity_locations.append(residence_locations).reset_index().drop("index", axis=1)
+    return activity_locations.append(residence_locations).reset_index() \
+        .drop("index", axis=1)
 
-def id_remapper(people, locations, visits):
+def id_remapper(people, locations, visits, num_tasks=1, num_partitions=32):
     groups = [
-        (people, 'pid', ['visits']),
-        (locations, 'lid', ['visits', 'people'])
+        ('people', 'pid', ['visits']),
+        ('locations', 'lid', ['visits', 'people'])
     ]
     data = {'people': people, 'locations': locations, 'visits': visits}
 
     # Remap location ids.
-    for to_remap, key, external_references in groups:
+    for to_remap_name, key, external_references in groups:
+        to_remap = data[to_remap_name]
+        
+        print(f'{to_remap_name} before remap:')
+        print(to_remap)
+
         # Remaps the dataframes existing index to a new dense index.
         to_remap['new_id'] = to_remap.index
         remapper = to_remap[[key, 'new_id']].copy()
         to_remap[key] = to_remap['new_id']
         to_remap.drop(["new_id"], axis=1, inplace=True)
 
+        print(f'{to_remap_name} after remap:')
+        print(to_remap)
+        
+        # Save changes t
+        data[to_remap_name] = to_remap
+
         # Replaced foreign key references.
         # for df in foreign_dfs:
         # Replace all references of the old keys with the new ones
         for ref_name in external_references:
             ref = data[ref_name]
-            ref = ref.merge(remapper, left_on=key, right_on=key)
-            ref[key]= ref['new_id']
+            #ref = ref.merge(remapper, how='left', left_on=key, right_on=key)
+            ref = partitioned_merge(ref, remapper, key,
+                num_partitions=num_partitions, num_tasks=num_tasks,
+                args={'how': 'left'})
+            ref[key] = ref['new_id']
             ref.drop(["new_id"], axis = 1, inplace=True)
             data[ref_name] = ref
-            
+         
     return data['people'], data['locations'], data['visits']
 
 if __name__ == "__main__":
@@ -88,6 +110,11 @@ if __name__ == "__main__":
 
     override = args.override
     population_dir = args.population_dir
+    num_tasks = args.num_tasks
+    num_partitions = args.num_partitions
+
+    if num_tasks > 1:
+        init_multiprocessing()
     
     # We need to normalise the given path so that relative paths don't break
     # the script and basename works correctly
@@ -111,33 +138,42 @@ if __name__ == "__main__":
     residence_locations_file = os.path.join(
             population_dir,
             args.residence_locations_file.format(prefix=prefix))
-    visits_file = os.path.join(
-            population_dir,
-            args.visits_file.format(prefix=prefix))
+    visit_files = map(
+            lambda f: os.path.join(population_dir, f.format(prefix=prefix)),
+            args.visit_files)
 
     print(people_file)
     print(activity_locations_file)
     print(residence_locations_file)
-    print(visits_file)
+    print(visit_files)
 
     # Read in all the datasetes.
     people = pd.read_csv(people_file)
     activity_locations = pd.read_csv(activity_locations_file)
+    activity_locations.rename(columns={'alid': 'lid'}, inplace=True)
     residences = pd.read_csv(residence_locations_file)
-    visits = pd.read_csv(visits_file)
+    residences.rename(columns={'rlid': 'lid'}, inplace=True)
+    visits = pd.concat(map(pd.read_csv, visit_files))
 
     # Combines activity and residence locations.
     combined = combine_residences_and_activities(activity_locations, residences)
+    # Make sure people ids are contiguous
+    people.reset_index().drop('index', axis=1)
 
     # Remap all ids
-    people, combined, visits = id_remapper(people, combined, visits)
+    people, combined, visits = id_remapper(people, combined, visits,
+            num_tasks=num_tasks, num_partitions=num_partitions)
     
     # Fix types
     combined.fillna(0, inplace=True)
     combined = combined.astype({'shopping': int})
     print(combined.dtypes)
 
+    # Make sure all the people are in order
+    people.sort_values(by='pid', inplace=True)
+
     # Make sure all the visits are in the right order
+    visits = visits.astype({'lid': int})
     visits.sort_values(by=['pid', 'start_time'], inplace=True)
 
     if override:
