@@ -79,6 +79,7 @@ def main(unused_argv):
             int(num_nodes), int(mean_degree_k), float(beta))
         translation_strategies.graph_to_disease_model(graph, out_dir,
                                                       TEMPLATE_DIR.value,int(num_nodes),mean_people)
+        print(f"Synthetic population saved to {out_dir}")
     else:
         raise ValueError("Unknown translation strategy: %s",
                          TRANSLATION_STRATEGY.value)
