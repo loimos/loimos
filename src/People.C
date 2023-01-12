@@ -50,6 +50,8 @@ People::People() {
     thisIndex
   );
   
+  double startTime = CkWallTimer();
+
   // Create real or fake people
   if (syntheticRun) {
     // Make a default person and populate people with copies
@@ -82,11 +84,13 @@ People::People() {
       // Load in people data from file.
       loadPeopleData();
   }
+  
+  CkPrintf("  Chare %d took %f s to load people\n", thisIndex,
+      CkWallTimer() - startTime);
 
   // Notify Main
-  #ifdef USE_HYPERCOMM
-  contribute(CkCallback(CkReductionTarget(Main, CharesCreated), mainProxy));
-  #endif
+  mainProxy.CharesCreated();
+  //contribute(CkCallback(CkReductionTarget(Main, CharesCreated), mainProxy));
 }
 
 People::People(CkMigrateMessage *msg) {}

@@ -67,6 +67,8 @@ Locations::Locations() {
 Locations::Locations(CkMigrateMessage *msg) {};
 
 void Locations::loadLocationData() {
+  double startTime = CkWallTimer();
+
   // Init local.
   int numAttributesPerLocation = 
     DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
@@ -116,6 +118,10 @@ void Locations::loadLocationData() {
   for (Location &location: locations) {
     contactModel->computeLocationValues(location);
   }
+
+  
+  CkPrintf("  Chare %d took %f s to load locations\n", thisIndex,
+      CkWallTimer() - startTime);
 }
 
 void Locations::pup(PUP::er &p) {

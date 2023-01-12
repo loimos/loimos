@@ -57,6 +57,7 @@
 /* readonly */ uint64_t totalVisits;
 /* readonly */ double simulationStartTime;
 /* readonly */ double iterationStartTime;
+/* readonly */ double stepStartTime;
 
 // For synthetic run.
 /* readonly */ int synPeopleGridWidth;
@@ -267,7 +268,7 @@ Main::Main(CkArgMsg* msg) {
     CkPrintf("Loading people and locations from %s.\n", scenarioPath.c_str());
   }
 
-  chareCount = 3; // Number of chare arrays/groups
+  chareCount = numPeoplePartitions; // Number of chare arrays/groups
   createdCount = 0;
 
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
@@ -324,18 +325,17 @@ Main::Main(CkArgMsg* msg) {
   }
 
   aggregatorProxy = CProxy_Aggregator::ckNew(visitParams, interactParams);
+#endif //USE_HYPERCOMM
 }
 
 void Main::CharesCreated() {
+  CkPrintf("  %d of %d chares created\n", createdCount, chareCount);
   if (++createdCount == chareCount) {
-#endif //USE_HYPERCOMM
     // Run
     CkPrintf("Running ...\n\n");
     simulationStartTime = CkWallTimer();
     mainProxy.run();
-#ifdef USE_HYPERCOMM
   }
-#endif
 }
 
 void Main::SeedInfections() {
