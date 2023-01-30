@@ -85,8 +85,8 @@ People::People() {
       loadPeopleData();
   }
   
-  CkPrintf("  Chare %d took %f s to load people\n", thisIndex,
-      CkWallTimer() - startTime);
+  //CkPrintf("  Chare %d took %f s to load people\n", thisIndex,
+  //    CkWallTimer() - startTime);
 
   // Notify Main
   mainProxy.CharesCreated();
