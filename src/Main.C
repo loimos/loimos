@@ -58,6 +58,7 @@
 /* readonly */ double simulationStartTime;
 /* readonly */ double iterationStartTime;
 /* readonly */ double stepStartTime;
+double dataLoadingStartTime;
 
 // For synthetic run.
 /* readonly */ int synPeopleGridWidth;
@@ -137,6 +138,8 @@ Main::Main(CkArgMsg* msg) {
   for (int i = 0; i < msg->argc; ++i) {
     CkPrintf("argv[%d]: %s\n", i, msg->argv[i]);
   }
+  
+  dataLoadingStartTime = CkWallTimer();
   
   int argNum = 0;
   syntheticRun = atoi(msg->argv[++argNum]) == 1;
@@ -263,6 +266,9 @@ Main::Main(CkArgMsg* msg) {
   accumulated.resize(diseaseModel->getNumberOfStates(), 0);
   delete msg;
 
+  CkPrintf("\nFinished loading shared/global data in %lf seconds.\n",
+        CkWallTimer() - dataLoadingStartTime);
+
   // creating chare arrays
   if (!syntheticRun) {
     CkPrintf("Loading people and locations from %s.\n", scenarioPath.c_str());
@@ -270,6 +276,8 @@ Main::Main(CkArgMsg* msg) {
 
   chareCount = numPeoplePartitions; // Number of chare arrays/groups
   createdCount = 0;
+
+  dataLoadingStartTime = CkWallTimer();
 
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
@@ -331,6 +339,9 @@ Main::Main(CkArgMsg* msg) {
 void Main::CharesCreated() {
   CkPrintf("  %d of %d chares created\n", createdCount, chareCount);
   if (++createdCount == chareCount) {
+    CkPrintf("\nFinished loading people and location data in %lf seconds.\n",
+        CkWallTimer() - dataLoadingStartTime);
+    
     // Run
     CkPrintf("Running ...\n\n");
     simulationStartTime = CkWallTimer();

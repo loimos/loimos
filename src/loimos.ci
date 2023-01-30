@@ -85,7 +85,7 @@ mainmodule loimos {
       #endif
         serial {
           iterationStartTime = CkWallTimer();
-          CkPrintf("Sending Visit Messages\n");
+          CkPrintf("  Sending Visit Messages\n");
           peopleArray.SendVisitMessages();
 
           stepStartTime = CkWallTimer();
@@ -96,7 +96,7 @@ mainmodule loimos {
         }
         when StartComputingInteractions() {
           serial {
-            CkPrintf("QD for visit messages took %fs\n",
+            CkPrintf("  QD for visit messages took %fs\n",
               CkWallTimer() - stepStartTime);
             
             CkPrintf("Compute Interactions\n");
@@ -115,7 +115,7 @@ mainmodule loimos {
         }
         when ComputedInteractions() {
           serial {
-            CkPrintf("QD for interaction messages took %fs\n",
+            CkPrintf("  QD for interaction messages took %fs\n",
               CkWallTimer() - stepStartTime);
             CkPrintf("Reporting Stats\n");
 
@@ -125,7 +125,7 @@ mainmodule loimos {
         }
         when ReceiveInfectiousCount(int infectiousCount) {
           serial {
-            CkPrintf("Endof day ste update and reduction took %fs\n",
+            CkPrintf(" End of day state update and reduction took %fs\n",
               CkWallTimer() - stepStartTime);
             
             // Use this count as desired here
@@ -182,7 +182,6 @@ mainmodule loimos {
         #endif // USE_PROJECTIONS
       }
       serial { 
-        CkPrintf("\nFinished data loading in %lf seconds.\n", simulationStartTime);
         CkPrintf("Finished simulating %d days in %lf seconds.\n", numDays, (CkWallTimer() - simulationStartTime));
         
         peopleArray.SendStats();
