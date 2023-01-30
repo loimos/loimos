@@ -337,7 +337,7 @@ Main::Main(CkArgMsg* msg) {
 }
 
 void Main::CharesCreated() {
-  CkPrintf("  %d of %d chares created\n", createdCount, chareCount);
+  //CkPrintf("  %d of %d chares created\n", createdCount, chareCount);
   if (++createdCount == chareCount) {
     CkPrintf("\nFinished loading people and location data in %lf seconds.\n",
         CkWallTimer() - dataLoadingStartTime);
