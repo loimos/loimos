@@ -120,8 +120,8 @@ void Locations::loadLocationData() {
   }
 
   
-  CkPrintf("  Chare %d took %f s to load locations\n", thisIndex,
-      CkWallTimer() - startTime);
+  //CkPrintf("  Chare %d took %f s to load locations\n", thisIndex,
+  //    CkWallTimer() - startTime);
 }
 
 void Locations::pup(PUP::er &p) {
