@@ -96,12 +96,11 @@ mainmodule loimos {
         }
         when StartComputingInteractions() {
           serial {
-            CkPrintf("  QD for visit messages took %fs\n",
+            CkPrintf("  Visit messages took %fs\n",
               CkWallTimer() - stepStartTime);
             
-            CkPrintf("Compute Interactions\n");
+            CkPrintf("  Compute Interactions\n");
             locationsArray.ComputeInteractions();
-            // CkPrintf("QD Compute Interactions\n");
             if (DAYS_TO_SEED_INFECTION > day) {
               SeedInfections();
             } 
@@ -115,7 +114,7 @@ mainmodule loimos {
         }
         when ComputedInteractions() {
           serial {
-            CkPrintf("  QD for interaction messages took %fs\n",
+            CkPrintf("  Interaction messages took %fs\n",
               CkWallTimer() - stepStartTime);
             CkPrintf("Reporting Stats\n");
 
