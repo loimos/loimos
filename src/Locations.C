@@ -142,7 +142,6 @@ void Locations::pup(PUP::er &p) {
 }
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
-  
   // adding person to location visit list
   int localLocIdx = getLocalIndex(
     visitMsg.locationIdx,
@@ -172,8 +171,10 @@ void Locations::ComputeInteractions() {
     loc.processEvents(diseaseModel, contactModel);
   }
 
-  //CkPrintf("\tDay %d, process %d, thread %d: %d visits, %d locations\n",
-  //  day, CkMyNode(), CkMyPe(), numVisits, (int) locations.size());
+  //if (0 == day) {
+  //  CkPrintf("    Process %d, thread %d: %d visits, %d locations\n",
+  //    CkMyNode(), CkMyPe(), numVisits, (int) locations.size());
+  //}
   
   day++;
 }
