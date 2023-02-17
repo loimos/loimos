@@ -75,20 +75,27 @@ mainmodule loimos {
         serial{traceArray.instrumentOn();}
         when instrumentSwitchOn() {}
       #endif // ENABLE_LB
+   
+      serial{ 
+        CkPrintf("Running ...\n\n");
+        simulationStartTime = CkWallTimer();
+      }
 
       for(day = 0; day < numDays; day++) {
+        serial{CkPrintf("  Starting iteration\n");}
       #ifdef USE_PROJECTIONS
         if (SHOULD_PROFILE(day)){
-            serial{traceArray.traceOn();}
-            when traceSwitchOn() {}
+          serial{traceArray.traceOn();}
+          when traceSwitchOn() {}
         }
       #endif
         serial {
           iterationStartTime = CkWallTimer();
-          CkPrintf("  Sending Visit Messages\n");
-          peopleArray.SendVisitMessages();
 
+          CkPrintf("  Sending Visit Messages\n");
+          // try adding fflush
           stepStartTime = CkWallTimer();
+          peopleArray.SendVisitMessages();
           CkStartQD(CkCallback(
             CkIndex_Main::StartComputingInteractions(),
             mainProxy
@@ -100,12 +107,12 @@ mainmodule loimos {
               CkWallTimer() - stepStartTime);
             
             CkPrintf("  Compute Interactions\n");
+            stepStartTime = CkWallTimer();
             locationsArray.ComputeInteractions();
             if (DAYS_TO_SEED_INFECTION > day) {
               SeedInfections();
             } 
             
-            stepStartTime = CkWallTimer();
             CkStartQD(CkCallback(
               CkIndex_Main::ComputedInteractions(),
               mainProxy
@@ -116,8 +123,8 @@ mainmodule loimos {
           serial {
             CkPrintf("  Interaction messages took %fs\n",
               CkWallTimer() - stepStartTime);
-            CkPrintf("Reporting Stats\n");
-
+            
+            CkPrintf("  End of day state update starting\n");
             stepStartTime = CkWallTimer();
             peopleArray.EndOfDayStateUpdate();
           }
@@ -167,17 +174,18 @@ mainmodule loimos {
 
         #ifdef USE_PROJECTIONS
           if (SHOULD_PROFILE(day)) {
-              serial{traceArray.traceOff();}
-              when traceSwitchOff(){}
-          }
-          
-          // Toggled by USE_PROJECTIONS to group profiling code
-          serial{traceArray.reportMemoryUsage();}
-          when printMemoryUsage(long usage) {
-            serial {
-              CkPrintf("Currently using %ld kb in total\n", usage);
+            serial{traceArray.traceOff();}
+            when traceSwitchOff(){}
+            
+            // Toggled by USE_PROJECTIONS to group profiling code
+            serial{traceArray.reportMemoryUsage();}
+            when printMemoryUsage(long usage) {
+              serial {
+                CkPrintf("Currently using %ld kb in total\n", usage);
+              }
             }
           }
+          
         #endif // USE_PROJECTIONS
       }
       serial { 

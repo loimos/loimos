@@ -342,9 +342,6 @@ void Main::CharesCreated() {
     CkPrintf("\nFinished loading people and location data in %lf seconds.\n",
         CkWallTimer() - dataLoadingStartTime);
     
-    // Run
-    CkPrintf("Running ...\n\n");
-    simulationStartTime = CkWallTimer();
     mainProxy.run();
   }
 }
