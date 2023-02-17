@@ -93,8 +93,8 @@ mainmodule loimos {
         serial{CkPrintf("  Starting iteration\n");}
       #ifdef USE_PROJECTIONS
         if (SHOULD_PROFILE(day)){
-            serial{traceArray.traceOn();}
-            when traceSwitchOn() {}
+          serial{traceArray.traceOn();}
+          when traceSwitchOn() {}
         }
       #endif
         serial {
@@ -123,7 +123,6 @@ mainmodule loimos {
               SeedInfections();
             } 
             
-            stepStartTime = CkWallTimer();
             CkStartQD(CkCallback(
               CkIndex_Main::ComputedInteractions(),
               mainProxy
@@ -189,15 +188,15 @@ mainmodule loimos {
 
         #ifdef USE_PROJECTIONS
           if (SHOULD_PROFILE(day)) {
-              serial{traceArray.traceOff();}
-              when traceSwitchOff(){}
-          }
-          
-          // Toggled by USE_PROJECTIONS to group profiling code
-          serial{traceArray.reportMemoryUsage();}
-          when printMemoryUsage(long usage) {
-            serial {
-              CkPrintf("Currently using %ld kb in total\n", usage);
+            serial{traceArray.traceOff();}
+            when traceSwitchOff(){}
+            
+            // Toggled by USE_PROJECTIONS to group profiling code
+            serial{traceArray.reportMemoryUsage();}
+            when printMemoryUsage(long usage) {
+              serial {
+                CkPrintf("Currently using %ld kb in total\n", usage);
+              }
             }
           }
           
