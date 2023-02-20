@@ -53,6 +53,13 @@ mainmodule loimos {
   readonly double simulationStartTime;
   readonly double iterationStartTime;
   readonly double stepStartTime;
+  readonly std::vector<double> totalTime;
+
+  #define TOTAL_TIME_INDEX 0
+  #define TOTAL_VISITS_TIME_INDEX 1
+  #define TOTAL_INTERACTIONS_TIME_INDEX 2
+  #define TOTAL_EOD_UPDATE_TIME_INDEX 3
+  #define TOTAL_TIME_SIZE 4
 
   readonly int synPeopleGridWidth;
   readonly int synPeopleGridHeight;
@@ -77,6 +84,7 @@ mainmodule loimos {
       #endif // ENABLE_LB
    
       serial{ 
+        totalTime.resize(TOTAL_TIME_SIZE, 0);
         CkPrintf("Running ...\n\n");
         simulationStartTime = CkWallTimer();
       }
@@ -103,8 +111,10 @@ mainmodule loimos {
         }
         when StartComputingInteractions() {
           serial {
+            double diff = CkWallTimer() - stepStartTime;
             CkPrintf("  Visit messages took %fs\n",
-              CkWallTimer() - stepStartTime);
+              diff);
+            totalTime[TOTAL_VISITS_TIME_INDEX] += diff;
             
             CkPrintf("  Compute Interactions\n");
             stepStartTime = CkWallTimer();
@@ -121,8 +131,10 @@ mainmodule loimos {
         }
         when ComputedInteractions() {
           serial {
+            double diff = CkWallTimer() - stepStartTime;
             CkPrintf("  Interaction messages took %fs\n",
-              CkWallTimer() - stepStartTime);
+              diff);
+            totalTime[TOTAL_INTERACTIONS_TIME_INDEX] += diff;
             
             CkPrintf("  End of day state update starting\n");
             stepStartTime = CkWallTimer();
@@ -131,8 +143,10 @@ mainmodule loimos {
         }
         when ReceiveInfectiousCount(int infectiousCount) {
           serial {
+            double diff = CkWallTimer() - stepStartTime;
             CkPrintf(" End of day state update and reduction took %fs\n",
-              CkWallTimer() - stepStartTime);
+              diff);
+            totalTime[TOTAL_EOD_UPDATE_TIME_INDEX] += diff;
             
             // Use this count as desired here
             if (interventionStategy) {
@@ -190,6 +204,12 @@ mainmodule loimos {
       }
       serial { 
         CkPrintf("Finished simulating %d days in %lf seconds.\n", numDays, (CkWallTimer() - simulationStartTime));
+        CkPrintf("  Visit messages took %lf seconds\n",
+          totalTime[TOTAL_VISITS_TIME_INDEX]);
+        CkPrintf("  Interaction calculations and messages took %lf seconds\n",
+          totalTime[TOTAL_INTERACTIONS_TIME_INDEX]);
+        CkPrintf("  End of day update and reduction took %lf seconds\n",
+          totalTime[TOTAL_EOD_UPDATE_TIME_INDEX]);
         
         peopleArray.SendStats();
       }

@@ -62,6 +62,7 @@ extern /* readonly */ bool syntheticRun;
 extern /* readonly */ uint64_t totalVisits;
 extern /* readonly */ double simulationStartTime;
 extern /* readonly */ double iterationStartTime;
+extern /* readonly */ std::vector<double> totalTime;
 
 // For real data run.
 extern /* readonly */ std::string scenarioPath;

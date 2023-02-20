@@ -59,6 +59,7 @@
 /* readonly */ double iterationStartTime;
 /* readonly */ double stepStartTime;
 double dataLoadingStartTime;
+/* readonly */ std::vector<double> totalTime;
 
 // For synthetic run.
 /* readonly */ int synPeopleGridWidth;
