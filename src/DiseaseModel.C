@@ -271,7 +271,7 @@ int DiseaseModel::getHealthyState(std::vector<Data> &dataField) const {
       model->starting_states(0);
     return state.starting_state();
 
-  } else if (AGE_CSV_INDEX <= dataField.size()) {
+  } else if (AGE_CSV_INDEX >= dataField.size()) {
     CkAbort("No age data (needed for determinign healthy disease state\n");
   }
   
