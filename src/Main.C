@@ -273,6 +273,10 @@ Main::Main(CkArgMsg* msg) {
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
 
+#ifdef USE_PROJECTIONS
+  traceArray = CProxy_TraceSwitcher::ckNew();
+#endif
+
 #ifdef USE_HYPERCOMM
   // Create Hypercomm message aggregators using env variables
   AggregatorParam visitParams;
