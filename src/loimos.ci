@@ -11,8 +11,13 @@ mainmodule loimos {
   // CBase_* classes defined, and these constants are only used in this file)
   #define PROFILING_START_DAY DAYS_IN_WEEK
   #define PROFILING_INTERVAL 28
+  #define SHOULD_PROFILE(day) (day >= PROFILING_START_DAY &&\
+    (day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0)
+  
   #define LB_START_DAY 6
   #define LB_INTERVAL DAYS_IN_WEEK
+  #define SHOULD_LB(day) (day >= LB_START_DAY &&\
+    (day - LB_START_DAY) % LB_INTERVAL == 0)
   
   #ifdef USE_HYPERCOMM
   include "AggregatorParam.h";
@@ -74,7 +79,7 @@ mainmodule loimos {
 
       for(day = 0; day < numDays; day++) {
       #ifdef USE_PROJECTIONS
-        if ((day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0){
+        if (SHOULD_PROFILE(day)){
             serial{traceArray.traceOn();}
             when traceSwitchOn() {}
         }
@@ -135,7 +140,7 @@ mainmodule loimos {
           serial{traceArray.instrumentOff();}
           when instrumentSwitchOff() {}
           
-          if ((day - LB_START_DAY) % LB_INTERVAL == 0) {
+          if (SHOULD_LB(day)) {
             serial {
               locationsArray.AtSync();
               peopleArray.AtSync();
@@ -151,7 +156,7 @@ mainmodule loimos {
       
 
         #ifdef USE_PROJECTIONS
-          if ((day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0) {
+          if (SHOULD_PROFILE(day)) {
               serial{traceArray.traceOff();}
               when traceSwitchOff(){}
           }
