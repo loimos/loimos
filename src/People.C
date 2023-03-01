@@ -232,11 +232,11 @@ void People::loadVisitData(std::ifstream *activityData) {
     }
   }
  
-  #ifdef DEBUG 
-    CkPrintf("\tProcess %d, thread %d, chare %d: %d visits, %d people (%d PDs)\n",
-      CkMyNode(), CkMyPe(), thisIndex, totalVisits, (int) people.size(),
+  //#ifdef DEBUG 
+    CkPrintf("    Chare %d process %d, thread %d, chare %d: %d visits, %d people (%d PDs)\n",
+      thisIndex, CkMyNode(), CkMyPe(), thisIndex, totalVisits, (int) people.size(),
       totalPeopleDays);
-  #endif
+  //#endif
 }
 
 void People::pup(PUP::er &p) {
@@ -420,10 +420,12 @@ void People::SyntheticSendVisitMessages() {
 
 void People::RealDataSendVisitMessages() {
   // Send activities for each person.
+  int totalNumVisits = 0;
   for (const Person &person: people) {
     for (VisitMessage visitMessage:
         person.visitsByDay[day % numDaysWithRealData]) {
       visitMessage.personState = person.state;
+      totalNumVisits++;
  
       #ifdef DEBUG 
         if (0 > visitMessage.locationIdx) {
@@ -449,6 +451,10 @@ void People::RealDataSendVisitMessages() {
       #endif // USE_HYPERCOMM
     }
   }
+  //if (0 == day) {
+  //  CkPrintf("    Chare %d Process %d, thread %d: %d visits, %d people\n",
+  //    thisIndex, CkMyNode(), CkMyPe(), totalNumVisits, people.size());
+  //}
 }
 
 void People::ReceiveInteractions(InteractionMessage interMsg) {
