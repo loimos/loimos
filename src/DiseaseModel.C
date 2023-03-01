@@ -280,13 +280,12 @@ int DiseaseModel::getHealthyState(std::vector<Data> &dataField) const {
     const loimos::proto::DiseaseModel_StartingCondition state =
       model->starting_states(stateNum);
 
-      if (state.lower() <= personAge && personAge <= state.upper()) {
-        return state.starting_state();
-      }
+    if (state.lower() <= personAge && personAge <= state.upper()) {
+      return state.starting_state();
     }
   }
 
-  CkAbort("No starting state for person of age %d. Read %d states total.",
+  CkAbort("No starting state for person of age %d. Read %d states total\n",
       personAge, numStartingStates);
 }
 
