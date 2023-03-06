@@ -109,6 +109,9 @@ mainmodule loimos {
             mainProxy
           ));
         }
+        when ReceiveVisitCount(int visitCount) {
+          serial{CkPrintf("  Total visit messages sent: %d\n", visitCount);}
+        }
         when StartComputingInteractions() {
           serial {
             double diff = CkWallTimer() - stepStartTime;

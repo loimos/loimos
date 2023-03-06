@@ -163,9 +163,13 @@ void People::loadVisitData(std::ifstream *activityData) {
       uint64_t seekPos = person
         .visitOffsetByDay[day % numDaysWithRealData];
       if (seekPos == EMPTY_VISIT_SCHEDULE) {
-        //CkPrintf("No visits on day %d in people chare %d\n", day, thisIndex);
+        CkPrintf("  No visits on day %d in people chare %d\n", day, thisIndex);
         continue;
       }
+      // else if (0 == person.uniqueId % 10000) {
+      //  CkPrintf("  People chare %d, person %d reading from %u on day %d\n",
+      //      thisIndex, person.uniqueId, seekPos, day);
+      //}
 
       activityData->seekg(seekPos, std::ios_base::beg);
 
@@ -228,6 +232,8 @@ void People::SendVisitMessages() {
 }
 
 void People::SyntheticSendVisitMessages() {
+  int totalNumVisits = 0;
+  
   // Model number of visits as a poisson distribution.
   std::poisson_distribution<int> num_visits_generator(LOCATION_LAMBDA);
 
@@ -282,6 +288,8 @@ void People::SyntheticSendVisitMessages() {
     for (int j = 0; j < 2 * numVisits; j++) {
       times.push(time_dist(generator));
     }
+
+    totalNumVisits += numVisits;
 
     // Randomly pick nearby location for person to visit.
     for (int j = 0; j < numVisits; j++) {
@@ -378,14 +386,24 @@ void People::SyntheticSendVisitMessages() {
       #endif // USE_HYPERCOMM
     } 
   }
+  if (0 == day) {
+    CkPrintf("    Process %d, thread %d: %d visits, %d people\n",
+      CkMyNode(), CkMyPe(), totalNumVisits, people.size());
+  }
 }
 
 void People::RealDataSendVisitMessages() {
   // Send activities for each person.
+  int numVisits = 0;
+  int minId = numPeople;
+  int maxId = 0;
   for (const Person &person: people) {
+    minId = std::min(minId, person.uniqueId);
+    maxId = std::max(maxId, person.uniqueId);
     for (VisitMessage visitMessage:
         person.visitsByDay[day % numDaysWithRealData]) {
       visitMessage.personState = person.state;
+      numVisits++;
 
       // Find process that owns that location
       int locationPartition = getPartitionIndex(visitMessage.locationIdx,
@@ -403,6 +421,15 @@ void People::RealDataSendVisitMessages() {
       #endif // USE_HYPERCOMM
     }
   }
+
+  if (0 == day) {
+    CkPrintf("    Chare %d (P %d, T %d): %d visits, %d people (in [%d, %d])\n",
+      thisIndex, CkMyNode(), CkMyPe(), numVisits, (int) people.size(), minId,
+      maxId);
+  }
+  // contributing to reduction
+  CkCallback cb(CkReductionTarget(Main, ReceiveVisitCount), mainProxy);
+  contribute(sizeof(int), &numVisits, CkReduction::sum_int, cb);
 }
 
 void People::ReceiveInteractions(InteractionMessage interMsg) {

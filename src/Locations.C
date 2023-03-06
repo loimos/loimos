@@ -171,10 +171,10 @@ void Locations::ComputeInteractions() {
     loc.processEvents(diseaseModel, contactModel);
   }
 
-  //if (0 == day) {
-  //  CkPrintf("    Process %d, thread %d: %d visits, %d locations\n",
-  //    CkMyNode(), CkMyPe(), numVisits, (int) locations.size());
-  //}
+  if (0 == day) {
+    CkPrintf("    Process %d, thread %d: %d visits, %d locations\n",
+      CkMyNode(), CkMyPe(), numVisits, (int) locations.size());
+  }
   
   day++;
 }
