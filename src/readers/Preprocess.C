@@ -159,13 +159,15 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
     int lastTime = -1;
     int nextPerson = 0;
     int nextTime = 0;
-    int personId = -1;
+    int nextTimeSec = 0;
+    int locationId = -1;
     int duration = -1;
     int totalVisits = 0;
     // For better looping efficiency simulate one break of inner loop to start.
-    std::tie(nextPerson, personId, nextTime, duration) =
+    std::tie(nextPerson, locationId, nextTime, duration) =
       DataReader<Person>::parseActivityStream(&activityStream,
           &csvDefinition, NULL);
+    nextTimeSec = nextTime;
     nextTime = getDay(nextTime);
 
     // Loop over the entire activity file and note boundaries on people and days
@@ -181,10 +183,13 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
 
         elements[numDaysWithRealData * (lastPerson - firstPersonIdx) + lastTime] =
           current_position;
-        //if (0 == lastPerson % 10000) {
+        if (0 == lastPerson % 10000) {
         //  CkPrintf("  Setting person %d to read from %u on day %d\n",
         //      lastPerson, current_position, lastTime);
-        //}
+          CkPrintf("  Person %d on day %d first visit (%u): %d to %d, at loc %d\n",
+              lastPerson, lastTime, current_position, nextTimeSec,
+              nextTimeSec + duration, locationId);
+        }
 
         // Scan until the next boundary.
         while (!activityStream.eof()
@@ -192,7 +197,7 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
             && lastPerson == nextPerson) {
 
             current_position = activityStream.tellg();
-            std::tie(nextPerson, personId, nextTime, duration) =
+            std::tie(nextPerson, locationId, nextTime, duration) =
               DataReader<Person>::parseActivityStream(&activityStream,
                   &csvDefinition, NULL);
             nextTime = getDay(nextTime);

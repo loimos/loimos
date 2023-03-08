@@ -166,10 +166,6 @@ void People::loadVisitData(std::ifstream *activityData) {
         CkPrintf("  No visits on day %d in people chare %d\n", day, thisIndex);
         continue;
       }
-      // else if (0 == person.uniqueId % 10000) {
-      //  CkPrintf("  People chare %d, person %d reading from %u on day %d\n",
-      //      thisIndex, person.uniqueId, seekPos, day);
-      //}
 
       activityData->seekg(seekPos, std::ios_base::beg);
 
@@ -181,6 +177,14 @@ void People::loadVisitData(std::ifstream *activityData) {
       std::tie(personId, locationId, visitStart, visitDuration) =
         DataReader<Person>::parseActivityStream(activityData,
             diseaseModel->activityDef, NULL);
+      
+      if (0 == personId % 10000) {
+      //  CkPrintf("  People chare %d, person %d reading from %u on day %d\n",
+      //      thisIndex, person.uniqueId, seekPos, day);
+          CkPrintf("  Person %d (%d) on day %d first visit: %d to %d, at loc %d\n",
+              person.uniqueId, personId, day, visitStart, visitStart + visitDuration,
+              locationId);
+      }
 
       // Seek while same person on same day
       while(personId == person.uniqueId && visitStart < nextDaySecs) {
