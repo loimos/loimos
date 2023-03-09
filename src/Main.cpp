@@ -68,6 +68,7 @@
 /* readonly */ double dataLoadingStartTime;
 /* readonly */ std::vector<double> totalTime;
 
+/* readonly */ std::vector<double> attrInput;
 
 // For synthetic run.
 /* readonly */ int synPeopleGridWidth;
@@ -152,6 +153,16 @@ Main::Main(CkArgMsg* msg) {
   int baseRunInfo = 0;
 
   if (syntheticRun) {
+    //Populate global attributes vector from file
+    std::ifstream infile("att");
+    int attrInd;
+    double attrVal;
+    while (infile >> attrInd >> attrVal)
+    {
+        Data d;
+        d.probability = attrVal;
+        attrInput.push_back(attrVal);
+    }// Move to readers
     // Get number of people.
     synPeopleGridWidth = atoi(msg->argv[++argNum]);
     synPeopleGridHeight = atoi(msg->argv[++argNum]);
