@@ -27,7 +27,9 @@
 #include <functional>
 #include <algorithm>
 
-std::uniform_real_distribution<> unitDistrib(0, 1);
+std::uniform_real_distribution<> unitDistrib(0,1);
+#define ONE_ATTR 1
+#define DEFAULT_
 
 People::People(std::string scenarioPath) {
   // Must be set to true to make AtSync work
@@ -56,18 +58,28 @@ People::People(std::string scenarioPath) {
 
   // Create real or fake people
   if (syntheticRun) {
-    // Make a default person and populate people with copies
+
     Person tmp {0, 0, std::numeric_limits<Time>::max() };
     people.resize(numLocalPeople, tmp);
 
     // Init peoples ids and randomly init ages.
     std::uniform_int_distribution<int> age_dist(0, 100);
     for (int p = 0; p < numLocalPeople; p++) {
+
       Data age;
       age.int_b10 = age_dist(generator);
       std::vector<Data> dataField = { age };
+      for (int j=0; j<attrInput.size(); ++j)
+      {
+        //CkPrintf("Val %lf\n",readVec[j]);
+        Data d;
+        d.probability = attrInput[j];
+        people[p].personData.push_back(d);//change
+      }
 
       people[p].setUniqueId(firstPersonIdx + p);
+      for (int j=0; j<people[p].personData.size(); ++j)
+        CkPrintf("Default (local) person %d with field %d having value %lf\n",people[p].uniqueId,j,people[p].personData[j].probability );
       people[p].state = diseaseModel->getHealthyState(dataField);
       // We set persons next state to equal current state to signify
       // that they are not in a disease model progression.
