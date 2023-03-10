@@ -102,9 +102,9 @@ void People::loadPeopleData() {
   }
 
   // Find starting line for our data through people cache.
-  peopleCache.seekg(thisIndex * sizeof(uint32_t));
-  uint32_t peopleOffset;
-  peopleCache.read((char *) &peopleOffset, sizeof(uint32_t));
+  peopleCache.seekg(thisIndex * sizeof(uint64_t));
+  uint64_t peopleOffset;
+  peopleCache.read((char *) &peopleOffset, sizeof(uint64_t));
   peopleData.seekg(peopleOffset);
 
   // Read in from remote file.
@@ -120,15 +120,15 @@ void People::loadPeopleData() {
   }
 
   // Load preprocessing meta data.
-  uint32_t *buf = (uint32_t *) malloc(sizeof(uint32_t) * numDaysWithRealData);
+  uint64_t *buf = (uint64_t *) malloc(sizeof(uint64_t) * numDaysWithRealData);
   for (int c = 0; c < numLocalPeople; c++) {
-    std::vector<uint32_t> *data_pos = &people[c].visitOffsetByDay;
+    std::vector<uint64_t> *data_pos = &people[c].visitOffsetByDay;
     int curr_id = people[c].uniqueId;
 
     // Read in their activity data offsets.
-    activityCache.seekg(sizeof(uint32_t) * numDaysWithRealData
+    activityCache.seekg(sizeof(uint64_t) * numDaysWithRealData
        * (curr_id - firstPersonIdx));
-    activityCache.read((char *) buf, sizeof(uint32_t) * numDaysWithRealData);
+    activityCache.read((char *) buf, sizeof(uint64_t) * numDaysWithRealData);
     for (int day = 0; day < numDaysWithRealData; day++) {
       data_pos->push_back(buf[day]);
     }
@@ -153,7 +153,7 @@ void People::loadVisitData(std::ifstream *activityData) {
     for (Person &person: people) {
       
       // Seek to correct position in file.
-      uint32_t seekPos = person
+      uint64_t seekPos = person
         .visitOffsetByDay[day % numDaysWithRealData];
       if (seekPos == EMPTY_VISIT_SCHEDULE) {
         //CkPrintf("No visits on day %d in people chare %d\n", day, thisIndex);

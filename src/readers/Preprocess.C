@@ -77,7 +77,7 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath, int nu
     std::string line;
     // Clear header.
     std::getline(activityStream, line);
-    uint32_t currentPosition = activityStream.tellg();;
+    uint64_t currentPosition = activityStream.tellg();;
 
     // Special case to get lowest person ID first.
     std::getline(activityStream, line);
@@ -100,7 +100,7 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath, int nu
         std::ofstream outputStream(outputPath, std::ios_base::binary);
         for (int chareNum = 0; chareNum < numChares; chareNum++) {
             // Write current offset.
-            outputStream.write((char *) &currentPosition, sizeof(uint32_t));
+            outputStream.write((char *) &currentPosition, sizeof(uint64_t));
 
             // Skip next n lines.
             for (int i = 0; i < objPerChare; i++) {
@@ -143,8 +143,8 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
     csvConfigDefStream.close();
 
     // Create position vector for each person.
-    std::size_t totalDataSize = numPeople * DAYS_IN_WEEK * sizeof(uint32_t);
-    uint32_t *elements = (uint32_t *) malloc(totalDataSize);
+    std::size_t totalDataSize = numPeople * DAYS_IN_WEEK * sizeof(uint64_t);
+    uint64_t *elements = (uint64_t *) malloc(totalDataSize);
     if (elements == NULL) {
         CkAbort("Failed to malloc enoough memory for preprocessing.\n");
     }
@@ -154,7 +154,7 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
     std::string line;
     // Clear header.
     std::getline(activityStream, line);
-    uint32_t current_position = activityStream.tellg();
+    uint64_t current_position = activityStream.tellg();
     int lastPerson = -1;
     int lastTime = -1;
     int nextPerson = 0;
