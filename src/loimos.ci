@@ -189,7 +189,9 @@ mainmodule loimos {
         #ifdef USE_PROJECTIONS
           if (SHOULD_PROFILE(day)) {
             serial{traceArray.traceOff();}
-            when traceSwitchOff(){}
+            when traceSwitchOff(){
+              serial{traceArray.traceFlush();}
+            }
             
             // Toggled by USE_PROJECTIONS to group profiling code
             serial{traceArray.reportMemoryUsage();}
