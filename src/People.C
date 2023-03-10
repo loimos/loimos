@@ -148,6 +148,9 @@ void People::loadPeopleData() {
 } 
 
 void People::loadVisitData(std::ifstream *activityData) {
+  #ifdef ENABLE_DEBUG
+    int numVisits = 0;
+  #endif
   for (int day = 0; day < numDaysWithRealData; ++day) {
     int nextDaySecs = (day + 1) * DAY_LENGTH;
     for (Person &person: people) {
@@ -176,6 +179,9 @@ void People::loadVisitData(std::ifstream *activityData) {
         // Save visit info
         person.visitsByDay[day].emplace_back(locationId, personId, -1,
             visitStart, visitStart + visitDuration);
+        #ifdef ENABLE_DEBUG
+          numVisits++;
+        #endif
 
         std::tie(personId, locationId, visitStart, visitDuration) =
           DataReader<Person>::parseActivityStream(activityData,
@@ -183,6 +189,12 @@ void People::loadVisitData(std::ifstream *activityData) {
       }
     }
   }
+  #ifdef ENABLE_DEBUG
+    CkPrintf("    Chare %d (P %d, T %d): %d visits, %d people\n",
+      thisIndex, CkMyNode(), CkMyPe(), numVisits, (int) people.size());
+    CkCallback cb(CkReductionTarget(Main, ReceiveVisitsCount), mainProxy);
+    contribute(sizeof(int), &numVisits, CkReduction::sum_int, cb);
+  #endif
 }
 
 void People::pup(PUP::er &p) {

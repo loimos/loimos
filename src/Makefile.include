@@ -32,6 +32,10 @@ LIBS += -L$(PROTOBUF_HOME)/lib
 endif
 
 # Set the ENABLE_UNIT_TESTING environment variable to compile for unit testing
+ifdef ENABLE_DEBUG
+OPTS     += -DENABLE_DEBUG
+endif
+
 ifdef ENABLE_UNIT_TESTING
 INCLUDES +=	-I$(GTEST_HOME)/include
 LIBS     += -L$(GTEST_HOME)/lib -lgtest
