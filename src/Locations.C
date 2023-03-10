@@ -94,9 +94,9 @@ void Locations::loadLocationData() {
   }
   
   // Find starting line for our data through location cache.
-  locationCache.seekg(thisIndex * sizeof(uint32_t));
-  uint32_t locationOffset;
-  locationCache.read((char *) &locationOffset, sizeof(uint32_t));
+  locationCache.seekg(thisIndex * sizeof(uint64_t));
+  uint64_t locationOffset;
+  locationCache.read((char *) &locationOffset, sizeof(uint64_t));
   locationData.seekg(locationOffset);
 
   // Read in our location data.

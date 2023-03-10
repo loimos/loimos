@@ -189,6 +189,11 @@ mainmodule loimos {
     entry void SeedInfections();
     entry void StartComputingInteractions(); 
     entry void ComputedInteractions();
+    #ifdef ENABLE_DEBUG
+    entry [reductiontarget] void ReceiveVisitsCount(int visitsCount) {
+        serial{CkPrintf("  Loaded a total of %d visits\n", visitsCount);}
+    };
+    #endif // ENABLE_DEBUG
     entry [reductiontarget] void ReceiveInfectiousCount(int infectiousCount);
     entry [reductiontarget] void ReceiveStats(CkReductionMsg *summary);
     #ifdef USE_PROJECTIONS

@@ -30,7 +30,7 @@ class Person : public DataInterface {
         // Integer byte offsets in visits file by day.
         // For example, fseek(visitOffsetByDay[2]) would seek to the start
         // of this person's visits on day 3.
-        std::vector<uint32_t> visitOffsetByDay;
+        std::vector<uint64_t> visitOffsetByDay;
 
         // Holds visit messages for each day
         std::vector<std::vector<VisitMessage> > visitsByDay;

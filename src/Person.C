@@ -24,7 +24,7 @@ Person::Person(int numAttributes, int startingState, int timeLeftInState) {
     this->isIsolating = false;
     this->willComply = false;
     this->secondsLeftInState = timeLeftInState;
-    this->visitOffsetByDay = std::vector<uint32_t>();
+    this->visitOffsetByDay = std::vector<uint64_t>();
 
     // Create an entry for each day we have data for    
     this->visitsByDay = std::vector<std::vector<VisitMessage> >();
