@@ -183,13 +183,13 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
 
         elements[numDaysWithRealData * (lastPerson - firstPersonIdx) + lastTime] =
           current_position;
-        if (0 == lastPerson % 10000) {
+        //if (0 == lastPerson % 10000) {
         //  CkPrintf("  Setting person %d to read from %u on day %d\n",
         //      lastPerson, current_position, lastTime);
-          CkPrintf("  Person %d on day %d first visit (%u): %d to %d, at loc %d\n",
-              lastPerson, lastTime, current_position, nextTimeSec,
-              nextTimeSec + duration, locationId);
-        }
+        //  CkPrintf("  Person %d on day %d first visit (%u): %d to %d, at loc %d\n",
+        //      lastPerson, lastTime, current_position, nextTimeSec,
+        //      nextTimeSec + duration, locationId);
+        //}
 
         // Scan until the next boundary.
         while (!activityStream.eof()

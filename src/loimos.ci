@@ -90,17 +90,17 @@ mainmodule loimos {
       }
 
       for(day = 0; day < numDays; day++) {
-        serial{CkPrintf("  Starting iteration\n");}
-      #ifdef USE_PROJECTIONS
-        if (SHOULD_PROFILE(day)){
-          serial{traceArray.traceOn();}
-          when traceSwitchOn() {}
-        }
-      #endif
+        //serial{CkPrintf("  Starting iteration\n");}
+        #ifdef USE_PROJECTIONS
+          if (SHOULD_PROFILE(day)){
+            serial{traceArray.traceOn();}
+            when traceSwitchOn() {}
+          }
+        #endif
         serial {
           iterationStartTime = CkWallTimer();
 
-          CkPrintf("  Sending Visit Messages\n");
+          //CkPrintf("  Sending Visit Messages\n");
           // try adding fflush
           stepStartTime = CkWallTimer();
           peopleArray.SendVisitMessages();
@@ -109,9 +109,6 @@ mainmodule loimos {
             mainProxy
           ));
         }
-        when ReceiveVisitCount(int visitCount) {
-          serial{CkPrintf("  Total visit messages sent: %d\n", visitCount);}
-        }
         when StartComputingInteractions() {
           serial {
             double diff = CkWallTimer() - stepStartTime;
@@ -119,7 +116,7 @@ mainmodule loimos {
               diff);
             totalTime[TOTAL_VISITS_TIME_INDEX] += diff;
             
-            CkPrintf("  Compute Interactions\n");
+            //CkPrintf("  Compute Interactions\n");
             stepStartTime = CkWallTimer();
             locationsArray.ComputeInteractions();
             if (DAYS_TO_SEED_INFECTION > day) {
@@ -139,7 +136,7 @@ mainmodule loimos {
               diff);
             totalTime[TOTAL_INTERACTIONS_TIME_INDEX] += diff;
             
-            CkPrintf("  End of day state update starting\n");
+            //CkPrintf("  End of day state update starting\n");
             stepStartTime = CkWallTimer();
             peopleArray.EndOfDayStateUpdate();
           }
@@ -147,7 +144,7 @@ mainmodule loimos {
         when ReceiveInfectiousCount(int infectiousCount) {
           serial {
             double diff = CkWallTimer() - stepStartTime;
-            CkPrintf(" End of day state update and reduction took %fs\n",
+            CkPrintf("  End of day state update and reduction took %fs\n",
               diff);
             totalTime[TOTAL_EOD_UPDATE_TIME_INDEX] += diff;
             

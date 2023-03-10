@@ -49,7 +49,7 @@ People::People() {
     numPeoplePartitions,
     thisIndex
   );
-  
+
   double startTime = CkWallTimer();
 
   // Create real or fake people
@@ -71,9 +71,9 @@ People::People() {
       // We set persons next state to equal current state to signify
       // that they are not in a disease model progression.
       people[p].next_state = people[p].state;
-    } 
+    }
   } else {
-      int numAttributesPerPerson = 
+      int numAttributesPerPerson =
         DataReader<Person>::getNonZeroAttributes(diseaseModel->personDef);
       for (int p = 0; p < numLocalPeople; p++) {
         people.emplace_back(Person(numAttributesPerPerson,
@@ -84,7 +84,7 @@ People::People() {
       // Load in people data from file.
       loadPeopleData();
   }
-  
+
   //CkPrintf("  Chare %d took %f s to load people\n", thisIndex,
   //    CkWallTimer() - startTime);
 
@@ -98,7 +98,7 @@ People::People(CkMigrateMessage *msg) {}
 /**
  * Loads real people data from file.
  */
-void People::loadPeopleData() {  
+void People::loadPeopleData() {
   std::ifstream peopleData(scenarioPath + "people.csv");
   std::ifstream peopleCache(scenarioPath + scenarioId + "_people.cache", std::ios_base::binary);
   if (!peopleData || !peopleCache) {
@@ -116,7 +116,7 @@ void People::loadPeopleData() {
   peopleData.close();
   peopleCache.close();
 
-  // Open activity data and cache. 
+  // Open activity data and cache.
   std::ifstream activityData(scenarioPath + "visits.csv");
   std::ifstream activityCache(scenarioPath + scenarioId + "_interactions.cache", std::ios_base::binary);
   if (!activityData || !activityCache) {
@@ -149,16 +149,16 @@ void People::loadPeopleData() {
   loadVisitData(&activityData);
 
   activityData.close();
-} 
+}
 
 void People::loadVisitData(std::ifstream *activityData) {
   #ifdef ENABLE_DEBUG
     int numVisits = 0;
   #endif
-  for (int day = 0; day < numDaysWithRealData; ++day) {
-    int nextDaySecs = (day + 1) * DAY_LENGTH;
-    for (Person &person: people) {
-      
+  for (Person &person: people) {
+    for (int day = 0; day < numDaysWithRealData; ++day) {
+      int nextDaySecs = (day + 1) * DAY_LENGTH;
+
       // Seek to correct position in file.
       uint64_t seekPos = person
         .visitOffsetByDay[day % numDaysWithRealData];
@@ -170,21 +170,21 @@ void People::loadVisitData(std::ifstream *activityData) {
       activityData->seekg(seekPos, std::ios_base::beg);
 
       // Start reading
-      int personId = -1; 
+      int personId = -1;
       int locationId = -1;
       int visitStart = -1;
       int visitDuration = -1;
       std::tie(personId, locationId, visitStart, visitDuration) =
         DataReader<Person>::parseActivityStream(activityData,
             diseaseModel->activityDef, NULL);
-      
-      if (0 == personId % 10000) {
+
+      //if (0 == personId % 10000) {
       //  CkPrintf("  People chare %d, person %d reading from %u on day %d\n",
       //      thisIndex, person.uniqueId, seekPos, day);
-          CkPrintf("  Person %d (%d) on day %d first visit: %d to %d, at loc %d\n",
-              person.uniqueId, personId, day, visitStart, visitStart + visitDuration,
-              locationId);
-      }
+      //    CkPrintf("  Person %d (%d) on day %d first visit: %d to %d, at loc %d\n",
+      //        person.uniqueId, personId, day, visitStart, visitStart + visitDuration,
+      //        locationId);
+      //}
 
       // Seek while same person on same day
       while(personId == person.uniqueId && visitStart < nextDaySecs) {
@@ -225,7 +225,7 @@ void People::pup(PUP::er &p) {
 /**
  * Randomly generates an itinerary (number of visits to random locations)
  * for each person and sends visit messages to locations.
- */ 
+ */
 void People::SendVisitMessages() {
   totalVisitsForDay = 0;
   if (syntheticRun) {
@@ -237,7 +237,7 @@ void People::SendVisitMessages() {
 
 void People::SyntheticSendVisitMessages() {
   int totalNumVisits = 0;
-  
+
   // Model number of visits as a poisson distribution.
   std::poisson_distribution<int> num_visits_generator(LOCATION_LAMBDA);
 
@@ -297,7 +297,7 @@ void People::SyntheticSendVisitMessages() {
 
     // Randomly pick nearby location for person to visit.
     for (int j = 0; j < numVisits; j++) {
-      
+
       // Generate visit start and end times.
       int visitStart = times.top();
       times.pop();
@@ -327,7 +327,7 @@ void People::SyntheticSendVisitMessages() {
             numHops,
             synLocationGridHeight - 1 - homeY
         );
-       
+
         // Choose random number of hops in the X direction.
         std::uniform_int_distribution<int> dist_gen(-maxHopsNegativeX, maxHopsPositiveX);
         destinationOffsetX = dist_gen(generator);
@@ -337,7 +337,7 @@ void People::SyntheticSendVisitMessages() {
         if (numHops != 0) {
           // Choose a random direction between positive and negative
           std::uniform_int_distribution<int> dir_gen(0, 1);
-          
+
           if (dir_gen(generator) == 0) {
             // Offset positively in Y.
             destinationOffsetY = std::min(numHops, maxHopsPositiveY);
@@ -388,11 +388,7 @@ void People::SyntheticSendVisitMessages() {
       #ifdef USE_HYPERCOMM
       }
       #endif // USE_HYPERCOMM
-    } 
-  }
-  if (0 == day) {
-    CkPrintf("    Process %d, thread %d: %d visits, %d people\n",
-      CkMyNode(), CkMyPe(), totalNumVisits, people.size());
+    }
   }
 }
 
@@ -426,14 +422,11 @@ void People::RealDataSendVisitMessages() {
     }
   }
 
-  if (0 == day) {
-    CkPrintf("    Chare %d (P %d, T %d): %d visits, %d people (in [%d, %d])\n",
-      thisIndex, CkMyNode(), CkMyPe(), numVisits, (int) people.size(), minId,
-      maxId);
-  }
-  // contributing to reduction
-  CkCallback cb(CkReductionTarget(Main, ReceiveVisitCount), mainProxy);
-  contribute(sizeof(int), &numVisits, CkReduction::sum_int, cb);
+  //if (0 == day) {
+  //  CkPrintf("    Chare %d (P %d, T %d): %d visits, %d people (in [%d, %d])\n",
+  //    thisIndex, CkMyNode(), CkMyPe(), numVisits, (int) people.size(), minId,
+  //    maxId);
+  //}
 }
 
 void People::ReceiveInteractions(InteractionMessage interMsg) {
@@ -464,9 +457,9 @@ void People::EndOfDayStateUpdate() {
   int infectiousCount = 0;
   for (Person &person : people) {
     ProcessInteractions(person);
-    
+
     person.EndOfDayStateUpdate(diseaseModel, &generator);
-    
+
     int resultantState = person.state;
     stateSummaries[resultantState + offset + 1]++;
     if (diseaseModel->isInfectious(resultantState)) {
@@ -477,7 +470,7 @@ void People::EndOfDayStateUpdate() {
   // contributing to reduction
   CkCallback cb(CkReductionTarget(Main, ReceiveInfectiousCount), mainProxy);
   contribute(sizeof(int), &infectiousCount, CkReduction::sum_int, cb);
-  
+
   // Get ready for the next day
   day++;
 }
@@ -518,7 +511,7 @@ void People::ProcessInteractions(Person &person) {
     // Mark that exposed healthy individuals should make transition at the end
     // of the day.
     if (diseaseModel->isSusceptible(person.state)) {
-      person.secondsLeftInState = -1; 
+      person.secondsLeftInState = -1;
     }
   }
 
