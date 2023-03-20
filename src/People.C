@@ -50,7 +50,9 @@ People::People() {
     thisIndex
   );
 
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
   double startTime = CkWallTimer();
+#endif
 
   // Create real or fake people
   if (syntheticRun) {
@@ -85,8 +87,10 @@ People::People() {
       loadPeopleData();
   }
 
-  //CkPrintf("  Chare %d took %f s to load people\n", thisIndex,
-  //    CkWallTimer() - startTime);
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
+  CkPrintf("  Chare %d took %f s to load people\n", thisIndex,
+      CkWallTimer() - startTime);
+#endif
 
   // Notify Main
   mainProxy.CharesCreated();
@@ -163,8 +167,10 @@ void People::loadVisitData(std::ifstream *activityData) {
       uint64_t seekPos = person
         .visitOffsetByDay[day % numDaysWithRealData];
       if (seekPos == EMPTY_VISIT_SCHEDULE) {
+#ifdef ENABLE_DEBUG >= DEBUG_VERBOSE
         CkPrintf("  No visits on day %d in people chare %d\n", day, thisIndex);
         continue;
+#endif
       }
 
       activityData->seekg(seekPos, std::ios_base::beg);
@@ -178,13 +184,15 @@ void People::loadVisitData(std::ifstream *activityData) {
         DataReader<Person>::parseActivityStream(activityData,
             diseaseModel->activityDef, NULL);
 
-      //if (0 == personId % 10000) {
-      //  CkPrintf("  People chare %d, person %d reading from %u on day %d\n",
-      //      thisIndex, person.uniqueId, seekPos, day);
-      //    CkPrintf("  Person %d (%d) on day %d first visit: %d to %d, at loc %d\n",
-      //        person.uniqueId, personId, day, visitStart, visitStart + visitDuration,
-      //        locationId);
-      //}
+#ifdef ENABLE_DEBUG >= DEBUG_PER_OBJECT
+      if (0 == personId % 10000) {
+        CkPrintf("  People chare %d, person %d reading from %u on day %d\n",
+            thisIndex, person.uniqueId, seekPos, day);
+          CkPrintf("  Person %d (%d) on day %d first visit: %d to %d, at loc %d\n",
+              person.uniqueId, personId, day, visitStart, visitStart + visitDuration,
+              locationId);
+      }
+#endif
 
       // Seek while same person on same day
       while(personId == person.uniqueId && visitStart < nextDaySecs) {
@@ -201,9 +209,7 @@ void People::loadVisitData(std::ifstream *activityData) {
       }
     }
   }
-  #ifdef ENABLE_DEBUG
-    CkPrintf("    Chare %d (P %d, T %d): %d visits, %d people\n",
-      thisIndex, CkMyNode(), CkMyPe(), numVisits, (int) people.size());
+  #ifdef ENABLE_DEBUG >= DEBUG_PER_CHARE
     CkCallback cb(CkReductionTarget(Main, ReceiveVisitsCount), mainProxy);
     contribute(sizeof(int), &numVisits, CkReduction::sum_int, cb);
   #endif
@@ -256,8 +262,12 @@ void People::SyntheticSendVisitMessages() {
   int locationPartitionWidth = synLocalLocationGridWidth;
   int locationPartitionHeight = synLocalLocationGridHeight;
   int locationPartitionGridWidth = synLocationPartitionGridWidth;
-  //CkPrintf("location grid at each chare is %d by %d\r\n",
-  //  locationPartitionWidth, locationPartitionHeight);
+#ifdef ENABLE_DEBUG >= DEBUG_BASIC
+  if (0 == thisIndex) {
+    CkPrintf("location grid at each chare is %d by %d\r\n",
+      locationPartitionWidth, locationPartitionHeight);
+  }
+#endif
 
   // Choose one location partition for the people in this parition to call home
   int homePartitionIdx = thisIndex % numLocationPartitions;
@@ -362,11 +372,14 @@ void People::SyntheticSendVisitMessages() {
         + (destinationY % locationPartitionHeight) * locationPartitionWidth
         + partitionX * numLocationsPerPartition
         + partitionY * locationPartitionGridWidth * numLocationsPerPartition;
-      //CkPrintf(
-      //  "person %d will visit location (%d, %d) with offset (%d,%d)\r\n",
-      //  personIdx, destinationX, destinationY, destinationOffsetX, destinationOffsetY);
-      //  CkPrintf("(%d, %d) -> %d in partition (%d, %d)\r\n",
-      //    destinationX, destinationY, destinationIdx, partitionX, partitionY);
+
+#if ENABLE_DEBUG >= DEBUG_PER_OBJECT
+      CkPrintf(
+          "person %d will visit location (%d, %d) with offset (%d,%d)\r\n",
+          personIdx, destinationX, destinationY, destinationOffsetX, destinationOffsetY);
+      CkPrintf("(%d, %d) -> %d in partition (%d, %d)\r\n",
+          destinationX, destinationY, destinationIdx, partitionX, partitionY);
+#endif
 
       // Determine which chare tracks this location.
       int locationPartition = getPartitionIndex(
@@ -422,11 +435,13 @@ void People::RealDataSendVisitMessages() {
     }
   }
 
-  //if (0 == day) {
-  //  CkPrintf("    Chare %d (P %d, T %d): %d visits, %d people (in [%d, %d])\n",
-  //    thisIndex, CkMyNode(), CkMyPe(), numVisits, (int) people.size(), minId,
-  //    maxId);
-  //}
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
+  if (0 == day) {
+    CkPrintf("    Chare %d (P %d, T %d): %d visits, %d people (in [%d, %d])\n",
+      thisIndex, CkMyNode(), CkMyPe(), numVisits, (int) people.size(), minId,
+      maxId);
+  }
+#endif
 }
 
 void People::ReceiveInteractions(InteractionMessage interMsg) {

@@ -119,9 +119,10 @@ void Locations::loadLocationData() {
     contactModel->computeLocationValues(location);
   }
 
-
-  //CkPrintf("  Chare %d took %f s to load locations\n", thisIndex,
-  //    CkWallTimer() - startTime);
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
+  CkPrintf("  Chare %d took %f s to load locations\n", thisIndex,
+      CkWallTimer() - startTime);
+#endif
 }
 
 void Locations::pup(PUP::er &p) {
@@ -171,17 +172,21 @@ void Locations::ComputeInteractions() {
     loc.processEvents(diseaseModel, contactModel);
   }
 
-  //if (0 == day) {
-  //  CkPrintf("    Process %d, thread %d: %d visits, %d locations\n",
-  //    CkMyNode(), CkMyPe(), numVisits, (int) locations.size());
-  //}
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
+  if (0 == day) {
+    CkPrintf("    Process %d, thread %d: %d visits, %d locations\n",
+      CkMyNode(), CkMyPe(), numVisits, (int) locations.size());
+  }
+#endif
 
   day++;
 }
 
 #ifdef ENABLE_LB
 void Locations::ResumeFromSync() {
-  //CkPrintf("\tDone load balancing on location chare %d\n", thisIndex);
+#ifdef ENABLE_DEBUG >= DEBUG_PER_CHARE
+  CkPrintf("\tDone load balancing on location chare %d\n", thisIndex);
+#endif
 
   CkCallback cb(CkReductionTarget(Main, locationsLBComplete), mainProxy);
   contribute(cb);

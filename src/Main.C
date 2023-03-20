@@ -77,28 +77,28 @@ class TraceSwitcher : public CBase_TraceSwitcher {
   public:
     #ifdef USE_PROJECTIONS
     TraceSwitcher() : CBase_TraceSwitcher(){}
-    
+
     void traceOn(){
       traceBegin();
       contribute(CkCallback(CkReductionTarget(Main, traceSwitchOn),mainProxy));
     };
-    
+
     void traceOff(){
-      traceEnd();    
+      traceEnd();
       contribute(CkCallback(CkReductionTarget(Main, traceSwitchOff),mainProxy));
-    };   
-    
+    };
+
     void traceFlush(){
       traceEnd();
       traceFlushLog();
       traceBegin();
     };
-    
-    void reportMemoryUsage(){ 
+
+    void reportMemoryUsage(){
       // Find this process's memory usage
       struct rusage self_usage;
       getrusage(RUSAGE_SELF, &self_usage);
-      
+
       // Account for the fact that multiple threads may be run on this process
       self_usage.ru_maxrss /= CkNodeSize(CkMyNode());
 
@@ -106,22 +106,24 @@ class TraceSwitcher : public CBase_TraceSwitcher {
       long result[2];
       result[0] = pid;
       result[1] = self_usage.ru_maxrss;
-      
+
       CkCallback cb(CkReductionTarget(Main, printMemoryUsage), mainProxy);
       contribute(sizeof(long), &self_usage.ru_maxrss, CkReduction::sum_long, cb);
 
-      //CkPrintf("  Process %ld is using %ld kb\n",
-      //    (int) pid, self_usage.ru_maxrss);
+      #if ENABLE_DEBUG >= DEBUG_BY_CHARE
+        CkPrintf("  Process %ld is using %ld kb\n",
+            (int) pid, self_usage.ru_maxrss);
+      #endif
     };
     #endif // USE_PROJECTIONS
-   
+
     #ifdef ENABLE_LB
     void instrumentOn(){
       LBTurnInstrumentOn();
       contribute(CkCallback(CkReductionTarget(Main, instrumentSwitchOn),
             mainProxy));
     }
-    
+
     void instrumentOff(){
       LBTurnInstrumentOff();
       contribute(CkCallback(CkReductionTarget(Main, instrumentSwitchOff),
@@ -136,12 +138,14 @@ Main::Main(CkArgMsg* msg) {
     CkAbort("Error, usage %s <people> <locations> <people subsets> <location subsets> <days> <disease_model_path> <scenario_folder (optional)>\n", msg->argv[0]);
   }
 
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
   for (int i = 0; i < msg->argc; ++i) {
     CkPrintf("argv[%d]: %s\n", i, msg->argv[i]);
   }
-  
+#endif
+
   dataLoadingStartTime = CkWallTimer();
-  
+
   int argNum = 0;
   syntheticRun = atoi(msg->argv[++argNum]) == 1;
   int baseRunInfo = 0;
@@ -150,7 +154,7 @@ Main::Main(CkArgMsg* msg) {
     synPeopleGridWidth = atoi(msg->argv[++argNum]);
     synPeopleGridHeight = atoi(msg->argv[++argNum]);
     numPeople = synPeopleGridWidth * synPeopleGridHeight;
-    
+
     // Location data
     synLocationGridWidth = atoi(msg->argv[++argNum]);
     synLocationGridHeight = atoi(msg->argv[++argNum]);
@@ -160,14 +164,14 @@ Main::Main(CkArgMsg* msg) {
 
     // Edge degree.
     averageDegreeOfVisit = atoi(msg->argv[++argNum]);
-    
+
     // Chare data
     synLocationPartitionGridWidth = atoi(msg->argv[++argNum]);
     synLocationPartitionGridHeight = atoi(msg->argv[++argNum]);
     numLocationPartitions =
       synLocationPartitionGridWidth * synLocationPartitionGridHeight;
     numPeoplePartitions = atoi(msg->argv[++argNum]);
- 
+
     // Calculate the dimensions of the block of locations stored by each
     // location chare
     synLocalLocationGridWidth = -1;
@@ -186,7 +190,7 @@ Main::Main(CkArgMsg* msg) {
         synLocationPartitionGridWidth, synLocationPartitionGridHeight,
         synLocationGridWidth, synLocationGridHeight);
     }
-    
+
     numDays = atoi(msg->argv[++argNum]);
 
   } else {
@@ -197,17 +201,21 @@ Main::Main(CkArgMsg* msg) {
     numDays = atoi(msg->argv[++argNum]);
     numDaysWithRealData = atoi(msg->argv[++argNum]);
   }
-  
+
   pathToOutput = std::string(msg->argv[++argNum]);
+#ifdef ENABLE_DEBUG >= ENABLE_DEBUG
   CkPrintf("Saving simulation output to %s\n", msg->argv[argNum]);
+#endif
   std::string pathToDiseaseModel = std::string(msg->argv[++argNum]);
+#ifdef ENABLE_DEBUG >= ENABLE_DEBUG
   CkPrintf("Reading disease model from %s\n", msg->argv[argNum]);
+#endif
 
   // Handle both real data runs or runs using synthetic populations.
   if(syntheticRun) {
     firstPersonIdx = 0;
     firstLocationIdx = 0;
-  } else {    
+  } else {
     // Create data caches.
     scenarioPath = std::string(msg->argv[++argNum]);
     std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(
@@ -221,13 +229,13 @@ Main::Main(CkArgMsg* msg) {
   int interventionStategyLocation = -1;
   for (; argNum < msg->argc; ++argNum) {
     std::string tmp = std::string(msg->argv[argNum]);
-    
+
     // We can just use a flag for now in the CLI, since we only have two
     // models and that's easier to parse, but we may eventually have more,
     // which is why we use an enum to actually hold the model value
     if ("-m" == tmp or "--min-max-alpha" == tmp) {
       contactModelType = (int) ContactModelType::min_max_alpha;
-    
+
     } else if ("-i" == tmp && argNum + 1 < msg->argc) {
       interventionStategyLocation = ++argNum;
       interventionStategy = true;
@@ -249,20 +257,26 @@ Main::Main(CkArgMsg* msg) {
 #endif
 
   // Instantiate DiseaseModel nodegroup (One for each physical processor).
+#if ENABLE_DEBUG >= DEBUG_BASIC
   CkPrintf("Loading diseaseModel at %s.\n", pathToDiseaseModel.c_str());
+#endif
   if (interventionStategy) {
+#if ENABLE_DEBUG >= DEBUG_BASIC
     CkPrintf("intervention stategy index: %d\n", interventionStategyLocation);
+#endif
     globDiseaseModel = CProxy_DiseaseModel::ckNew(pathToDiseaseModel,
         scenarioPath, msg->argv[interventionStategyLocation]);
+#if ENABLE_DEBUG >= DEBUG_BASIC
     CkPrintf("Loading intervention at %s.\n",
         msg->argv[interventionStategyLocation]);
+#endif
 
   } else {
     globDiseaseModel = CProxy_DiseaseModel::ckNew(pathToDiseaseModel,
         scenarioPath, "");
     CkPrintf("Running with no intervention.\n");
   }
-  
+
   diseaseModel = globDiseaseModel.ckLocalBranch();
   accumulated.resize(diseaseModel->getNumberOfStates(), 0);
   delete msg;
@@ -272,7 +286,9 @@ Main::Main(CkArgMsg* msg) {
 
   // creating chare arrays
   if (!syntheticRun) {
+#if ENABLE_DEBUG >= DEBUG_BASIC
     CkPrintf("Loading people and locations from %s.\n", scenarioPath.c_str());
+#endif
   }
 
   chareCount = numPeoplePartitions; // Number of chare arrays/groups
@@ -342,14 +358,14 @@ void Main::CharesCreated() {
   if (++createdCount == chareCount) {
     CkPrintf("\nFinished loading people and location data in %lf seconds.\n",
         CkWallTimer() - dataLoadingStartTime);
-    
+
     mainProxy.run();
   }
 }
 
 void Main::SeedInfections() {
   std::default_random_engine generator(time(NULL));
-  
+
   // Determine all of the intitial infections on the first day so we can
   // guarentee they are unique (not checking this quickly runs into birthday
   // problem issues, even for sizable datasets)
@@ -372,7 +388,7 @@ void Main::SeedInfections() {
   for (int i = 0; i < INITIAL_INFECTIONS_PER_DAY; ++i) {
     int personIdx = initialInfections.back();
     initialInfections.pop_back();
-  
+
     int peoplePartitionIdx = getPartitionIndex(
       personIdx,
       numPeople,

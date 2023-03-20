@@ -31,11 +31,13 @@ else
 LIBS += -L$(PROTOBUF_HOME)/lib
 endif
 
-# Set the ENABLE_UNIT_TESTING environment variable to compile for unit testing
+# Set the ENABLE_DEBUG environment varibale to a positive integer to set a
+# level of debug printing
 ifdef ENABLE_DEBUG
-OPTS     += -DENABLE_DEBUG
+OPTS     += -DENABLE_DEBUG $(ENABLE_DEBUG)
 endif
 
+# Set the ENABLE_UNIT_TESTING environment variable to compile for unit testing
 ifdef ENABLE_UNIT_TESTING
 INCLUDES +=	-I$(GTEST_HOME)/include
 LIBS     += -L$(GTEST_HOME)/lib -lgtest
