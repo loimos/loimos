@@ -8,8 +8,8 @@
  * This file is responsible for building a file cache pre-simulation to allow
  * direct fseeking in files rather than slow iteration. Three caches are built
  * for each of the people, locations, and activities file. The cache is
- * dependent on the files given and the number of chares 
- */ 
+ * dependent on the files given and the number of chares
+ */
 
 #include <string>
 #include <iostream>
@@ -25,9 +25,9 @@
 
 #define MAX_WRITE_SIZE 65536 // 2^16
 
-/** 
+/**
  * This file preprocesses a given input file.
- */ 
+ */
 // TODO: Replace getline with function that doesn't need to copy to string object in subfunctions.
 std::tuple<int, int, std::string> buildCache(std::string scenarioPath, int numPeople, int peopleChares, int numLocations, int numLocationChares, int numDays) {
     // Build person and location cache.
@@ -41,13 +41,13 @@ std::tuple<int, int, std::string> buildCache(std::string scenarioPath, int numPe
 }
 
 int buildObjectLookupCache(std::string inputPath, std::string outputPath, int numObjs, int numChares, std::string pathToCsvDefinition) {
-    /** 
+    /**
      * Assumptions: (about person file)
      * -- Contigious block of IDs that are sorted.
-     * 
+     *
      * Creates a mapping from char number to byte offset that the reading should
      * commence from.
-     * 
+     *
      * Returns:
      *    int offset of lowest contigious block.
      */
@@ -88,7 +88,7 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath, int nu
     }
     int firstIdx = std::atoi(tok);
     free(str);
-        
+
     // Check if file cache already created.
     std::ifstream existenceCheck(outputPath, std::ios_base::binary);
     if (existenceCheck.good()) {
@@ -116,7 +116,7 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath, int nu
 
 void buildActivityCache(std::string inputPath, std::string outputPath, int numPeople, int numDays, int firstPersonIdx, std::string pathToCsvDefinition) {
     /**
-     * Assumptions. 
+     * Assumptions.
      * Stream is sorted by start time per person.
      */
     // Check if cache already created.
@@ -159,36 +159,53 @@ void buildActivityCache(std::string inputPath, std::string outputPath, int numPe
     int lastTime = -1;
     int nextPerson = 0;
     int nextTime = 0;
-    int personId = -1;
+    int nextTimeSec = 0;
+    int locationId = -1;
     int duration = -1;
-    //int totalVisits = 0;
+    int totalVisits = 0;
     // For better looping efficiency simulate one break of inner loop to start.
-    std::tie(nextPerson, personId, nextTime, duration) = DataReader<Person>::parseActivityStream(&activityStream, &csvDefinition, NULL);
+    std::tie(nextPerson, locationId, nextTime, duration) =
+      DataReader<Person>::parseActivityStream(&activityStream,
+          &csvDefinition, NULL);
+    nextTimeSec = nextTime;
     nextTime = getDay(nextTime);
 
     // Loop over the entire activity file and note boundaries on people and days
     int numVisits = 0;
     while (!activityStream.eof()) {
-        //CkPrintf("Person %d has %d visits on day %d (next byte is %d)\n",
+        //CkPrintf("Person %d has %d visits on day %d (next byte is %u)\n",
         //  lastPerson, numVisits, lastTime, current_position);
-        
+
         // Get details of new entry.
         lastPerson = nextPerson;
         lastTime = nextTime;
-        //numVisits = 0;
-        
-        elements[DAYS_IN_WEEK * (lastPerson - firstPersonIdx) + lastTime] = current_position;
+        numVisits = 0;
+
+        elements[numDaysWithRealData * (lastPerson - firstPersonIdx) + lastTime] =
+          current_position;
+        //if (0 == lastPerson % 10000) {
+        //  CkPrintf("  Setting person %d to read from %u on day %d\n",
+        //      lastPerson, current_position, lastTime);
+        //  CkPrintf("  Person %d on day %d first visit (%u): %d to %d, at loc %d\n",
+        //      lastPerson, lastTime, current_position, nextTimeSec,
+        //      nextTimeSec + duration, locationId);
+        //}
 
         // Scan until the next boundary.
-        while (!activityStream.eof() && lastTime == nextTime && lastPerson == nextPerson) {
+        while (!activityStream.eof()
+            && lastTime == nextTime
+            && lastPerson == nextPerson) {
+
             current_position = activityStream.tellg();
-            std::tie(nextPerson, personId, nextTime, duration) = DataReader<Person>::parseActivityStream(&activityStream, &csvDefinition, NULL);
+            std::tie(nextPerson, locationId, nextTime, duration) =
+              DataReader<Person>::parseActivityStream(&activityStream,
+                  &csvDefinition, NULL);
             nextTime = getDay(nextTime);
-            //numVisits++;
-            //totalVisits++;
+            numVisits++;
+            totalVisits++;
         }
     }
-    //CkPrintf("Parsed a total of %d visits\n", totalVisits);
+    CkPrintf("Parsed a total of %d visits\n", totalVisits);
 
     // Output
     std::ofstream outputStream(outputPath, std::ios::out | std::ios::binary);

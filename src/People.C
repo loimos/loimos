@@ -49,7 +49,11 @@ People::People() {
     numPeoplePartitions,
     thisIndex
   );
-  
+
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
+  double startTime = CkWallTimer();
+#endif
+
   // Create real or fake people
   if (syntheticRun) {
     // Make a default person and populate people with copies
@@ -69,9 +73,9 @@ People::People() {
       // We set persons next state to equal current state to signify
       // that they are not in a disease model progression.
       people[p].next_state = people[p].state;
-    } 
+    }
   } else {
-      int numAttributesPerPerson = 
+      int numAttributesPerPerson =
         DataReader<Person>::getNonZeroAttributes(diseaseModel->personDef);
       for (int p = 0; p < numLocalPeople; p++) {
         people.emplace_back(Person(numAttributesPerPerson,
@@ -83,10 +87,14 @@ People::People() {
       loadPeopleData();
   }
 
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
+  CkPrintf("  Chare %d took %f s to load people\n", thisIndex,
+      CkWallTimer() - startTime);
+#endif
+
   // Notify Main
-  #ifdef USE_HYPERCOMM
-  contribute(CkCallback(CkReductionTarget(Main, CharesCreated), mainProxy));
-  #endif
+  mainProxy.CharesCreated();
+  //contribute(CkCallback(CkReductionTarget(Main, CharesCreated), mainProxy));
 }
 
 People::People(CkMigrateMessage *msg) {}
@@ -94,7 +102,7 @@ People::People(CkMigrateMessage *msg) {}
 /**
  * Loads real people data from file.
  */
-void People::loadPeopleData() {  
+void People::loadPeopleData() {
   std::ifstream peopleData(scenarioPath + "people.csv");
   std::ifstream peopleCache(scenarioPath + scenarioId + "_people.cache", std::ios_base::binary);
   if (!peopleData || !peopleCache) {
@@ -112,7 +120,7 @@ void People::loadPeopleData() {
   peopleData.close();
   peopleCache.close();
 
-  // Open activity data and cache. 
+  // Open activity data and cache.
   std::ifstream activityData(scenarioPath + "visits.csv");
   std::ifstream activityCache(scenarioPath + scenarioId + "_interactions.cache", std::ios_base::binary);
   if (!activityData || !activityCache) {
@@ -145,34 +153,46 @@ void People::loadPeopleData() {
   loadVisitData(&activityData);
 
   activityData.close();
-} 
+}
 
 void People::loadVisitData(std::ifstream *activityData) {
   #ifdef ENABLE_DEBUG
     int numVisits = 0;
   #endif
-  for (int day = 0; day < numDaysWithRealData; ++day) {
-    int nextDaySecs = (day + 1) * DAY_LENGTH;
-    for (Person &person: people) {
-      
+  for (Person &person: people) {
+    for (int day = 0; day < numDaysWithRealData; ++day) {
+      int nextDaySecs = (day + 1) * DAY_LENGTH;
+
       // Seek to correct position in file.
       uint64_t seekPos = person
         .visitOffsetByDay[day % numDaysWithRealData];
       if (seekPos == EMPTY_VISIT_SCHEDULE) {
-        //CkPrintf("No visits on day %d in people chare %d\n", day, thisIndex);
+#ifdef ENABLE_DEBUG >= DEBUG_VERBOSE
+        CkPrintf("  No visits on day %d in people chare %d\n", day, thisIndex);
         continue;
+#endif
       }
 
       activityData->seekg(seekPos, std::ios_base::beg);
 
       // Start reading
-      int personId = -1; 
+      int personId = -1;
       int locationId = -1;
       int visitStart = -1;
       int visitDuration = -1;
       std::tie(personId, locationId, visitStart, visitDuration) =
         DataReader<Person>::parseActivityStream(activityData,
             diseaseModel->activityDef, NULL);
+
+#ifdef ENABLE_DEBUG >= DEBUG_PER_OBJECT
+      if (0 == personId % 10000) {
+        CkPrintf("  People chare %d, person %d reading from %u on day %d\n",
+            thisIndex, person.uniqueId, seekPos, day);
+          CkPrintf("  Person %d (%d) on day %d first visit: %d to %d, at loc %d\n",
+              person.uniqueId, personId, day, visitStart, visitStart + visitDuration,
+              locationId);
+      }
+#endif
 
       // Seek while same person on same day
       while(personId == person.uniqueId && visitStart < nextDaySecs) {
@@ -189,9 +209,7 @@ void People::loadVisitData(std::ifstream *activityData) {
       }
     }
   }
-  #ifdef ENABLE_DEBUG
-    CkPrintf("    Chare %d (P %d, T %d): %d visits, %d people\n",
-      thisIndex, CkMyNode(), CkMyPe(), numVisits, (int) people.size());
+  #ifdef ENABLE_DEBUG >= DEBUG_PER_CHARE
     CkCallback cb(CkReductionTarget(Main, ReceiveVisitsCount), mainProxy);
     contribute(sizeof(int), &numVisits, CkReduction::sum_int, cb);
   #endif
@@ -213,7 +231,7 @@ void People::pup(PUP::er &p) {
 /**
  * Randomly generates an itinerary (number of visits to random locations)
  * for each person and sends visit messages to locations.
- */ 
+ */
 void People::SendVisitMessages() {
   totalVisitsForDay = 0;
   if (syntheticRun) {
@@ -224,6 +242,8 @@ void People::SendVisitMessages() {
 }
 
 void People::SyntheticSendVisitMessages() {
+  int totalNumVisits = 0;
+
   // Model number of visits as a poisson distribution.
   std::poisson_distribution<int> num_visits_generator(LOCATION_LAMBDA);
 
@@ -242,8 +262,12 @@ void People::SyntheticSendVisitMessages() {
   int locationPartitionWidth = synLocalLocationGridWidth;
   int locationPartitionHeight = synLocalLocationGridHeight;
   int locationPartitionGridWidth = synLocationPartitionGridWidth;
-  //CkPrintf("location grid at each chare is %d by %d\r\n",
-  //  locationPartitionWidth, locationPartitionHeight);
+#ifdef ENABLE_DEBUG >= DEBUG_BASIC
+  if (0 == thisIndex) {
+    CkPrintf("location grid at each chare is %d by %d\r\n",
+      locationPartitionWidth, locationPartitionHeight);
+  }
+#endif
 
   // Choose one location partition for the people in this parition to call home
   int homePartitionIdx = thisIndex % numLocationPartitions;
@@ -279,9 +303,11 @@ void People::SyntheticSendVisitMessages() {
       times.push(time_dist(generator));
     }
 
+    totalNumVisits += numVisits;
+
     // Randomly pick nearby location for person to visit.
     for (int j = 0; j < numVisits; j++) {
-      
+
       // Generate visit start and end times.
       int visitStart = times.top();
       times.pop();
@@ -311,7 +337,7 @@ void People::SyntheticSendVisitMessages() {
             numHops,
             synLocationGridHeight - 1 - homeY
         );
-       
+
         // Choose random number of hops in the X direction.
         std::uniform_int_distribution<int> dist_gen(-maxHopsNegativeX, maxHopsPositiveX);
         destinationOffsetX = dist_gen(generator);
@@ -321,7 +347,7 @@ void People::SyntheticSendVisitMessages() {
         if (numHops != 0) {
           // Choose a random direction between positive and negative
           std::uniform_int_distribution<int> dir_gen(0, 1);
-          
+
           if (dir_gen(generator) == 0) {
             // Offset positively in Y.
             destinationOffsetY = std::min(numHops, maxHopsPositiveY);
@@ -346,11 +372,14 @@ void People::SyntheticSendVisitMessages() {
         + (destinationY % locationPartitionHeight) * locationPartitionWidth
         + partitionX * numLocationsPerPartition
         + partitionY * locationPartitionGridWidth * numLocationsPerPartition;
-      //CkPrintf(
-      //  "person %d will visit location (%d, %d) with offset (%d,%d)\r\n",
-      //  personIdx, destinationX, destinationY, destinationOffsetX, destinationOffsetY);
-      //  CkPrintf("(%d, %d) -> %d in partition (%d, %d)\r\n",
-      //    destinationX, destinationY, destinationIdx, partitionX, partitionY);
+
+#if ENABLE_DEBUG >= DEBUG_PER_OBJECT
+      CkPrintf(
+          "person %d will visit location (%d, %d) with offset (%d,%d)\r\n",
+          personIdx, destinationX, destinationY, destinationOffsetX, destinationOffsetY);
+      CkPrintf("(%d, %d) -> %d in partition (%d, %d)\r\n",
+          destinationX, destinationY, destinationIdx, partitionX, partitionY);
+#endif
 
       // Determine which chare tracks this location.
       int locationPartition = getPartitionIndex(
@@ -372,16 +401,22 @@ void People::SyntheticSendVisitMessages() {
       #ifdef USE_HYPERCOMM
       }
       #endif // USE_HYPERCOMM
-    } 
+    }
   }
 }
 
 void People::RealDataSendVisitMessages() {
   // Send activities for each person.
+  int numVisits = 0;
+  int minId = numPeople;
+  int maxId = 0;
   for (const Person &person: people) {
+    minId = std::min(minId, person.uniqueId);
+    maxId = std::max(maxId, person.uniqueId);
     for (VisitMessage visitMessage:
         person.visitsByDay[day % numDaysWithRealData]) {
       visitMessage.personState = person.state;
+      numVisits++;
 
       // Find process that owns that location
       int locationPartition = getPartitionIndex(visitMessage.locationIdx,
@@ -399,6 +434,14 @@ void People::RealDataSendVisitMessages() {
       #endif // USE_HYPERCOMM
     }
   }
+
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
+  if (0 == day) {
+    CkPrintf("    Chare %d (P %d, T %d): %d visits, %d people (in [%d, %d])\n",
+      thisIndex, CkMyNode(), CkMyPe(), numVisits, (int) people.size(), minId,
+      maxId);
+  }
+#endif
 }
 
 void People::ReceiveInteractions(InteractionMessage interMsg) {
@@ -429,9 +472,9 @@ void People::EndOfDayStateUpdate() {
   int infectiousCount = 0;
   for (Person &person : people) {
     ProcessInteractions(person);
-    
+
     person.EndOfDayStateUpdate(diseaseModel, &generator);
-    
+
     int resultantState = person.state;
     stateSummaries[resultantState + offset + 1]++;
     if (diseaseModel->isInfectious(resultantState)) {
@@ -442,7 +485,7 @@ void People::EndOfDayStateUpdate() {
   // contributing to reduction
   CkCallback cb(CkReductionTarget(Main, ReceiveInfectiousCount), mainProxy);
   contribute(sizeof(int), &infectiousCount, CkReduction::sum_int, cb);
-  
+
   // Get ready for the next day
   day++;
 }
@@ -483,7 +526,7 @@ void People::ProcessInteractions(Person &person) {
     // Mark that exposed healthy individuals should make transition at the end
     // of the day.
     if (diseaseModel->isSusceptible(person.state)) {
-      person.secondsLeftInState = -1; 
+      person.secondsLeftInState = -1;
     }
   }
 

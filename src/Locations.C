@@ -35,7 +35,7 @@ Locations::Locations() {
     numLocationPartitions,
     thisIndex
   );
-  
+
   // Init disease states
   diseaseModel = globDiseaseModel.ckLocalBranch();
 
@@ -63,12 +63,14 @@ Locations::Locations() {
   contribute(CkCallback(CkReductionTarget(Main, CharesCreated), mainProxy));
   #endif
 }
-    
+
 Locations::Locations(CkMigrateMessage *msg) {};
 
 void Locations::loadLocationData() {
+  double startTime = CkWallTimer();
+
   // Init local.
-  int numAttributesPerLocation = 
+  int numAttributesPerLocation =
     DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
   locations.reserve(numLocalLocations);
   int firstIdx = thisIndex * getNumLocalElements(numLocations, numLocationPartitions, 0);
@@ -92,7 +94,7 @@ void Locations::loadLocationData() {
   if (!locationData || !locationCache) {
     CkAbort("Could not open person data input.");
   }
-  
+
   // Find starting line for our data through location cache.
   locationCache.seekg(thisIndex * sizeof(uint64_t));
   uint64_t locationOffset;
@@ -116,6 +118,11 @@ void Locations::loadLocationData() {
   for (Location &location: locations) {
     contactModel->computeLocationValues(location);
   }
+
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
+  CkPrintf("  Chare %d took %f s to load locations\n", thisIndex,
+      CkWallTimer() - startTime);
+#endif
 }
 
 void Locations::pup(PUP::er &p) {
@@ -123,7 +130,7 @@ void Locations::pup(PUP::er &p) {
   p | locations;
   p | generator;
   p | day;
-  
+
   if (p.isUnpacking()) {
     diseaseModel = globDiseaseModel.ckLocalBranch();
     contactModel = new ContactModel();
@@ -136,7 +143,6 @@ void Locations::pup(PUP::er &p) {
 }
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
-  
   // adding person to location visit list
   int localLocIdx = getLocalIndex(
     visitMsg.locationIdx,
@@ -158,7 +164,7 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   locations[localLocIdx].addEvent(departure);
 }
 
-void Locations::ComputeInteractions() { 
+void Locations::ComputeInteractions() {
   // traverses list of locations
   int numVisits = 0;
   for (Location &loc : locations) {
@@ -166,15 +172,21 @@ void Locations::ComputeInteractions() {
     loc.processEvents(diseaseModel, contactModel);
   }
 
-  //CkPrintf("\tDay %d, process %d, thread %d: %d visits, %d locations\n",
-  //  day, CkMyNode(), CkMyPe(), numVisits, (int) locations.size());
-  
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
+  if (0 == day) {
+    CkPrintf("    Process %d, thread %d: %d visits, %d locations\n",
+      CkMyNode(), CkMyPe(), numVisits, (int) locations.size());
+  }
+#endif
+
   day++;
 }
 
 #ifdef ENABLE_LB
 void Locations::ResumeFromSync() {
-  //CkPrintf("\tDone load balancing on location chare %d\n", thisIndex);
+#ifdef ENABLE_DEBUG >= DEBUG_PER_CHARE
+  CkPrintf("\tDone load balancing on location chare %d\n", thisIndex);
+#endif
 
   CkCallback cb(CkReductionTarget(Main, locationsLBComplete), mainProxy);
   contribute(cb);

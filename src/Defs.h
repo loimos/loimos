@@ -7,6 +7,12 @@
 #ifndef __DEFS_H__
 #define __DEFS_H__
 
+// Debug levels
+#define DEBUG_BASIC 1
+#define DEBUG_VERBOSE 2
+#define DEBUG_PER_CHARE 3
+#define DEBUG_PER_OBJECT 4
+
 // Disease states
 #define SUSCEPTIBLE 0
 #define EXPOSED 1
@@ -62,6 +68,7 @@ extern /* readonly */ bool syntheticRun;
 extern /* readonly */ uint64_t totalVisits;
 extern /* readonly */ double simulationStartTime;
 extern /* readonly */ double iterationStartTime;
+extern /* readonly */ std::vector<double> totalTime;
 
 // For real data run.
 extern /* readonly */ std::string scenarioPath;

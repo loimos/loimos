@@ -10,7 +10,7 @@ mainmodule loimos {
   // Profiling/LB parameters (these are here because Defs.h depends on having
   // CBase_* classes defined, and these constants are only used in this file)
   #define PROFILING_START_DAY DAYS_IN_WEEK
-  #define PROFILING_INTERVAL 28
+  #define PROFILING_INTERVAL 3
   #define SHOULD_PROFILE(day) (day >= PROFILING_START_DAY &&\
     (day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0)
   
@@ -52,6 +52,14 @@ mainmodule loimos {
   readonly uint64_t totalVisits;
   readonly double simulationStartTime;
   readonly double iterationStartTime;
+  readonly double stepStartTime;
+  readonly std::vector<double> totalTime;
+
+  #define TOTAL_TIME_INDEX 0
+  #define TOTAL_VISITS_TIME_INDEX 1
+  #define TOTAL_INTERACTIONS_TIME_INDEX 2
+  #define TOTAL_EOD_UPDATE_TIME_INDEX 3
+  #define TOTAL_TIME_SIZE 4
 
   readonly int synPeopleGridWidth;
   readonly int synPeopleGridHeight;
@@ -67,28 +75,35 @@ mainmodule loimos {
 
   mainchare Main {
     entry Main(CkArgMsg*);
-    #ifdef USE_HYPERCOMM
     entry [reductiontarget] void CharesCreated();
-    #endif // USE_HYPERCOMM
     entry void run() {
       // We only want to collect instumentation on the main loop
       #ifdef ENABLE_LB
         serial{traceArray.instrumentOn();}
         when instrumentSwitchOn() {}
       #endif // ENABLE_LB
+   
+      serial{ 
+        totalTime.resize(TOTAL_TIME_SIZE, 0);
+        CkPrintf("Running ...\n\n");
+        simulationStartTime = CkWallTimer();
+      }
 
       for(day = 0; day < numDays; day++) {
-      #ifdef USE_PROJECTIONS
-        if (SHOULD_PROFILE(day)){
+        //serial{CkPrintf("  Starting iteration\n");}
+        #ifdef USE_PROJECTIONS
+          if (SHOULD_PROFILE(day)){
             serial{traceArray.traceOn();}
             when traceSwitchOn() {}
-        }
-      #endif
+          }
+        #endif
         serial {
           iterationStartTime = CkWallTimer();
-          // CkPrintf("Sending Visit Messages\n");
+
+          //CkPrintf("  Sending Visit Messages\n");
+          // try adding fflush
+          stepStartTime = CkWallTimer();
           peopleArray.SendVisitMessages();
-          // CkPrintf("QD Visit Messages\n");
           CkStartQD(CkCallback(
             CkIndex_Main::StartComputingInteractions(),
             mainProxy
@@ -96,9 +111,14 @@ mainmodule loimos {
         }
         when StartComputingInteractions() {
           serial {
-            // CkPrintf("Compute Interactions\n");
+            double diff = CkWallTimer() - stepStartTime;
+            CkPrintf("  Visit messages took %fs\n",
+              diff);
+            totalTime[TOTAL_VISITS_TIME_INDEX] += diff;
+            
+            //CkPrintf("  Compute Interactions\n");
+            stepStartTime = CkWallTimer();
             locationsArray.ComputeInteractions();
-            // CkPrintf("QD Compute Interactions\n");
             if (DAYS_TO_SEED_INFECTION > day) {
               SeedInfections();
             } 
@@ -111,12 +131,23 @@ mainmodule loimos {
         }
         when ComputedInteractions() {
           serial {
-            // CkPrintf("Reporting Stats\n");
+            double diff = CkWallTimer() - stepStartTime;
+            CkPrintf("  Interaction messages took %fs\n",
+              diff);
+            totalTime[TOTAL_INTERACTIONS_TIME_INDEX] += diff;
+            
+            //CkPrintf("  End of day state update starting\n");
+            stepStartTime = CkWallTimer();
             peopleArray.EndOfDayStateUpdate();
           }
         }
         when ReceiveInfectiousCount(int infectiousCount) {
           serial {
+            double diff = CkWallTimer() - stepStartTime;
+            CkPrintf("  End of day state update and reduction took %fs\n",
+              diff);
+            totalTime[TOTAL_EOD_UPDATE_TIME_INDEX] += diff;
+            
             // Use this count as desired here
             if (interventionStategy) {
               globDiseaseModel.toggleIntervention(infectiousCount);
@@ -157,22 +188,30 @@ mainmodule loimos {
 
         #ifdef USE_PROJECTIONS
           if (SHOULD_PROFILE(day)) {
-              serial{traceArray.traceOff();}
-              when traceSwitchOff(){}
-          }
-          
-          // Toggled by USE_PROJECTIONS to group profiling code
-          serial{traceArray.reportMemoryUsage();}
-          when printMemoryUsage(long usage) {
-            serial {
-              CkPrintf("Currently using %ld kb in total\n", usage);
+            serial{traceArray.traceOff();}
+            when traceSwitchOff(){
+              serial{traceArray.traceFlush();}
+            }
+            
+            // Toggled by USE_PROJECTIONS to group profiling code
+            serial{traceArray.reportMemoryUsage();}
+            when printMemoryUsage(long usage) {
+              serial {
+                CkPrintf("Currently using %ld kb in total\n", usage);
+              }
             }
           }
+          
         #endif // USE_PROJECTIONS
       }
       serial { 
-        CkPrintf("\nFinished data loading in %lf seconds.\n", simulationStartTime);
         CkPrintf("Finished simulating %d days in %lf seconds.\n", numDays, (CkWallTimer() - simulationStartTime));
+        CkPrintf("  Visit messages took %lf seconds\n",
+          totalTime[TOTAL_VISITS_TIME_INDEX]);
+        CkPrintf("  Interaction calculations and messages took %lf seconds\n",
+          totalTime[TOTAL_INTERACTIONS_TIME_INDEX]);
+        CkPrintf("  End of day update and reduction took %lf seconds\n",
+          totalTime[TOTAL_EOD_UPDATE_TIME_INDEX]);
         
         peopleArray.SendStats();
       }
