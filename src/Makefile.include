@@ -34,7 +34,7 @@ endif
 # Set the ENABLE_DEBUG environment varibale to a positive integer to set a
 # level of debug printing
 ifdef ENABLE_DEBUG
-OPTS     += -DENABLE_DEBUG $(ENABLE_DEBUG)
+OPTS     += -DENABLE_DEBUG=$(ENABLE_DEBUG)
 endif
 
 # Set the ENABLE_UNIT_TESTING environment variable to compile for unit testing
