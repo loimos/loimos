@@ -205,11 +205,11 @@ Main::Main(CkArgMsg* msg) {
   }
 
   pathToOutput = std::string(msg->argv[++argNum]);
-#ifdef ENABLE_DEBUG >= ENABLE_DEBUG
+#if ENABLE_DEBUG >= DEBUG_BASIC
   CkPrintf("Saving simulation output to %s\n", msg->argv[argNum]);
 #endif
   std::string pathToDiseaseModel = std::string(msg->argv[++argNum]);
-#ifdef ENABLE_DEBUG >= ENABLE_DEBUG
+#if ENABLE_DEBUG >= DEBUG_BASIC
   CkPrintf("Reading disease model from %s\n", msg->argv[argNum]);
 #endif
 

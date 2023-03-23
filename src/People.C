@@ -167,7 +167,7 @@ void People::loadVisitData(std::ifstream *activityData) {
       uint64_t seekPos = person
         .visitOffsetByDay[day % numDaysWithRealData];
       if (seekPos == EMPTY_VISIT_SCHEDULE) {
-#ifdef ENABLE_DEBUG >= DEBUG_VERBOSE
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
         CkPrintf("  No visits on day %d in people chare %d\n", day, thisIndex);
         continue;
 #endif
@@ -184,7 +184,7 @@ void People::loadVisitData(std::ifstream *activityData) {
         DataReader<Person>::parseActivityStream(activityData,
             diseaseModel->activityDef, NULL);
 
-#ifdef ENABLE_DEBUG >= DEBUG_PER_OBJECT
+#if ENABLE_DEBUG >= DEBUG_PER_OBJECT
       if (0 == personId % 10000) {
         CkPrintf("  People chare %d, person %d reading from %u on day %d\n",
             thisIndex, person.uniqueId, seekPos, day);
@@ -209,7 +209,7 @@ void People::loadVisitData(std::ifstream *activityData) {
       }
     }
   }
-  #ifdef ENABLE_DEBUG >= DEBUG_PER_CHARE
+  #if ENABLE_DEBUG >= DEBUG_PER_CHARE
     CkCallback cb(CkReductionTarget(Main, ReceiveVisitsCount), mainProxy);
     contribute(sizeof(int), &numVisits, CkReduction::sum_int, cb);
   #endif
@@ -262,7 +262,7 @@ void People::SyntheticSendVisitMessages() {
   int locationPartitionWidth = synLocalLocationGridWidth;
   int locationPartitionHeight = synLocalLocationGridHeight;
   int locationPartitionGridWidth = synLocationPartitionGridWidth;
-#ifdef ENABLE_DEBUG >= DEBUG_BASIC
+#if ENABLE_DEBUG >= DEBUG_BASIC
   if (0 == thisIndex) {
     CkPrintf("location grid at each chare is %d by %d\r\n",
       locationPartitionWidth, locationPartitionHeight);

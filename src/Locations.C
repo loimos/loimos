@@ -184,7 +184,7 @@ void Locations::ComputeInteractions() {
 
 #ifdef ENABLE_LB
 void Locations::ResumeFromSync() {
-#ifdef ENABLE_DEBUG >= DEBUG_PER_CHARE
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
   CkPrintf("\tDone load balancing on location chare %d\n", thisIndex);
 #endif
 
