@@ -137,7 +137,9 @@ Main::Main(CkArgMsg* msg) {
   if(msg->argc < 7){
     CkAbort("Error, usage %s <people> <locations> <people subsets> <location subsets> <days> <disease_model_path> <scenario_folder (optional)>\n", msg->argv[0]);
   }
-
+#ifdef ENABLE_DEBUG
+  CkPrintf("Debug printing enabled (verbosity at level %d)\n", ENABLE_DEBUG);
+#endif
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   for (int i = 0; i < msg->argc; ++i) {
     CkPrintf("argv[%d]: %s\n", i, msg->argv[i]);
