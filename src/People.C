@@ -455,11 +455,14 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
   // Just concatenate the interaction lists so that we can process all of the
   // interactions at the end of the day
   Person &person = people[localIdx];
-  person.interactions.insert(
-    person.interactions.end(),
-    interMsg.interactions.cbegin(),
-    interMsg.interactions.cend()
-  );
+  for (Interaction &interaction: interMsg.interactions) {
+    person.interactions.push_back(interaction);
+  }
+  //person.interactions.insert(
+  //  person.interactions.end(),
+  //  interMsg.interactions.cbegin(),
+  //  interMsg.interactions.cend()
+  //);
 }
 
 void People::EndOfDayStateUpdate() {
