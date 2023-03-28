@@ -12,6 +12,7 @@
 #include "disease_model/distribution.pb.h"
 #include "readers/DataReader.h"
 #include "readers/interventions.pb.h"
+#include "AttributeTable.h"
 
 #include "Event.h"
 #include "readers/data.pb.h"
@@ -74,6 +75,11 @@ class DiseaseModel : public CBase_DiseaseModel {
   bool shouldPersonIsolate(int healthState);
   bool isLocationOpen(std::vector<Data> *locAttr) const;
   bool complyingWithLockdown(std::default_random_engine *generator) const;
+
+  // Tables containing lookup information for attributes
+  AttributeTable personTable{1};
+  AttributeTable locationTable{0};
+  // Populate in diseaseModel constructor, don't define here
 };
 
 #endif  // DISEASEMODEL_H_

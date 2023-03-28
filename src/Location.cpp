@@ -22,10 +22,18 @@
 #include <algorithm>
 
 Location::Location(int numAttributes, int uniqueIdx,
-    std::default_random_engine *generator,
-    const DiseaseModel *diseaseModel) : unitDistrib(0, 1) {
-  if (numAttributes != 0) {
-    this->data.resize(numAttributes);
+    std::default_random_engine *generator, const DiseaseModel *diseaseModel) :
+  unitDistrib(0, 1) {
+  /*if (numAttributes != 0) {
+    this->locationData.resize(numAttributes);
+    }*/
+  int tableSize = diseaseModel->locationTable.size();
+  if (tableSize != 0) {
+    this->locationData.resize(tableSize);
+    for (int i = numAttributes; i < this->locationData.size(); i++) {
+      locationData[i] =
+        diseaseModel->locationTable.getDefaultValue(i - numAttributes);
+    }
   }
   day = 0;
   this->generator = generator;

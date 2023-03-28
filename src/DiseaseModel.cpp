@@ -21,6 +21,8 @@
 #include "disease_model/disease.pb.h"
 #include "disease_model/distribution.pb.h"
 #include "readers/interventions.pb.h"
+#include "AttributeTable.h"
+#include "Person.h"
 
 #include <cmath>
 #include <cstdio>
@@ -63,6 +65,11 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
   diseaseModelStream.close();
   assert(model->disease_states_size() != 0);
 
+
+
+  int personTableSize = 0;
+  int locationTableSize = 0;
+
   // Setup other shared PE objects.
   if (!syntheticRun) {
     // Handle people...
@@ -104,7 +111,17 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
       CkAbort("Could not parse activity protobuf!");
     }
     activityInputStream.close();
+
+    personTableSize += DataReader<Person>::getNonZeroAttributes(personDef);
+    locationTableSize += DataReader<Person>::getNonZeroAttributes(locationDef);
   }
+
+  //Read in other info besides size -- data type and dummy default value
+  personTable.resize(personTableSize);
+  locationTable.resize(locationTableSize);
+
+  personTable.populateTable("att");
+  locationTable.populateTable("att");
 
   if (interventionStategy) {
     interventionDef = new loimos::proto::Intervention();

@@ -27,6 +27,17 @@ Person::Person(int numAttributes, int startingState, int timeLeftInState) {
   this->willComply = false;
   this->secondsLeftInState = timeLeftInState;
   this->visitOffsetByDay = std::vector<uint64_t>();
+  DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
+
+  int tableSize = diseaseModel->personTable.size();
+  if (tableSize != 0) {
+    this->personData.resize(tableSize);
+    for (int i = numAttributes; i < this->personData.size(); i++) {
+      this->personData[i] =
+        diseaseModel->personTable.getDefaultValue(i - numAttributes);
+    }
+  }
+  // Treat file-read and realdata attributes same, no need to make distinction ^^^
 
   // Create an entry for each day we have data for
   this->visitsByDay.resize(numDaysWithRealData);

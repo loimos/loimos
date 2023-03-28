@@ -78,7 +78,6 @@ extern /* readonly */ std::vector<double> totalTime;
 extern /* readonly */ int firstPersonIdx;
 extern /* readonly */ int firstLocationIdx;
 
-extern /* readonly */ std::vector<double> attrInput;
 
 // For synthetic run.
 extern /* readonly */ int synPeopleGridWidth;
