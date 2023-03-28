@@ -54,6 +54,5 @@ extern /* readonly */ int averageDegreeOfVisit;
 
 // Intervention
 extern /* readonly */ bool interventionStategy;
-extern /* readonly */ std::vector<double> attrInput;
 
 #endif  // EXTERN_H_

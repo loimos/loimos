@@ -50,8 +50,6 @@ mainmodule loimos {
   readonly int numDays;
   readonly int numDaysWithRealData;
 
-  readonly std::vector<double> attrInput;
-
   readonly bool syntheticRun;
   readonly int contactModelType;
   readonly int maxSimVisitsIdx;

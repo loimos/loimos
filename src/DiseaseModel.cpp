@@ -67,6 +67,11 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
   diseaseModelStream.close();
   assert(model->disease_states_size() != 0);
 
+
+
+  int personTableSize = 0;
+  int locationTableSize = 0;
+
   // Setup other shared PE objects.
   if (!syntheticRun) {
     // Handle people...
@@ -134,6 +139,13 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     personTable.readAttributes(personDef->fields());
     locationTable.readAttributes(locationDef->fields());
   }
+
+  //Read in other info besides size -- data type and dummy default value
+  personTable.resize(personTableSize);
+  locationTable.resize(locationTableSize);
+
+  personTable.populateTable("att");
+  locationTable.populateTable("att");
 
   if (interventionStategy) {
     interventionDef = new loimos::proto::InterventionModel();
