@@ -1,2 +1,7 @@
-0 1.0
-1 0.55
+type name val at_type
+double prob 1.0 p
+double sym 0.55 l
+double sus 1.0 p
+double fac 0.55 l
+double coeff 1.0 l
+double test 0.55 l
