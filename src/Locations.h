@@ -7,9 +7,9 @@
 #ifndef __LOCATIONS_H__
 #define __LOCATIONS_H__
 
-#include "Location.h" 
+#include "Location.h"
 #include "DiseaseModel.h"
-#include "Location.h" 
+#include "Location.h"
 #include "contact_model/ContactModel.h"
 
 #include <vector>
@@ -26,11 +26,12 @@ class Locations : public CBase_Locations {
 
   public:
     Locations();
+    ~Locations();
     Locations(CkMigrateMessage *msg);
     void pup(PUP::er &p);
     void ReceiveVisitMessages(VisitMessage visitMsg);
     void ComputeInteractions(); // calls ReceiveInfections
-    
+
     // Load location data from CSV.
     void loadLocationData();
 

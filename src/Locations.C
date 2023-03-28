@@ -64,7 +64,13 @@ Locations::Locations() {
   #endif
 }
 
-Locations::Locations(CkMigrateMessage *msg) {};
+Locations::~Locations() {
+  delete contactModel;
+}
+
+Locations::Locations(CkMigrateMessage *msg) {
+  delete contactModel;
+};
 
 void Locations::loadLocationData() {
   double startTime = CkWallTimer();
@@ -111,7 +117,7 @@ void Locations::loadLocationData() {
   locationCache.close();
 
   // Init contact model
-  contactModel = new ContactModel();
+  contactModel = createContactModel();
   contactModel->setGenerator(&generator);
 
   // Let contact model add any attributes it needs to the locations

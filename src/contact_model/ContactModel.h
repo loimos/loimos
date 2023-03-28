@@ -26,7 +26,7 @@ class ContactModel {
     std::default_random_engine *generator;
     std::uniform_real_distribution<> unitDistrib;
     int contactProbabilityIndex;
-  
+
   public:
     ContactModel();
     // Explicitly create other default constructors and assignment operators
@@ -34,6 +34,7 @@ class ContactModel {
     ContactModel& operator=(const ContactModel &other) = default;
     ContactModel(ContactModel &&other) = default;
     ContactModel& operator=(ContactModel &&other) = default;
+    ~ContactModel() = default;
 
     void setGenerator(std::default_random_engine *generator);
     // Calculates any location-specific values and stores them as new
