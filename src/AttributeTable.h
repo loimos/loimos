@@ -5,16 +5,15 @@
 #include "readers/DataReader.h"
 #include <string>
 #include <vector>
-
+using namespace DataTypes;
 struct Attribute {
     union Data defaultValue;
-    std::string dataType;
-    std::string attributeType;
-    //get rid of attribute type -- not important with table distinction now
+    DataType dataType;
     std::string name;
     int index;
 };
 //Change dataTypes to enum in datareader.h
+
 
 class AttributeTable
 {
@@ -26,17 +25,17 @@ class AttributeTable
     Attribute getAttribute(int i);
     union Data getDefaultValue(int i) const;
     std::string getName(int i);
-    std::string getDataType(int i);
-    std::string getAttributeType(int i);
+    DataType getDataType(int i);
     bool getTableType(); 
     bool isPersonTable;
     void populateTable(std::string fname);
     int size() const;
     void updateIndex(int i, int newIndex);
     void resize(int size);
+    void readData(std::ifstream *input, loimos::proto::CSVDefinition *dataFormat);
 };
 
-Attribute createAttribute( union Data val,  std::string dtype,  std::string attype,  std::string name,  int location);
+Attribute createAttribute( union Data val,  DataType dtype, std::string name,  int location);
 
 
 

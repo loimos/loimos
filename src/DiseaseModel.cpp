@@ -141,8 +141,6 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
   }
 
   //Read in other info besides size -- data type and dummy default value
-  personTable.resize(personTableSize);
-  locationTable.resize(locationTableSize);
 
   personTable.populateTable("att");
   locationTable.populateTable("att");
