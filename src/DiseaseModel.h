@@ -27,12 +27,10 @@ class DiseaseModel : public CBase_DiseaseModel {
         // TODO(iancostello): Change these maps to be non-pointers.
         std::unordered_map<std::string, int> *stateLookup;
         // For each state index, map from stategy name string to index of strategy labels.
-        std::vector<std::unordered_map<std::string, int> *> *strategyLookup;  
+        std::vector<std::unordered_map<std::string, int> *> *strategyLookup;
         Time getTimeInNextState(const loimos::proto::DiseaseModel_DiseaseState_TimedTransitionSet_StateTransition *transitionSet, std::default_random_engine *generator) const;
         Time timeDefToSeconds(Time_Def time) const;
-        int healthyState;
-        int exposedState;
-        
+
         // Intervention related.
         bool interventionToggled;
     public:
