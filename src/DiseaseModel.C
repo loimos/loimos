@@ -5,13 +5,13 @@
  */
 
 /**
- * The disease model class 
- * 
+ * The disease model class
+ *
  * The disease model class provides the a timed finite state automata
- * 
- * This class provides an abstraction over the core proto definition. 
+ *
+ * This class provides an abstraction over the core proto definition.
  * .transition
- */ 
+ */
 
 #include "loimos.decl.h"
 #include "DiseaseModel.h"
@@ -35,8 +35,9 @@ using NameIndexLookupType = std::unordered_map<std::string, int>;
 // not everyone gets infected immediately given the small time units
 // (i.e. it normalizes for the size of the smallest time increment used
 // in the discrete event simulation and disease model)
-const long double TRANSMISSIBILITY = 7.5E-6 / DAY_LENGTH;
+//const long double TRANSMISSIBILITY = 7.5E-6 / DAY_LENGTH;
 //const long double TRANSMISSIBILITY = 4E-6 / DAY_LENGTH;
+const long double TRANSMISSIBILITY = 5E-8 / DAY_LENGTH;
 
 /**
  * Constructor which loads in disease file from text proto file.
@@ -103,7 +104,7 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     }
     activityInputStream.close();
   }
-  
+
   if (interventionStategy) {
     interventionDef = new loimos::proto::Intervention();
     std::ifstream interventionActivityStream(pathToIntervention);
@@ -118,7 +119,7 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     }
     interventionActivityStream.close();
   }
-  
+
   // Always toggle intervention off to start.
   interventionToggled = false;
 }
@@ -158,7 +159,7 @@ DiseaseModel::transitionFromState(int fromState,
     // Currently for timed transitions we only support one set edge.
     const loimos::proto::DiseaseModel_DiseaseState_TimedTransitionSet
       *transition_set = &(currState->timed_transition());
-    
+
     // Check if any transitions to be made.
     int transitionSetSize = transition_set->transition_size();
     if (transitionSetSize == 0) {
@@ -174,7 +175,7 @@ DiseaseModel::transitionFromState(int fromState,
       const loimos::proto::
         DiseaseModel_DiseaseState_TimedTransitionSet_StateTransition
         *transition = &transition_set->transition(i);
-      
+
       // TODO: Create a CDF vector in initialization.
       cdfSoFar += transition->with_prob();
       if (randomCutoff <= cdfSoFar) {
@@ -185,11 +186,11 @@ DiseaseModel::transitionFromState(int fromState,
     }
     // A state transition should be made.
     CkAbort("No state transition made! From state %d.", fromState);
-  
+
   } else if (currState->has_exposure_transition()) {
     return std::make_tuple(
         currState->exposure_transition().transition(0).next_state(), 0);
-  
+
     /*
     // If already infected then they are settling in this state so no transition.
     if (alreadyInfected) {
@@ -213,7 +214,7 @@ Time DiseaseModel::getTimeInNextState(
     DiseaseModel_DiseaseState_TimedTransitionSet_StateTransition
     *transitionSet,
     std::default_random_engine *generator) const {
-  
+
   if (transitionSet->has_fixed()) {
     return timeDefToSeconds(transitionSet->fixed().time_in_state());
 
@@ -237,10 +238,10 @@ Time DiseaseModel::getTimeInNextState(
     std::uniform_real_distribution<float> uniform_dist(0, 1);
     float randomCutoff = uniform_dist(*generator);
     float cdfSoFar = 0;
-    
+
     for (int i = 0; i < transitionSet->discrete().bin_size(); i++) {
       cdfSoFar += transitionSet->discrete().bin(i).with_prob();
-      
+
       if (randomCutoff < cdfSoFar) {
         return timeDefToSeconds(transitionSet->discrete().bin(i).tval());
       }
@@ -262,7 +263,7 @@ int DiseaseModel::getNumberOfStates() const {
 }
 
 /** Returns the initial starting healthy and exposed state */
-int DiseaseModel::getHealthyState(std::vector<Data> &dataField) const { 
+int DiseaseModel::getHealthyState(std::vector<Data> &dataField) const {
   int numStartingStates = model->starting_states_size();
 
   // Shouldn't need to check age if there's only one starting state
@@ -274,7 +275,7 @@ int DiseaseModel::getHealthyState(std::vector<Data> &dataField) const {
   } else if (AGE_CSV_INDEX >= dataField.size()) {
     CkAbort("No age data (needed for determinign healthy disease state\n");
   }
-  
+
   // Age based transition.
   int personAge = dataField[AGE_CSV_INDEX].int_b10;
   for (int stateNum = 0; stateNum < numStartingStates; stateNum++) {
@@ -351,7 +352,7 @@ double DiseaseModel::getPropensity(int susceptibleState, int infectiousState,
  */
 void DiseaseModel::toggleIntervention(int newDailyInfections) {
   if (!interventionToggled) {
-    if (static_cast<double>(newDailyInfections) / numPeople >= 
+    if (static_cast<double>(newDailyInfections) / numPeople >=
           interventionDef->newdailycasestriggeron()) {
       interventionToggled = true;
       printf("Intervention toggled!\n");
@@ -377,8 +378,8 @@ double DiseaseModel::getCompilance() const {
 
 /**
  * Only thing that causes person to self-isolate is if interventions are
- * triggered, that intervention imposes stay at home, and person is symptomatic. 
- */ 
+ * triggered, that intervention imposes stay at home, and person is symptomatic.
+ */
 bool DiseaseModel::shouldPersonIsolate(int healthState) {
   return interventionToggled
     && interventionDef->stayathome()
@@ -387,7 +388,7 @@ bool DiseaseModel::shouldPersonIsolate(int healthState) {
 
 /**
  * Location closed if it is a school and intervention is triggered.
- */ 
+ */
 bool DiseaseModel::isLocationOpen(std::vector<Data> *locAttr) const {
   return !(interventionToggled && interventionDef->schoolclosures() &&
    locAttr->at(interventionDef->csvlocationofschool()).int_b10 > 0);
