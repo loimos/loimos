@@ -1,4 +1,5 @@
 label: "H5N1"
+transmissibility: 6e-13
 
 disease_state: {
     state_label: "uninfected"

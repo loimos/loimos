@@ -19,13 +19,14 @@ import "distribution.proto";
 message DiseaseModel {
     // Defines the unique disease identifier.
     string label = 1;
+    double transmissibility = 2;
 
     message StartingCondition {
       int32 starting_state = 1;
       int32 lower = 2;
       int32 upper = 3;
     }
-    repeated StartingCondition starting_states = 2;
+    repeated StartingCondition starting_states = 3;
 
     // Defines a vertex in the graph and its outbound nodes.
     message DiseaseState {
