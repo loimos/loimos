@@ -17,7 +17,11 @@
 #include <fstream>
 #include <tuple>
 
-#define MAX_INPUT_lineLength (std::streamsize) 262144  // 2^18
+#define MAX_INPUT_lineLength (std::streamsize) 262144 // 2^18
+
+namespace DataTypes {
+    enum DataType { int_b10, uint_32, string, probability, category, boolean};
+}
 
 /**
  * Defines a generic data reader for any child class of DataInterface.
