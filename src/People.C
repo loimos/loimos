@@ -49,6 +49,8 @@ People::People() {
     numPeoplePartitions,
     thisIndex
   );
+  int firstPersonIdx = thisIndex * getNumElementsPerPartition(numPeople,
+      numPeoplePartitions);
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
   double startTime = CkWallTimer();
@@ -61,7 +63,6 @@ People::People() {
     people.resize(numLocalPeople, tmp);
 
     // Init peoples ids and randomly init ages.
-    int firstPersonIdx = thisIndex * (numPeople / numPeoplePartitions);
     std::uniform_int_distribution<int> age_dist(0, 100);
     for (int p = 0; p < numLocalPeople; p++) {
       Data age;

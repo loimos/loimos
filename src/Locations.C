@@ -73,7 +73,8 @@ void Locations::loadLocationData() {
   int numAttributesPerLocation =
     DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
   locations.reserve(numLocalLocations);
-  int firstIdx = thisIndex * getNumLocalElements(numLocations, numLocationPartitions, 0);
+  int firstIdx = thisIndex * getNumElementsPerPartition(numLocations,
+      numLocationPartitions);
   for (int p = 0; p < numLocalLocations; p++) {
     locations.emplace_back(numAttributesPerLocation, firstIdx + p, &generator, diseaseModel);
   }
