@@ -13,7 +13,7 @@
 
 /**
  * Defines attributes of a single person.
- */ 
+ */
 
 Person::Person(int numAttributes, int startingState, int timeLeftInState) {
     if (numAttributes != 0) {
@@ -26,9 +26,7 @@ Person::Person(int numAttributes, int startingState, int timeLeftInState) {
     this->secondsLeftInState = timeLeftInState;
     this->visitOffsetByDay = std::vector<uint64_t>();
 
-    // Create an entry for each day we have data for    
-    this->visitsByDay = std::vector<std::vector<VisitMessage> >();
-    //this->visitsByDay.reserve(numDaysWithRealData);
+    // Create an entry for each day we have data for
     this->visitsByDay.resize(numDaysWithRealData);
 }
 
@@ -60,9 +58,9 @@ void Person::EndOfDayStateUpdate(DiseaseModel *diseaseModel,
     // If they have already been infected
     if (next_state != -1) {
       state = next_state;
-      std::tie(next_state, secondsLeftInState) = 
+      std::tie(next_state, secondsLeftInState) =
         diseaseModel->transitionFromState(state, generator);
-        
+
       // Check if person will begin isolating.
       if (willComply) {
         isIsolating = diseaseModel->shouldPersonIsolate(state);
@@ -70,7 +68,7 @@ void Person::EndOfDayStateUpdate(DiseaseModel *diseaseModel,
 
     } else {
       // Get which exposed state they should transition to.
-      std::tie(state, std::ignore) = 
+      std::tie(state, std::ignore) =
         diseaseModel->transitionFromState(state, generator);
       // See where they will transition next.
       std::tie(next_state, secondsLeftInState) =
