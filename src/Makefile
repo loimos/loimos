@@ -101,7 +101,7 @@ test-intervention: all
 	./charmrun +p4 ./loimos 0 41119 19203 60 40 180 7 test-intervention.csv ../data/disease_models/covid19_onepath.textproto ../data/populations/coc/ -i ../data/interventions/isolation_and_school_closures.textproto ++local
 
 test-intervention-syn: all
-	./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 test-intervention-syn.csv ../data/disease_models/covid19_onepath.textproto -i ../data/interventions/only_isolation.text_proto ++local
+	./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 test-intervention-syn.csv ../data/disease_models/covid19_onepath.textproto -i ../data/interventions/only_isolation.textproto ++local
 
 clean-cache:
 	rm ../data/populations/coc/*.cache ../data/populations/synthetic_small_city/*.cache
