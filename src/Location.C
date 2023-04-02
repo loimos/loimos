@@ -51,7 +51,7 @@ void Location::setGenerator(std::default_random_engine *generator) {
   this->generator = generator;
 }
 
-// DataInterface overrides. 
+// DataInterface overrides.
 void Location::setUniqueId(int idx) {
   this->uniqueId = idx;
 }
@@ -88,10 +88,11 @@ void Location::processEvents(
 
       if (ARRIVAL == event.type) {
         arrivals->push_back(event);
-        std::push_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
+        std::push_heap(arrivals->begin(), arrivals->end(),
+            Event::greaterPartner);
 
       } else if (DEPARTURE == event.type) {
-        // Remove the arrival event corresponding to this departure 
+        // Remove the arrival event corresponding to this departure
         std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
         arrivals->pop_back();
 
@@ -115,7 +116,7 @@ inline void Location::onDeparture(
 
   } else if (diseaseModel->isInfectious(departure.personState)) {
     onInfectiousDeparture(diseaseModel, contactModel, departure);
-  } 
+  }
 }
 
 void Location::onSusceptibleDeparture(
@@ -137,10 +138,14 @@ void Location::onSusceptibleDeparture(
         susceptibleDeparture.partnerTime
       ),
       susceptibleDeparture.scheduledTime
-    ); 
+    );
   }
 
-  sendInteractions(susceptibleDeparture.personIdx);
+  // Don't send empty interaction messages
+  int personIdx = susceptibleDeparture.personIdx;
+  if (interactions.count(personIdx) && interactions[personIdx].size() > 0) {
+    sendInteractions(susceptibleDeparture.personIdx);
+  }
 }
 
 void Location::onInfectiousDeparture(
@@ -162,8 +167,8 @@ void Location::onInfectiousDeparture(
         infectiousDeparture.partnerTime
       ),
       infectiousDeparture.scheduledTime
-    ); 
-  } 
+    );
+  }
 }
 
 inline void Location::registerInteraction(
@@ -206,7 +211,8 @@ inline void Location::sendInteractions(int personIdx) {
     firstPersonIdx
   );
 
-  InteractionMessage interMsg(personIdx, interactions[personIdx]);
+  InteractionMessage *interMsg = new InteractionMessage(personIdx,
+      interactions[personIdx]);
   #ifdef USE_HYPERCOMM
   Aggregator* agg = aggregatorProxy.ckLocalBranch();
   if (agg->interact_aggregator) {
@@ -218,7 +224,7 @@ inline void Location::sendInteractions(int personIdx) {
   }
   #endif // USE_HYPERCOMM
 
-  /*  
+  /*
   CkPrintf(
     "sending %d interactions to person %d in partition %d\r\n",
     (int) interactions[personIdx].size(),
@@ -226,7 +232,7 @@ inline void Location::sendInteractions(int personIdx) {
     peoplePartitionIdx
   );
   */
-  
+
   // Free up space where we were storing interactions data. This also prevents
   // interactions from being sent multiple times if this person has multiple
   // visits to this location

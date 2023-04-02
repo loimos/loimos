@@ -10,7 +10,7 @@
 #include "DiseaseModel.h"
 #include "Interaction.h"
 #include "Person.h"
-#include "Message.h"
+//#include "Message.h"
 
 #include <random>
 #include <vector>
@@ -38,10 +38,10 @@ class People : public CBase_People {
     People();
     People(CkMigrateMessage *msg);
     void pup(PUP::er &p);
-    void SendVisitMessages(); 
+    void SendVisitMessages();
     void SyntheticSendVisitMessages();
     void RealDataSendVisitMessages();
-    void ReceiveInteractions(InteractionMessage interMsg);
+    void ReceiveInteractions(InteractionMessage *interMsg);
     void EndOfDayStateUpdate();
     void SendStats();
     #ifdef ENABLE_LB

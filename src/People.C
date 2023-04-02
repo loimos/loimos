@@ -197,8 +197,8 @@ void People::loadVisitData(std::ifstream *activityData) {
       // Seek while same person on same day
       while(personId == person.uniqueId && visitStart < nextDaySecs) {
         // Save visit info
-        person.visitsByDay[day].emplace_back(locationId, personId, -1,
-            visitStart, visitStart + visitDuration);
+        person.visitsByDay[day].emplace_back(locationId, visitStart,
+            visitStart + visitDuration);
         #ifdef ENABLE_DEBUG
           numVisits++;
         #endif
@@ -390,7 +390,8 @@ void People::SyntheticSendVisitMessages() {
       );
 
       // Send off visit message
-      VisitMessage visitMsg(destinationIdx, personIdx, p.state, visitStart, visitEnd);
+      VisitMessage *visitMsg = new VisitMessage(destinationIdx, personIdx,
+          p.state, visitStart, visitEnd);
       #ifdef USE_HYPERCOMM
       Aggregator* agg = aggregatorProxy.ckLocalBranch();
       if (agg->visit_aggregator) {
@@ -413,13 +414,13 @@ void People::RealDataSendVisitMessages() {
   for (const Person &person: people) {
     minId = std::min(minId, person.uniqueId);
     maxId = std::max(maxId, person.uniqueId);
-    for (VisitMessage visitMessage:
-        person.visitsByDay[day % numDaysWithRealData]) {
-      visitMessage.personState = person.state;
+    for (Visit visit: person.visitsByDay[day % numDaysWithRealData]) {
+      VisitMessage *visitMsg = new VisitMessage(visit.locationIdx,
+          person.uniqueId, person.state, visit.visitStart, visit.visitEnd);
       numVisits++;
 
       // Find process that owns that location
-      int locationPartition = getPartitionIndex(visitMessage.locationIdx,
+      int locationPartition = getPartitionIndex(visit.locationIdx,
           numLocations, numLocationPartitions, firstLocationIdx);
       // Send off the visit message.
       #ifdef USE_HYPERCOMM
@@ -428,7 +429,7 @@ void People::RealDataSendVisitMessages() {
         agg->visit_aggregator->send(locationsArray[locationPartition], visitMessage);
       } else {
       #endif // USE_HYPERCOMM
-        locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
+        locationsArray[locationPartition].ReceiveVisitMessages(visitMsg);
       #ifdef USE_HYPERCOMM
       }
       #endif // USE_HYPERCOMM
@@ -444,9 +445,9 @@ void People::RealDataSendVisitMessages() {
 #endif
 }
 
-void People::ReceiveInteractions(InteractionMessage interMsg) {
+void People::ReceiveInteractions(InteractionMessage *interMsg) {
   int localIdx = getLocalIndex(
-    interMsg.personIdx,
+    interMsg->personIdx,
     numPeople,
     numPeoplePartitions,
     firstPersonIdx
@@ -457,9 +458,10 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
   Person &person = people[localIdx];
   person.interactions.insert(
     person.interactions.end(),
-    interMsg.interactions.cbegin(),
-    interMsg.interactions.cend()
+    interMsg->interactions.cbegin(),
+    interMsg->interactions.cend()
   );
+  delete interMsg;
 }
 
 void People::EndOfDayStateUpdate() {
