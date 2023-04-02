@@ -30,13 +30,16 @@ class VisitMessage : public CMessage_VisitMessage {
 
 class InteractionMessage : public CMessage_InteractionMessage {
   public:
+    int locationIdx;
     int personIdx;
     std::vector<Interaction> interactions;
 
     InteractionMessage() {}
     InteractionMessage(CkMigrateMessage *msg) {}
-    InteractionMessage(int personIdx_, const std::vector<Interaction>& interactions_)
-      : personIdx(personIdx_), interactions(interactions_) {}
+    InteractionMessage(int locationIdx_, int personIdx_,
+        const std::vector<Interaction>& interactions_) :
+      locationIdx(locationIdx_), personIdx(personIdx_),
+      interactions(interactions_) {}
 
     //void pup(PUP::er& p) {
     //  p | personIdx;

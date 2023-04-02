@@ -372,7 +372,7 @@ void Main::SeedInfections() {
   // guarentee they are unique (not checking this quickly runs into birthday
   // problem issues, even for sizable datasets)
   if (0 == day) {
-    std::uniform_int_distribution<> personDistrib(0, numPeople);
+    std::uniform_int_distribution<> personDistrib(0, numPeople - 1);
     std::unordered_set<int> initialInfectionsSet;
     initialInfections.reserve(INITIAL_INFECTIONS);
     // Use set to check membership becuase it's faster and we can spare the
@@ -407,9 +407,10 @@ void Main::SeedInfections() {
       0,
       std::numeric_limits<int>::max()
     );
-
-    InteractionMessage *interMsg = new InteractionMessage(personIdx,
+    //CkPrintf("  Infecting person %d to seed outbreak\n", personIdx);
+    InteractionMessage *interMsg = new InteractionMessage(-1, personIdx,
         interactions);
+
     #ifdef USE_HYPERCOMM
     Aggregator* agg = aggregatorProxy.ckLocalBranch();
     if (agg->interact_aggregator) {

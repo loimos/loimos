@@ -211,7 +211,8 @@ inline void Location::sendInteractions(int personIdx) {
     firstPersonIdx
   );
 
-  InteractionMessage *interMsg = new InteractionMessage(personIdx,
+  //CkPrintf("  Loc %d sending message to person %d\n", uniqueId, personIdx);
+  InteractionMessage *interMsg = new InteractionMessage(uniqueId, personIdx,
       interactions[personIdx]);
   #ifdef USE_HYPERCOMM
   Aggregator* agg = aggregatorProxy.ckLocalBranch();
