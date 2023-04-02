@@ -12,23 +12,6 @@
 #include "readers/DataInterface.h"
 #include "readers/DataReader.h"
 
-struct Visit {
-  int locationIdx;
-  int visitStart;
-  int visitEnd;
-
-  Visit() = default;
-  Visit(CkMigrateMessage *msg) {}
-  Visit(int locationIdx_, int visitStart_, int visitEnd_) :
-    locationIdx(locationIdx_), visitStart(visitStart_), visitEnd(visitEnd_) {}
-  Visit(const Visit&) = default;
-  Visit(Visit&&) = default;
-  Visit& operator=(const Visit&) = default;
-  Visit& operator=(Visit&&) = default;
-  ~Visit() = default;
-};
-PUPbytes(Visit);
-
 class Person : public DataInterface {
     public:
         // Unique global identifier for a person.
@@ -50,8 +33,8 @@ class Person : public DataInterface {
         std::vector<uint64_t> visitOffsetByDay;
 
         // Holds visit messages for each day
-        std::vector<std::vector<Visit> > visitsByDay;
-
+        std::vector<std::vector<VisitMessage> > visitsByDay;
+        
         // Various dynamic attributes of the person
         std::vector<union Data> personData;
 

@@ -407,10 +407,8 @@ void Main::SeedInfections() {
       0,
       std::numeric_limits<int>::max()
     );
-    //CkPrintf("  Infecting person %d to seed outbreak\n", personIdx);
-    InteractionMessage *interMsg = new InteractionMessage(-1, personIdx,
-        interactions);
 
+    InteractionMessage interMsg(-1, personIdx, interactions);
     #ifdef USE_HYPERCOMM
     Aggregator* agg = aggregatorProxy.ckLocalBranch();
     if (agg->interact_aggregator) {

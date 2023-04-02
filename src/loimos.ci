@@ -5,6 +5,7 @@
 
 mainmodule loimos {
   include "Interaction.h";
+  include "Message.h";
   
   // Profiling/LB parameters (these are here because Defs.h depends on having
   // CBase_* classes defined, and these constants are only used in this file)
@@ -267,16 +268,11 @@ mainmodule loimos {
     entry Aggregator(AggregatorParam p1, AggregatorParam p2);
   };
   #endif // USE_HYPERCOMM
-  
-  message VisitMessage;
-  message InteractionMessage {
-    std::vector<Interaction> interactions;
-  };
 
   array [1D] People {
     entry People();
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
-    entry void ReceiveInteractions(InteractionMessage *);
+    entry void ReceiveInteractions(InteractionMessage);
     entry void EndOfDayStateUpdate(); // contribute call to ReceiveInfectiousCount
     entry void SendStats(); // contribute call to ReceiveStats
     entry void AtSync();
@@ -284,7 +280,7 @@ mainmodule loimos {
 
   array [1D] Locations {
     entry Locations();
-    entry void ReceiveVisitMessages(VisitMessage *);
+    entry void ReceiveVisitMessages(VisitMessage);
     entry void ComputeInteractions(); // calls ReceiveInteractions
     entry void AtSync();
   };

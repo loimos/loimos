@@ -88,8 +88,7 @@ void Location::processEvents(
 
       if (ARRIVAL == event.type) {
         arrivals->push_back(event);
-        std::push_heap(arrivals->begin(), arrivals->end(),
-            Event::greaterPartner);
+        std::push_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
 
       } else if (DEPARTURE == event.type) {
         // Remove the arrival event corresponding to this departure
@@ -141,11 +140,7 @@ void Location::onSusceptibleDeparture(
     );
   }
 
-  // Don't send empty interaction messages
-  int personIdx = susceptibleDeparture.personIdx;
-  if (interactions.count(personIdx) && interactions[personIdx].size() > 0) {
-    sendInteractions(susceptibleDeparture.personIdx);
-  }
+  sendInteractions(susceptibleDeparture.personIdx);
 }
 
 void Location::onInfectiousDeparture(
@@ -211,9 +206,7 @@ inline void Location::sendInteractions(int personIdx) {
     firstPersonIdx
   );
 
-  //CkPrintf("  Loc %d sending message to person %d\n", uniqueId, personIdx);
-  InteractionMessage *interMsg = new InteractionMessage(uniqueId, personIdx,
-      interactions[personIdx]);
+  InteractionMessage interMsg(uniqueId, personIdx, interactions[personIdx]);
   #ifdef USE_HYPERCOMM
   Aggregator* agg = aggregatorProxy.ckLocalBranch();
   if (agg->interact_aggregator) {

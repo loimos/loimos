@@ -27,8 +27,6 @@ Person::Person(int numAttributes, int startingState, int timeLeftInState) {
     this->visitOffsetByDay = std::vector<uint64_t>();
 
     // Create an entry for each day we have data for
-    this->visitsByDay = std::vector<std::vector<Visit> >();
-    //this->visitsByDay.reserve(numDaysWithRealData);
     this->visitsByDay.resize(numDaysWithRealData);
 }
 
