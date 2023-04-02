@@ -139,10 +139,10 @@ void Locations::pup(PUP::er &p) {
   }
 }
 
-void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
+void Locations::ReceiveVisitMessages(VisitMessage *visitMsg) {
   // adding person to location visit list
   int localLocIdx = getLocalIndex(
-    visitMsg.locationIdx,
+    visitMsg->locationIdx,
     numLocations,
     numLocationPartitions,
     firstLocationIdx
@@ -152,13 +152,17 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   //  visitMsg.locationIdx, localLocIdx, numLocalLocations);
 
   // Wrap vist info...
-  Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.personState, visitMsg.visitStart };
-  Event departure { DEPARTURE, visitMsg.personIdx, visitMsg.personState, visitMsg.visitEnd };
+  Event arrival { ARRIVAL, visitMsg->personIdx, visitMsg->personState,
+    visitMsg->visitStart };
+  Event departure { DEPARTURE, visitMsg->personIdx, visitMsg->personState,
+    visitMsg->visitEnd };
   Event::pair(&arrival, &departure);
 
   // ...and queue it up at the appropriate location
   locations[localLocIdx].addEvent(arrival);
   locations[localLocIdx].addEvent(departure);
+
+  delete visitMsg;
 }
 
 void Locations::ComputeInteractions() {
