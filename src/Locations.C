@@ -39,6 +39,14 @@ Locations::Locations() {
   // Init disease states
   diseaseModel = globDiseaseModel.ckLocalBranch();
 
+  // Seed random number generator via branch ID for reproducibility
+  generator.seed(time(NULL));
+  // generator.seed(thisIndex);
+
+  // Init contact model
+  contactModel = createContactModel();
+  contactModel->setGenerator(&generator);
+
   // Load application data
   if (syntheticRun) {
     locations.reserve(numLocalLocations);
@@ -49,14 +57,6 @@ Locations::Locations() {
   } else {
     loadLocationData();
   }
-
-  // Seed random number generator via branch ID for reproducibility
-  generator.seed(time(NULL));
-  // generator.seed(thisIndex);
-
-  // Init contact model
-  contactModel = createContactModel();
-  contactModel->setGenerator(&generator);
 
   // Notify Main
   #ifdef USE_HYPERCOMM
@@ -111,10 +111,6 @@ void Locations::loadLocationData() {
   locationData.close();
   locationCache.close();
 
-  // Init contact model
-  contactModel = new ContactModel();
-  contactModel->setGenerator(&generator);
-
   // Let contact model add any attributes it needs to the locations
   for (Location &location: locations) {
     contactModel->computeLocationValues(location);
@@ -134,7 +130,7 @@ void Locations::pup(PUP::er &p) {
 
   if (p.isUnpacking()) {
     diseaseModel = globDiseaseModel.ckLocalBranch();
-    contactModel = new ContactModel();
+    contactModel = createContactModel();
     contactModel->setGenerator(&generator);
 
     for (Location &loc: locations) {
