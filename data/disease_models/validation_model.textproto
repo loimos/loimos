@@ -1,4 +1,5 @@
 label: "Highly contagious test model"
+transmissibility: 6e-13
 
 starting_states: {
 	lower: 0

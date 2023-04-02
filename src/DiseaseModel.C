@@ -35,9 +35,6 @@ using NameIndexLookupType = std::unordered_map<std::string, int>;
 // not everyone gets infected immediately given the small time units
 // (i.e. it normalizes for the size of the smallest time increment used
 // in the discrete event simulation and disease model)
-//const long double TRANSMISSIBILITY = 7.5E-6 / DAY_LENGTH;
-//const long double TRANSMISSIBILITY = 4E-6 / DAY_LENGTH;
-const long double TRANSMISSIBILITY = 5E-8 / DAY_LENGTH;
 
 /**
  * Constructor which loads in disease file from text proto file.
@@ -316,7 +313,7 @@ double DiseaseModel::getLogProbNotInfected(Event susceptibleEvent,
   double baseProb =
     1.0 -
     // ...a scaling factor (normalizes based on the unit of time)...
-    TRANSMISSIBILITY
+    model->transmissibility()
     // ...the susceptibility of the susceptible person...
     * model->disease_state(susceptibleEvent.personState).susceptibility()
     // ...and the infectivity of the infectious person
@@ -341,7 +338,7 @@ double DiseaseModel::getPropensity(int susceptibleState, int infectiousState,
   // EpiHiper had a number of weights/scaling constants that we may add in
   // later, but for now we ommit most of them (which is equivalent to setting
   // them all to one)
-  return TRANSMISSIBILITY * dt
+  return model->transmissibility() * dt
     * model->disease_state(susceptibleState).susceptibility()
     * model->disease_state(infectiousState).infectivity();
 }
