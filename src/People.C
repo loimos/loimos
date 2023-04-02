@@ -456,12 +456,18 @@ void People::ReceiveInteractions(InteractionMessage *interMsg) {
 
   // Just concatenate the interaction lists so that we can process all of the
   // interactions at the end of the day
-  Person &person = people[localIdx];
-  person.interactions.insert(
-    person.interactions.end(),
-    interMsg->interactions.cbegin(),
-    interMsg->interactions.cend()
-  );
+  if (interMsg->interactions.size() > 0) {
+    Person &person = people[localIdx];
+    //if (person.interactions.size() == 0) {
+      //CkPrintf("  First %d interactions for person %d from loc %d\n",
+      //    interMsg->interactions.size(), person.uniqueId, interMsg->locationIdx);
+    //}
+    person.interactions.insert(
+      person.interactions.end(),
+      interMsg->interactions.cbegin(),
+      interMsg->interactions.cend()
+    );
+  }
   delete interMsg;
 }
 
