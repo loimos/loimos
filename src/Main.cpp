@@ -324,7 +324,6 @@ Main::Main(CkArgMsg* msg) {
       CkWallTimer() - dataLoadingStartTime);
 
   // Populating people and location tables with attributes from file
-  /*
   for (int i = 0; i < diseaseModel->personTable.size(); i++) {
     CkPrintf("Trait: %s, i: %d\n",
         diseaseModel->personTable.getName(i).c_str(), i);
@@ -333,7 +332,7 @@ Main::Main(CkArgMsg* msg) {
     CkPrintf("LTrait: %s, i: %d\n",
         diseaseModel->locationTable.getName(i).c_str(), i);
   }
-  */
+
 
   // creating chare arrays
   if (!syntheticRun) {

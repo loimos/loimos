@@ -112,16 +112,8 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     }
     activityInputStream.close();
 
-    int personTableSize = DataReader<Person>::getNonZeroAttributes(personDef);
-    int locationTableSize = DataReader<Person>::getNonZeroAttributes(locationDef);
-    std::ifstream peopleData(scenarioPath + "people.csv");
-    std::ifstream locationData(scenarioPath + "locations.csv");
-    personTable.resize(personTableSize);
-    locationTable.resize(locationTableSize);
-    personTable.readData(&peopleData, personDef);
-    locationTable.readData(&locationData, locationDef);
-    peopleData.close();
-    locationData.close();
+    personTable.readData(personDef);
+    locationTable.readData(locationDef);
   }
 
   //Read in other info besides size -- data type and dummy default value
