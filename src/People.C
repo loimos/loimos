@@ -25,8 +25,6 @@
 #include <fstream>
 
 std::uniform_real_distribution<> unitDistrib(0,1);
-#define ONE_ATTR 1
-#define DEFAULT_
 
 People::People() {
   //Must be set to true to make AtSync work
@@ -246,10 +244,10 @@ void People::SyntheticSendVisitMessages() {
   int totalNumVisits = 0;
 
   // Model number of visits as a poisson distribution.
-  std::poisson_distribution<int> num_visits_generator(LOCATION_LAMBDA);
+  std::poisson_distribution<int> num_visits_generator(averageDegreeOfVisit);
 
   // Model visit distance as poisson distribution.
-  std::poisson_distribution<int> visit_distance_generator(averageDegreeOfVisit);
+  std::poisson_distribution<int> visit_distance_generator(LOCATION_LAMBDA);
 
   // Model visit times as uniform.
   std::uniform_int_distribution<int> time_dist(0, DAY_LENGTH); // in seconds
