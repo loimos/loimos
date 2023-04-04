@@ -5,15 +5,15 @@
 #include "readers/DataReader.h"
 #include <string>
 #include <vector>
+
 using namespace DataTypes;
+
 struct Attribute {
     union Data defaultValue;
     DataType dataType;
     std::string name;
     int index;
 };
-//Change dataTypes to enum in datareader.h
-
 
 class AttributeTable
 {
@@ -32,11 +32,9 @@ class AttributeTable
     int size() const;
     void updateIndex(int i, int newIndex);
     void resize(int size);
-    void readData(std::ifstream *input, loimos::proto::CSVDefinition *dataFormat);
+    void readData(loimos::proto::CSVDefinition *dataFormat);
 };
 
 Attribute createAttribute( union Data val,  DataType dtype, std::string name,  int location);
-
-
 
 #endif
