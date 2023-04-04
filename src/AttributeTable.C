@@ -1,6 +1,9 @@
 #include "loimos.decl.h"
 #include "AttributeTable.h"
 #include "readers/data.pb.h"
+#include "readers/DataReader.h"
+#include "Person.h"
+#include "Location.h"
 #include <string>
 #include <vector>
 
@@ -85,65 +88,34 @@ void AttributeTable::populateTable(std::string fname) {
     }
 }
 
-void AttributeTable::readData(std::ifstream *input, loimos::proto::CSVDefinition *dataFormat) {
-            // TODO make this 2^16 and support longer lines through multiple reads.
-    char buf[MAX_INPUT_lineLength];
-        // Get next line.
-    input->getline(buf, MAX_INPUT_lineLength);
-
-    // Read over people data format.
-    int attrIndex = 0;
-    // Tracks how many non-ignored fields there have been.
-    int numDataFields = 0;
-    int leftCommaLocation = 0;
-
-
-    int lineLength = input->gcount();
-    for (int c = 0; c < lineLength; c++) {
-        // Scan for the next attrbiutes - comma separted.
-        if (buf[c] == CSV_DELIM || c + 1 == lineLength) {
-            // Get next attribute type.
-            CkPrintf("2ATTTABLESIZE %d attrindex %d\n", this->list.size(),attrIndex);
-            //loimos::proto::Data_Field const *field = &dataFormat->field(attrIndex);
-            uint16_t dataLen = c - leftCommaLocation;
-            /*
-            if (field->has_ignore() || dataLen == 0) {
-                // Skip
-            } else {
-                // Process data.
-                CkPrintf("4ATTTABLESIZE %d\n", this->list.size());
-                char *start = buf + leftCommaLocation;
-                if (c + 1 == lineLength) {
-                    dataLen += 1;
-                }
-                Attribute a;
+void AttributeTable::readData(loimos::proto::CSVDefinition *dataFormat) {
+    this->resize(DataReader<Person>::getNonZeroAttributes(dataFormat));
+    int attrInd = 0;
+    bool isPid = true;
+    for (int c = 0; c < dataFormat->field_size(); c++) {
+        if(!dataFormat->field(c).has_ignore()) {
+            if (!isPid) {
+                loimos::proto::Data_Field const *field = &dataFormat->field(c);
                 DataType dataEnum = int_b10;
                 Data d;
-                std::string name = "testName";
-                CkPrintf("5ATTTABLESIZE %d\n", this->list.size());
-              // Parse byte stream to the correct representation.
-                    CkPrintf("ATTRTABLEIND %d\n", numDataFields);
-                  if (field->has_b10int() || field->has_foreignid()) {
-                      // TODO parse this directly.
-                      d.int_b10 = std::stoi(std::string(start, dataLen));
-                      dataEnum = int_b10;
-                  } else if (field->has_label()) {
-                    d.str = new std::string(start, dataLen);
-                      dataEnum = string;
-                  } else if (field->has_bool_()) {
-                      if (dataLen == 1) {
-                          d.boolean = (start[0] == 't' || start[0] == '1');
-                      } else {
-                          d.boolean = false;
-                      }
-                  }
-                  this->list[numDataFields] = createAttribute(d,dataEnum,name,numDataFields);
-                  numDataFields++;
-            }*/
+                std::string name = field->field_name();
+                if (field->has_b10int() || field->has_foreignid()) {
+                    d.int_b10 = 1;
+                    dataEnum = int_b10;
+                } else if (field->has_label()) {
+                    d.str = new std::string("default");
+                    dataEnum = string;
+                } else if (field->has_bool_()) {
+                    d.boolean = true;
+                }
+                this->list[attrInd] = createAttribute(d,dataEnum,name,attrInd);
+                
+                attrInd++;
+            } else {
+                isPid = false;
+            }
         }
-            leftCommaLocation = c + 1;
-            attrIndex++;
-    }
+    }   
 }
 
 
