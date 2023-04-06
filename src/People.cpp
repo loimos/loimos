@@ -227,8 +227,8 @@ void People::loadVisitData(std::ifstream *activityData) {
       }
     }
   }
-  #if ENABLE_DEBUG >= DEBUG_PER_CHARE
-    CkCallback cb(CkReductionTarget(Main, ReceiveVisitsCount), mainProxy);
+  #if ENABLE_DEBUG >= DEBUG_VERBOSE
+    CkCallback cb(CkReductionTarget(Main, ReceiveVisitsLoadedCount), mainProxy);
     contribute(sizeof(int), &numVisits, CkReduction::sum_int, cb);
   #endif
 }
@@ -257,11 +257,11 @@ void People::SendVisitMessages() {
   } else {
     RealDataSendVisitMessages();
   }
+  CkCallback cb(CkReductionTarget(Main, ReceiveVisitsSentCount), mainProxy);
+  contribute(sizeof(int), &totalVisitsForDay, CkReduction::sum_int, cb);
 }
 
 void People::SyntheticSendVisitMessages() {
-  int totalNumVisits = 0;
-
   // Model number of visits as a poisson distribution.
   std::poisson_distribution<int> num_visits_generator(averageDegreeOfVisit);
 
@@ -315,8 +315,6 @@ void People::SyntheticSendVisitMessages() {
     for (int j = 0; j < 2 * numVisits; j++) {
       times.push(time_dist(generator));
     }
-
-    totalNumVisits += numVisits;
 
     // Randomly pick nearby location for person to visit.
     for (int j = 0; j < numVisits; j++) {
@@ -395,7 +393,8 @@ void People::SyntheticSendVisitMessages() {
         numLocationPartitions, firstLocationIdx);
 
       // Send off visit message
-      VisitMessage visitMsg(destinationIdx, personIdx, p.state, visitStart, visitEnd);
+      VisitMessage visitMsg(destinationIdx, personIdx, p.state, visitStart,
+          visitEnd);
       #ifdef USE_HYPERCOMM
       Aggregator* agg = aggregatorProxy.ckLocalBranch();
       if (agg->visit_aggregator) {
@@ -412,16 +411,19 @@ void People::SyntheticSendVisitMessages() {
 
 void People::RealDataSendVisitMessages() {
   // Send activities for each person.
-  int numVisits = 0;
+  #if ENABLE_DEBUG >= DEBUG_PER_CHARE
   int minId = numPeople;
   int maxId = 0;
-  for (const Person &person : people) {
-    minId = std::min(minId, person.getUniqueId());
-    maxId = std::max(maxId, person.getUniqueId());
-    for (VisitMessage visitMessage:
-        person.visitsByDay[day % numDaysWithRealData]) {
+  #endif
+  int dayIdx = day % numDaysWithRealData;
+  for (const Person &person: people) {
+    #if ENABLE_DEBUG >= DEBUG_PER_CHARE
+    minId = std::min(minId, person.uniqueId);
+    maxId = std::max(maxId, person.uniqueId);
+    #endif
+    for (VisitMessage visitMessage: person.visitsByDay[dayIdx]) {
       visitMessage.personState = person.state;
-      numVisits++;
+      totalVisitsForDay++;
 
       // Find process that owns that location
       int locationPartition = getPartitionIndex(visitMessage.locationIdx,
@@ -442,8 +444,8 @@ void People::RealDataSendVisitMessages() {
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
   if (0 == day) {
-    CkPrintf("    Chare %d (P %d, T %d): %d visits, %d people (in [%d, %d])\n",
-      thisIndex, CkMyNode(), CkMyPe(), numVisits, std::static_cast<int>(people.size()),
+    CkPrintf("    Chare %d (P %d, T %d): %d visits, %lu people (in [%d, %d])\n",
+        thisIndex, CkMyNode(), CkMyPe(), totalVisitsForDay, people.size(),
         minId, maxId);
   }
 #endif
@@ -471,26 +473,33 @@ void People::ReceiveIntervention(std::shared_ptr<Intervention> intervention) {
 void People::EndOfDayStateUpdate() {
   // Get ready to count today's states
   int totalStates = diseaseModel->getNumberOfStates();
-  int offset = (totalStates + 1) * day;
+  int offset = (totalStates + 2) * day;
   stateSummaries[offset] = totalVisitsForDay;
 
   // Handle state transitions at the end of the day.
   int infectiousCount = 0;
+  int totalInteractionsForDay = 0;
   for (Person &person : people) {
+    totalInteractionsForDay += person.interactions.size();
     ProcessInteractions(&person);
 
     person.EndOfDayStateUpdate(diseaseModel, &generator);
 
     int resultantState = person.state;
-    stateSummaries[resultantState + offset + 1]++;
+    stateSummaries[resultantState + offset + 2]++;
     if (diseaseModel->isInfectious(resultantState)) {
       infectiousCount++;
     }
   }
+  stateSummaries[offset + 1] = totalInteractionsForDay;
 
   // contributing to reduction
   CkCallback cb(CkReductionTarget(Main, ReceiveInfectiousCount), mainProxy);
   contribute(sizeof(int), &infectiousCount, CkReduction::sum_int, cb);
+  CkCallback interCb(CkReductionTarget(Main, ReceiveInteractionsCount),
+      mainProxy);
+  contribute(sizeof(int), &totalInteractionsForDay, CkReduction::sum_int,
+      interCb);
 
   // Get ready for the next day
   day++;

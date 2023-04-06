@@ -52,6 +52,7 @@ mainmodule loimos {
   readonly int firstLocationIdx;
 
   readonly uint64_t totalVisits;
+  readonly uint64_t totalInteractions;
   readonly double simulationStartTime;
   readonly double iterationStartTime;
   readonly double stepStartTime;
@@ -87,8 +88,10 @@ mainmodule loimos {
         serial{traceArray.instrumentOn();}
         when instrumentSwitchOn() {}
       #endif // ENABLE_LB
-
+   
       serial{
+        totalVisits = 0;
+        totalInteractions = 0;
         totalTime.resize(TOTAL_TIME_SIZE, 0);
         CkPrintf("Running ...\n\n");
         simulationStartTime = CkWallTimer();
@@ -209,6 +212,8 @@ mainmodule loimos {
       }
       serial {
         CkPrintf("Finished simulating %d days in %lf seconds.\n", numDays, (CkWallTimer() - simulationStartTime));
+        CkPrintf("  Processed a total of %lu visits and %lu interactions\n",
+          totalVisits, totalInteractions);
         CkPrintf("  Visit messages took %lf seconds\n",
           totalTime[TOTAL_VISITS_TIME_INDEX]);
         CkPrintf("  Interaction calculations and messages took %lf seconds\n",
@@ -233,10 +238,17 @@ mainmodule loimos {
     entry void StartComputingInteractions();
     entry void ComputedInteractions();
     #ifdef ENABLE_DEBUG
-    entry [reductiontarget] void ReceiveVisitsCount(int visitsCount) {
-        serial{CkPrintf("  Loaded a total of %d visits\n", visitsCount);}
+    entry [reductiontarget] void ReceiveVisitsLoadedCount(int visitsCount) {
+      serial{CkPrintf("  Loaded a total of %d visits\n", visitsCount);}
     };
     #endif // ENABLE_DEBUG
+    entry [reductiontarget] void ReceiveVisitsSentCount(int count) {
+      serial{totalVisits += count;}
+    };
+    entry [reductiontarget] void ReceiveInteractionsCount(int count) {
+      serial{totalInteractions += count;}
+      serial{CkPrintf("  Processed %d interactions\n", count);}
+    };
     entry [reductiontarget] void ReceiveInfectiousCount(int infectiousCount);
     entry [reductiontarget] void ReceiveStats(CkReductionMsg *summary);
     #ifdef ENABLE_TRACING

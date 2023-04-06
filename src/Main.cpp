@@ -55,6 +55,7 @@
 /* readonly */ int firstPersonIdx;
 /* readonly */ int firstLocationIdx;
 /* readonly */ uint64_t totalVisits;
+/* readonly */ uint64_t totalInteractions;
 /* readonly */ double simulationStartTime;
 /* readonly */ double iterationStartTime;
 /* readonly */ double stepStartTime;
@@ -450,26 +451,32 @@ void Main::SaveStats(int *data) {
   // Write header row
   outFile << "day,state,total_in_state,change_in_state" << std::endl;
 
+  uint64_t numVisits = 0;
+  uint64_t numInteractions = 0;
   for (day = 0; day < numDays; ++day, data += numDiseaseStates + 1) {
-    // Get total visits for the day.
-    totalVisits += data[0];
+    // Not relaible counter; unclear why
+    // Get num visits for the day.
+    numVisits += (uint64_t) data[0];
+    numInteractions += (uint64_t) data[1];
 
     // Get number of disease state changes.
     for (int i = 0; i < numDiseaseStates; i++) {
-      int total_in_state = data[i + 1];
-      int change_in_state = total_in_state - accumulated[i];
-      if (total_in_state != 0 || change_in_state != 0) {
+      int num_in_state = data[i + 2];
+      int change_in_state = num_in_state - accumulated[i];
+      if (num_in_state != 0 || change_in_state != 0) {
         // Write out data for state on that day
         outFile << day << ","
           << diseaseModel->lookupStateName(i) << ","
-          << total_in_state << ","
+          << num_in_state << ","
           << change_in_state << std::endl;
       }
-      accumulated[i] = total_in_state;
+      accumulated[i] = num_in_state;
     }
   }
 
   outFile.close();
+  CkPrintf("  Found %lu visits and %lu interactions in summaries\n",
+      numVisits, numInteractions);
 }
 
 #include "loimos.def.h"
