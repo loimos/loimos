@@ -27,8 +27,9 @@ class MinMaxAlphaModel : public ContactModel {
   // we can override them
   MinMaxAlphaModel();
   void computeLocationValues(Location *location) override;
-  bool madeContact(const Event& susceptibleEvent,
-    const Event& infectiousEvent, const Location& location) override;
+  bool madeContact(const Event &susceptibleEvent,
+    const Event& infectiousEvent, const Location &location) override;
+  double getContactProbability(const Location &location) const override;
 };
 
 #endif  // CONTACT_MODEL_MINMAXALPHAMODEL_H_

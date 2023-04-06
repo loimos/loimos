@@ -33,9 +33,13 @@ void ContactModel::setGenerator(std::default_random_engine *generator) {
 void ContactModel::computeLocationValues(Location *location) {}
 
 // Just use a constant probability
-bool ContactModel::madeContact(const Event& susceptibleEvent,
-  const Event& infectiousEvent, const Location& location) {
+bool ContactModel::madeContact(const Event &susceptibleEvent,
+  const Event &infectiousEvent, const Location &location) {
   return unitDistrib(*generator) < DEFAULT_CONTACT_PROBABILITY;
+}
+
+double ContactModel::getContactProbability(const Location &location) const {
+  return DEFAULT_CONTACT_PROBABILITY;
 }
 
 ContactModel *createContactModel() {

@@ -120,7 +120,7 @@ int Location::processEvents(
   interactions.clear();
   day++;
 
-  return numInteractions;
+  return contactModel->getContactProbability(*this) * numInteractions;
 }
 
 // Simple dispatch to the susceptible/infectious depature handlers
