@@ -251,15 +251,14 @@ void People::pup(PUP::er &p) {
  * for each person and sends visit messages to locations.
  */
 void People::SendVisitMessages() {
-#ifdef ENABLE_DEBUG >= DEBUG_VERBOSE
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
   totalVisitsForDay = 0;
 #endif
   if (syntheticRun) {
     SyntheticSendVisitMessages();
   } else {
     RealDataSendVisitMessages();
-  }
-#ifdef ENABLE_DEBUG >= DEBUG_VERBOSE
+ #if ENABLE_DEBUG >= DEBUG_VERBOSE
   CkCallback cb(CkReductionTarget(Main, ReceiveVisitsSentCount), mainProxy);
   contribute(sizeof(int), &totalVisitsForDay, CkReduction::sum_int, cb);
 #endif
@@ -427,7 +426,7 @@ void People::RealDataSendVisitMessages() {
     #endif
     for (VisitMessage visitMessage: person.visitsByDay[dayIdx]) {
       visitMessage.personState = person.state;
-      #ifdef DEBUG_VERBOSE
+      #if ENABLE_DEBUG >= DEBUG_VERBOSE
       totalVisitsForDay++;
       #endif
 
@@ -486,7 +485,7 @@ void People::EndOfDayStateUpdate() {
   int infectiousCount = 0;
   int totalExposuresPerDay = 0;
   for (Person &person : people) {
-#ifdef ENABLE_DEBUG >= DEBUG_VERBOSE
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
     totalExposuresPerDay += person.interactions.size();
 #endif
     ProcessInteractions(&person);
@@ -504,7 +503,7 @@ void People::EndOfDayStateUpdate() {
   // contributing to reduction
   CkCallback cb(CkReductionTarget(Main, ReceiveInfectiousCount), mainProxy);
   contribute(sizeof(int), &infectiousCount, CkReduction::sum_int, cb);
-#ifdef ENABLE_DEBUG >= DEBUG_VERBOSE
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
   CkCallback expCb(CkReductionTarget(Main, ReceiveExposuresCount), mainProxy);
   contribute(sizeof(int), &totalExposuresPerDay, CkReduction::sum_int, expCb);
 #endif
