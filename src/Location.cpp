@@ -66,7 +66,7 @@ void Location::addEvent(Event e) {
   events.push_back(e);
 }
 
-int Location::processEvents(
+uint64_t Location::processEvents(
   const DiseaseModel *diseaseModel,
   ContactModel *contactModel
 ) {

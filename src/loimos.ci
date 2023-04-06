@@ -244,9 +244,9 @@ mainmodule loimos {
     entry [reductiontarget] void ReceiveVisitsSentCount(int count) {
       serial{totalVisits += count;}
     };
-    entry [reductiontarget] void ReceiveInteractionsCount(int count) {
+    entry [reductiontarget] void ReceiveInteractionsCount(uint64_t count) {
       serial{totalInteractions += count;}
-      serial{CkPrintf("  Processed %d interactions\n", count);}
+      serial{CkPrintf("  Processed %lu interactions\n", count);}
     };
     entry [reductiontarget] void ReceiveExposuresCount(int count) {
       serial{totalExposures += count;}
