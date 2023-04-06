@@ -56,6 +56,7 @@
 /* readonly */ int firstLocationIdx;
 /* readonly */ uint64_t totalVisits;
 /* readonly */ uint64_t totalInteractions;
+/* readonly */ uint64_t totalExposures;
 /* readonly */ double simulationStartTime;
 /* readonly */ double iterationStartTime;
 /* readonly */ double stepStartTime;
@@ -475,8 +476,8 @@ void Main::SaveStats(int *data) {
   }
 
   outFile.close();
-  CkPrintf("  Found %lu visits and %lu interactions in summaries\n",
-      numVisits, numInteractions);
+  //CkPrintf("  Found %lu visits and %lu interactions in summaries\n",
+  //    numVisits, numInteractions);
 }
 
 #include "loimos.def.h"

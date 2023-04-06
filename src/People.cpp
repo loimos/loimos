@@ -251,14 +251,18 @@ void People::pup(PUP::er &p) {
  * for each person and sends visit messages to locations.
  */
 void People::SendVisitMessages() {
+#ifdef ENABLE_DEBUG >= DEBUG_VERBOSE
   totalVisitsForDay = 0;
+#endif
   if (syntheticRun) {
     SyntheticSendVisitMessages();
   } else {
     RealDataSendVisitMessages();
   }
+#ifdef ENABLE_DEBUG >= DEBUG_VERBOSE
   CkCallback cb(CkReductionTarget(Main, ReceiveVisitsSentCount), mainProxy);
   contribute(sizeof(int), &totalVisitsForDay, CkReduction::sum_int, cb);
+#endif
 }
 
 void People::SyntheticSendVisitMessages() {
@@ -423,7 +427,9 @@ void People::RealDataSendVisitMessages() {
     #endif
     for (VisitMessage visitMessage: person.visitsByDay[dayIdx]) {
       visitMessage.personState = person.state;
+      #ifdef DEBUG_VERBOSE
       totalVisitsForDay++;
+      #endif
 
       // Find process that owns that location
       int locationPartition = getPartitionIndex(visitMessage.locationIdx,
@@ -478,9 +484,11 @@ void People::EndOfDayStateUpdate() {
 
   // Handle state transitions at the end of the day.
   int infectiousCount = 0;
-  int totalInteractionsForDay = 0;
+  int totalExposuresPerDay = 0;
   for (Person &person : people) {
-    totalInteractionsForDay += person.interactions.size();
+#ifdef ENABLE_DEBUG >= DEBUG_VERBOSE
+    totalExposuresPerDay += person.interactions.size();
+#endif
     ProcessInteractions(&person);
 
     person.EndOfDayStateUpdate(diseaseModel, &generator);
@@ -491,15 +499,15 @@ void People::EndOfDayStateUpdate() {
       infectiousCount++;
     }
   }
-  stateSummaries[offset + 1] = totalInteractionsForDay;
+  stateSummaries[offset + 1] = totalExposuresPerDay;
 
   // contributing to reduction
   CkCallback cb(CkReductionTarget(Main, ReceiveInfectiousCount), mainProxy);
   contribute(sizeof(int), &infectiousCount, CkReduction::sum_int, cb);
-  CkCallback interCb(CkReductionTarget(Main, ReceiveInteractionsCount),
-      mainProxy);
-  contribute(sizeof(int), &totalInteractionsForDay, CkReduction::sum_int,
-      interCb);
+#ifdef ENABLE_DEBUG >= DEBUG_VERBOSE
+  CkCallback expCb(CkReductionTarget(Main, ReceiveExposuresCount), mainProxy);
+  contribute(sizeof(int), &totalExposuresPerDay, CkReduction::sum_int, expCb);
+#endif
 
   // Get ready for the next day
   day++;

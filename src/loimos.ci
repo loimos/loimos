@@ -53,6 +53,7 @@ mainmodule loimos {
 
   readonly uint64_t totalVisits;
   readonly uint64_t totalInteractions;
+  readonly uint64_t totalExposures;
   readonly double simulationStartTime;
   readonly double iterationStartTime;
   readonly double stepStartTime;
@@ -191,7 +192,6 @@ mainmodule loimos {
           }
         #endif // ENABLE_LB
 
-
         #ifdef ENABLE_TRACING
           if (SHOULD_PROFILE(day)) {
             serial{traceArray.traceOff();}
@@ -212,8 +212,8 @@ mainmodule loimos {
       }
       serial {
         CkPrintf("Finished simulating %d days in %lf seconds.\n", numDays, (CkWallTimer() - simulationStartTime));
-        CkPrintf("  Processed a total of %lu visits and %lu interactions\n",
-          totalVisits, totalInteractions);
+        CkPrintf("  Processed %lu visits, %lu interactions, and %lu exposures\n",
+          totalVisits, totalInteractions, totalExposures);
         CkPrintf("  Visit messages took %lf seconds\n",
           totalTime[TOTAL_VISITS_TIME_INDEX]);
         CkPrintf("  Interaction calculations and messages took %lf seconds\n",
@@ -241,7 +241,6 @@ mainmodule loimos {
     entry [reductiontarget] void ReceiveVisitsLoadedCount(int visitsCount) {
       serial{CkPrintf("  Loaded a total of %d visits\n", visitsCount);}
     };
-    #endif // ENABLE_DEBUG
     entry [reductiontarget] void ReceiveVisitsSentCount(int count) {
       serial{totalVisits += count;}
     };
@@ -249,6 +248,11 @@ mainmodule loimos {
       serial{totalInteractions += count;}
       serial{CkPrintf("  Processed %d interactions\n", count);}
     };
+    entry [reductiontarget] void ReceiveExposuresCount(int count) {
+      serial{totalExposures += count;}
+      serial{CkPrintf("  Processed %d exposures\n", count);}
+    };
+    #endif // ENABLE_DEBUG
     entry [reductiontarget] void ReceiveInfectiousCount(int infectiousCount);
     entry [reductiontarget] void ReceiveStats(CkReductionMsg *summary);
     #ifdef ENABLE_TRACING

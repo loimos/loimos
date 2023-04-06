@@ -66,11 +66,15 @@ void Location::addEvent(Event e) {
   events.push_back(e);
 }
 
-void Location::processEvents(
+int Location::processEvents(
   const DiseaseModel *diseaseModel,
   ContactModel *contactModel
 ) {
+  int numInteractions = 0;
   std::vector<Event> *arrivals;
+  #if ENABLE_DEBUG >= DEBUG_VERBOSE
+  int otherArrivalsCount = 0;
+  #endif
 
   if (!interventionStategy || !complysWithShutdown
       || diseaseModel->isLocationOpen(&data)) {
@@ -85,6 +89,13 @@ void Location::processEvents(
       // If a person can niether infect other people nor be infected themself,
       // we can just ignore their comings and goings
       } else {
+        #if ENABLE_DEBUG >= DEBUG_VERBOSE
+        if (ARRIVAL == event.type) {
+          otherArrivalsCount++;
+        } else {
+          otherArrivalsCount--;
+        }
+        #endif
         continue;
       }
 
@@ -96,6 +107,10 @@ void Location::processEvents(
         // Remove the arrival event corresponding to this departure
         std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
         arrivals->pop_back();
+        #if ENABLE_DEBUG >= DEBUG_VERBOSE
+        numInteractions += susceptibleArrivals.size()
+          + infectiousArrivals.size() + otherArrivalsCount;
+        #endif
 
         onDeparture(diseaseModel, contactModel, event);
       }
@@ -104,6 +119,8 @@ void Location::processEvents(
   events.clear();
   interactions.clear();
   day++;
+
+  return numInteractions;
 }
 
 // Simple dispatch to the susceptible/infectious depature handlers
