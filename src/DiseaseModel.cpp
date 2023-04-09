@@ -382,7 +382,7 @@ void DiseaseModel::toggleIntervention(int newDailyInfections) {
 }
 
 /**
- * For now only the self-siolation intervention has a compilance value
+ * For now only the self-isolation intervention has a compilance value
  */
 double DiseaseModel::getCompilance() const {
   if (interventionStategy && interventionDef->stay_at_home()) {

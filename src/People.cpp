@@ -69,20 +69,16 @@ People::People(std::string scenarioPath) {
       Data age;
       age.int_b10 = age_dist(generator);
       std::vector<Data> dataField = { age };
-      /*
-      for (int j=0; j<attrInput.size(); ++j)
-      {
-        //CkPrintf("Val %lf\n",readVec[j]);
-        Data d;
-        d.probability = attrInput[j];
-        people[p].personData.push_back(d);//change
-      }*/
 
-      people[p].setUniqueId(firstPersonIdx + p);
-      for (int j=0; j<people[p].personData.size(); ++j)
+
+      for (int j = 0; j < people[p].personData.size(); ++j) {
         CkPrintf("Default (local) person %d with field %d having value %lf\n",
             people[p].uniqueId, j, people[p].personData[j].probability);
+      }
+
+      people[p].setUniqueId(firstPersonIdx + p);
       people[p].state = diseaseModel->getHealthyState(dataField);
+
       // We set persons next state to equal current state to signify
       // that they are not in a disease model progression.
       people[p].next_state = people[p].state;
@@ -458,6 +454,24 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
     interMsg.interactions.cbegin(), interMsg.interactions.cend());
 }
 
+void People::ReceiveIntervention(InterventionMessage interMsg) {
+  int localIdx = getLocalIndex(
+    interMsg.personIdx,
+    numPeople,
+    numPeoplePartitions,
+    firstPersonIdx
+  );
+  int attrIndex = interMsg.attrIndex;
+  double newValue = interMsg.newValue;
+
+
+  Person &person = people[localIdx];
+  CkPrintf("Changed persondata value of %f to new value of %f\n",person.personData[attrIndex].probability, newValue);
+  person.personData[attrIndex].probability = newValue;
+
+}
+
+
 void People::EndOfDayStateUpdate() {
   // Get ready to count today's states
   int totalStates = diseaseModel->getNumberOfStates();
@@ -491,7 +505,13 @@ void People::SendStats() {
   contribute(stateSummaries, CkReduction::sum_int, cb);
 }
 
+<<<<<<< develop:src/People.cpp
 void People::ProcessInteractions(Person *person) {
+=======
+
+
+void People::ProcessInteractions(Person &person) {
+>>>>>>> HEAD~1:src/People.C
   double totalPropensity = 0.0;
   int numInteractions = static_cast<int>(person->interactions.size());
   for (int i = 0; i < numInteractions; ++i) {

@@ -121,7 +121,9 @@ mainmodule loimos {
             if (DAYS_TO_SEED_INFECTION > day) {
               SeedInfections();
             } 
-            
+            if (day == 0) {
+              peopleArray.ReceiveIntervention(InterventionMessage(0,2,5.5));
+            }
             CkStartQD(CkCallback(
               CkIndex_Main::ComputedInteractions(),
               mainProxy
@@ -274,6 +276,7 @@ mainmodule loimos {
     entry void ReceiveInteractions(InteractionMessage);
     entry void EndOfDayStateUpdate(); // contribute call to ReceiveInfectiousCount
     entry void SendStats(); // contribute call to ReceiveStats
+    entry void ReceiveIntervention(InterventionMessage);
     entry void AtSync();
   };
 

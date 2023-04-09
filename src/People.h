@@ -22,6 +22,7 @@
 #define LOCATION_LAMBDA 5.2
 
 class People : public CBase_People {
+<<<<<<< develop
  private:
   int numLocalPeople;
   int day;
@@ -44,6 +45,7 @@ class People : public CBase_People {
   void ReceiveInteractions(InteractionMessage interMsg);
   void EndOfDayStateUpdate();
   void SendStats();
+  void ReceiveIntervention(InterventionMessage interMsg);
   #ifdef ENABLE_LB
   void ResumeFromSync();
   #endif  // ENABLE_LB
