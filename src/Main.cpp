@@ -171,7 +171,7 @@ Main::Main(CkArgMsg* msg) {
           d.int_b10 = {std::stoi(value)};
         } else if (dataType == "bool") {
           d.boolean = {value == "1" || value == "t"};
-        } /*else if (dataType == "string") {
+        } else if (dataType == "string") {
           d.*str = {value};
         } else if (dataType == "uint32_t") {
           d.uint_32 = {std::stoul(value)};
@@ -188,6 +188,7 @@ Main::Main(CkArgMsg* msg) {
     for (int i = 0; i < t.list.size(); i++) {
         CkPrintf("Trait: %s, i: %d\n", t.getDataType(i).c_str(),i);
     }*/// Move to readers
+
     // Get number of people.
     synPeopleGridWidth = atoi(msg->argv[++argNum]);
     synPeopleGridHeight = atoi(msg->argv[++argNum]);

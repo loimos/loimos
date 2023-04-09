@@ -74,14 +74,7 @@ People::People(int seed, std::string scenarioPath) {
       Data age;
       age.int_b10 = age_dist(generator);
       std::vector<Data> dataField = { age };
-      /*
-      for (int j=0; j<attrInput.size(); ++j)
-      {
-        //CkPrintf("Val %lf\n",readVec[j]);
-        Data d;
-        d.probability = attrInput[j];
-        people[p].personData.push_back(d);//change
-      }*/
+
 
       p.setUniqueId(firstLocalPersonIdx + i);
       p.state = diseaseModel->getHealthyState(dataField);
@@ -552,7 +545,13 @@ void People::SendStats() {
   contribute(stateSummaries, CkReduction::sum_int, cb);
 }
 
+<<<<<<< develop:src/People.cpp
 void People::ProcessInteractions(Person *person) {
+=======
+
+
+void People::ProcessInteractions(Person &person) {
+>>>>>>> HEAD~1:src/People.C
   double totalPropensity = 0.0;
   int numInteractions = static_cast<int>(person->interactions.size());
   for (int i = 0; i < numInteractions; ++i) {
