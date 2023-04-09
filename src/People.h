@@ -25,6 +25,7 @@
 #define LOCATION_LAMBDA 5.2
 
 class People : public CBase_People {
+<<<<<<< develop
  private:
   int numLocalPeople;
   int day;
