@@ -52,7 +52,7 @@ class Person : public DataInterface {
 
         // Disease model functions.
         void EndOfDayStateUpdate(DiseaseModel *diseaseModel,
-                                   std::default_random_engine *generator);
+            std::default_random_engine *generator);
 
         // Override DataInterfect abstract methods
         void setUniqueId(int idx);

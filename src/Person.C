@@ -11,6 +11,8 @@
 #include "Message.h"
 #include "readers/data.pb.h"
 
+#include <random>
+
 /**
  * Defines attributes of a single person.
  */
@@ -54,11 +56,12 @@ void Person::EndOfDayStateUpdate(DiseaseModel *diseaseModel,
     std::default_random_engine *generator) {
   // Transition to next state or mark the passage of time
   secondsLeftInState -= DAY_LENGTH;
+  int dwellTime = 0;
   if (secondsLeftInState <= 0) {
     // If they have already been infected
     if (nextState != -1) {
       state = nextState;
-      std::tie(nextState, secondsLeftInState) =
+      std::tie(nextState, dwellTime) =
         diseaseModel->transitionFromState(state, generator);
 
       // Check if person will begin isolating.
@@ -70,10 +73,11 @@ void Person::EndOfDayStateUpdate(DiseaseModel *diseaseModel,
       // Get which exposed state they should transition to.
       std::tie(state, std::ignore) =
         diseaseModel->transitionFromState(state, generator);
-      // See where they will transition next.
-      std::tie(nextState, secondsLeftInState) =
+      // See where they will transition next
+      std::tie(nextState, dwellTime) =
         diseaseModel->transitionFromState(state, generator);
     }
+    secondsLeftInState += dwellTime;
   }
 }
 
