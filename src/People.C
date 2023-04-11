@@ -380,26 +380,10 @@ void People::SyntheticSendVisitMessages() {
           destinationX, destinationY, destinationIdx, partitionX, partitionY);
 #endif
 
-      // Determine which chare tracks this location.
-      int locationPartition = getPartitionIndex(
-        destinationIdx,
-        numLocations,
-        numLocationPartitions,
-        firstLocationIdx
-      );
-
       // Send off visit message
-      VisitMessage visitMsg(destinationIdx, personIdx, p.state, visitStart, visitEnd);
-      #ifdef USE_HYPERCOMM
-      Aggregator* agg = aggregatorProxy.ckLocalBranch();
-      if (agg->visit_aggregator) {
-        agg->visit_aggregator->send(locationsArray[locationPartition], visitMsg);
-      } else {
-      #endif // USE_HYPERCOMM
-        locationsArray[locationPartition].ReceiveVisitMessages(visitMsg);
-      #ifdef USE_HYPERCOMM
-      }
-      #endif // USE_HYPERCOMM
+      VisitMessage visitMsg(destinationIdx, personIdx, p.state, visitStart,
+          visitEnd);
+      SendVisitMessage(&visitMsg);
     }
   }
 }
@@ -425,22 +409,9 @@ void People::RealDataSendVisitMessages() {
       } else {
         visitMessage.personState = person.nextState;
       }
-      numVisits++;
 
-      // Find process that owns that location
-      int locationPartition = getPartitionIndex(visitMessage.locationIdx,
-          numLocations, numLocationPartitions, firstLocationIdx);
-      // Send off the visit message.
-      #ifdef USE_HYPERCOMM
-      Aggregator* agg = aggregatorProxy.ckLocalBranch();
-      if (agg->visit_aggregator) {
-        agg->visit_aggregator->send(locationsArray[locationPartition], visitMessage);
-      } else {
-      #endif // USE_HYPERCOMM
-        locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
-      #ifdef USE_HYPERCOMM
-      }
-      #endif // USE_HYPERCOMM
+      SendVisitMessage(&visitMessage);
+      numVisits++;
     }
   }
 
@@ -451,6 +422,24 @@ void People::RealDataSendVisitMessages() {
       maxId);
   }
 #endif
+}
+
+void People::SendVisitMessage(VisitMessage *visitMessage) {
+  // Find process that owns that location
+  int locationPartition = getPartitionIndex(visitMessage->locationIdx,
+      numLocations, numLocationPartitions, firstLocationIdx);
+
+  // Send off the visit message.
+#ifdef USE_HYPERCOMM
+  Aggregator* agg = aggregatorProxy.ckLocalBranch();
+  if (agg->visit_aggregator) {
+    agg->visit_aggregator->send(locationsArray[locationPartition],
+        *visitMessage);
+    return;
+  }
+#endif // USE_HYPERCOMM
+
+  locationsArray[locationPartition].ReceiveVisitMessages(*visitMessage);
 }
 
 void People::ReceiveInteractions(InteractionMessage interMsg) {
