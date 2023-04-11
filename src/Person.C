@@ -20,7 +20,7 @@ Person::Person(int numAttributes, int startingState, int timeLeftInState) {
         this->personData.resize(numAttributes);
     }
     this->state = startingState;
-    this->next_state = -1;
+    this->nextState = -1;
     this->isIsolating = false;
     this->willComply = false;
     this->secondsLeftInState = timeLeftInState;
@@ -33,7 +33,7 @@ Person::Person(int numAttributes, int startingState, int timeLeftInState) {
 void Person::pup(PUP::er &p) {
     p | uniqueId;
     p | state;
-    p | next_state;
+    p | nextState;
     p | secondsLeftInState;
     p | interactions;
     p | visitOffsetByDay;
@@ -56,9 +56,9 @@ void Person::EndOfDayStateUpdate(DiseaseModel *diseaseModel,
   secondsLeftInState -= DAY_LENGTH;
   if (secondsLeftInState <= 0) {
     // If they have already been infected
-    if (next_state != -1) {
-      state = next_state;
-      std::tie(next_state, secondsLeftInState) =
+    if (nextState != -1) {
+      state = nextState;
+      std::tie(nextState, secondsLeftInState) =
         diseaseModel->transitionFromState(state, generator);
 
       // Check if person will begin isolating.
@@ -71,7 +71,7 @@ void Person::EndOfDayStateUpdate(DiseaseModel *diseaseModel,
       std::tie(state, std::ignore) =
         diseaseModel->transitionFromState(state, generator);
       // See where they will transition next.
-      std::tie(next_state, secondsLeftInState) =
+      std::tie(nextState, secondsLeftInState) =
         diseaseModel->transitionFromState(state, generator);
     }
   }

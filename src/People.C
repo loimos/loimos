@@ -71,7 +71,7 @@ People::People() {
       people[p].state = diseaseModel->getHealthyState(dataField);
       // We set persons next state to equal current state to signify
       // that they are not in a disease model progression.
-      people[p].next_state = people[p].state;
+      people[p].nextState = people[p].state;
     }
   } else {
       int numAttributesPerPerson =
@@ -407,14 +407,24 @@ void People::SyntheticSendVisitMessages() {
 void People::RealDataSendVisitMessages() {
   // Send activities for each person.
   int numVisits = 0;
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
   int minId = numPeople;
   int maxId = 0;
+#endif
+  int dayIdx = day % numDaysWithRealData;
+  int dayStartTime = day * DAY_LENGTH;
   for (const Person &person: people) {
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
     minId = std::min(minId, person.uniqueId);
     maxId = std::max(maxId, person.uniqueId);
-    for (VisitMessage visitMessage:
-        person.visitsByDay[day % numDaysWithRealData]) {
-      visitMessage.personState = person.state;
+#endif
+    for (VisitMessage visitMessage: person.visitsByDay[dayIdx]) {
+      int visitStartTime = visitMessage.visitStart - dayStartTime;
+      if (visitStartTime < person.secondsLeftInState) {
+        visitMessage.personState = person.state;
+      } else {
+        visitMessage.personState = person.nextState;
+      }
       numVisits++;
 
       // Find process that owns that location
