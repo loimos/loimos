@@ -405,10 +405,28 @@ void People::SendLoadedVisits() {
 void People::ComputeVisitDiseaseState(int dayStartTime, const Person &person,
     VisitMessage *visitMessage) {
   int visitStartTime = visitMessage->visitStart - dayStartTime;
-  if (visitStartTime < person.secondsLeftInState) {
+  int visitEndTime = visitMessage->visitEnd - dayStartTime;
+  // Transition after visit ->  send old state
+  if (visitEndTime < person.secondsLeftInState) {
     visitMessage->personState = person.state;
-  } else {
+
+  // Transition before visit -> send new state
+  } else if (visitStartTime >= person.secondsLeftInState) {
     visitMessage->personState = person.nextState;
+
+  // Transition during visit -> split visit
+  } else {
+    VisitMessage before(visitMessage->locationIdx, visitMessage->personIdx,
+        person.state, visitMessage->visitStart,
+        dayStartTime + person.secondsLeftInState - 1);
+    VisitMessage after(visitMessage->locationIdx, visitMessage->personIdx,
+        person.state, dayStartTime + person.secondsLeftInState,
+        visitMessage->visitEnd);
+    SendVisitMessage(&before);
+    SendVisitMessage(&after);
+    totalVisitsForDay += 2;
+
+    return;
   }
 
   SendVisitMessage(visitMessage);
