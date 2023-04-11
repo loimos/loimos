@@ -31,6 +31,8 @@ class People : public CBase_People {
     DiseaseModel *diseaseModel;
     std::vector<int> stateSummaries;
 
+    void ComputeVisitDiseaseState(int dayStart, const Person &person,
+        VisitMessage *visitMessage);
     void SendVisitMessage(VisitMessage *visitMessage);
     void ProcessInteractions(Person &person);
     void loadPeopleData();
@@ -40,8 +42,8 @@ class People : public CBase_People {
     People(CkMigrateMessage *msg);
     void pup(PUP::er &p);
     void SendVisitMessages();
-    void SyntheticSendVisitMessages();
-    void RealDataSendVisitMessages();
+    void ComputeVisits();
+    void SendLoadedVisits();
     void ReceiveInteractions(InteractionMessage interMsg);
     void EndOfDayStateUpdate();
     void SendStats();

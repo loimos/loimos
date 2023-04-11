@@ -234,15 +234,20 @@ void People::pup(PUP::er &p) {
 void People::SendVisitMessages() {
   totalVisitsForDay = 0;
   if (syntheticRun) {
-    SyntheticSendVisitMessages();
+    ComputeVisits();
   } else {
-    RealDataSendVisitMessages();
+    SendLoadedVisits();
   }
+
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
+  if (0 == day) {
+    CkPrintf("    Chare %d (P %d, T %d): %d visits, %d people\n",
+      thisIndex, CkMyNode(), CkMyPe(), totalVisitsForDay, (int) people.size());
+  }
+#endif
 }
 
-void People::SyntheticSendVisitMessages() {
-  int totalNumVisits = 0;
-
+void People::ComputeVisits() {
   // Model number of visits as a poisson distribution.
   std::poisson_distribution<int> num_visits_generator(averageDegreeOfVisit);
 
@@ -250,7 +255,7 @@ void People::SyntheticSendVisitMessages() {
   std::poisson_distribution<int> visit_distance_generator(LOCATION_LAMBDA);
 
   // Model visit times as uniform.
-  std::uniform_int_distribution<int> time_dist(0, DAY_LENGTH); // in seconds
+  std::uniform_int_distribution<int> time_dist(0, DAY_LENGTH - 1); // in seconds
   std::priority_queue<int, std::vector<int>, std::greater<int> > times;
 
   // Calculate minigrid sizes.
@@ -281,7 +286,7 @@ void People::SyntheticSendVisitMessages() {
   );
 
   // Calculate schedule for each person.
-  for (Person &p : people) {
+  for (const Person &p : people) {
     // Check if person is self isolating.
     int personIdx = p.uniqueId;
     if (p.isIsolating && diseaseModel->isInfectious(p.state)) {
@@ -295,14 +300,11 @@ void People::SyntheticSendVisitMessages() {
 
     // Get random number of visits for this person.
     int numVisits = num_visits_generator(generator);
-    totalVisitsForDay += numVisits;
     // Randomly generate start and end times for each visit,
     // using a priority queue ensures the times are in order.
     for (int j = 0; j < 2 * numVisits; j++) {
       times.push(time_dist(generator));
     }
-
-    totalNumVisits += numVisits;
 
     // Randomly pick nearby location for person to visit.
     for (int j = 0; j < numVisits; j++) {
@@ -383,45 +385,34 @@ void People::SyntheticSendVisitMessages() {
       // Send off visit message
       VisitMessage visitMsg(destinationIdx, personIdx, p.state, visitStart,
           visitEnd);
-      SendVisitMessage(&visitMsg);
+      // Start times for on-the-fly syntheitc data are all less than DAY_LENGTH
+      ComputeVisitDiseaseState(0, p, &visitMsg);
     }
   }
 }
 
-void People::RealDataSendVisitMessages() {
+void People::SendLoadedVisits() {
   // Send activities for each person.
-  int numVisits = 0;
-#if ENABLE_DEBUG >= DEBUG_PER_CHARE
-  int minId = numPeople;
-  int maxId = 0;
-#endif
   int dayIdx = day % numDaysWithRealData;
-  int dayStartTime = day * DAY_LENGTH;
+  int dayStartTime = dayIdx * DAY_LENGTH;
   for (const Person &person: people) {
-#if ENABLE_DEBUG >= DEBUG_PER_CHARE
-    minId = std::min(minId, person.uniqueId);
-    maxId = std::max(maxId, person.uniqueId);
-#endif
     for (VisitMessage visitMessage: person.visitsByDay[dayIdx]) {
-      int visitStartTime = visitMessage.visitStart - dayStartTime;
-      if (visitStartTime < person.secondsLeftInState) {
-        visitMessage.personState = person.state;
-      } else {
-        visitMessage.personState = person.nextState;
-      }
-
-      SendVisitMessage(&visitMessage);
-      numVisits++;
+      ComputeVisitDiseaseState(dayStartTime, person, &visitMessage);
     }
   }
+}
 
-#if ENABLE_DEBUG >= DEBUG_PER_CHARE
-  if (0 == day) {
-    CkPrintf("    Chare %d (P %d, T %d): %d visits, %d people (in [%d, %d])\n",
-      thisIndex, CkMyNode(), CkMyPe(), numVisits, (int) people.size(), minId,
-      maxId);
+void People::ComputeVisitDiseaseState(int dayStartTime, const Person &person,
+    VisitMessage *visitMessage) {
+  int visitStartTime = visitMessage->visitStart - dayStartTime;
+  if (visitStartTime < person.secondsLeftInState) {
+    visitMessage->personState = person.state;
+  } else {
+    visitMessage->personState = person.nextState;
   }
-#endif
+
+  SendVisitMessage(visitMessage);
+  totalVisitsForDay++;
 }
 
 void People::SendVisitMessage(VisitMessage *visitMessage) {
