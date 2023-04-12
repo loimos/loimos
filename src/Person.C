@@ -54,9 +54,14 @@ std::vector<union Data> &Person::getDataField() {
 
 void Person::EndOfDayStateUpdate(DiseaseModel *diseaseModel,
     std::default_random_engine *generator) {
-  // Transition to next state or mark the passage of time
+  // We use the max time to mark states which last indefintiely
+  if (std::numeric_limits<Time>::max() == secondsLeftInState) {
+    return;
+  }
   secondsLeftInState -= DAY_LENGTH;
+
   int dwellTime = 0;
+  int oldState = state;
   if (secondsLeftInState <= 0) {
     // If they have already been infected
     if (nextState != -1) {
@@ -77,7 +82,16 @@ void Person::EndOfDayStateUpdate(DiseaseModel *diseaseModel,
       std::tie(nextState, dwellTime) =
         diseaseModel->transitionFromState(state, generator);
     }
-    secondsLeftInState += dwellTime;
+
+    // We use the max time to mark states which last indefintiely, so don't
+    // mess that up
+    if (std::numeric_limits<Time>::max() == dwellTime) {
+      secondsLeftInState = dwellTime;
+    } else {
+      secondsLeftInState += dwellTime;
+    }
+    CkPrintf("  Person %d transitioned from %d to %d (%d/%ds left, next %d)\n",
+        uniqueId, oldState, state, secondsLeftInState, dwellTime, nextState);
   }
 }
 
