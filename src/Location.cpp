@@ -230,6 +230,10 @@ inline void Location::sendInteractions(int personIdx) {
   }
   #endif  // USE_HYPERCOMM
 
+  if (0 > personIdx) {
+    CkAbort("   Trying to send message to person %d\n", personIdx);
+  }
+
   /*
   CkPrintf(
     "sending %d interactions to person %d in partition %d\r\n",

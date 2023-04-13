@@ -258,7 +258,8 @@ void People::SendVisitMessages() {
     SyntheticSendVisitMessages();
   } else {
     RealDataSendVisitMessages();
- #if ENABLE_DEBUG >= DEBUG_VERBOSE
+  }
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
   CkCallback cb(CkReductionTarget(Main, ReceiveVisitsSentCount), mainProxy);
   contribute(sizeof(int), &totalVisitsForDay, CkReduction::sum_int, cb);
 #endif
@@ -459,6 +460,11 @@ void People::RealDataSendVisitMessages() {
 void People::ReceiveInteractions(InteractionMessage interMsg) {
   int localIdx = getLocalIndex(interMsg.personIdx, numPeople,
     numPeoplePartitions, firstPersonIdx);
+
+  if (0 > localIdx) {
+    CkAbort("    Delivered message to person %d (%d on chare %d)\n",
+        interMsg.personIdx, localIdx, thisIndex);
+  }
 
   // Just concatenate the interaction lists so that we can process all of the
   // interactions at the end of the day
