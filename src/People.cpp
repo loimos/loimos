@@ -47,7 +47,7 @@ People::People(std::string scenarioPath) {
 
   // Allocate space to summarize the state summaries for every day
   int totalStates = diseaseModel->getNumberOfStates();
-  stateSummaries.resize((totalStates + 1) * numDays, 0);
+  stateSummaries.resize((totalStates + 2) * numDays, 0);
 
   // Get the number of people assigned to this chare
   numLocalPeople = getNumLocalElements(numPeople, numPeoplePartitions,
