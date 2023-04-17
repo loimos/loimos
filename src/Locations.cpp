@@ -167,14 +167,14 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 void Locations::ComputeInteractions() {
   // traverses list of locations
   int numVisits = 0;
-  uint64_t numInteractions = 0;
+  int numInteractions = 0;
   for (Location &loc : locations) {
     numVisits += loc.events.size() / 2;
     numInteractions += loc.processEvents(diseaseModel, contactModel);
   }
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   CkCallback cb(CkReductionTarget(Main, ReceiveInteractionsCount), mainProxy);
-  contribute(sizeof(uint64_t), &numInteractions, CkReduction::sum_ulong, cb);
+  contribute(sizeof(int), &numInteractions, CkReduction::sum_int, cb);
 #endif
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
