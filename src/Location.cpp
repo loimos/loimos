@@ -66,14 +66,14 @@ void Location::addEvent(Event e) {
   events.push_back(e);
 }
 
-uint64_t Location::processEvents(
+int Location::processEvents(
   const DiseaseModel *diseaseModel,
   ContactModel *contactModel
 ) {
   int numInteractions = 0;
   std::vector<Event> *arrivals;
   #if ENABLE_DEBUG >= DEBUG_VERBOSE
-  int otherArrivalsCount = 0;
+  int numPresent = 0;
   #endif
 
   if (!interventionStategy || !complysWithShutdown
@@ -91,9 +91,10 @@ uint64_t Location::processEvents(
       } else {
         #if ENABLE_DEBUG >= DEBUG_VERBOSE
         if (ARRIVAL == event.type) {
-          otherArrivalsCount++;
+          numPresent++;
         } else {
-          otherArrivalsCount--;
+          numPresent--;
+          numInteractions += numPresent;
         }
         #endif
         continue;
@@ -102,14 +103,16 @@ uint64_t Location::processEvents(
       if (ARRIVAL == event.type) {
         arrivals->push_back(event);
         std::push_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
-
+        #if ENABLE_DEBUG >= DEBUG_VERBOSE
+        numPresent++;
+        #endif
       } else if (DEPARTURE == event.type) {
         // Remove the arrival event corresponding to this departure
         std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
         arrivals->pop_back();
         #if ENABLE_DEBUG >= DEBUG_VERBOSE
-        numInteractions += susceptibleArrivals.size()
-          + infectiousArrivals.size() + otherArrivalsCount;
+        numPresent--;
+        numInteractions += numPresent;
         #endif
 
         onDeparture(diseaseModel, contactModel, event);

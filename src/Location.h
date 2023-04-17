@@ -105,7 +105,7 @@ class Location : public DataInterface {
 
   // Runs through all of the current events and return the indices of
   // any people who have been infected
-  uint64_t processEvents(const DiseaseModel *diseaseModel,
+  int processEvents(const DiseaseModel *diseaseModel,
     ContactModel *contactModel);
 };
 
