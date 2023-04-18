@@ -24,8 +24,13 @@ GTEST_HOME ?= /usr/local/gtest
 # Set the environment variable HYPERCOMM_HOME to the Hypercomm library installation
 HYPERCOMM_HOME ?= ../hypercomm-aggregation
 
+ifdef ENABLE_DEBUG
+OPTS     += -g
+else
+OPTS     += -g -O2
+endif
+
 CXX       = g++
-OPTS     += -g #-O2
 INCLUDES  = -I$(PROTOBUF_HOME)/include
 LIBS      = -lpthread -lprotobuf
 
