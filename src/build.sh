@@ -27,8 +27,8 @@ for enable_smp in true false; do
 
         if $enable_tracing; then
           BIN="$BIN-prj"
-          OPTS="$OPTS USE_PROJECTIONS=1"
-          export USE_PROJECTIONS=1
+          OPTS="$OPTS ENABLE_TRACING=1"
+          export ENABLE_TRACING=1
         fi
 
         if $enable_load_balancing; then

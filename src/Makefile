@@ -39,8 +39,8 @@ endif
 # Set the ENABLE_LB environment variable to compile for Charm++'s in-built
 # dynamic load balancing
 
-# set the USE_PROJECTIONS environment variable to compile for projections
-ifdef USE_PROJECTIONS
+# set the ENABLE_TRACING environment variable to compile for projections
+ifdef ENABLE_TRACING
 PROJECTION_FLAGS = -tracemode projections
 else
 PROJECTION_FLAGS = 

@@ -6,8 +6,8 @@ ifdef ENABLE_SMP
 CHARM_HOME = $(CHARM_HOME)-smp
 endif
 
-ifdef USE_PROJECTIONS
-CHARMC      = $(CHARM_HOME)/bin/charmc -DUSE_PROJECTIONS
+ifdef ENABLE_TRACING
+CHARMC      = $(CHARM_HOME)/bin/charmc -DENABLE_TRACING
 else
 CHARMC      = $(CHARM_HOME)/bin/charmc
 endif
@@ -55,8 +55,8 @@ LIBS     += -L$(GTEST_HOME)/lib -lgtest
 OPTS     += -DENABLE_UNIT_TESTING
 endif
 
-ifdef USE_PROJECTIONS
-OPTS     += -DUSE_PROJECTIONS
+ifdef ENABLE_TRACING
+OPTS     += -DENABLE_TRACING
 endif
 
 ifdef USE_HYPERCOMM

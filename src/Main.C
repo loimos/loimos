@@ -75,7 +75,7 @@ double dataLoadingStartTime;
 
 class TraceSwitcher : public CBase_TraceSwitcher {
   public:
-    #ifdef USE_PROJECTIONS
+    #ifdef ENABLE_TRACING
     TraceSwitcher() : CBase_TraceSwitcher(){}
 
     void traceOn(){
@@ -115,7 +115,7 @@ class TraceSwitcher : public CBase_TraceSwitcher {
             (int) pid, self_usage.ru_maxrss);
       #endif
     };
-    #endif // USE_PROJECTIONS
+    #endif // ENABLE_TRACING
 
     #ifdef ENABLE_LB
     void instrumentOn(){
@@ -301,7 +301,7 @@ Main::Main(CkArgMsg* msg) {
   peopleArray = CProxy_People::ckNew(numPeoplePartitions);
   locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
 
-#ifdef USE_PROJECTIONS
+#ifdef ENABLE_TRACING
   traceArray = CProxy_TraceSwitcher::ckNew();
 #endif
 
