@@ -2,8 +2,8 @@
 
 Loimos is a parallel, agent-based simulator for modeling the spread of
 infectious diseases. This simulator employs a combination of
-time-stepping and descrete event simulations to capture
-population dynamics in realisitic social contact networks. These
+time-stepping and discrete event simulations to capture
+population dynamics in realistic social contact networks. These
 networks are *digital twins* of various U.S. states built based on a
 variety of sources, including census and survey data,
 which are then used as input for various outbreak simulations.
@@ -12,7 +12,7 @@ which are then used as input for various outbreak simulations.
 
 Loimos has two major dependencies:
 1. [Charm++](https://github.com/UIUC-PPL/charm), the parallel framework
-and runtime in which Loimos was implmented.
+and runtime in which Loimos was implemented.
 2. Google's Protocol Buffers, or [Protobuf](https://github.com/protocolbuffers/protobuf),
 which Loimos uses to format and parse many of its input files.
 
@@ -25,7 +25,7 @@ Charm++ may be installed from source as follows:
 
     ```./build charm++ <version> smp --with-production --enable-tracing```
   
-    Note that you may need to load some module files in order to proberly build Charm++ on a cluster. Most clusters will require loading the system MPI, and   Cray clusters will generally require some form of `craype-hugepages`. See below for some examples, or consult the [Charm++ documentation](https://charm.  readthedocs.io/en/latest/charm%2B%2B/manual.html#sec-install).
+    Note that you may need to load some module files in order to properly build Charm++ on a cluster. Most clusters will require loading the system MPI, and   Cray clusters will generally require some form of `craype-hugepages`. See below for some examples, or consult the [Charm++ documentation](https://charm.  readthedocs.io/en/latest/charm%2B%2B/manual.html#sec-install).
   
     | System              | Version            | Module Line                                              |
     |---------------------|--------------------|----------------------------------------------------------|
@@ -36,11 +36,11 @@ Charm++ may be installed from source as follows:
 
     We recommend building Charm++ twice: once with the `smp` argument passed to `./build` and once without, as Charm++'s Shared Memory Parallelism (SMP) mode is helpful on some machines and node counts but not on others.
 
-4. Lastly, set the `CHARM_HOME` environment variable so that Loimos is able to find your local installation of Charm++. We recommend adding the following line to either your `~/.bashrc` or `~/.bash_profile` (or simular configuration file for other terminals):
+4. Lastly, set the `CHARM_HOME` environment variable so that Loimos is able to find your local installation of Charm++. We recommend adding the following line to either your `~/.bashrc` or `~/.bash_profile` (or similar configuration file for other terminals):
     
     ```export CHARM_HOME="/<full/path/to/install>/charm/<version>"```
 
-    Note that you should *not* append `-smp` to this path in order to build Loimos with SMP; this will be handled by setting a seperate environment variable at compile time.
+    Note that you should *not* append `-smp` to this path in order to build Loimos with SMP; this will be handled by setting a separate environment variable at compile time.
 
 ### Protobuf
 
