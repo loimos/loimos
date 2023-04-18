@@ -63,7 +63,31 @@ Protobuf can be installed as follows:
 
 ## Building the Source
 
+Once Loimos's dependencies have been installed as outlined above, it can be built from source as follows:
+1. Clone this repo, such as with
+    ```git clone git@github.com:loimos/loimos.git```
+2. `cd` into `loimos/src` and run `make` to build the application from source. By default, the executable will be named `loimos`, although some compile-time options can change this.
+
 ### Compile-time Flags
+
+Loimos has a number of compile-time options that can be used to produce executables tuned for different purposes. These are generally passed to the build system by setting various environment variables. For example, an SMP version of Loimos can be build with
+
+```
+ENABLE_SMP=1 make
+```
+
+We recommend running `make clean` before building Loimos with a different configuration. Loimos's various compile time options are summarized below. Note that some options append a suffix to the executable. When multiple such options are used, these suffixes will be added in the order in which the appear in the table below. For example, building with `ENABLE_SMP=1 make` will build the executable `loimos-smp`, whereas building with `ENABLE_SMP=1 ENABLE_LB=1 ENABLE_DEBUG=2 make` will build the executable `loimos-smp-lb`, with the debug level not impacting the executable name.
+
+| Environment Variable  | Value | Executable Suffix | Explanation                                                                   |
+|-----------------------|-------|-------------------|-------------------------------------------------------------------------------|
+| `ENABLE_SMP`          | 1     | `-smp`            | Builds Loimos with Shared Memory Parallelism.                                 |
+| `ENABLE_TRACING`      | 1     | `-prj`            | Enables collecting performance profiles using the built-in Charm++ profiler   |
+| `ENABLE_LB`           | 1     | `-lb`             | Enables Charm++ dynamic load balancing                                        |
+| `ENABLE_UNIT_TESTING` | 1     |                   | Builds Loimos with unit tests enabled                                         |
+| `ENABLE_DEBUG`        | 1     |                   | Basic debug information                                                       |
+|                       | 2     |                   | Verbose debug information                                                     |
+|                       | 3     |                   | Chare-level debug information                                                 |
+|                       | 4     |                   | People- and location-level debug information                                  
 
 ## Running the Code
 
