@@ -36,9 +36,11 @@ Charm++ may be installed from source as follows:
 
     We recommend building Charm++ twice: once with the `smp` argument passed to `./build` and once without, as Charm++'s Shared Memory Parallelism (SMP) mode is helpful on some machines and node counts but not on others.
 
-4. Lastly, set an environment variable so that Loimos is able to find your local installation of Charm++. We recommend adding the following line to either your `~/.bashrc` or `~/.bash_profile` (or simular configuration file for other terminals):
+4. Lastly, set the `CHARM_HOME` environment variable so that Loimos is able to find your local installation of Charm++. We recommend adding the following line to either your `~/.bashrc` or `~/.bash_profile` (or simular configuration file for other terminals):
     
-    ```export CHARM_HOME=/<full/path/to/install>/charm/<version>```
+    ```export CHARM_HOME="/<full/path/to/install>/charm/<version>"```
+
+    Note that you should *not* append `-smp` to this path in order to build Loimos with SMP; this will be handled by setting a seperate environment variable at compile time.
 
 ### Protobuf
 
