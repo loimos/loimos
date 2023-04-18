@@ -13,16 +13,16 @@ OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o \
 DEFS   = loimos.def.h Defs.h readers/DataReader.h
 DECLS  = loimos.decl.h
 
-BIN    = loimos
+BIN   := loimos
 
 ifdef ENABLE_SMP
-BIN    +=-smp
+BIN   :=$(BIN)-smp
 endif
 ifdef ENABLE_TRACING
-BIN    +=-prj
+BIN   :=$(BIN)-prj
 endif
 ifdef ENABLE_LB
-BIN    +=-lb
+BIN   :=$(BIN)-lb
 endif
 
 # Set the ENABLE_UNIT_TESTING environment variable to compile for unit testing
