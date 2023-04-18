@@ -20,7 +20,7 @@ which Loimos uses to format and parse many of its input files.
 Charm++ may be installed from source as follows:
 1. Clone the Charm++ git repo from GitHub here: [https://github.com/UIUC-PPL/charm](https://github.com/UIUC-PPL/charm).
 2. Once the repo is cloned, `cd` into its top-level directory and check out the latest version (ex: `git checkout v7.0.0`).
-3. Next, build Charm++. Charm++ has a variety of options and which are best to use varies by system. In general, the build line will look something like
+3. Next, build Charm++. Charm++ has a variety of options and which are best to use varies by system. In general, the build line will look something like this:
 
     ```./build charm++ <version> smp --with-production --enable-tracing```
   
@@ -76,7 +76,7 @@ Loimos has a number of compile-time options that can be used to produce executab
 ENABLE_SMP=1 make
 ```
 
-We recommend running `make clean` before building Loimos with a different configuration. Loimos's various compile time options are summarized below. Note that some options append a suffix to the executable. When multiple such options are used, these suffixes will be added in the order in which the appear in the table below. For example, building with `ENABLE_SMP=1 make` will build the executable `loimos-smp`, whereas building with `ENABLE_SMP=1 ENABLE_LB=1 ENABLE_DEBUG=2 make` will build the executable `loimos-smp-lb`, with the debug level not impacting the executable name.
+We recommend running `make clean` before building Loimos with a different configuration. Loimos's various compile-time options are summarized below. Note that some options append a suffix to the executable. When multiple such options are used, these suffixes will be added in the order in which the appear in the table below. For example, building with `ENABLE_SMP=1 make` will build the executable `loimos-smp`, whereas building with `ENABLE_SMP=1 ENABLE_LB=1 ENABLE_DEBUG=2 make` will build the executable `loimos-smp-lb`, with the debug level not impacting the executable name.
 
 | Environment Variable  | Value | Executable Suffix | Explanation                                                                   |
 |-----------------------|-------|-------------------|-------------------------------------------------------------------------------|
@@ -92,7 +92,7 @@ We recommend running `make clean` before building Loimos with a different config
 ## Running the Code
 
 ### Quick Start
-A quick test run may be run to verify that the build was successful using `<compile options> make test-small` with the same compile options used to build the executable. This test should only take a couple seconds to run. A more through test suite can be run using `<compile options> make test`, although this will take longer to run (generally under 5 minutes), and so we recommend either submitting them as a batch script or in an interactive allocation on your cluster of choice.
+A quick test run may be run to verify that the build was successful using `<compile options> make test-small` with the same compile-time options used to build the executable. This test should only take a couple seconds to run. A more through test suite can be run using `<compile options> make test`, although this will take longer to run (generally under 5 minutes), and so we recommend either submitting them as a batch script or in an interactive allocation on your cluster of choice. Note that we use the default executable, `loimos`, for all further example commands below. If you used any compile-time options that change the executable name, replace `loimos` with the appropriate executable name.
 
 For a more substantial test, run the following command on a 64 task MPI allocation:
 
@@ -120,9 +120,9 @@ Where
 - `OF` is the path to the output file.
 - `DF` is the path to the disease model.
 
-For pre-defined populations, run with the command:
+For pre-defined populations, run Loimos with the command:
 
-```./loimos 0 NP NL NPP NLP ND NDV OF DF SD [-m] [-i I]```
+```./loimos 0 <NP> <NL> <NPP> <NLP> <ND> <NDV> <OF> <DF> <SD> [-m] [-i <IF>]```
 
 Where
 - `NP` is the number of people.
@@ -138,8 +138,21 @@ Where
   scenario. These are usually found in `loimos/data/populations`.
 - `-m` or `--min-max-alpha` is an optional flag which indicates that the
   min-max-alpha contact model should be used.
-- `-i` is an optional flag used when specifying an intervention. `I` should
+- `-i` is an optional flag used when specifying an intervention. `IF` should
   be the path to a `.textproto` file specifying the intervention to be used.
   These are generally found in `loimos/data/interventions`.
 
-### Configuring Batch Jobs for Your System
+## Authors
+
+Many thanks go to Loimos's
+[contributors](https://github.com/loimos/loimos/graphs/contributors).
+
+## License
+
+Loimos is distributed under the terms of the MIT license.
+
+All contributions must be made under the MIT license. Copyrights in the Loimos project are retained by contributors. No copyright assignment is required to contribute to Loimos.
+
+See [LICENSE](https://github.com/hatchet/loimos/blob/develop/LICENSE) for details.
+
+SPDX-License-Identifier: MIT
