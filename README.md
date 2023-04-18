@@ -37,11 +37,29 @@ Charm++ may be installed from source as follows:
 
 4. Lastly, set the `CHARM_HOME` environment variable so that Loimos is able to find your local installation of Charm++. We recommend adding the following line to either your `~/.bashrc` or `~/.bash_profile` (or similar configuration file for other terminals):
     
-    ```export CHARM_HOME="/<full/path/to/install>/charm/<version>"```
+    ```export CHARM_HOME="/<full/path/to/install/dir>/charm/<version>"```
 
     Note that you should *not* append `-smp` to this path in order to build Loimos with SMP; this will be handled by setting a separate environment variable at compile time.
 
 ### Protobuf
+
+Protobuf can be installed as follows:
+1. Create a separate `install` directory somewhere you have write permissions with `mkdir install`. This is to get around the fact that on most computing clusters, many users will not have sudo permissions. Placing this at the top level of your home directory is often convenient, in which case the full path is given by `$HOME/install`.
+2. Download version 3.21.12 of Protobuf here: [https://github.com/protocolbuffers/protobuf/releases/tag/v21.12](https://github.com/protocolbuffers/protobuf/releases/tag/v21.12). We suggest using the C++ version of this release rather than cloning the full repo or using the most recent version as the C++ version has a much simpler build system without as many dependencies, and this is the last release which contains a separate C++ version. You can download this C++ version like so: `wget https://github.com/protocolbuffers/protobuf/releases/download/v21.9/protobuf-cpp-3.21.12.tar.gz`
+3. Extract the downloaded files and `cd` into the resulting directory: `tar -xzf protobuf-cpp-3.21.12.tar.gz`.
+4. Build and install Protobuf as follows:
+    ```
+    ./configure --prefix=/<full/path/to/install/dir>
+    make
+    make check
+    make install
+    ```
+5. Lastly, set two environment variables so that Loimos is able to find your local installation of Protobuf. We recommend adding the following lines to either your `~/.bashrc` or `~/.bash_profile` (or similar configuration file for other terminals):
+    
+    ```
+    export PROTOBUF_HOME="/<full/path/to/install/dir>"
+    export LD_LIBRARY_PATH="$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH"
+    ```
 
 ## Building the Source
 
