@@ -95,7 +95,7 @@ test-large: all
 	if [ -f ../data/populations/coc/visits.csv ]; then \
 		./charmrun +p4 ./loimos 0 41119 19203 60 40 30 7 test-large.csv ../data/disease_models/covid19.textproto ../data/populations/coc/ --min-max-alpha ++local;\
 	else\
-		echo CoC data not available\
+		echo CoC data not available;\
 	fi
 
 test-validation: all
