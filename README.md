@@ -12,7 +12,7 @@ which are then used as input for various outbreak simulations.
 
 Loimos has two major dependencies:
 1. [Charm++](https://github.com/UIUC-PPL/charm), the parallel framework
-and runtime in which Loimos was implemented.
+and runtime in which Loimos is implemented.
 2. Google's Protocol Buffers, or [Protobuf](https://github.com/protocolbuffers/protobuf),
 which Loimos uses to format and parse many of its input files.
 
@@ -62,7 +62,7 @@ Protobuf can be installed as follows:
     export LD_LIBRARY_PATH="$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH"
     ```
 
-## Building the Source
+## Building from Source
 
 Once Loimos's dependencies have been installed as outlined above, it can be built from source as follows:
 1. Clone this repo, such as with
@@ -93,5 +93,54 @@ We recommend running `make clean` before building Loimos with a different config
 ## Running the Code
 
 ### Quick Start
+A quick test run may be run to verify that the build was successful using `<compile options> make test-small` with the same compile options used to build the executable. This test should only take a couple seconds to run. A more through test suite can be run using `<compile options> make test`, although this will take longer to run (generally under 5 minutes), and so we recommend either submitting them as a batch script or in an interactive allocation on your cluster of choice.
+
+For a more substantial test, run the following command on a 64 task MPI allocation:
+
+```srun -n 64 ./loimos 1 2349 2349 1248 1248 5 8 8 64 16 on-the-fly-md-out.csv ../data/disease_models/covid19_onepath.textproto```
+
+This command will run Loimos on a purely synthetic population about the size of the state of Maryland (~5.5 million people and ~1.5 million locations) with 64 processes.
+
+### Command Line Arguments
+Loimos can either generate a purely synthetic population on-the-fly or load a pre-defined population. Note that while more realistic social contact networks (the digital twins mentioned previously) are provided to Loimos using the later syntax, these datasets are not currently released.
+
+To generate a synthetic population on-the-fly, run Loimos with a command line in the following form:
+
+```./loimos 1 <PGW> <PGH> <LGW> <LGH> <NV> <LPGW> <LPGH> <NPP> <ND> <OF> <DF>```
+
+Where
+- `PGW` is the people grid width.
+- `PGH` is the people grid height.
+- `LGW` is the location grid width, and should be a multiple of `LPGW`.
+- `LGH` is the location grid height, and should be a multiple of `LPGH`.
+- `NV` is the average number of visits per person per day.
+- `LPGW` is the location partition grid width.
+- `LPGH` is the location partition grid height.
+- `NPP` is the number of people partitions, and should usually be equal to `LPGW * LPGH` and evenly divide the number of cores Loimos is run on.
+- `ND` is the number of days to simulate.
+- `OF` is the path to the output file.
+- `DF` is the path to the disease model.
+
+For pre-defined populations, run with the command:
+
+```./loimos 0 NP NL NPP NLP ND NDV OF DF SD [-m] [-i I]```
+
+Where
+- `NP` is the number of people.
+- `NL` is the number of locations.
+- `NPP` is the number of people partitions, and should evenly divide the number of cores Loimos is run on.
+- `NLP` is the number of location partitions, and should evenly divide the number of cores Loimos is run on.
+- `ND` is the number of days to simulate.
+- `NVD` is the number of days of visit data in the scenario (or, equivalently,
+  how often to repeat each person's visit schedule).
+- `OF` is the path to the output file.
+- `DF` is the path to the disease model.
+- `SD` is the path to the directory containing the population data for the
+  scenario. These are usually found in `loimos/data/populations`.
+- `-m` or `--min-max-alpha` is an optional flag which indicates that the
+  min-max-alpha contact model should be used.
+- `-i` is an optional flag used when specifying an intervention. `I` should
+  be the path to a `.textproto` file specifying the intervention to be used.
+  These are generally found in `loimos/data/interventions`.
 
 ### Configuring Batch Jobs for Your System
