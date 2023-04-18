@@ -1,5 +1,11 @@
 # Set the environment variable CHARM_HOME to the Charm++ installation with projections enabled
 CHARM_HOME ?= /usr/local/charm
+
+# Set the ENABLE_SMP environment variable to build with smp
+ifdef ENABLE_SMP
+CHARM_HOME = $(CHARM_HOME)-smp
+endif
+
 ifdef USE_PROJECTIONS
 CHARMC      = $(CHARM_HOME)/bin/charmc -DUSE_PROJECTIONS
 else
@@ -19,7 +25,7 @@ GTEST_HOME ?= /usr/local/gtest
 HYPERCOMM_HOME ?= ../hypercomm-aggregation
 
 CXX       = g++
-OPTS     += -g -O2
+OPTS     += -g #-O2
 INCLUDES  = -I$(PROTOBUF_HOME)/include
 LIBS      = -lpthread -lprotobuf
 
