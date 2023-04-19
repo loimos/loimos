@@ -12,7 +12,18 @@ OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o \
 				 contact_model/MinMaxAlphaModel.o readers/interventions.pb.o
 DEFS   = loimos.def.h Defs.h readers/DataReader.h
 DECLS  = loimos.decl.h
+
 BIN    = loimos
+
+ifdef ENABLE_SMP
+BIN    +=-smp
+endif
+ifdef ENABLE_TRACING
+BIN    +=-prj
+endif
+ifdef ENABLE_LB
+BIN    +=-lb
+endif
 
 # Set the ENABLE_UNIT_TESTING environment variable to compile for unit testing
 ifdef ENABLE_UNIT_TESTING
@@ -28,8 +39,8 @@ endif
 # Set the ENABLE_LB environment variable to compile for Charm++'s in-built
 # dynamic load balancing
 
-# set the USE_PROJECTIONS environment variable to compile for projections
-ifdef USE_PROJECTIONS
+# set the ENABLE_TRACING environment variable to compile for projections
+ifdef ENABLE_TRACING
 PROJECTION_FLAGS = -tracemode projections
 else
 PROJECTION_FLAGS = 

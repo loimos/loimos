@@ -1,7 +1,13 @@
 # Set the environment variable CHARM_HOME to the Charm++ installation with projections enabled
 CHARM_HOME ?= /usr/local/charm
-ifdef USE_PROJECTIONS
-CHARMC      = $(CHARM_HOME)/bin/charmc -DUSE_PROJECTIONS
+
+# Set the ENABLE_SMP environment variable to build with smp
+ifdef ENABLE_SMP
+CHARM_HOME = $(CHARM_HOME)-smp
+endif
+
+ifdef ENABLE_TRACING
+CHARMC      = $(CHARM_HOME)/bin/charmc -DENABLE_TRACING
 else
 CHARMC      = $(CHARM_HOME)/bin/charmc
 endif
@@ -18,8 +24,13 @@ GTEST_HOME ?= /usr/local/gtest
 # Set the environment variable HYPERCOMM_HOME to the Hypercomm library installation
 HYPERCOMM_HOME ?= ../hypercomm-aggregation
 
-CXX       = g++
+ifdef ENABLE_DEBUG
+OPTS     += -g
+else
 OPTS     += -g -O2
+endif
+
+CXX       = g++
 INCLUDES  = -I$(PROTOBUF_HOME)/include
 LIBS      = -lpthread -lprotobuf
 
@@ -44,8 +55,8 @@ LIBS     += -L$(GTEST_HOME)/lib -lgtest
 OPTS     += -DENABLE_UNIT_TESTING
 endif
 
-ifdef USE_PROJECTIONS
-OPTS     += -DUSE_PROJECTIONS
+ifdef ENABLE_TRACING
+OPTS     += -DENABLE_TRACING
 endif
 
 ifdef USE_HYPERCOMM

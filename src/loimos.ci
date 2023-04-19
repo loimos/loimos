@@ -91,7 +91,7 @@ mainmodule loimos {
 
       for(day = 0; day < numDays; day++) {
         //serial{CkPrintf("  Starting iteration\n");}
-        #ifdef USE_PROJECTIONS
+        #ifdef ENABLE_TRACING
           if (SHOULD_PROFILE(day)){
             serial{traceArray.traceOn();}
             when traceSwitchOn() {}
@@ -186,14 +186,14 @@ mainmodule loimos {
         #endif // ENABLE_LB
       
 
-        #ifdef USE_PROJECTIONS
+        #ifdef ENABLE_TRACING
           if (SHOULD_PROFILE(day)) {
             serial{traceArray.traceOff();}
             when traceSwitchOff(){
               serial{traceArray.traceFlush();}
             }
             
-            // Toggled by USE_PROJECTIONS to group profiling code
+            // Toggled by ENABLE_TRACING to group profiling code
             serial{traceArray.reportMemoryUsage();}
             when printMemoryUsage(long usage) {
               serial {
@@ -202,7 +202,7 @@ mainmodule loimos {
             }
           }
           
-        #endif // USE_PROJECTIONS
+        #endif // ENABLE_TRACING
       }
       serial { 
         CkPrintf("Finished simulating %d days in %lf seconds.\n", numDays, (CkWallTimer() - simulationStartTime));
@@ -235,11 +235,11 @@ mainmodule loimos {
     #endif // ENABLE_DEBUG
     entry [reductiontarget] void ReceiveInfectiousCount(int infectiousCount);
     entry [reductiontarget] void ReceiveStats(CkReductionMsg *summary);
-    #ifdef USE_PROJECTIONS
+    #ifdef ENABLE_TRACING
     entry [reductiontarget] void traceSwitchOn();
     entry [reductiontarget] void traceSwitchOff();
     entry [reductiontarget] void printMemoryUsage(long usage);
-    #endif // USE_PROJECTIONS
+    #endif // ENABLE_TRACING
     #ifdef ENABLE_LB
     entry [reductiontarget] void instrumentSwitchOn();
     entry [reductiontarget] void instrumentSwitchOff();
@@ -251,12 +251,12 @@ mainmodule loimos {
 
   group TraceSwitcher{
     entry TraceSwitcher();
-    #ifdef USE_PROJECTIONS
+    #ifdef ENABLE_TRACING
     entry void traceOn();
     entry void traceOff();
     entry void traceFlush();
     entry void reportMemoryUsage();
-    #endif // USE_PROJECTIONS
+    #endif // ENABLE_TRACING
     #ifdef ENABLE_LB
     entry void instrumentOn();
     entry void instrumentOff();
