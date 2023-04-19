@@ -24,7 +24,7 @@ Charm++ may be installed from source as follows:
 
     ```./build charm++ <version> smp --with-production --enable-tracing```
   
-    Note that you may need to load some module files in order to properly build Charm++ on a cluster. Most clusters will require loading the system MPI, and   Cray clusters will generally require some form of `craype-hugepages`. See below for some examples, or consult the [Charm++ documentation](https://charm.  readthedocs.io/en/latest/charm%2B%2B/manual.html#sec-install).
+    Note that you may need to load some module files in order to properly build Charm++ on a cluster. Most clusters will require loading the system MPI, and   Cray clusters will generally require some form of `craype-hugepages`. See below for some examples, or consult the [Charm++ documentation](https://charm.readthedocs.io/en/latest/charm%2B%2B/manual.html#sec-install).
   
     | System              | Version            | Module Line                                              |
     |---------------------|--------------------|----------------------------------------------------------|
@@ -45,7 +45,10 @@ Charm++ may be installed from source as follows:
 
 Protobuf can be installed as follows:
 1. Create a separate `install` directory somewhere you have write permissions with `mkdir install`. This is to get around the fact that on most computing clusters, many users will not have sudo permissions. Placing this at the top level of your home directory is often convenient, in which case the full path is given by `$HOME/install`.
-2. Download version 3.21.12 of Protobuf here: [https://github.com/protocolbuffers/protobuf/releases/tag/v21.12](https://github.com/protocolbuffers/protobuf/releases/tag/v21.12). We suggest using the C++ version of this release rather than cloning the full repo or using the most recent version as the C++ version has a much simpler build system without as many dependencies, and this is the last release which contains a separate C++ version. You can download this C++ version like so: `wget https://github.com/protocolbuffers/protobuf/releases/download/v21.9/protobuf-cpp-3.21.12.tar.gz`
+2. Download version 3.21.12 of Protobuf here: [https://github.com/protocolbuffers/protobuf/releases/tag/v21.12](https://github.com/protocolbuffers/protobuf/releases/tag/v21.12). We suggest using the C++ version of this release rather than cloning the full repo or using the most recent version as the C++ version has a much simpler build system without as many dependencies, and this is the last release which contains a separate C++ version. You can download this C++ version like so:
+    
+    ```wget https://github.com/protocolbuffers/protobuf/releases/download/v21.9/protobuf-cpp-3.21.12.tar.gz```
+
 3. Extract the downloaded files and `cd` into the resulting directory: `tar -xzf protobuf-cpp-3.21.12.tar.gz`.
 4. Build and install Protobuf as follows:
     ```
@@ -135,12 +138,12 @@ Where
 - `OF` is the path to the output file.
 - `DF` is the path to the disease model.
 - `SD` is the path to the directory containing the population data for the
-  scenario. These are usually found in `loimos/data/populations`.
+  scenario. These are usually found in [`loimos/data/populations`](https://github.com/loimos/loimos/blob/develop/data/populations).
 - `-m` or `--min-max-alpha` is an optional flag which indicates that the
   min-max-alpha contact model should be used.
 - `-i` is an optional flag used when specifying an intervention. `IF` should
   be the path to a `.textproto` file specifying the intervention to be used.
-  These are generally found in `loimos/data/interventions`.
+  These are generally found in [`loimos/data/interventions`](https://github.com/loimos/loimos/blob/develop/data/interventions).
 
 ## Authors
 
