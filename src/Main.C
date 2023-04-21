@@ -387,6 +387,9 @@ void Main::SeedInfections() {
     }
   }
 
+  int dayIdx = day % numDaysWithRealData;
+  int dayStart = day * DAY_LENGTH;
+  int dayEnd = dayStart + DAY_LENGTH - 1;
   for (int i = 0; i < INITIAL_INFECTIONS_PER_DAY; ++i) {
     int personIdx = initialInfections.back();
     initialInfections.pop_back();
@@ -402,10 +405,10 @@ void Main::SeedInfections() {
     std::vector<Interaction> interactions;
     interactions.emplace_back(
       std::numeric_limits<double>::max(),
-      0,
-      0,
-      0,
-      std::numeric_limits<int>::max()
+      -1,
+      -1,
+      dayStart,
+      dayEnd
     );
 
     InteractionMessage interMsg(-1, personIdx, interactions);

@@ -16,6 +16,7 @@
   #include "Aggregator.h"
 #endif // USE_HYPERCOMM
 
+#include <random>
 #include <tuple>
 #include <limits>
 #include <queue>
@@ -71,7 +72,7 @@ People::People() {
       people[p].state = diseaseModel->getHealthyState(dataField);
       // We set persons next state to equal current state to signify
       // that they are not in a disease model progression.
-      people[p].next_state = people[p].state;
+      people[p].nextState = people[p].state;
     }
   } else {
       int numAttributesPerPerson =
@@ -234,15 +235,20 @@ void People::pup(PUP::er &p) {
 void People::SendVisitMessages() {
   totalVisitsForDay = 0;
   if (syntheticRun) {
-    SyntheticSendVisitMessages();
+    ComputeVisits();
   } else {
-    RealDataSendVisitMessages();
+    SendLoadedVisits();
   }
+
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
+  if (0 == day) {
+    CkPrintf("    Chare %d (P %d, T %d): %d visits, %d people\n",
+      thisIndex, CkMyNode(), CkMyPe(), totalVisitsForDay, (int) people.size());
+  }
+#endif
 }
 
-void People::SyntheticSendVisitMessages() {
-  int totalNumVisits = 0;
-
+void People::ComputeVisits() {
   // Model number of visits as a poisson distribution.
   std::poisson_distribution<int> num_visits_generator(averageDegreeOfVisit);
 
@@ -250,7 +256,7 @@ void People::SyntheticSendVisitMessages() {
   std::poisson_distribution<int> visit_distance_generator(LOCATION_LAMBDA);
 
   // Model visit times as uniform.
-  std::uniform_int_distribution<int> time_dist(0, DAY_LENGTH); // in seconds
+  std::uniform_int_distribution<int> time_dist(0, DAY_LENGTH - 1); // in seconds
   std::priority_queue<int, std::vector<int>, std::greater<int> > times;
 
   // Calculate minigrid sizes.
@@ -281,7 +287,7 @@ void People::SyntheticSendVisitMessages() {
   );
 
   // Calculate schedule for each person.
-  for (Person &p : people) {
+  for (const Person &p : people) {
     // Check if person is self isolating.
     int personIdx = p.uniqueId;
     if (p.isIsolating && diseaseModel->isInfectious(p.state)) {
@@ -295,14 +301,11 @@ void People::SyntheticSendVisitMessages() {
 
     // Get random number of visits for this person.
     int numVisits = num_visits_generator(generator);
-    totalVisitsForDay += numVisits;
     // Randomly generate start and end times for each visit,
     // using a priority queue ensures the times are in order.
     for (int j = 0; j < 2 * numVisits; j++) {
       times.push(time_dist(generator));
     }
-
-    totalNumVisits += numVisits;
 
     // Randomly pick nearby location for person to visit.
     for (int j = 0; j < numVisits; j++) {
@@ -380,67 +383,73 @@ void People::SyntheticSendVisitMessages() {
           destinationX, destinationY, destinationIdx, partitionX, partitionY);
 #endif
 
-      // Determine which chare tracks this location.
-      int locationPartition = getPartitionIndex(
-        destinationIdx,
-        numLocations,
-        numLocationPartitions,
-        firstLocationIdx
-      );
-
       // Send off visit message
-      VisitMessage visitMsg(destinationIdx, personIdx, p.state, visitStart, visitEnd);
-      #ifdef USE_HYPERCOMM
-      Aggregator* agg = aggregatorProxy.ckLocalBranch();
-      if (agg->visit_aggregator) {
-        agg->visit_aggregator->send(locationsArray[locationPartition], visitMsg);
-      } else {
-      #endif // USE_HYPERCOMM
-        locationsArray[locationPartition].ReceiveVisitMessages(visitMsg);
-      #ifdef USE_HYPERCOMM
-      }
-      #endif // USE_HYPERCOMM
+      VisitMessage visitMsg(destinationIdx, personIdx, p.state, visitStart,
+          visitEnd);
+      // Start times for on-the-fly syntheitc data are all less than DAY_LENGTH
+      ComputeVisitDiseaseState(0, p, &visitMsg);
     }
   }
 }
 
-void People::RealDataSendVisitMessages() {
+void People::SendLoadedVisits() {
   // Send activities for each person.
-  int numVisits = 0;
-  int minId = numPeople;
-  int maxId = 0;
+  int dayIdx = day % numDaysWithRealData;
+  int dayStartTime = dayIdx * DAY_LENGTH;
   for (const Person &person: people) {
-    minId = std::min(minId, person.uniqueId);
-    maxId = std::max(maxId, person.uniqueId);
-    for (VisitMessage visitMessage:
-        person.visitsByDay[day % numDaysWithRealData]) {
-      visitMessage.personState = person.state;
-      numVisits++;
-
-      // Find process that owns that location
-      int locationPartition = getPartitionIndex(visitMessage.locationIdx,
-          numLocations, numLocationPartitions, firstLocationIdx);
-      // Send off the visit message.
-      #ifdef USE_HYPERCOMM
-      Aggregator* agg = aggregatorProxy.ckLocalBranch();
-      if (agg->visit_aggregator) {
-        agg->visit_aggregator->send(locationsArray[locationPartition], visitMessage);
-      } else {
-      #endif // USE_HYPERCOMM
-        locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
-      #ifdef USE_HYPERCOMM
-      }
-      #endif // USE_HYPERCOMM
+    for (VisitMessage visitMessage: person.visitsByDay[dayIdx]) {
+      ComputeVisitDiseaseState(dayStartTime, person, &visitMessage);
     }
   }
+}
 
-#if ENABLE_DEBUG >= DEBUG_PER_CHARE
-  if (0 == day) {
-    CkPrintf("    Chare %d (P %d, T %d): %d visits, %d people (in [%d, %d])\n",
-      thisIndex, CkMyNode(), CkMyPe(), numVisits, (int) people.size(), minId,
-      maxId);
+void People::ComputeVisitDiseaseState(int dayStartTime, const Person &person,
+    VisitMessage *visitMessage) {
+  int visitStartTime = visitMessage->visitStart - dayStartTime;
+  int visitEndTime = visitMessage->visitEnd - dayStartTime;
+  // Transition after visit ->  send old state
+  if (visitEndTime < person.secondsLeftInState) {
+    visitMessage->personState = person.state;
+
+  // Transition before visit -> send new state
+  } else if (visitStartTime >= person.secondsLeftInState) {
+    visitMessage->personState = person.nextState;
+
+  // Transition during visit -> split visit
+  } else {
+    VisitMessage before(visitMessage->locationIdx, visitMessage->personIdx,
+        person.state, visitMessage->visitStart,
+        dayStartTime + person.secondsLeftInState - 1);
+    VisitMessage after(visitMessage->locationIdx, visitMessage->personIdx,
+        person.state, dayStartTime + person.secondsLeftInState,
+        visitMessage->visitEnd);
+    SendVisitMessage(&before);
+    SendVisitMessage(&after);
+    totalVisitsForDay += 2;
+
+    return;
   }
-#endif
+
+  SendVisitMessage(visitMessage);
+  totalVisitsForDay++;
+}
+
+void People::SendVisitMessage(VisitMessage *visitMessage) {
+  // Find process that owns that location
+  int locationPartition = getPartitionIndex(visitMessage->locationIdx,
+      numLocations, numLocationPartitions, firstLocationIdx);
+
+  // Send off the visit message.
+#ifdef USE_HYPERCOMM
+  Aggregator* agg = aggregatorProxy.ckLocalBranch();
+  if (agg->visit_aggregator) {
+    agg->visit_aggregator->send(locationsArray[locationPartition],
+        *visitMessage);
+    return;
+  }
+#endif // USE_HYPERCOMM
+
+  locationsArray[locationPartition].ReceiveVisitMessages(*visitMessage);
 }
 
 void People::ReceiveInteractions(InteractionMessage interMsg) {
@@ -461,6 +470,47 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
   );
 }
 
+void People::ProcessInteractions(Person &person) {
+  int numInteractions = (int) person.interactions.size();
+  if (0 == numInteractions || !diseaseModel->isSusceptible(person.state)) {
+    return;
+  }
+
+  // Detemine whether or not this person was infected...
+  double totalPropensity = 0.0;
+  for (int i = 0; i < numInteractions; ++i) {
+    totalPropensity += person.interactions[i].propensity;
+  }
+  double roll = -log(unitDistrib(generator)) / totalPropensity;
+
+  if (roll <= DAY_LENGTH) {
+    // ...if they were, determine which interaction was responsible, by
+    // chooseing an interaction, with a weight equal to the propensity
+    roll = std::uniform_real_distribution<>(0, totalPropensity)(generator);
+    double partialSum = 0.0;
+    Interaction &inter = person.interactions[0];
+    for (int i; i < numInteractions; ++i) {
+      inter = person.interactions[i];
+
+      partialSum += inter.propensity;
+      if (partialSum > roll) {
+        break;
+      }
+    }
+
+    // TODO: Save any useful information about the interaction which caused
+    // the infection
+
+    // Mark that exposed healthy individuals should make transition at the end
+    // of the day.
+    std::uniform_int_distribution<> timeDistrib(inter.startTime,
+        inter.endTime);
+    person.secondsLeftInState = DAY_LENGTH - timeDistrib(generator);
+  }
+
+  person.interactions.clear();
+}
+
 void People::EndOfDayStateUpdate() {
   // Get ready to count today's states
   int totalStates = diseaseModel->getNumberOfStates();
@@ -469,9 +519,8 @@ void People::EndOfDayStateUpdate() {
 
   // Handle state transitions at the end of the day.
   int infectiousCount = 0;
-  for (Person &person : people) {
+  for (Person &person: people) {
     ProcessInteractions(person);
-
     person.EndOfDayStateUpdate(diseaseModel, &generator);
 
     int resultantState = person.state;
@@ -492,44 +541,6 @@ void People::EndOfDayStateUpdate() {
 void People::SendStats() {
   CkCallback cb(CkReductionTarget(Main, ReceiveStats), mainProxy);
   contribute(stateSummaries, CkReduction::sum_int, cb);
-}
-
-void People::ProcessInteractions(Person &person) {
-  double totalPropensity = 0.0;
-  int numInteractions = (int) person.interactions.size();
-  for (int i = 0; i < numInteractions; ++i) {
-    totalPropensity += person.interactions[i].propensity;
-  }
-
-  // Detemine whether or not this person was infected...
-  double roll = -log(unitDistrib(generator)) / totalPropensity;
-
-  if (roll <= DAY_LENGTH) {
-    // ...if they were, determine which interaction was responsible, by
-    // chooseing an interaction, with a weight equal to the propensity
-    roll = std::uniform_real_distribution<>(0, totalPropensity)(generator);
-    double partialSum = 0.0;
-    int interactionIdx;
-    for (
-      interactionIdx = 0; interactionIdx < numInteractions; ++interactionIdx
-    ) {
-      partialSum += person.interactions[interactionIdx].propensity;
-      if (partialSum > roll) {
-        break;
-      }
-    }
-
-    // TODO: Save any useful information about the interaction which caused
-    // the infection
-
-    // Mark that exposed healthy individuals should make transition at the end
-    // of the day.
-    if (diseaseModel->isSusceptible(person.state)) {
-      person.secondsLeftInState = -1;
-    }
-  }
-
-  person.interactions.clear();
 }
 
 #ifdef ENABLE_LB

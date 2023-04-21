@@ -18,7 +18,7 @@ class Person : public DataInterface {
         int uniqueId;
         // Numeric disease state of the person.
         int state;
-        int next_state;
+        int nextState;
         int secondsLeftInState;
         bool willComply;
         bool isIsolating;
@@ -34,7 +34,7 @@ class Person : public DataInterface {
 
         // Holds visit messages for each day
         std::vector<std::vector<VisitMessage> > visitsByDay;
-        
+
         // Various dynamic attributes of the person
         std::vector<union Data> personData;
 
@@ -52,7 +52,7 @@ class Person : public DataInterface {
 
         // Disease model functions.
         void EndOfDayStateUpdate(DiseaseModel *diseaseModel,
-                                   std::default_random_engine *generator);
+            std::default_random_engine *generator);
 
         // Override DataInterfect abstract methods
         void setUniqueId(int idx);

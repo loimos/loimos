@@ -11,6 +11,8 @@
 #include "Message.h"
 #include "readers/data.pb.h"
 
+#include <random>
+
 /**
  * Defines attributes of a single person.
  */
@@ -20,7 +22,7 @@ Person::Person(int numAttributes, int startingState, int timeLeftInState) {
         this->personData.resize(numAttributes);
     }
     this->state = startingState;
-    this->next_state = -1;
+    this->nextState = -1;
     this->isIsolating = false;
     this->willComply = false;
     this->secondsLeftInState = timeLeftInState;
@@ -33,7 +35,7 @@ Person::Person(int numAttributes, int startingState, int timeLeftInState) {
 void Person::pup(PUP::er &p) {
     p | uniqueId;
     p | state;
-    p | next_state;
+    p | nextState;
     p | secondsLeftInState;
     p | interactions;
     p | visitOffsetByDay;
@@ -52,13 +54,19 @@ std::vector<union Data> &Person::getDataField() {
 
 void Person::EndOfDayStateUpdate(DiseaseModel *diseaseModel,
     std::default_random_engine *generator) {
-  // Transition to next state or mark the passage of time
+  // We use the max time to mark states which last indefintiely
+  if (std::numeric_limits<Time>::max() == secondsLeftInState) {
+    return;
+  }
   secondsLeftInState -= DAY_LENGTH;
+
+  int dwellTime = 0;
+  int oldState = state;
   if (secondsLeftInState <= 0) {
     // If they have already been infected
-    if (next_state != -1) {
-      state = next_state;
-      std::tie(next_state, secondsLeftInState) =
+    if (nextState != -1) {
+      state = nextState;
+      std::tie(nextState, dwellTime) =
         diseaseModel->transitionFromState(state, generator);
 
       // Check if person will begin isolating.
@@ -70,10 +78,20 @@ void Person::EndOfDayStateUpdate(DiseaseModel *diseaseModel,
       // Get which exposed state they should transition to.
       std::tie(state, std::ignore) =
         diseaseModel->transitionFromState(state, generator);
-      // See where they will transition next.
-      std::tie(next_state, secondsLeftInState) =
+      // See where they will transition next
+      std::tie(nextState, dwellTime) =
         diseaseModel->transitionFromState(state, generator);
     }
+
+    // We use the max time to mark states which last indefintiely, so don't
+    // mess that up
+    if (std::numeric_limits<Time>::max() == dwellTime) {
+      secondsLeftInState = dwellTime;
+    } else {
+      secondsLeftInState += dwellTime;
+    }
+    CkPrintf("  Person %d transitioned from %d to %d (%d/%ds left, next %d)\n",
+        uniqueId, oldState, state, secondsLeftInState, dwellTime, nextState);
   }
 }
 
