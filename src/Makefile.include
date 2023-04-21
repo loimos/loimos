@@ -3,7 +3,7 @@ CHARM_HOME ?= /usr/local/charm
 
 # Set the ENABLE_SMP environment variable to build with smp
 ifdef ENABLE_SMP
-CHARM_HOME = $(CHARM_HOME)-smp
+CHARM_HOME := $(CHARM_HOME)-smp
 endif
 
 ifdef ENABLE_TRACING
