@@ -26,7 +26,7 @@ export PROTOBUF_HOME="/<full/path/to/install/dir>"
 export LD_LIBRARY_PATH="$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH"
 ```
 
-Note that `CHARM_HOME` should be set so that the file `$CHARM_HOME/bin/charmc` exists. Likewise, `PROTOBUF_HOME` should be set so that the file `$PROTOBUF_HOME/bin/protoc` exists. If these files are not present at these locations Loimos will not be able to build properly.
+Note that `CHARM_HOME` should be set so that the file `$CHARM_HOME/bin/charmc` exists, or, if building Charm++ with SMP, so that the file `$CHARM_HOME-smp/bin/charmc` exisits. Likewise, `PROTOBUF_HOME` should be set so that the file `$PROTOBUF_HOME/bin/protoc` exists. If these files are not present at these locations Loimos will not be able to build properly.
 
 ## Building from Source
 
