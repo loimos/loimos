@@ -212,7 +212,7 @@ mainmodule loimos {
       }
       serial {
         CkPrintf("Finished simulating %d days in %lf seconds.\n", numDays, (CkWallTimer() - simulationStartTime));
-        #ifdef ENABLE_DEBUG
+        #if ENABLE_DEBUG >= 2
         CkPrintf("  Processed %lu visits, %lu interactions, and %lu exposures\n",
           totalVisits, totalInteractions, totalExposures);
         #endif
@@ -239,21 +239,21 @@ mainmodule loimos {
     entry void SeedInfections();
     entry void StartComputingInteractions();
     entry void ComputedInteractions();
-    #ifdef ENABLE_DEBUG
-    entry [reductiontarget] void ReceiveVisitsLoadedCount(int visitsCount) {
+    #if ENABLE_DEBUG >= 2
+    entry [reductiontarget] void ReceiveVisitsLoadedCount(uint64_t visitsCount) {
       serial{CkPrintf("  Loaded a total of %d visits\n", visitsCount);}
     };
-    entry [reductiontarget] void ReceiveVisitsSentCount(int count) {
+    entry [reductiontarget] void ReceiveVisitsSentCount(uint64_t count) {
       serial{totalVisits += count;}
-      serial{CkPrintf("  Processed %d sent visits\n", count);}
+      serial{CkPrintf("  Processed %lu sent visits\n", count);}
     };
-    entry [reductiontarget] void ReceiveInteractionsCount(int count) {
+    entry [reductiontarget] void ReceiveInteractionsCount(uint64_t count) {
       serial{totalInteractions += count;}
-      serial{CkPrintf("  Processed %d interactions\n", count);}
+      serial{CkPrintf("  Processed %lu interactions\n", count);}
     };
-    entry [reductiontarget] void ReceiveExposuresCount(int count) {
+    entry [reductiontarget] void ReceiveExposuresCount(uint64_t count) {
       serial{totalExposures += count;}
-      serial{CkPrintf("  Processed %d exposures\n", count);}
+      serial{CkPrintf("  Processed %lu exposures\n", count);}
     };
     #endif // ENABLE_DEBUG
     entry [reductiontarget] void ReceiveInfectiousCount(int infectiousCount);

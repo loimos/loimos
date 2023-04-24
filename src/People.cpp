@@ -261,7 +261,7 @@ void People::SendVisitMessages() {
   }
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   CkCallback cb(CkReductionTarget(Main, ReceiveVisitsSentCount), mainProxy);
-  contribute(sizeof(int), &totalVisitsForDay, CkReduction::sum_int, cb);
+  contribute(sizeof(uint64_t), &totalVisitsForDay, CkReduction::sum_ulong, cb);
 #endif
 }
 
@@ -489,7 +489,7 @@ void People::EndOfDayStateUpdate() {
 
   // Handle state transitions at the end of the day.
   int infectiousCount = 0;
-  int totalExposuresPerDay = 0;
+  uint64_t totalExposuresPerDay = 0;
   for (Person &person : people) {
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
     totalExposuresPerDay += person.interactions.size();
@@ -511,7 +511,8 @@ void People::EndOfDayStateUpdate() {
   contribute(sizeof(int), &infectiousCount, CkReduction::sum_int, cb);
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   CkCallback expCb(CkReductionTarget(Main, ReceiveExposuresCount), mainProxy);
-  contribute(sizeof(int), &totalExposuresPerDay, CkReduction::sum_int, expCb);
+  contribute(sizeof(uint64_t), &totalExposuresPerDay, CkReduction::sum_ulong,
+      expCb);
 #endif
 
   // Get ready for the next day

@@ -66,14 +66,14 @@ void Location::addEvent(Event e) {
   events.push_back(e);
 }
 
-int Location::processEvents(
+uint64_t Location::processEvents(
   const DiseaseModel *diseaseModel,
   ContactModel *contactModel
 ) {
-  int numInteractions = 0;
+  uint64_t numInteractions = 0;
   std::vector<Event> *arrivals;
   #if ENABLE_DEBUG >= DEBUG_VERBOSE
-  int numPresent = 0;
+  uint64_t numPresent = 0;
   #endif
 
   if (!interventionStategy || !complysWithShutdown
@@ -123,7 +123,11 @@ int Location::processEvents(
   interactions.clear();
   day++;
 
+  #ifdef ENABLE_DEBUG >= DEBUG_VERBOSE
   return contactModel->getContactProbability(*this) * numInteractions;
+  #else
+  return 0;
+  #endif
 }
 
 // Simple dispatch to the susceptible/infectious depature handlers
