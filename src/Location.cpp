@@ -75,6 +75,7 @@ Counter Location::processEvents(
   std::vector<Event> *arrivals;
   #if ENABLE_DEBUG >= DEBUG_VERBOSE
   Counter numPresent = 0;
+  Counter numVisits = events.size() / 2;
   #endif
 
   if (!interventionStategy || !complysWithShutdown
@@ -125,6 +126,14 @@ Counter Location::processEvents(
   day++;
 
   #ifdef ENABLE_DEBUG >= DEBUG_VERBOSE
+  if (0 == uniqueId) {
+    uint32_t maxSimVisits =
+      getValue(SIMULTANEOUS_MAX_VISITS_CSV_INDEX).uint_32;
+    double prob = contactModel->getContactProbability(*this);
+    Counter estimate = prob * numInteractions;
+    CkPrintf("    Location %d: %u max sim, %lu visits, %f prob, %lu inter\n",
+        uniqueId, maxSimVisits, numVisits, prob, estimate);
+  }
   return contactModel->getContactProbability(*this) * numInteractions;
   #else
   return 0;

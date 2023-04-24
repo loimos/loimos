@@ -179,15 +179,11 @@ void Locations::ComputeInteractions() {
       CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), cb);
 #endif
 
-#if ENABLE_DEBUG >= DEBUG_PER_CHARE
+#if ENABLE_DEBUG >= DEBUG_VERBOSE//PER_CHARE
   if (0 == day) {
-<<<<<<< develop:src/Locations.cpp
-    CkPrintf("    Process %d, thread %d: %d visits, %d locations\n",
-      CkMyNode(), CkMyPe(), numVisits, static_cast<int>(locations.size()));
-=======
-    CkPrintf("    Process %d, thread %d: "COUNTER_PRINT_TYPE" visits, %d locations\n",
-      CkMyNode(), CkMyPe(), numVisits, (int) locations.size());
->>>>>>> HEAD~24:src/Locations.C
+    CkPrintf("    Process %d, thread %d: "COUNTER_PRINT_TYPE" visits, "
+        COUNTER_PRINT_TYPE" interactions, %lu locations\n",
+        CkMyNode(), CkMyPe(), numVisits, numInteractions, locations.size());
   }
 #endif
 
