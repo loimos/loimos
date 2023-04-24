@@ -6,6 +6,7 @@
 
 #include "loimos.decl.h"
 #include "Main.h"
+#include "Types.h"
 #include "People.h"
 #include "Locations.h"
 #include "DiseaseModel.h"
@@ -54,9 +55,9 @@
 /* readonly */ int contactModelType;
 /* readonly */ int firstPersonIdx;
 /* readonly */ int firstLocationIdx;
-/* readonly */ uint64_t totalVisits;
-/* readonly */ uint64_t totalInteractions;
-/* readonly */ uint64_t totalExposures;
+/* readonly */ Counter totalVisits;
+/* readonly */ Counter totalInteractions;
+/* readonly */ Counter totalExposures;
 /* readonly */ double simulationStartTime;
 /* readonly */ double iterationStartTime;
 /* readonly */ double stepStartTime;

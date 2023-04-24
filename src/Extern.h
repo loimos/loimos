@@ -24,9 +24,9 @@ extern /* readonly */ int numDays;
 extern /* readonly */ int numDaysWithRealData;
 extern /* readonly */ bool syntheticRun;
 
-extern /* readonly */ uint64_t totalVisits;
-extern /* readonly */ uint64_t totalInteractions;
-extern /* readonly */ uint64_t totalExposures;
+extern /* readonly */ Counter totalVisits;
+extern /* readonly */ Counter totalInteractions;
+extern /* readonly */ Counter totalExposures;
 extern /* readonly */ double simulationStartTime;
 extern /* readonly */ double iterationStartTime;
 

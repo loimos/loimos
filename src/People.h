@@ -7,6 +7,7 @@
 #ifndef PEOPLE_H_
 #define PEOPLE_H_
 
+#include "Types.h"
 #include "DiseaseModel.h"
 #include "Interaction.h"
 #include "Person.h"
@@ -28,8 +29,7 @@ class People : public CBase_People {
  private:
   int numLocalPeople;
   int day;
-  int totalVisitsForDay;
-
+  Counter totalVisitsForDay;
   std::vector<Person> people;
   std::default_random_engine generator;
   DiseaseModel *diseaseModel;

@@ -10,6 +10,15 @@
 #include <vector>
 #include <string>
 
+#include "Types.h"
+
+// Concat two parts of variable names (for use with other macros)
+// in-direction neccessary so that any macros passed in will be expanded prior
+// to being concatenated
+#define CONCAT(x, y) CONCAT_(x, y)
+#define CONCAT_(x, y) x ## y
+//#define CK_SUM_COUNTER(type) CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE)
+
 // Debug levels
 #define DEBUG_BASIC 1
 #define DEBUG_VERBOSE 2
@@ -27,16 +36,15 @@
 #define INFECTION_PERIOD 4
 
 // Event types
-using EventType = char;
 #define ARRIVAL 0
 #define DEPARTURE 1
 
 // Time
-using Time = int32_t;
 const Time DAY_LENGTH = 3600 * 24;
 const Time HOUR_LENGTH = 3600;
 const Time MINUTE_LENGTH = 60;
 #define DAYS_IN_WEEK 7
+
 
 // Indices of attribute columns in the appropriate csvs
 #define AGE_CSV_INDEX 0

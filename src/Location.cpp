@@ -5,6 +5,7 @@
  */
 
 #include "loimos.decl.h"
+#include "Types.h"
 #include "Location.h"
 #include "People.h"
 #include "Event.h"
@@ -66,14 +67,14 @@ void Location::addEvent(Event e) {
   events.push_back(e);
 }
 
-uint64_t Location::processEvents(
+Counter Location::processEvents(
   const DiseaseModel *diseaseModel,
   ContactModel *contactModel
 ) {
-  uint64_t numInteractions = 0;
+  Counter numInteractions = 0;
   std::vector<Event> *arrivals;
   #if ENABLE_DEBUG >= DEBUG_VERBOSE
-  uint64_t numPresent = 0;
+  Counter numPresent = 0;
   #endif
 
   if (!interventionStategy || !complysWithShutdown

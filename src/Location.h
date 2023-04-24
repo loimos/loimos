@@ -10,6 +10,7 @@
 // Foreward declaration to help with includes
 class Location;
 
+#include "Types.h"
 #include "Event.h"
 #include "Interaction.h"
 #include "DiseaseModel.h"
@@ -105,7 +106,7 @@ class Location : public DataInterface {
 
   // Runs through all of the current events and return the indices of
   // any people who have been infected
-  uint64_t processEvents(const DiseaseModel *diseaseModel,
+  Counter processEvents(const DiseaseModel *diseaseModel,
     ContactModel *contactModel);
 };
 

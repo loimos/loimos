@@ -5,6 +5,7 @@
  */
 
 #include "loimos.decl.h"
+#include "Types.h"
 #include "Locations.h"
 #include "Location.h"
 #include "Event.h"
@@ -166,21 +167,27 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 
 void Locations::ComputeInteractions() {
   // traverses list of locations
-  uint64_t numVisits = 0;
-  uint64_t numInteractions = 0;
+  Counter numVisits = 0;
+  Counter numInteractions = 0;
   for (Location &loc : locations) {
     numVisits += loc.events.size() / 2;
     numInteractions += loc.processEvents(diseaseModel, contactModel);
   }
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   CkCallback cb(CkReductionTarget(Main, ReceiveInteractionsCount), mainProxy);
-  contribute(sizeof(uint64_t), &numInteractions, CkReduction::sum_ulong, cb);
+  contribute(sizeof(Counter), &numInteractions,
+      CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), cb);
 #endif
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
   if (0 == day) {
+<<<<<<< develop:src/Locations.cpp
     CkPrintf("    Process %d, thread %d: %d visits, %d locations\n",
       CkMyNode(), CkMyPe(), numVisits, static_cast<int>(locations.size()));
+=======
+    CkPrintf("    Process %d, thread %d: "COUNTER_PRINT_TYPE" visits, %d locations\n",
+      CkMyNode(), CkMyPe(), numVisits, (int) locations.size());
+>>>>>>> HEAD~24:src/Locations.C
   }
 #endif
 

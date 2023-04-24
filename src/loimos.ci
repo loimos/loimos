@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: MIT
 
 mainmodule loimos {
+  include "Types.h";
   include "Interaction.h";
   include "Message.h";
   include "intervention_model/Interventions.h";
@@ -51,9 +52,9 @@ mainmodule loimos {
   readonly int firstPersonIdx;
   readonly int firstLocationIdx;
 
-  readonly uint64_t totalVisits;
-  readonly uint64_t totalInteractions;
-  readonly uint64_t totalExposures;
+  readonly Counter totalVisits;
+  readonly Counter totalInteractions;
+  readonly Counter totalExposures;
   readonly double simulationStartTime;
   readonly double iterationStartTime;
   readonly double stepStartTime;
@@ -93,6 +94,7 @@ mainmodule loimos {
       serial{
         totalVisits = 0;
         totalInteractions = 0;
+        totalExposures = 0;
         totalTime.resize(TOTAL_TIME_SIZE, 0);
         CkPrintf("Running ...\n\n");
         simulationStartTime = CkWallTimer();
@@ -240,20 +242,20 @@ mainmodule loimos {
     entry void StartComputingInteractions();
     entry void ComputedInteractions();
     #if ENABLE_DEBUG >= 2
-    entry [reductiontarget] void ReceiveVisitsLoadedCount(uint64_t visitsCount) {
+    entry [reductiontarget] void ReceiveVisitsLoadedCount(int visitsCount) {
       serial{CkPrintf("  Loaded a total of %d visits\n", visitsCount);}
     };
-    entry [reductiontarget] void ReceiveVisitsSentCount(uint64_t count) {
+    entry [reductiontarget] void ReceiveVisitsSentCount(Counter count) {
       serial{totalVisits += count;}
-      serial{CkPrintf("  Processed %lu sent visits\n", count);}
+      serial{CkPrintf("  Processed "COUNTER_PRINT_TYPE" sent visits\n", count);}
     };
-    entry [reductiontarget] void ReceiveInteractionsCount(uint64_t count) {
+    entry [reductiontarget] void ReceiveInteractionsCount(Counter count) {
       serial{totalInteractions += count;}
-      serial{CkPrintf("  Processed %lu interactions\n", count);}
+      serial{CkPrintf("  Processed "COUNTER_PRINT_TYPE" interactions\n", count);}
     };
-    entry [reductiontarget] void ReceiveExposuresCount(uint64_t count) {
+    entry [reductiontarget] void ReceiveExposuresCount(Counter count) {
       serial{totalExposures += count;}
-      serial{CkPrintf("  Processed %lu exposures\n", count);}
+      serial{CkPrintf("  Processed "COUNTER_PRINT_TYPE" exposures\n", count);}
     };
     #endif // ENABLE_DEBUG
     entry [reductiontarget] void ReceiveInfectiousCount(int infectiousCount);

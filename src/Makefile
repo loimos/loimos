@@ -13,7 +13,7 @@ OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o  \
 				 intervention_model/AttributeTable.o \
          protobuf/disease.pb.o protobuf/distribution.pb.o \
 		     protobuf/data.pb.o protobuf/interventions.pb.o
-DEFS   = loimos.def.h Defs.h readers/DataReader.h
+DEFS   = loimos.def.h Defs.h Types.h readers/DataReader.h
 DECLS  = loimos.decl.h
 
 BIN   := loimos
