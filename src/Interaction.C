@@ -1,4 +1,4 @@
-/* Copyright 2020 The Loimos Project Developers.
+/* Copyright 2020-2023 The Loimos Project Developers.
  * See the top-level LICENSE file for details.
  *
  * SPDX-License-Identifier: MIT
@@ -6,7 +6,7 @@
 
 #include "loimos.decl.h"
 #include "Interaction.h"
-  
+
 Interaction::Interaction(
   double propensity,
   int infectiousIdx,

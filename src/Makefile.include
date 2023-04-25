@@ -1,3 +1,8 @@
+# Copyright 2020-2023 The Loimos Project Developers.
+# See the top-level LICENSE file for details.
+#
+# SPDX-License-Identifier: MIT
+
 # Set the environment variable CHARM_HOME to the Charm++ installation with projections enabled
 CHARM_HOME ?= /usr/local/charm
 

@@ -1,4 +1,4 @@
-/* Copyright 2021 The Loimos Project Developers.
+/* Copyright 2020-2023 The Loimos Project Developers.
  * See the top-level LICENSE file for details.
  *
  * SPDX-License-Identifier: MIT
@@ -18,7 +18,7 @@
 #define MAX_INPUT_lineLength (std::streamsize) 262144 // 2^18
 
 namespace DataTypes {
-    enum DataType { int_b10, uint_32, string, probability, category }; 
+    enum DataType { int_b10, uint_32, string, probability, category };
 }
 
 union Data {
@@ -35,7 +35,7 @@ PUPbytes(union Data);
  * Defines a generic data reader for any child class of DataInterface.
  * Array definition is child object dependent so this required that the
  * code be defined in the .h file rather than in the .C.
- */ 
+ */
 template <class T>
 class DataReader {
     public:
@@ -77,14 +77,14 @@ class DataReader {
                             } else {
                                 if (field->has_b10int() || field->has_foreignid()) {
                                     // TODO parse this directly.
-                                    objData[numDataFields].int_b10 = 
+                                    objData[numDataFields].int_b10 =
                                         std::stoi(std::string(start, dataLen));
                                 } else if (field->has_label()) {
-                                    objData[numDataFields].str = 
+                                    objData[numDataFields].str =
                                         new std::string(start, dataLen);
                                 } else if (field->has_bool_()) {
                                     if (dataLen == 1) {
-                                        objData[numDataFields].boolean = 
+                                        objData[numDataFields].boolean =
                                         (start[0] == 't' || start[0] == '1');
                                     } else {
                                         objData[numDataFields].boolean = false;
@@ -99,7 +99,7 @@ class DataReader {
                 }
             }
         }
-        
+
         static int getNonZeroAttributes(loimos::proto::CSVDefinition *dataFormat) {
             int count = 0;
             for (int c = 0; c < dataFormat->field_size(); c++) {
@@ -157,7 +157,7 @@ class DataReader {
                             // TODO process.
                             numDataFields++;
                         }
-                        
+
                     }
                     leftCommaLocation = c + 1;
                     attrIndex++;

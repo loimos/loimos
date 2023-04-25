@@ -1,4 +1,4 @@
-/* Copyright 2020 The Loimos Project Developers.
+/* Copyright 2020-2023 The Loimos Project Developers.
  * See the top-level LICENSE file for details.
  *
  * SPDX-License-Identifier: MIT
@@ -27,7 +27,7 @@ MinMaxAlphaModel::MinMaxAlphaModel() {
 // Compute this location's contact probability and store it as an attribute
 void MinMaxAlphaModel::computeLocationValues(Location& location) {
   std::vector<union Data> &data = location.getDataField();
-  
+
   if (-1 == contactProbabilityIndex) {
     contactProbabilityIndex = (int) data.size();
   }
@@ -52,7 +52,7 @@ bool MinMaxAlphaModel::madeContact(
   const Event& infectiousEvent,
   Location& location
 ) {
-  union Data contactProbability = 
+  union Data contactProbability =
     location.getDataField()[contactProbabilityIndex];
   return unitDistrib(*generator) < contactProbability.probability;
 }

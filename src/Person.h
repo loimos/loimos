@@ -1,4 +1,4 @@
-/* Copyright 2021 The Loimos Project Developers.
+/* Copyright 2020-2023 The Loimos Project Developers.
  * See the top-level LICENSE file for details.
  *
  * SPDX-License-Identifier: MIT
@@ -34,7 +34,7 @@ class Person : public DataInterface {
 
         // Holds visit messages for each day
         std::vector<std::vector<VisitMessage> > visitsByDay;
-        
+
         // Various dynamic attributes of the person
         std::vector<union Data> personData;
 

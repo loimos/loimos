@@ -1,4 +1,4 @@
-/* Copyright 2020 The Loimos Project Developers.
+/* Copyright 2020-2023 The Loimos Project Developers.
  * See the top-level LICENSE file for details.
  *
  * SPDX-License-Identifier: MIT
@@ -26,7 +26,7 @@ class ContactModel {
     std::default_random_engine *generator;
     std::uniform_real_distribution<> unitDistrib;
     int contactProbabilityIndex;
-  
+
   public:
     ContactModel();
     // Explicitly create other default constructors and assignment operators

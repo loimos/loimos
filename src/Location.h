@@ -1,4 +1,4 @@
-/* Copyright 2020 The Loimos Project Developers.
+/* Copyright 2020-2023 The Loimos Project Developers.
  * See the top-level LICENSE file for details.
  *
  * SPDX-License-Identifier: MIT
@@ -36,7 +36,7 @@ class Location : public DataInterface {
     // a person currently at this location
     std::vector<Event> infectiousArrivals;
     std::vector<Event> susceptibleArrivals;
-    
+
     // Maps each susceptible person's id to a list of interactions with people
     // who could have infected them
     std::unordered_map<int, std::vector<Interaction> > interactions;
@@ -46,7 +46,7 @@ class Location : public DataInterface {
 
     bool complysWithShutdown;
     int day;
-   
+
     // For DataInterface
     int uniqueId;
 
@@ -87,12 +87,12 @@ class Location : public DataInterface {
     // Represents all of the arrivals and departures of people
     // from this location on a given day
     std::vector<Event> events;
-    
+
     // This distribution should always be the same - not sure how well
     // static variables work with Charm++, so this may need to be put
     // on the stack somewhere later on
     // static std::uniform_real_distribution<> unitDistrib;
-    
+
     // Provide default constructor operations.
     Location() = default;
     Location(CkMigrateMessage *msg);
@@ -105,19 +105,19 @@ class Location : public DataInterface {
     // Default assignment operators.
     Location& operator=(const Location&) = default;
     Location& operator=(Location&&) = default;
-   
-    // Lets us migrate these objects 
+
+    // Lets us migrate these objects
     void pup(PUP::er &p);
     void setGenerator(std::default_random_engine *generator);
 
     // Override abstract DataInterface getters and setters.
     void setUniqueId(int idx);
     std::vector<union Data> &getDataField();
-    
+
     // Adds an event represnting a person either arriving or departing
     // from this location
     void addEvent(Event e);
-    
+
     // Runs through all of the current events and return the indices of
     // any people who have been infected
     void processEvents(
@@ -125,5 +125,5 @@ class Location : public DataInterface {
       ContactModel *contactModel
     );
 };
-  
+
 #endif // __LOCATION_H__

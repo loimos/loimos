@@ -1,4 +1,4 @@
-/* Copyright 2020 The Loimos Project Developers.
+/* Copyright 2020-2023 The Loimos Project Developers.
  * See the top-level LICENSE file for details.
  *
  * SPDX-License-Identifier: MIT
@@ -7,9 +7,9 @@
 #ifndef __LOCATIONS_H__
 #define __LOCATIONS_H__
 
-#include "Location.h" 
+#include "Location.h"
 #include "DiseaseModel.h"
-#include "Location.h" 
+#include "Location.h"
 #include "contact_model/ContactModel.h"
 
 #include <vector>
@@ -30,7 +30,7 @@ class Locations : public CBase_Locations {
     void pup(PUP::er &p);
     void ReceiveVisitMessages(VisitMessage visitMsg);
     void ComputeInteractions(); // calls ReceiveInfections
-    
+
     // Load location data from CSV.
     void loadLocationData();
 
