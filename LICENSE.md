@@ -1,4 +1,4 @@
-Copyright 2020 The Loimos Project Developers.
+Copyright 2020-2023 The Loimos Project Developers.
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
