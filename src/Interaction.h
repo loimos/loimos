@@ -1,4 +1,4 @@
-/* Copyright 2020 The Loimos Project Developers.
+/* Copyright 2020-2023 The Loimos Project Developers.
  * See the top-level LICENSE file for details.
  *
  * SPDX-License-Identifier: MIT
@@ -20,13 +20,13 @@ struct Interaction {
   // a infection
   // TODO: figure out how to extract these from an infectious/susceptible
   // state pair
-  //int targetState; 
+  //int targetState;
   // We need to know when the interaction occured so that, if this interaction
   // does in fact result in an infection, we can determine precisely when it
   // occured
   int startTime;
   int endTime;
-  
+
   // Lets us send potential infections via charm++
   void pup(PUP::er &p);
 

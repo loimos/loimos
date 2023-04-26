@@ -1,4 +1,4 @@
-/* Copyright 2020 The Loimos Project Developers.
+/* Copyright 2020-2023 The Loimos Project Developers.
  * See the top-level LICENSE file for details.
  *
  * SPDX-License-Identifier: MIT
@@ -11,27 +11,27 @@
 #include <cmath>
 
 /**
- * Returns the number of elements that each chare will track at a minimum. 
- * 
+ * Returns the number of elements that each chare will track at a minimum.
+ *
  * Args:
  *    int numElements: The total number of objects of this type.
  *    int numPartitions: The total number of chares.
- * 
- */ 
+ *
+ */
 int getNumElementsPerPartition(int numElements, int numPartitions){
   return floor((float)numElements/(float)numPartitions);
 }
 
 
 /**
- * Returns the number of the objects that a particular chare tracks. 
- * 
+ * Returns the number of the objects that a particular chare tracks.
+ *
  * Args:
  *    int numElements: The total number of objects of this type.
  *    int numPartitions: The total number of chares.
  *    int partitionIndex: Chare index
- * 
- */ 
+ *
+ */
 int getNumLocalElements(int numElements, int numPartitions, int partitionIndex){
   int elementsPerPartition = getNumElementsPerPartition(numElements,numPartitions);
   if(partitionIndex == (numPartitions-1))
@@ -40,17 +40,17 @@ int getNumLocalElements(int numElements, int numPartitions, int partitionIndex){
 }
 
 /**
- * Returns the number of the chare that tracks a particular element. 
- * 
+ * Returns the number of the chare that tracks a particular element.
+ *
  * Args:
  *    int globalIndex: The global unique object identifier.
  *    int numElements: The total number of objects of this type.
  *    int numPartitions: The total number of chares.
  *    int offset: The globalIndex number referring to the first object. Likely
  *      could be replaced with a better system.
- * 
+ *
  * Notes: Will likely change as we introduce active load balancing.
- */ 
+ */
 int getPartitionIndex(int globalIndex, int numElements, int numPartitions, int offset){
   int partitionIndex = (globalIndex - offset) /getNumElementsPerPartition(numElements,numPartitions);
   if(partitionIndex >= numPartitions)
@@ -61,15 +61,15 @@ int getPartitionIndex(int globalIndex, int numElements, int numPartitions, int o
 /**
  * Returns local (zero-indexed) position of an object on a chare from its
  * global id.
- * 
+ *
  * Args:
  *    int globalIndex: The global unique object identifier.
  *    int numElements: The total number of objects of this type.
  *    int numPartitions: The total number of chares.
  *    int offset: The globalIndex number referring to the first object. Likely
  *      could be replaced with a better system.
- * 
- */ 
+ *
+ */
 int getLocalIndex(int globalIndex, int numElements, int numPartitions, int offset){
   int partitionIndex = getPartitionIndex(globalIndex,numElements,numPartitions, offset);
   int elementsPerPartition = getNumElementsPerPartition(numElements,numPartitions);
@@ -79,15 +79,15 @@ int getLocalIndex(int globalIndex, int numElements, int numPartitions, int offse
 /**
  * Returns global indexed position of an object from its local (zero-indexed)
  * id on a chare.
- * 
+ *
  * Args:
  *    int localIndex: The local (zero-indexed) unique object identifier.
  *    int numElements: The total number of objects of this type.
  *    int numPartitions: The total number of chares.
  *    int offset: The globalIndex number referring to the first object. Likely
  *      could be replaced with a better system.
- * 
- */ 
+ *
+ */
 int getGlobalIndex(int localIndex, int partitionIndex, int numElements, int numPartitions, int offset){
   int elementsPerPartition = getNumElementsPerPartition(numElements,numPartitions);
   return partitionIndex*elementsPerPartition+localIndex + offset;

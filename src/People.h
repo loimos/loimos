@@ -1,4 +1,4 @@
-/* Copyright 2020 The Loimos Project Developers.
+/* Copyright 2020-2023 The Loimos Project Developers.
  * See the top-level LICENSE file for details.
  *
  * SPDX-License-Identifier: MIT
@@ -38,7 +38,7 @@ class People : public CBase_People {
     People();
     People(CkMigrateMessage *msg);
     void pup(PUP::er &p);
-    void SendVisitMessages(); 
+    void SendVisitMessages();
     void SyntheticSendVisitMessages();
     void RealDataSendVisitMessages();
     void ReceiveInteractions(InteractionMessage interMsg);

@@ -1,4 +1,4 @@
-/* Copyright 2020 The Loimos Project Developers.
+/* Copyright 2020-2023 The Loimos Project Developers.
  * See the top-level LICENSE file for details.
  *
  * SPDX-License-Identifier: MIT
@@ -22,7 +22,7 @@ class MinMaxAlphaModel : public ContactModel {
     // Specifies where to look for the attribute we create to store each
     // location's contact probability
     int contactProbabilityIndex;
-  
+
   public:
     // We need to re-declare all of these methods from ContactModel so
     // we can override them
