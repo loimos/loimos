@@ -53,6 +53,10 @@
 /* readonly */ int numDaysWithRealData;
 /* readonly */ bool syntheticRun;
 /* readonly */ int contactModelType;
+/* readonly */ int maxSimVisitsIdx;
+/* readonly */ int ageIdx;
+/* readonly */ std::string scenarioPath;
+/* readonly */ std::string scenarioId;
 /* readonly */ int firstPersonIdx;
 /* readonly */ int firstLocationIdx;
 /* readonly */ Counter totalVisits;
@@ -61,7 +65,7 @@
 /* readonly */ double simulationStartTime;
 /* readonly */ double iterationStartTime;
 /* readonly */ double stepStartTime;
-double dataLoadingStartTime;
+/* readonly */ double dataLoadingStartTime;
 /* readonly */ std::vector<double> totalTime;
 
 

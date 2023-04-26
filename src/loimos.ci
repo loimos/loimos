@@ -49,6 +49,8 @@ mainmodule loimos {
 
   readonly bool syntheticRun;
   readonly int contactModelType;
+  readonly int maxSimVisitsIdx;
+  readonly int ageIdx;
   readonly int firstPersonIdx;
   readonly int firstLocationIdx;
 

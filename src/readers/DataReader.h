@@ -165,13 +165,35 @@ class DataReader {
   }
 
   static int getNonZeroAttributes(loimos::proto::CSVDefinition *dataFormat) {
-    int count = 0;
+    int count = -1;
     for (int c = 0; c < dataFormat->fields_size(); c++) {
       if (!dataFormat->fields(c).has_ignore()) {
-        count += 1;
+        count++;
       }
     }
-    return count - 1;
+    return count;
+  }
+
+  static int getAttributeIndex(loimos::proto::CSVDefinition *dataFormat,
+      std::string attributeName) {
+
+    int count = -1;
+    for (int i = 0; i < dataFormat->fields_size(); ++i) {
+      loimos::proto::DataField const *field = &dataFormat->fields(i);
+
+      // Only need to keep track of location among attributes stored in
+      // data vector
+      if (field->has_ignore() || field->has_unique_id()) {
+        continue;
+      }
+
+      count++;
+      if (field->field_name() == attributeName) {
+        return count;
+      }
+    }
+
+    return -1;
   }
 };
 #endif  // READERS_DATAREADER_H_

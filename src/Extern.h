@@ -35,7 +35,8 @@ extern /* readonly */ std::string scenarioPath;
 extern /* readonly */ std::string scenarioId;
 extern /* readonly */ int firstPersonIdx;
 extern /* readonly */ int firstLocationIdx;
-
+extern /* readonly */ int maxSimVisitsIdx;
+extern /* readonly */ int ageIdx;
 
 // For synthetic run.
 extern /* readonly */ int synPeopleGridWidth;

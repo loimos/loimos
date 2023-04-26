@@ -48,7 +48,6 @@ const Time MINUTE_LENGTH = 60;
 
 // Indices of attribute columns in the appropriate csvs
 #define AGE_CSV_INDEX 0
-#define SIMULTANEOUS_MAX_VISITS_CSV_INDEX 1
 
 // Data loading
 #define EMPTY_VISIT_SCHEDULE 0xFFFFFFFF

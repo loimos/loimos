@@ -19,6 +19,7 @@
 #include "Extern.h"
 #include "Event.h"
 #include "Person.h"
+#include "Location.h"
 #include "readers/DataReader.h"
 #include "intervention_model/AttributeTable.h"
 #include "protobuf/interventions.pb.h"
@@ -78,6 +79,11 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
       CkAbort("Could not parse person protobuf!");
     }
     personInputStream.close();
+    ageIdx = DataReader<>::getAttributeIndex(personDef, "age");
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
+    CkPrintf("  Age to be stored at index %d\n",
+        ageIdx);
+#endif
 
     // ...locations...
     locationDef = new loimos::proto::CSVDefinition();
@@ -92,6 +98,16 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
       CkAbort("Could not parse location protobuf!");
     }
     locationInputStream.close();
+    maxSimVisitsIdx = DataReader<>::getAttributeIndex(locationDef,
+        "max_simultaneous_visits");
+    if (-1 == maxSimVisitsIdx) {
+      CkAbort("Error: required attribute \"max_simultaneous_visits\" not present\n");
+    } else {
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
+      CkPrintf("  Max sim visit count to be stored at index %d\n",
+          maxSimVisitsIdx);
+#endif
+    }
 
     // ...and visits
     activityDef = new loimos::proto::CSVDefinition();
@@ -293,12 +309,12 @@ int DiseaseModel::getHealthyState(const std::vector<Data> &dataField) const {
       model->starting_states(0);
     return state.starting_state();
 
-  } else if (AGE_CSV_INDEX >= dataField.size()) {
-    CkAbort("No age data (needed for determining healthy disease state\n");
+  } else if (-1 == ageIdx) {
+    CkAbort("No age data (needed for determinign healthy disease state)\n");
   }
 
   // Age based transition.
-  int personAge = dataField[AGE_CSV_INDEX].int_b10;
+  int personAge = dataField[ageIdx].int_b10;
   for (int stateNum = 0; stateNum < numStartingStates; stateNum++) {
     const loimos::proto::DiseaseModel_StartingCondition state =
       model->starting_states(stateNum);
