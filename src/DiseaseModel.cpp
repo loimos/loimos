@@ -82,8 +82,10 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     personInputStream.close();
     ageIdx = DataReader<>::getAttributeIndex(personDef, "age");
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
+    if (0 == CkMyNode()) {
     CkPrintf("  Age to be stored at index %d\n",
         ageIdx);
+    }
 #endif
 
     // ...locations...
@@ -107,8 +109,10 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
         CkAbort("Error: required attribute \"max_simultaneous_visits\" not present\n");
       } else {
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
-        CkPrintf("  Max sim visit count to be stored at index %d\n",
-            maxSimVisitsIdx);
+        if (0 == CkMyNode()) {
+          CkPrintf("  Max sim visit count to be stored at index %d\n",
+              maxSimVisitsIdx);
+        }
 #endif
       }
     }
