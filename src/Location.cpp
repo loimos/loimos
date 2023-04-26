@@ -125,14 +125,15 @@ Counter Location::processEvents(
   interactions.clear();
   day++;
 
-  #ifdef ENABLE_DEBUG >= DEBUG_VERBOSE
+  #if ENABLE_DEBUG >= DEBUG_VERBOSE
   if (0 == uniqueId) {
     uint32_t maxSimVisits =
-      getValue(SIMULTANEOUS_MAX_VISITS_CSV_INDEX).uint_32;
+      data[SIMULTANEOUS_MAX_VISITS_CSV_INDEX].int_b10;
     double prob = contactModel->getContactProbability(*this);
     Counter estimate = prob * numInteractions;
-    CkPrintf("    Location %d: %u max sim, %lu visits, %f prob, %lu inter\n",
-        uniqueId, maxSimVisits, numVisits, prob, estimate);
+    CkPrintf("    Location %d (%lu attrs): %d max sim, %lu visits, %f prob, "
+        "%lu inter\n",
+        uniqueId, data.size(), maxSimVisits, numVisits, prob, estimate);
   }
   return contactModel->getContactProbability(*this) * numInteractions;
   #else

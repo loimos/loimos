@@ -38,8 +38,8 @@ void MinMaxAlphaModel::computeLocationValues(Location *location) {
   // varies by location
   union Data contactProbability;
   double max_visits =
-    static_cast<double>(data[SIMULTANEOUS_MAX_VISITS_CSV_INDEX].uint_32);
-  contactProbability.double_b10 = fmin(1,
+    static_cast<double>(data[SIMULTANEOUS_MAX_VISITS_CSV_INDEX].int_b10;
+  contactProbability.probability = fmin(1,
     (MIN + (MAX - MIN) * (1.0 - exp(-max_visits / ALPHA))) / (max_visits - 1));
 
   data.push_back(contactProbability);
