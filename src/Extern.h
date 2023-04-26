@@ -22,6 +22,7 @@ extern /* readonly */ int numPeoplePartitions;
 extern /* readonly */ int numLocationPartitions;
 extern /* readonly */ int numDays;
 extern /* readonly */ int numDaysWithRealData;
+extern /* readonly */ int contactModelType;
 extern /* readonly */ bool syntheticRun;
 
 extern /* readonly */ Counter totalVisits;

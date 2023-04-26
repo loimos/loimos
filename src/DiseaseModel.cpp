@@ -22,6 +22,7 @@
 #include "Location.h"
 #include "readers/DataReader.h"
 #include "intervention_model/AttributeTable.h"
+#include "contact_model/ContactModel.h"
 #include "protobuf/interventions.pb.h"
 #include "protobuf/disease.pb.h"
 #include "protobuf/distribution.pb.h"
@@ -98,15 +99,18 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
       CkAbort("Could not parse location protobuf!");
     }
     locationInputStream.close();
-    maxSimVisitsIdx = DataReader<>::getAttributeIndex(locationDef,
-        "max_simultaneous_visits");
-    if (-1 == maxSimVisitsIdx) {
-      CkAbort("Error: required attribute \"max_simultaneous_visits\" not present\n");
-    } else {
+
+    if ((int) ContactModelType::min_max_alpha == contactModelType) {
+      maxSimVisitsIdx = DataReader<>::getAttributeIndex(locationDef,
+          "max_simultaneous_visits");
+      if (-1 == maxSimVisitsIdx) {
+        CkAbort("Error: required attribute \"max_simultaneous_visits\" not present\n");
+      } else {
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
-      CkPrintf("  Max sim visit count to be stored at index %d\n",
-          maxSimVisitsIdx);
+        CkPrintf("  Max sim visit count to be stored at index %d\n",
+            maxSimVisitsIdx);
 #endif
+      }
     }
 
     // ...and visits
