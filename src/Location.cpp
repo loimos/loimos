@@ -126,15 +126,6 @@ Counter Location::processEvents(
   day++;
 
   #if ENABLE_DEBUG >= DEBUG_VERBOSE
-  //if (0 == uniqueId) {
-  //  int maxSimVisits =
-  //    locationData[maxSimVisitsIdx].int_b10;
-  //  double prob = contactModel->getContactProbability(*this);
-  //  Counter estimate = prob * numInteractions;
-  //  CkPrintf("    Location %d (%lu attrs): %d max sim, %lu visits, %f prob, "
-  //      "%lu inter\n",
-  //      uniqueId, data.size(), maxSimVisits, numVisits, prob, estimate);
-  //}
   return contactModel->getContactProbability(*this) * numInteractions;
   #else
   return 0;

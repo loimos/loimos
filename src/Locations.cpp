@@ -179,7 +179,7 @@ void Locations::ComputeInteractions() {
       CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), cb);
 #endif
 
-#if ENABLE_DEBUG >= DEBUG_VERBOSE//PER_CHARE
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
   if (0 == day) {
     CkPrintf("    Process %d, thread %d: "COUNTER_PRINT_TYPE" visits, "
         COUNTER_PRINT_TYPE" interactions, %lu locations\n",
