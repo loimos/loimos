@@ -34,11 +34,12 @@ def parse_args():
 
 
 def analyze_by_location(locations, people, visits, output_dir):
-    cols = [f"total_on_day_{d}" for d in range(7)]
-    missing_mask = np.any(np.isnan(locations[cols]), axis=1)
-    locations.loc[missing_mask, cols] = 0
+    # cols = [f'total_on_day_{d}' for d in range(7)]
+    # missing_mask = np.any(np.isnan(locations[cols]),axis=1)
+    # locations.loc[missing_mask,cols] = 0
 
-    visit_counts = np.array(locations[cols]).flatten()
+    # visit_counts = np.array(locations[cols]).flatten()
+    visit_counts = np.array(locations["total_visits"])
     print(np.mean(visit_counts), np.std(visit_counts))
     print(np.quantile(visit_counts, [0.25, 0.5, 0.75]))
 
@@ -50,6 +51,18 @@ def analyze_by_location(locations, people, visits, output_dir):
     sns.histplot(visited_location_counts, bins=50, kde=False, log_scale=(True, True))
     plt.savefig(os.path.join(output_dir, "visits_location_hist.pdf"))
     # sns.kdeplot(visited_location_counts, log_scale=(True,True))
+
+    max_sim_visit_counts = np.array(locations["max_simultaneous_visits"])
+    print(np.mean(max_sim_visit_counts), np.std(max_sim_visit_counts))
+    print(np.quantile(max_sim_visit_counts, [0.25, 0.5, 0.75]))
+
+    visited_locations_mask = max_sim_visit_counts != 0
+    visited_location_counts = max_sim_visit_counts[visited_locations_mask]
+    print(visited_location_counts.shape, visit_counts.shape)
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.histplot(visited_location_counts, bins=50, kde=True, log_scale=(True, True))
+    plt.savefig(os.path.join(output_dir, "max_sim_visits_location_hist.pdf"))
 
     visits_by_location = visits.groupby(by="lid")
     visit_counts_by_location = visits_by_location[["lid", "start_time"]].count()
@@ -120,8 +133,8 @@ def main():
     people = pd.read_csv(os.path.join(input_dir, "people.csv"))
     visits = pd.read_csv(os.path.join(input_dir, "visits.csv"))
 
-    # analyze_by_location(locations, people, visits, output_dir)
-    analyze_by_person(locations, people, visits, output_dir)
+    analyze_by_location(locations, people, visits, output_dir)
+    # analyze_by_person(locations, people, visits, output_dir)
 
 
 if __name__ == "__main__":
