@@ -89,12 +89,15 @@ clean:
 	done
 
 # All test names start with "test-"
-TEST_NAMES= -small -syn -large -validation -intervention -intervention-syn
+TEST_NAMES= -style -small -syn -large -validation -intervention -intervention-syn
 TESTS=$(subst -,test-,$(TEST_NAMES))
 
 # Run all tests with test rule
 .PHONY:test $(TESTS)
 test: $(TESTS)
+
+test-style:
+	cpplint --extensions=C,h,ci --root=loimos/src --recursive . &> linter-errors.log
 
 test-small: all
 	./charmrun +p4 ./loimos 0 100 735 2 2 30 7 test-small.csv ../data/disease_models/covid19.textproto ../data/populations/synthetic_small_city/ --min-max-alpha ++local
