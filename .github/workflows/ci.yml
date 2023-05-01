@@ -1,3 +1,4 @@
+---
 name: CI
 
 # Controls when the action will run. Triggers the workflow on push or pull
@@ -5,9 +6,9 @@ name: CI
 
 on:
   push:
-    branches: [ develop ]
+    branches: [develop]
   pull_request:
-    branches: [ develop ]
+    branches: [develop]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in
 # parallel
@@ -20,38 +21,40 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the
     # job
     steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can
-    # access it
-    - name: Build code
-      uses: actions/checkout@v3
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can
+      # access it
+      - name: Build code
+        uses: actions/checkout@v3
 
-    # Build Charm++ Non-SMP
-    - name: build-charm-nonsmp
-      run: |
-        git clone https://github.com/UIUC-PPL/charm.git charm-nonsmp
-        cd charm-nonsmp
-        git checkout v6.10.2
-        ./build charm++ netlrts-linux-x86_64 -g -j4 --with-production --enable-error-checking
+      # Build Charm++ Non-SMP
+      - name: build-charm-nonsmp
+        run: |
+          git clone https://github.com/UIUC-PPL/charm.git charm-nonsmp
+          cd charm-nonsmp
+          git checkout v6.10.2
+          ./build charm++ netlrts-linux-x86_64 -g -j4 --with-production \
+          --enable-error-checking
 
-    # Build Charm++ SMP
-    - name: build-charm-smp
-      run: |
-        git clone https://github.com/UIUC-PPL/charm.git charm-smp
-        cd charm-smp
-        git checkout v6.10.2
-        ./build charm++ netlrts-linux-x86_64 smp -g -j4 --with-production --enable-error-checking
+      # Build Charm++ SMP
+      - name: build-charm-smp
+        run: |
+          git clone https://github.com/UIUC-PPL/charm.git charm-smp
+          cd charm-smp
+          git checkout v6.10.2
+          ./build charm++ netlrts-linux-x86_64 smp -g -j4 --with-production \
+          --enable-error-checking
 
-    # Build protobuf
-    - name: build-protobuf
-      run: |
-        git clone https://github.com/protocolbuffers/protobuf.git
-        cd protobuf
-        git checkout v3.15.0
-        ./autogen.sh
-        mkdir build install
-        cd build
-        ../configure --prefix=$GITHUB_WORKSPACE/protobuf/install
-        make -j4 && make install
+      # Build protobuf
+      - name: build-protobuf
+        run: |
+          git clone https://github.com/protocolbuffers/protobuf.git
+          cd protobuf
+          git checkout v3.15.0
+          ./autogen.sh
+          mkdir build install
+          cd build
+          ../configure --prefix=$GITHUB_WORKSPACE/protobuf/install
+          make -j4 && make install
 
 #    # Build googletest
 #    - name: build-gtest
@@ -65,25 +68,30 @@ jobs:
 #        make -j4
 #        make install
 
-    # Build and test Loimos
-    - name: build-loimos
-      run: |
-        git submodule init
-        git submodule update
-        cd src
-        export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
-        export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
-        export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
-        export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
-        # Test non-SMP
-        export CHARM_HOME=$GITHUB_WORKSPACE/charm-nonsmp
-        export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
-        make
-        ./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 ci-test-non-smp.csv ../data/disease_models/covid19_onepath.textproto +setcpuaffinity ++local
-        make clean
-        # Test SMP
-        export CHARM_HOME=$GITHUB_WORKSPACE/charm-smp
-        export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
-        make
-        ./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 ci-test-smp.csv ../data/disease_models/covid19_onepath.textproto +setcpuaffinity ++local
-        make clean
+      # Build and test Loimos
+      - name: build-loimos
+        run: |
+          git submodule init
+          git submodule update
+          cd src
+          export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
+          export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
+          export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
+          export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
+          # Test non-SMP
+          export CHARM_HOME=$GITHUB_WORKSPACE/charm-nonsmp
+          export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
+          make
+          ./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 \
+          ci-test-non-smp.csv \
+          ../data/disease_models/covid19_onepath.textproto +setcpuaffinity \
+          ++local
+          make clean
+          # Test SMP
+          export CHARM_HOME=$GITHUB_WORKSPACE/charm-smp
+          export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
+          make
+          ./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 \
+          ci-test-smp.csv ../data/disease_models/covid19_onepath.textproto \
+          +setcpuaffinity ++local
+          make clean
