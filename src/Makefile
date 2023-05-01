@@ -61,13 +61,13 @@ $(BIN): $(OBJS) $(UNIT_TEST_OBJS) $(DECLS)
 $(DECLS): %.decl.h: %.ci
 	$(CHARMC) $< $(OPTS)
 
-# Build .o files from the corresponding .C and .h files
-$(OBJS): %.o: %.C %.h $(DECLS) $(DEFS)
+# Build .o files from the corresponding .cpp and .h files
+$(OBJS): %.o: %.cpp %.h $(DECLS) $(DEFS)
 	$(CHARMC) $(CXXFLAGS) -c -o $@ $<
 
-# Build .o files from just the .C files for unit tests 
+# Build .o files from just the .cpp files for unit tests 
 # (they don't have .h files)
-$(UNIT_TEST_OBJS): %.o: %.C $(DECLS) $(DEFS)
+$(UNIT_TEST_OBJS): %.o: %.cpp $(DECLS) $(DEFS)
 	$(CHARMC) $(CXXFLAGS) -c -o $@ $<
 
 # Subdirs will build the protobuf object files
