@@ -57,10 +57,10 @@ jobs:
           DEFAULT_BRANCH: develop
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: false
-          #VALIDATE_CPP: true
-          #VALIDATE_GITHUB_ACTIONS: true
-          #VALIDATE_MARKDOWN: true
-          #VALIDATE_PROTOBUF: true
-          #VALIDATE_PYTHON_BLACK: true
-          #VALIDATE_PYTHON_FLAKE8: true
+          VALIDATE_CPP: true
+          VALIDATE_GITHUB_ACTIONS: true
+          VALIDATE_MARKDOWN: true
+          VALIDATE_PROTOBUF: true
+          VALIDATE_PYTHON_BLACK: true
+          VALIDATE_PYTHON_FLAKE8: true
           IGNORE_GENERATED_FILES: true
