@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-#ifndef __AGGREGATOR_H__
-#define __AGGREGATOR_H__
+#ifndef __LOIMOS_SRC_AGGREGATOR_H__
+#define __LOIMOS_SRC_AGGREGATOR_H__
 
 #include "AggregatorParam.h"
 #include "Message.h"
@@ -16,15 +16,17 @@
 
 using buffer_t = aggregation::direct_buffer;
 using routing_t = aggregation::routing::mesh<2>;
-using visit_aggregator_t = aggregation::array_aggregator<buffer_t, routing_t, VisitMessage>;
-using interact_aggregator_t = aggregation::array_aggregator<buffer_t, routing_t, InteractionMessage>;
+using visit_aggregator_t = aggregation::array_aggregator<buffer_t, routing_t,
+      VisitMessage>;
+using interact_aggregator_t = aggregation::array_aggregator<buffer_t,
+      routing_t, InteractionMessage>;
 
 class Aggregator : public CBase_Aggregator {
-  public:
-    std::shared_ptr<visit_aggregator_t> visit_aggregator;
-    std::shared_ptr<interact_aggregator_t> interact_aggregator;
+public:
+  std::shared_ptr<visit_aggregator_t> visit_aggregator;
+  std::shared_ptr<interact_aggregator_t> interact_aggregator;
 
-    Aggregator(AggregatorParam p1, AggregatorParam p2);
+  Aggregator(AggregatorParam p1, AggregatorParam p2);
 };
 
-#endif // __AGGREGATOR_H__
+#endif // __LOIMOS_SRC_AGGREGATOR_H__
