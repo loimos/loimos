@@ -16,8 +16,6 @@
 
 class Person : public DataInterface {
  public:
-  // Unique global identifier for a person.
-  int uniqueId;
   // Numeric disease state of the person.
   int state;
   int next_state;
@@ -33,8 +31,6 @@ class Person : public DataInterface {
   std::vector<uint64_t> visitOffsetByDay;
   // Holds visit messages for each day
   std::vector<std::vector<VisitMessage> > visitsByDay;
-  // Various dynamic attributes of the person
-  std::vector<union Data> personData;
   // Constructors and assignment operators
   Person() = default;
   Person(int numAttributes, int startingState, int timeLeftInState);
@@ -48,9 +44,6 @@ class Person : public DataInterface {
   // Disease model functions.
   void EndOfDayStateUpdate(DiseaseModel *diseaseModel,
       std::default_random_engine *generator);
-  // Override DataInterfect abstract methods
-  void setUniqueId(int idx);
-  std::vector<union Data> &getDataField();
   // Debugging.
   void _print_information(loimos::proto::CSVDefinition *personDef);
 };

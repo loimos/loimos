@@ -67,7 +67,7 @@ People::People(std::string scenarioPath) {
       age.int_b10 = age_dist(generator);
       std::vector<Data> dataField = { age };
 
-      people[p].uniqueId = firstPersonIdx + p;
+      people[p].setUniqueId(firstPersonIdx + p);
       people[p].state = diseaseModel->getHealthyState(dataField);
       // We set persons next state to equal current state to signify
       // that they are not in a disease model progression.
@@ -133,7 +133,7 @@ void People::loadPeopleData(std::string scenarioPath) {
     reinterpret_cast<uint64_t *>(malloc(sizeof(uint64_t) * numDaysWithRealData));
   for (int c = 0; c < numLocalPeople; c++) {
     std::vector<uint64_t> *data_pos = &people[c].visitOffsetByDay;
-    int curr_id = people[c].uniqueId;
+    int curr_id = people[c].getUniqueId();
 
     // Read in their activity data offsets.
     activityCache.seekg(sizeof(uint64_t) * numDaysWithRealData
@@ -149,7 +149,7 @@ void People::loadPeopleData(std::string scenarioPath) {
   // Initialize intial states. (This will move in the DataLoaderPR)
   double isolationCompliance = diseaseModel->getCompilance();
   for (Person &person : people) {
-    person.state = diseaseModel->getHealthyState(person.getDataField());
+    person.state = diseaseModel->getHealthyState(person.getData());
     person.willComply = unitDistrib(generator) < isolationCompliance;
   }
 
@@ -190,15 +190,15 @@ void People::loadVisitData(std::ifstream *activityData) {
 #if ENABLE_DEBUG >= DEBUG_PER_OBJECT
       if (0 == personId % 10000) {
         CkPrintf("  People chare %d, person %d reading from %u on day %d\n",
-            thisIndex, person.uniqueId, seekPos, day);
+            thisIndex, person.getUniqueId(), seekPos, day);
           CkPrintf("  Person %d (%d) on day %d first visit: %d to %d, at loc %d\n",
-              person.uniqueId, personId, day, visitStart, visitStart + visitDuration,
+              person.getUniqueId(), personId, day, visitStart, visitStart + visitDuration,
               locationId);
       }
 #endif
 
       // Seek while same person on same day
-      while (personId == person.uniqueId && visitStart < nextDaySecs) {
+      while (personId == person.getUniqueId() && visitStart < nextDaySecs) {
         // Save visit info
         person.visitsByDay[day].emplace_back(locationId, personId, -1,
             visitStart, visitStart + visitDuration);
@@ -282,7 +282,7 @@ void People::SyntheticSendVisitMessages() {
   // Calculate schedule for each person.
   for (Person &p : people) {
     // Check if person is self isolating.
-    int personIdx = p.uniqueId;
+    int personIdx = p.getUniqueId();
     if (p.isIsolating && diseaseModel->isInfectious(p.state)) {
       continue;
     }
@@ -401,8 +401,8 @@ void People::RealDataSendVisitMessages() {
   int minId = numPeople;
   int maxId = 0;
   for (const Person &person : people) {
-    minId = std::min(minId, person.uniqueId);
-    maxId = std::max(maxId, person.uniqueId);
+    minId = std::min(minId, person.getUniqueId());
+    maxId = std::max(maxId, person.getUniqueId());
     for (VisitMessage visitMessage:
         person.visitsByDay[day % numDaysWithRealData]) {
       visitMessage.personState = person.state;

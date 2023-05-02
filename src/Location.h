@@ -37,12 +37,8 @@ class Location : public DataInterface {
   // Maps each susceptible person's id to a list of interactions with people
   // who could have infected them
   std::unordered_map<int, std::vector<Interaction> > interactions;
-  // Various attributes of the location.
-  std::vector<union Data> locationData;
   bool complysWithShutdown;
   int day;
-  // For DataInterface
-  int uniqueId;
   // Helper functions to handle when a person leaves this location
   // onDeparture branches to one of the two other functions
   inline void onDeparture(
@@ -94,16 +90,12 @@ class Location : public DataInterface {
   // Lets us migrate these objects
   void pup(PUP::er &p);
   void setGenerator(std::default_random_engine *generator);
-  // Override abstract DataInterface getters and setters.
-  void setUniqueId(int idx);
-  std::vector<union Data> &getDataField();
   // Adds an event represnting a person either arriving or departing
   // from this location
   void addEvent(Event e);
   // Runs through all of the current events and return the indices of
   // any people who have been infected
-  void processEvents(
-    const DiseaseModel *diseaseModel,
+  void processEvents(const DiseaseModel *diseaseModel,
     ContactModel *contactModel);
 };
 

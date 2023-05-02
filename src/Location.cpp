@@ -25,7 +25,7 @@ Location::Location(int numAttributes, int uniqueIdx,
     std::default_random_engine *generator,
     const DiseaseModel *diseaseModel) : unitDistrib(0, 1) {
   if (numAttributes != 0) {
-    this->locationData.resize(numAttributes);
+    this->data.resize(numAttributes);
   }
   day = 0;
   this->generator = generator;
@@ -41,7 +41,7 @@ void Location::pup(PUP::er &p) {
   p | infectiousArrivals;
   p | susceptibleArrivals;
   p | interactions;
-  p | locationData;
+  p | data;
   p | day;
   p | uniqueId;
   p | events;
@@ -51,15 +51,6 @@ void Location::pup(PUP::er &p) {
 // probably won't survive the migration
 void Location::setGenerator(std::default_random_engine *generator) {
   this->generator = generator;
-}
-
-// DataInterface overrides.
-void Location::setUniqueId(int idx) {
-  this->uniqueId = idx;
-}
-
-std::vector<union Data> &Location::getDataField() {
-  return this->locationData;
 }
 
 // Event processing.
@@ -74,7 +65,7 @@ void Location::processEvents(
   std::vector<Event> *arrivals;
 
   if (!interventionStategy || !complysWithShutdown
-      || diseaseModel->isLocationOpen(&locationData)) {
+      || diseaseModel->isLocationOpen(&data)) {
     std::sort(events.begin(), events.end());
     for (const Event &event : events) {
       if (diseaseModel->isSusceptible(event.personState)) {

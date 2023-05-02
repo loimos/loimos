@@ -117,7 +117,7 @@ void Locations::loadLocationData(std::string scenarioPath) {
 
   // Let contact model add any attributes it needs to the locations
   for (Location &location : locations) {
-    contactModel->computeLocationValues(location);
+    contactModel->computeLocationValues(&location);
   }
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE

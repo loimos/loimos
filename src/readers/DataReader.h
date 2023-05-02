@@ -17,20 +17,6 @@
 
 #define MAX_INPUT_lineLength (std::streamsize) 262144 // 2^18
 
-namespace DataTypes {
-    enum DataType { int_b10, uint_32, string, probability, category };
-}
-
-union Data {
-    int int_b10;
-    bool boolean;
-    uint32_t uint_32;
-    double probability;
-    uint16_t category;
-    std::string *str;
-};
-PUPbytes(union Data);
-
 /**
  * Defines a generic data reader for any child class of DataInterface.
  * Array definition is child object dependent so this required that the
@@ -53,7 +39,7 @@ class DataReader {
                 // Tracks how many non-ignored fields there have been.
                 int numDataFields = 0;
                 int leftCommaLocation = 0;
-                std::vector<union Data> &objData = obj.getDataField();
+                std::vector<union Data> &objData = obj.getData();
 
                 int lineLength = input->gcount();
                 for (int c = 0; c < lineLength; c++) {

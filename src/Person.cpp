@@ -19,7 +19,7 @@
 
 Person::Person(int numAttributes, int startingState, int timeLeftInState) {
   if (numAttributes != 0) {
-    this->personData.resize(numAttributes);
+    this->data.resize(numAttributes);
   }
   this->state = startingState;
   this->next_state = -1;
@@ -40,16 +40,8 @@ void Person::pup(PUP::er &p) {
   p | interactions;
   p | visitOffsetByDay;
   p | visitsByDay;
-  p | personData;
+  p | data;
   p | isIsolating;
-}
-
-void Person::setUniqueId(int idx) {
-  this->uniqueId = idx;
-}
-
-std::vector<union Data> &Person::getDataField() {
-  return this->personData;
 }
 
 void Person::EndOfDayStateUpdate(DiseaseModel *diseaseModel,
@@ -90,11 +82,11 @@ void Person::_print_information(loimos::proto::CSVDefinition *personDef) {
       printf("-- %s is ", field->field_name().c_str());
       if (field->has_uniqueid() || field->has_b10int()
           || field->has_foreignid()) {
-        printf("%d\n", this->personData[attr].int_b10);
+        printf("%d\n", this->data[attr].int_b10);
       } else if (field->has_label()) {
-        // printf("%s\n", this->personData[attr].str.c_str());
+        // printf("%s\n", this->data[attr].str.c_str());
       } else if (field->has_bool_()) {
-        printf("%s\n", this->personData[attr].boolean ? "True" : "False");
+        printf("%s\n", this->data[attr].boolean ? "True" : "False");
       }
       attr++;
     }
