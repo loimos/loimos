@@ -14,14 +14,16 @@
 
 #ifdef USE_HYPERCOMM
   #include "Aggregator.h"
-#endif // USE_HYPERCOMM
+#endif  // USE_HYPERCOMM
 
 #include <random>
 #include <vector>
 #include <cmath>
 #include <algorithm>
 
-Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine *generator, const DiseaseModel *diseaseModel) : unitDistrib(0, 1) {
+Location::Location(int numAttributes, int uniqueIdx,
+    std::default_random_engine *generator,
+    const DiseaseModel *diseaseModel) : unitDistrib(0, 1) {
   if (numAttributes != 0) {
     this->locationData.resize(numAttributes);
   }
@@ -33,7 +35,7 @@ Location::Location(int numAttributes, int uniqueIdx, std::default_random_engine 
   }
 }
 
-Location::Location(CkMigrateMessage *msg) {};
+Location::Location(CkMigrateMessage *msg) {}
 
 void Location::pup(PUP::er &p) {
   p | infectiousArrivals;
@@ -71,9 +73,10 @@ void Location::processEvents(
 ) {
   std::vector<Event> *arrivals;
 
-  if (!interventionStategy || !complysWithShutdown || diseaseModel->isLocationOpen(&locationData)) {
+  if (!interventionStategy || !complysWithShutdown
+      || diseaseModel->isLocationOpen(&locationData)) {
     std::sort(events.begin(), events.end());
-    for (const Event &event: events) {
+    for (const Event &event : events) {
       if (diseaseModel->isSusceptible(event.personState)) {
         arrivals = &susceptibleArrivals;
 
@@ -125,7 +128,7 @@ void Location::onSusceptibleDeparture(
 ) {
   // Each infectious person at this location might have infected this
   // susceptible person
-  for (const Event &infectiousArrival: infectiousArrivals) {
+  for (const Event &infectiousArrival : infectiousArrivals) {
     registerInteraction(
       diseaseModel,
       contactModel,
@@ -134,10 +137,8 @@ void Location::onSusceptibleDeparture(
       // The start time is whichever arrival happened later
       std::max(
         infectiousArrival.scheduledTime,
-        susceptibleDeparture.partnerTime
-      ),
-      susceptibleDeparture.scheduledTime
-    );
+        susceptibleDeparture.partnerTime),
+      susceptibleDeparture.scheduledTime);
   }
 
   sendInteractions(susceptibleDeparture.personIdx);
@@ -159,10 +160,8 @@ void Location::onInfectiousDeparture(
       // The start time is whichever arrival happened later
       std::max(
         susceptibleArrival.scheduledTime,
-        infectiousDeparture.partnerTime
-      ),
-      infectiousDeparture.scheduledTime
-    );
+        infectiousDeparture.partnerTime),
+      infectiousDeparture.scheduledTime);
   }
 }
 
@@ -182,8 +181,7 @@ inline void Location::registerInteraction(
     susceptibleEvent.personState,
     infectiousEvent.personState,
     startTime,
-    endTime
-  );
+    endTime);
 
   // Note that this will create a new vector if this is the first potential
   // infection for the susceptible person in question
@@ -192,8 +190,7 @@ inline void Location::registerInteraction(
     infectiousEvent.personIdx,
     infectiousEvent.personState,
     startTime,
-    endTime
-  );
+    endTime);
 }
 
 // Simple helper function which send the list of interactions with the
@@ -203,8 +200,7 @@ inline void Location::sendInteractions(int personIdx) {
     personIdx,
     numPeople,
     numPeoplePartitions,
-    firstPersonIdx
-  );
+    firstPersonIdx);
 
   InteractionMessage interMsg(uniqueId, personIdx, interactions[personIdx]);
   #ifdef USE_HYPERCOMM
@@ -212,11 +208,11 @@ inline void Location::sendInteractions(int personIdx) {
   if (agg->interact_aggregator) {
     agg->interact_aggregator->send(peopleArray[peoplePartitionIdx], interMsg);
   } else {
-  #endif // USE_HYPERCOMM
+  #endif  // USE_HYPERCOMM
     peopleArray[peoplePartitionIdx].ReceiveInteractions(interMsg);
   #ifdef USE_HYPERCOMM
   }
-  #endif // USE_HYPERCOMM
+  #endif  // USE_HYPERCOMM
 
   /*
   CkPrintf(

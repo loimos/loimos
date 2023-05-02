@@ -25,7 +25,6 @@ void Interaction::pup(PUP::er &p) {
   p|propensity;
   p|infectiousIdx;
   p|infectiousState;
-  //p|targetState;
   p|startTime;
   p|endTime;
 }

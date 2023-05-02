@@ -4,8 +4,13 @@
  * SPDX-License-Identifier: MIT
  */
 
-#ifndef __DEFS_H__
-#define __DEFS_H__
+#ifndef DEFS_H_
+#define DEFS_H_
+
+#include "loimos.decl.h"
+
+#include <vector>
+#include <string>
 
 // Debug levels
 #define DEBUG_BASIC 1
@@ -33,7 +38,6 @@ using Time = int32_t;
 const Time DAY_LENGTH = 3600 * 24;
 const Time HOUR_LENGTH = 3600;
 const Time MINUTE_LENGTH = 60;
-// TODO: change to commandline argument (and rename to reflect flexibility)
 #define DAYS_IN_WEEK 7
 
 // Indices of attribute columns in the appropriate csvs
@@ -71,8 +75,6 @@ extern /* readonly */ double iterationStartTime;
 extern /* readonly */ std::vector<double> totalTime;
 
 // For real data run.
-extern /* readonly */ std::string scenarioPath;
-extern /* readonly */ std::string scenarioId;
 extern /* readonly */ int firstPersonIdx;
 extern /* readonly */ int firstLocationIdx;
 
@@ -98,6 +100,7 @@ int getPartitionIndex(int globalIndex, int numElements, int numPartitions, int o
 
 int getLocalIndex(int globalIndex, int numElements, int numPartitions, int offset);
 
-int getGlobalIndex(int localIndex, int partitionIndex, int numElements, int numPartitions, int offset);
+int getGlobalIndex(int localIndex, int partitionIndex, int numElements,
+  int numPartitions, int offset);
 
-#endif // __DEFS_H__
+#endif  // DEFS_H_

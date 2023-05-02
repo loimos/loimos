@@ -10,11 +10,12 @@
 #include "Interaction.h"
 #include "DiseaseModel.h"
 #include "Person.h"
+#include "readers/Preprocess.h"
 #include "readers/DataReader.h"
 
 #ifdef USE_HYPERCOMM
   #include "Aggregator.h"
-#endif // USE_HYPERCOMM
+#endif  // USE_HYPERCOMM
 
 #include <tuple>
 #include <limits>
@@ -23,11 +24,13 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <functional>
+#include <algorithm>
 
-std::uniform_real_distribution<> unitDistrib(0,1);
+std::uniform_real_distribution<> unitDistrib(0, 1);
 
-People::People() {
-  //Must be set to true to make AtSync work
+People::People(std::string scenarioPath) {
+  // Must be set to true to make AtSync work
   usesAtSync = true;
 
   day = 0;
@@ -42,11 +45,8 @@ People::People() {
   stateSummaries.resize((totalStates + 1) * numDays, 0);
 
   // Get the number of people assigned to this chare
-  numLocalPeople = getNumLocalElements(
-    numPeople,
-    numPeoplePartitions,
-    thisIndex
-  );
+  numLocalPeople = getNumLocalElements(numPeople, numPeoplePartitions,
+    thisIndex);
   int firstPersonIdx = thisIndex * getNumElementsPerPartition(numPeople,
       numPeoplePartitions);
 
@@ -78,12 +78,11 @@ People::People() {
         DataReader<Person>::getNonZeroAttributes(diseaseModel->personDef);
       for (int p = 0; p < numLocalPeople; p++) {
         people.emplace_back(Person(numAttributesPerPerson,
-          0, std::numeric_limits<Time>::max()
-        ));
+          0, std::numeric_limits<Time>::max()));
       }
 
       // Load in people data from file.
-      loadPeopleData();
+      loadPeopleData(scenarioPath);
   }
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
@@ -93,7 +92,6 @@ People::People() {
 
   // Notify Main
   mainProxy.CharesCreated();
-  //contribute(CkCallback(CkReductionTarget(Main, CharesCreated), mainProxy));
 }
 
 People::People(CkMigrateMessage *msg) {}
@@ -101,9 +99,12 @@ People::People(CkMigrateMessage *msg) {}
 /**
  * Loads real people data from file.
  */
-void People::loadPeopleData() {
+void People::loadPeopleData(std::string scenarioPath) {
+  std::string scenarioId = getScenarioId(numPeople, numPeoplePartitions,
+    numLocations, numLocationPartitions);
   std::ifstream peopleData(scenarioPath + "people.csv");
-  std::ifstream peopleCache(scenarioPath + scenarioId + "_people.cache", std::ios_base::binary);
+  std::ifstream peopleCache(scenarioPath + scenarioId + "_people.cache",
+    std::ios_base::binary);
   if (!peopleData || !peopleCache) {
     CkAbort("Could not open person data input.");
   }
@@ -111,7 +112,7 @@ void People::loadPeopleData() {
   // Find starting line for our data through people cache.
   peopleCache.seekg(thisIndex * sizeof(uint64_t));
   uint64_t peopleOffset;
-  peopleCache.read((char *) &peopleOffset, sizeof(uint64_t));
+  peopleCache.read(reinterpret_cast<char *>(&peopleOffset), sizeof(uint64_t));
   peopleData.seekg(peopleOffset);
 
   // Read in from remote file.
@@ -121,13 +122,15 @@ void People::loadPeopleData() {
 
   // Open activity data and cache.
   std::ifstream activityData(scenarioPath + "visits.csv");
-  std::ifstream activityCache(scenarioPath + scenarioId + "_interactions.cache", std::ios_base::binary);
+  std::ifstream activityCache(scenarioPath + scenarioId + "_interactions.cache",
+    std::ios_base::binary);
   if (!activityData || !activityCache) {
     CkAbort("Could not open activity input.");
   }
 
   // Load preprocessing meta data.
-  uint64_t *buf = (uint64_t *) malloc(sizeof(uint64_t) * numDaysWithRealData);
+  uint64_t *buf =
+    reinterpret_cast<uint64_t *>(malloc(sizeof(uint64_t) * numDaysWithRealData));
   for (int c = 0; c < numLocalPeople; c++) {
     std::vector<uint64_t> *data_pos = &people[c].visitOffsetByDay;
     int curr_id = people[c].uniqueId;
@@ -135,7 +138,8 @@ void People::loadPeopleData() {
     // Read in their activity data offsets.
     activityCache.seekg(sizeof(uint64_t) * numDaysWithRealData
        * (curr_id - firstPersonIdx));
-    activityCache.read((char *) buf, sizeof(uint64_t) * numDaysWithRealData);
+    activityCache.read(reinterpret_cast<char *>(buf),
+      sizeof(uint64_t) * numDaysWithRealData);
     for (int day = 0; day < numDaysWithRealData; day++) {
       data_pos->push_back(buf[day]);
     }
@@ -144,7 +148,7 @@ void People::loadPeopleData() {
 
   // Initialize intial states. (This will move in the DataLoaderPR)
   double isolationCompliance = diseaseModel->getCompilance();
-  for (Person &person: people) {
+  for (Person &person : people) {
     person.state = diseaseModel->getHealthyState(person.getDataField());
     person.willComply = unitDistrib(generator) < isolationCompliance;
   }
@@ -158,7 +162,7 @@ void People::loadVisitData(std::ifstream *activityData) {
   #ifdef ENABLE_DEBUG
     int numVisits = 0;
   #endif
-  for (Person &person: people) {
+  for (Person &person : people) {
     for (int day = 0; day < numDaysWithRealData; ++day) {
       int nextDaySecs = (day + 1) * DAY_LENGTH;
 
@@ -194,7 +198,7 @@ void People::loadVisitData(std::ifstream *activityData) {
 #endif
 
       // Seek while same person on same day
-      while(personId == person.uniqueId && visitStart < nextDaySecs) {
+      while (personId == person.uniqueId && visitStart < nextDaySecs) {
         // Save visit info
         person.visitsByDay[day].emplace_back(locationId, personId, -1,
             visitStart, visitStart + visitDuration);
@@ -250,14 +254,12 @@ void People::SyntheticSendVisitMessages() {
   std::poisson_distribution<int> visit_distance_generator(LOCATION_LAMBDA);
 
   // Model visit times as uniform.
-  std::uniform_int_distribution<int> time_dist(0, DAY_LENGTH); // in seconds
+  std::uniform_int_distribution<int> time_dist(0, DAY_LENGTH);  // in seconds
   std::priority_queue<int, std::vector<int>, std::greater<int> > times;
 
   // Calculate minigrid sizes.
   int numLocationsPerPartition = getNumElementsPerPartition(
-    numLocations,
-    numLocationPartitions
-  );
+    numLocations, numLocationPartitions);
   int locationPartitionWidth = synLocalLocationGridWidth;
   int locationPartitionHeight = synLocalLocationGridHeight;
   int locationPartitionGridWidth = synLocationPartitionGridWidth;
@@ -275,10 +277,7 @@ void People::SyntheticSendVisitMessages() {
   int homePartitionStartX = homePartitionX * locationPartitionWidth;
   int homePartitionStartY = homePartitionY * locationPartitionHeight;
   int homePartitionNumLocations = getNumLocalElements(
-    numLocations,
-    numLocationPartitions,
-    homePartitionIdx
-  );
+    numLocations, numLocationPartitions, homePartitionIdx);
 
   // Calculate schedule for each person.
   for (Person &p : people) {
@@ -306,7 +305,6 @@ void People::SyntheticSendVisitMessages() {
 
     // Randomly pick nearby location for person to visit.
     for (int j = 0; j < numVisits; j++) {
-
       // Generate visit start and end times.
       int visitStart = times.top();
       times.pop();
@@ -327,18 +325,15 @@ void People::SyntheticSendVisitMessages() {
         // Calculate maximum hops that can be taken from home location in each
         // direction. (i.e. might be constrained for home locations close to edge)
         int maxHopsNegativeX = std::min(numHops, homeX);
-        int maxHopsPositiveX = std::min(
-            numHops,
-            synLocationGridWidth - 1 - homeX
-        );
+        int maxHopsPositiveX = std::min(numHops,
+          synLocationGridWidth - 1 - homeX);
         int maxHopsNegativeY = std::min(numHops, homeY);
-        int maxHopsPositiveY = std::min(
-            numHops,
-            synLocationGridHeight - 1 - homeY
-        );
+        int maxHopsPositiveY = std::min(numHops,
+          synLocationGridHeight - 1 - homeY);
 
         // Choose random number of hops in the X direction.
-        std::uniform_int_distribution<int> dist_gen(-maxHopsNegativeX, maxHopsPositiveX);
+        std::uniform_int_distribution<int> dist_gen(-maxHopsNegativeX,
+          maxHopsPositiveX);
         destinationOffsetX = dist_gen(generator);
 
         // Travel the remaining hops in the Y direction
@@ -355,7 +350,6 @@ void People::SyntheticSendVisitMessages() {
             destinationOffsetY = -std::min(numHops, maxHopsNegativeY);
           }
         }
-        // CkPrintf("Home is (%d, %d) (%d %d %d %d))\n", homeX, homeY, maxHopsNegativeX, maxHopsPositiveX, maxHopsNegativeY, maxHopsPositiveY);
       }
 
       // Finally calculate the index of the location to actually visit...
@@ -375,18 +369,15 @@ void People::SyntheticSendVisitMessages() {
 #if ENABLE_DEBUG >= DEBUG_PER_OBJECT
       CkPrintf(
           "person %d will visit location (%d, %d) with offset (%d,%d)\r\n",
-          personIdx, destinationX, destinationY, destinationOffsetX, destinationOffsetY);
+          personIdx, destinationX, destinationY, destinationOffsetX,
+          destinationOffsetY);
       CkPrintf("(%d, %d) -> %d in partition (%d, %d)\r\n",
           destinationX, destinationY, destinationIdx, partitionX, partitionY);
 #endif
 
       // Determine which chare tracks this location.
-      int locationPartition = getPartitionIndex(
-        destinationIdx,
-        numLocations,
-        numLocationPartitions,
-        firstLocationIdx
-      );
+      int locationPartition = getPartitionIndex(destinationIdx, numLocations,
+        numLocationPartitions, firstLocationIdx);
 
       // Send off visit message
       VisitMessage visitMsg(destinationIdx, personIdx, p.state, visitStart, visitEnd);
@@ -395,11 +386,11 @@ void People::SyntheticSendVisitMessages() {
       if (agg->visit_aggregator) {
         agg->visit_aggregator->send(locationsArray[locationPartition], visitMsg);
       } else {
-      #endif // USE_HYPERCOMM
+      #endif  // USE_HYPERCOMM
         locationsArray[locationPartition].ReceiveVisitMessages(visitMsg);
       #ifdef USE_HYPERCOMM
       }
-      #endif // USE_HYPERCOMM
+      #endif  // USE_HYPERCOMM
     }
   }
 }
@@ -409,7 +400,7 @@ void People::RealDataSendVisitMessages() {
   int numVisits = 0;
   int minId = numPeople;
   int maxId = 0;
-  for (const Person &person: people) {
+  for (const Person &person : people) {
     minId = std::min(minId, person.uniqueId);
     maxId = std::max(maxId, person.uniqueId);
     for (VisitMessage visitMessage:
@@ -426,39 +417,32 @@ void People::RealDataSendVisitMessages() {
       if (agg->visit_aggregator) {
         agg->visit_aggregator->send(locationsArray[locationPartition], visitMessage);
       } else {
-      #endif // USE_HYPERCOMM
+      #endif  // USE_HYPERCOMM
         locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
       #ifdef USE_HYPERCOMM
       }
-      #endif // USE_HYPERCOMM
+      #endif  // USE_HYPERCOMM
     }
   }
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
   if (0 == day) {
     CkPrintf("    Chare %d (P %d, T %d): %d visits, %d people (in [%d, %d])\n",
-      thisIndex, CkMyNode(), CkMyPe(), numVisits, (int) people.size(), minId,
-      maxId);
+      thisIndex, CkMyNode(), CkMyPe(), numVisits, std::static_cast<int>(people.size()),
+        minId, maxId);
   }
 #endif
 }
 
 void People::ReceiveInteractions(InteractionMessage interMsg) {
-  int localIdx = getLocalIndex(
-    interMsg.personIdx,
-    numPeople,
-    numPeoplePartitions,
-    firstPersonIdx
-  );
+  int localIdx = getLocalIndex(interMsg.personIdx, numPeople,
+    numPeoplePartitions, firstPersonIdx);
 
   // Just concatenate the interaction lists so that we can process all of the
   // interactions at the end of the day
   Person &person = people[localIdx];
-  person.interactions.insert(
-    person.interactions.end(),
-    interMsg.interactions.cbegin(),
-    interMsg.interactions.cend()
-  );
+  person.interactions.insert(person.interactions.end(),
+    interMsg.interactions.cbegin(), interMsg.interactions.cend());
 }
 
 void People::EndOfDayStateUpdate() {
@@ -470,7 +454,7 @@ void People::EndOfDayStateUpdate() {
   // Handle state transitions at the end of the day.
   int infectiousCount = 0;
   for (Person &person : people) {
-    ProcessInteractions(person);
+    ProcessInteractions(&person);
 
     person.EndOfDayStateUpdate(diseaseModel, &generator);
 
@@ -494,11 +478,11 @@ void People::SendStats() {
   contribute(stateSummaries, CkReduction::sum_int, cb);
 }
 
-void People::ProcessInteractions(Person &person) {
+void People::ProcessInteractions(Person *person) {
   double totalPropensity = 0.0;
-  int numInteractions = (int) person.interactions.size();
+  int numInteractions = static_cast<int>(person->interactions.size());
   for (int i = 0; i < numInteractions; ++i) {
-    totalPropensity += person.interactions[i].propensity;
+    totalPropensity += person->interactions[i].propensity;
   }
 
   // Detemine whether or not this person was infected...
@@ -513,23 +497,23 @@ void People::ProcessInteractions(Person &person) {
     for (
       interactionIdx = 0; interactionIdx < numInteractions; ++interactionIdx
     ) {
-      partialSum += person.interactions[interactionIdx].propensity;
+      partialSum += person->interactions[interactionIdx].propensity;
       if (partialSum > roll) {
         break;
       }
     }
 
-    // TODO: Save any useful information about the interaction which caused
+    // TODO(jkitson): Save any useful information about the interaction which caused
     // the infection
 
     // Mark that exposed healthy individuals should make transition at the end
     // of the day.
-    if (diseaseModel->isSusceptible(person.state)) {
-      person.secondsLeftInState = -1;
+    if (diseaseModel->isSusceptible(person->state)) {
+      person->secondsLeftInState = -1;
     }
   }
 
-  person.interactions.clear();
+  person->interactions.clear();
 }
 
 #ifdef ENABLE_LB
@@ -537,4 +521,4 @@ void People::ResumeFromSync() {
   CkCallback cb(CkReductionTarget(Main, peopleLBComplete), mainProxy);
   contribute(cb);
 }
-#endif // ENABLE_LB
+#endif  // ENABLE_LB

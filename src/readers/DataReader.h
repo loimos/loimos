@@ -36,7 +36,7 @@ PUPbytes(union Data);
  * Array definition is child object dependent so this required that the
  * code be defined in the .h file rather than in the .C.
  */
-template <class T>
+template <class T = DataInterface>
 class DataReader {
     public:
         static void readData(std::ifstream *input, loimos::proto::CSVDefinition *dataFormat,

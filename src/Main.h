@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-#ifndef __MAIN_H__
-#define __MAIN_H__
+#ifndef MAIN_H_
+#define MAIN_H_
 
 #include <vector>
 #include <string>
@@ -21,11 +21,11 @@ class Main : public CBase_Main {
   int chareCount;
   int createdCount;
 
-  public:
-    Main(CkArgMsg* msg);
-    void CharesCreated();
-    void SeedInfections();
-    void SaveStats(int *data);
+ public:
+  explicit Main(CkArgMsg* msg);
+  void CharesCreated();
+  void SeedInfections();
+  void SaveStats(int *data);
 };
 
-#endif // __MAIN_H__
+#endif  // MAIN_H_

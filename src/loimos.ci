@@ -23,6 +23,7 @@ mainmodule loimos {
   include "AggregatorParam.h";
   #endif // USE_HYPERCOMM
 
+  include "string";
   include "vector";
   include "sys/time.h";
   include "sys/resource.h";
@@ -46,8 +47,6 @@ mainmodule loimos {
   readonly int contactModelType;
   readonly int firstPersonIdx;
   readonly int firstLocationIdx;
-  readonly std::string scenarioPath;
-  readonly std::string scenarioId;
 
   readonly uint64_t totalVisits;
   readonly double simulationStartTime;
@@ -270,7 +269,7 @@ mainmodule loimos {
   #endif // USE_HYPERCOMM
 
   array [1D] People {
-    entry People();
+    entry People(std::string scenarioPath);
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
     entry void ReceiveInteractions(InteractionMessage);
     entry void EndOfDayStateUpdate(); // contribute call to ReceiveInfectiousCount
@@ -279,7 +278,7 @@ mainmodule loimos {
   };
 
   array [1D] Locations {
-    entry Locations();
+    entry Locations(std::string scenarioPath);
     entry void ReceiveVisitMessages(VisitMessage);
     entry void ComputeInteractions(); // calls ReceiveInteractions
     entry void AtSync();

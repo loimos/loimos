@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-#ifndef __INTERACTION_H__
-#define __INTERACTION_H__
+#ifndef INTERACTION_H_
+#define INTERACTION_H_
 
 // Simple struct to hold data on an interfaction between with a susceptible
 // person which could lead to an infection
@@ -16,14 +16,9 @@ struct Interaction {
   // question
   int infectiousIdx;
   int infectiousState;
-  // The state the susceptible person will transition to if this results in
-  // a infection
-  // TODO: figure out how to extract these from an infectious/susceptible
-  // state pair
-  //int targetState;
   // We need to know when the interaction occured so that, if this interaction
   // does in fact result in an infection, we can determine precisely when it
-  // occured
+  // occurred
   int startTime;
   int endTime;
 
@@ -36,8 +31,7 @@ struct Interaction {
     int infectiousIdx,
     int infectiousState,
     int startTime,
-    int endTime
-  );
+    int endTime);
   // ...and we need to define these explicitly since we added a constructor
   Interaction() = default;
   Interaction(const Interaction&) = default;
@@ -46,4 +40,4 @@ struct Interaction {
   Interaction &operator = (Interaction&&) = default;
 };
 
-#endif // __INTERACTION_H__
+#endif  // INTERACTION_H_

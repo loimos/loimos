@@ -28,6 +28,10 @@
 #include <google/protobuf/text_format.h>
 #include <limits>
 #include <random>
+#include <string>
+#include <tuple>
+#include <vector>
+#include <unordered_map>
 
 using NameIndexLookupType = std::unordered_map<std::string, int>;
 
@@ -173,7 +177,7 @@ DiseaseModel::transitionFromState(int fromState,
         DiseaseModel_DiseaseState_TimedTransitionSet_StateTransition
         *transition = &transition_set->transition(i);
 
-      // TODO: Create a CDF vector in initialization.
+      // TODO(IanCostello): Create a CDF vector in initialization.
       cdfSoFar += transition->with_prob();
       if (randomCutoff <= cdfSoFar) {
         int nextState = transition->next_state();
@@ -260,7 +264,7 @@ int DiseaseModel::getNumberOfStates() const {
 }
 
 /** Returns the initial starting healthy and exposed state */
-int DiseaseModel::getHealthyState(std::vector<Data> &dataField) const {
+int DiseaseModel::getHealthyState(const std::vector<Data> &dataField) const {
   int numStartingStates = model->starting_states_size();
 
   // Shouldn't need to check age if there's only one starting state
@@ -270,7 +274,7 @@ int DiseaseModel::getHealthyState(std::vector<Data> &dataField) const {
     return state.starting_state();
 
   } else if (AGE_CSV_INDEX >= dataField.size()) {
-    CkAbort("No age data (needed for determinign healthy disease state\n");
+    CkAbort("No age data (needed for determining healthy disease state\n");
   }
 
   // Age based transition.
@@ -388,10 +392,10 @@ bool DiseaseModel::shouldPersonIsolate(int healthState) {
  */
 bool DiseaseModel::isLocationOpen(std::vector<Data> *locAttr) const {
   return !(interventionToggled && interventionDef->schoolclosures() &&
-   locAttr->at(interventionDef->csvlocationofschool()).int_b10 > 0);
+    locAttr->at(interventionDef->csvlocationofschool()).int_b10 > 0);
 }
 
 bool DiseaseModel::complyingWithLockdown(std::default_random_engine *generator) const {
-  std::uniform_real_distribution<double> uniform_dist(0,1);
+  std::uniform_real_distribution<double> uniform_dist(0, 1);
   return uniform_dist(*generator) < interventionDef->schoolclosurecompliance();
 }
