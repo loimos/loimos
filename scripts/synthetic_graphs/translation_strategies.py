@@ -104,7 +104,7 @@ def graph_to_disease_model(graph, out_dir, template_dir, num_nodes, mean_people)
                 sleeping_hours = (24 - hours_occupied_for_day) // 2
                 activity_start_times = sorted(
                     random.sample(
-                        HOURS_OF_THE_DAY[sleeping_hours: 24 - sleeping_hours + 1],
+                        HOURS_OF_THE_DAY[sleeping_hours : 24 - sleeping_hours + 1],
                         visits_for_day + 1,
                     )
                 )
