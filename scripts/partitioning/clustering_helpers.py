@@ -7,7 +7,7 @@
 
 def split_large_clusters(clusters, max_in_cluster):
     """Breaks clusters that are above the maximum size into (n-1) full clusters
-    and 1 partially fully cluster. """
+    and 1 partially fully cluster."""
     # Detects if any clusters are oversized and if so creates a list of new
     # clusters to replace that one.
     new_clusters = []

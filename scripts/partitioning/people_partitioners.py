@@ -11,7 +11,7 @@ Algorithms that perform partitioning on people set.
 
 # Now assign the people to clusters
 def count_in_list(listv, cluster):
-    """ Returns how many elements of listv are in cluster."""
+    """Returns how many elements of listv are in cluster."""
     count = 0
     for v in listv:
         if v in cluster:

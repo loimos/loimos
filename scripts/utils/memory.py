@@ -8,9 +8,9 @@ import pandas as pd
 def obj_size_fmt(num):
     if num < 10**3:
         return "{:.2f}{}".format(num, "B")
-    elif (num >= 10 ** 3) & (num < 10**6):
+    elif (num >= 10**3) & (num < 10**6):
         return "{:.2f}{}".format(num / (1.024 * 10**3), "KB")
-    elif (num >= 10 ** 6) & (num < 10**9):
+    elif (num >= 10**6) & (num < 10**9):
         return "{:.2f}{}".format(num / (1.024 * 10**6), "MB")
     else:
         return "{:.2f}{}".format(num / (1.024 * 10**9), "GB")
