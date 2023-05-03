@@ -1,8 +1,8 @@
-field {
+fields {
     field_name: "person_id"
-    uniqueId {}
+    unique_id {}
 }
-field {
+fields {
     field_name: "age"
     b10int {}
 }

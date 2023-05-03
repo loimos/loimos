@@ -1,32 +1,32 @@
-field {
+fields {
     field_name: "daynum"
     ignore {}
 }
-field {
+fields {
     field_name: "pid"
-    uniqueId {}
+    unique_id {}
 }
-field {
+fields {
     field_name: "activity_number"
     ignore {}
 }
-field {
+fields {
     field_name: "activity_type"
     ignore {}
 }
-field {
+fields {
     field_name: "start_time"
-    startTime {}
+    start_time {}
 }
-field {
+fields {
     field_name: "end_time"
     ignore {}
 }
-field {
+fields {
     field_name: "duration"
     duration {}
 }
-field {
+fields {
     field_name: "lid"
-    foreignId {}
+    foreign_id {}
 }

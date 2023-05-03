@@ -10,14 +10,14 @@ package loimos.proto;
 import "data.proto";
 
 message Intervention {
-    double newDailyCasesTriggerOn = 1;
-    double newDailyCasesTriggerOff = 2;
-    bool schoolClosures = 3;
-    bool stayAtHome = 4; 
-    double isolationCompliance = 5;
-    double schoolClosureCompliance = 6;
-    // CSV Mappings
-    int32 csvLocationOfSchool = 7;
-    int32 csvLocationOfSeederBool = 8;
-    int32 seedingAdminCode = 9;
+  double new_daily_cases_trigger_on = 1;
+  double new_daily_cases_trigger_off = 2;
+  bool school_closures = 3;
+  bool stay_at_home = 4; 
+  double isolation_compliance = 5;
+  double school_closure_compliance = 6;
+  // CSV Mappings
+  int32 csv_location_of_school = 7;
+  int32 csv_location_of_seeder_bool = 8;
+  int32 seeding_admin_code = 9;
 }
