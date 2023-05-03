@@ -36,7 +36,7 @@ class DiseaseModel : public CBase_DiseaseModel {
     loimos::proto::DiseaseModel_DiseaseState_TimedTransitionSet_StateTransition
       *transitionSet,
     std::default_random_engine *generator) const;
-  Time timeDefToSeconds(Time_Def time) const;
+  Time timeDefToSeconds(TimeDef time) const;
 
   // Intervention related.
   bool interventionToggled;

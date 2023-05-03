@@ -75,8 +75,8 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath,
   csvConfigDefStream.close();
 
   int csvLocationOfPid = -1;
-  for (int i = 0; i < csvDefinition.field_size(); i += 1) {
-    if (csvDefinition.field(i).has_uniqueid()) {
+  for (int i = 0; i < csvDefinition.fields_size(); i += 1) {
+    if (csvDefinition.fields(i).has_unique_id()) {
       csvLocationOfPid = i;
       break;
     }

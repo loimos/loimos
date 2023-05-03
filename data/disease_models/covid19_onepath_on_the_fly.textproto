@@ -102,61 +102,61 @@ disease_states: {
 			next_state: 7
 			with_prob: 0.9594
 			discrete: {
-				bin: {
+				bins: {
 					tval: {
 						days: 1
 					}
 					with_prob: 0.175
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 2
 					}
 					with_prob: 0.175
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 3
 					}
 					with_prob: 0.1
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 4
 					}
 					with_prob: 0.1
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 5
 					}
 					with_prob: 0.1
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 6
 					}
 					with_prob: 0.1
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 7
 					}
 					with_prob: 0.1
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 8
 					}
 					with_prob: 0.05
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 9
 					}
 					with_prob: 0.05
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 10
 					}
@@ -177,13 +177,13 @@ disease_states: {
 			next_state: 9
 			with_prob: 0.0006
 			discrete: {
-				bin: {
+				bins: {
 					tval: {
 						days: 1
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 2
 					}
@@ -263,13 +263,13 @@ disease_states: {
 			next_state: 11
 			with_prob: 0.95
 			discrete: {
-				bin: {
+				bins: {
 					tval: {
 						days: 1
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 2
 					}
@@ -281,61 +281,61 @@ disease_states: {
 			next_state: 14
 			with_prob: 0.05
 			discrete: {
-				bin: {
+				bins: {
 					tval: {
 						days: 1
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 2
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 3
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 4
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 5
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 6
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 7
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 8
 					}
 					with_prob: 1
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 9
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 10
 					}
@@ -387,25 +387,25 @@ disease_states: {
 			next_state: 13
 			with_prob: 0.06
 			discrete: {
-				bin: {
+				bins: {
 					tval: {
 						days: 1
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 2
 					}
 					with_prob: 1
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 3
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 4
 					}
@@ -417,49 +417,49 @@ disease_states: {
 			next_state: 14
 			with_prob: 0.94
 			discrete: {
-				bin: {
+				bins: {
 					tval: {
 						days: 1
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 2
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 3
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 4
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 5
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 6
 					}
 					with_prob: 1
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 7
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 8
 					}
@@ -499,25 +499,25 @@ disease_states: {
 			next_state: 14
 			with_prob: 1
 			discrete: {
-				bin: {
+				bins: {
 					tval: {
 						days: 1
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 2
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 3
 					}
 					with_prob: 0
 				}
-				bin: {
+				bins: {
 					tval: {
 						days: 4
 					}

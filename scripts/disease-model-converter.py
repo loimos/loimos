@@ -29,7 +29,7 @@ def convert_transition(transition_edge):
                 bins.append(
                     {"tval": {"days": edge["value"]}, "with_prob": edge["probability"]}
                 )
-            return {"discrete": {"bin": bins}}
+            return {"discrete": {"bins": bins}}
     elif "normal" in transition_edge:
         return {
             "normal": {

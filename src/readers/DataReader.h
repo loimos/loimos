@@ -50,7 +50,7 @@ class DataReader {
         }
 
         // Get next attribute type.
-        loimos::proto::Data_Field const *field = &dataFormat->field(attrIndex);
+        loimos::proto::DataField const *field = &dataFormat->fields(attrIndex);
         uint16_t dataLen = c - leftCommaLocation;
         if (field->has_ignore() || dataLen == 0) {
           // Skip
@@ -74,15 +74,15 @@ class DataReader {
   // Returns 1 if another field was set in the data vector of obj
   // and 0 otherwise
   static int parseObjectData(const std::string &rawData,
-      const loimos::proto::Data_Field *field, int fieldIdx, T *obj) {
+      const loimos::proto::DataField *field, int fieldIdx, T *obj) {
     std::vector<union Data> *data = &obj->getData();
 
     // Parse byte stream to the correct representation.
-    if (field->has_uniqueid()) {
+    if (field->has_unique_id()) {
       obj->setUniqueId(std::stoi(rawData));
       return 0;
     } else {
-      if (field->has_b10int() || field->has_foreignid()) {
+      if (field->has_b10int() || field->has_foreign_id()) {
         data->at(fieldIdx).int_b10 = std::stoi(rawData);
 
       } else if (field->has_label()) {
@@ -123,7 +123,7 @@ class DataReader {
       // Scan for the next attributes - comma separated.
       if (buf[c] == CSV_DELIM || c + 1 == lineLength) {
         // Get next attribute type.
-        loimos::proto::Data_Field const *field = &dataFormat->field(attrIndex);
+        loimos::proto::DataField const *field = &dataFormat->fields(attrIndex);
         uint16_t dataLen = c - leftCommaLocation;
         if (field->has_ignore() || dataLen == 0) {
           // Skip
@@ -137,13 +137,13 @@ class DataReader {
           }
 
           // Parse byte stream to the correct representation.
-          if (field->has_uniqueid()) {
+          if (field->has_unique_id()) {
             personId = std::atoi(start);
 
-          } else if (field->has_foreignid()) {
+          } else if (field->has_foreign_id()) {
             locationId = std::atoi(start);
 
-          } else if (field->has_starttime()) {
+          } else if (field->has_start_time()) {
             startTime = std::atoi(start);
 
           } else if (field->has_duration()) {
@@ -162,8 +162,8 @@ class DataReader {
 
   static int getNonZeroAttributes(loimos::proto::CSVDefinition *dataFormat) {
     int count = 0;
-    for (int c = 0; c < dataFormat->field_size(); c++) {
-      if (!dataFormat->field(c).has_ignore()) {
+    for (int c = 0; c < dataFormat->fields_size(); c++) {
+      if (!dataFormat->fields(c).has_ignore()) {
         count += 1;
       }
     }

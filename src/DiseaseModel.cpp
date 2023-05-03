@@ -240,11 +240,11 @@ Time DiseaseModel::getTimeInNextState(
     float randomCutoff = uniform_dist(*generator);
     float cdfSoFar = 0;
 
-    for (int i = 0; i < transitionSet->discrete().bin_size(); i++) {
-      cdfSoFar += transitionSet->discrete().bin(i).with_prob();
+    for (int i = 0; i < transitionSet->discrete().bins_size(); i++) {
+      cdfSoFar += transitionSet->discrete().bins(i).with_prob();
 
       if (randomCutoff < cdfSoFar) {
-        return timeDefToSeconds(transitionSet->discrete().bin(i).tval());
+        return timeDefToSeconds(transitionSet->discrete().bins(i).tval());
       }
     }
   }
@@ -252,7 +252,7 @@ Time DiseaseModel::getTimeInNextState(
 }
 
 /** Converts a protobuf time definition into a seconds as an integer */
-Time DiseaseModel::timeDefToSeconds(Time_Def time) const {
+Time DiseaseModel::timeDefToSeconds(TimeDef time) const {
   return static_cast<Time>(time.days() * DAY_LENGTH
       + time.hours() * HOUR_LENGTH
       + time.minutes() * MINUTE_LENGTH);
@@ -354,13 +354,13 @@ double DiseaseModel::getPropensity(int susceptibleState, int infectiousState,
 void DiseaseModel::toggleIntervention(int newDailyInfections) {
   if (!interventionToggled) {
     if (static_cast<double>(newDailyInfections) / numPeople >=
-          interventionDef->newdailycasestriggeron()) {
+          interventionDef->new_daily_cases_trigger_on()) {
       interventionToggled = true;
       printf("Intervention toggled!\n");
     }
   } else {
     if (static_cast<double>(newDailyInfections) / numPeople <=
-          interventionDef->newdailycasestriggeroff()) {
+          interventionDef->new_daily_cases_trigger_off()) {
       interventionToggled = false;
     }
   }
@@ -370,8 +370,8 @@ void DiseaseModel::toggleIntervention(int newDailyInfections) {
  * For now only the self-siolation intervention has a compilance value
  */
 double DiseaseModel::getCompilance() const {
-  if (interventionStategy && interventionDef->stayathome()) {
-    return interventionDef->isolationcompliance();
+  if (interventionStategy && interventionDef->stay_at_home()) {
+    return interventionDef->isolation_compliance();
   } else {
     return 0;
   }
@@ -383,7 +383,7 @@ double DiseaseModel::getCompilance() const {
  */
 bool DiseaseModel::shouldPersonIsolate(int healthState) {
   return interventionToggled
-    && interventionDef->stayathome()
+    && interventionDef->stay_at_home()
     && model->disease_states(healthState).symptomatic();
 }
 
@@ -391,11 +391,11 @@ bool DiseaseModel::shouldPersonIsolate(int healthState) {
  * Location closed if it is a school and intervention is triggered.
  */
 bool DiseaseModel::isLocationOpen(std::vector<Data> *locAttr) const {
-  return !(interventionToggled && interventionDef->schoolclosures() &&
-    locAttr->at(interventionDef->csvlocationofschool()).int_b10 > 0);
+  return !(interventionToggled && interventionDef->school_closures() &&
+    locAttr->at(interventionDef->csv_location_of_school()).int_b10 > 0);
 }
 
 bool DiseaseModel::complyingWithLockdown(std::default_random_engine *generator) const {
   std::uniform_real_distribution<double> uniform_dist(0, 1);
-  return uniform_dist(*generator) < interventionDef->schoolclosurecompliance();
+  return uniform_dist(*generator) < interventionDef->school_closure_compliance();
 }

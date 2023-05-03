@@ -74,14 +74,14 @@ void Person::EndOfDayStateUpdate(DiseaseModel *diseaseModel,
 void Person::_print_information(loimos::proto::CSVDefinition *personDef) {
   printf("My ID is %d.\n", this->uniqueId);
   int attr = 0;
-  for (int c = 0; c < personDef->field_size(); c++) {
-    loimos::proto::Data_Field const *field = &personDef->field(c);
+  for (int c = 0; c < personDef->fields_size(); c++) {
+    loimos::proto::DataField const *field = &personDef->fields(c);
     if (field->has_ignore()) {
       // Skip
     } else {
       printf("-- %s is ", field->field_name().c_str());
-      if (field->has_uniqueid() || field->has_b10int()
-          || field->has_foreignid()) {
+      if (field->has_unique_id() || field->has_b10int()
+          || field->has_foreign_id()) {
         printf("%d\n", this->data[attr].int_b10);
       } else if (field->has_label()) {
         // printf("%s\n", this->data[attr].str.c_str());
