@@ -192,8 +192,8 @@ void People::loadVisitData(std::ifstream *activityData) {
         CkPrintf("  People chare %d, person %d reading from %u on day %d\n",
             thisIndex, person.getUniqueId(), seekPos, day);
           CkPrintf("  Person %d (%d) on day %d first visit: %d to %d, at loc %d\n",
-              person.getUniqueId(), personId, day, visitStart, visitStart + visitDuration,
-              locationId);
+              person.getUniqueId(), personId, day, visitStart,
+              visitStart + visitDuration, locationId);
       }
 #endif
 
