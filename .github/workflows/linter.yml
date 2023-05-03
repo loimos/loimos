@@ -57,7 +57,6 @@ jobs:
           DEFAULT_BRANCH: develop
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MULTI_STATUS: true
-          #ACTIONS_RUNNER_DEBUG: true
           #VALIDATE_ALL_CODEBASE: false
           VALIDATE_CPP: true
           VALIDATE_GITHUB_ACTIONS: true

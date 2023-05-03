@@ -53,7 +53,7 @@ jobs:
           ./autogen.sh
           mkdir build install
           cd build
-          ../configure --prefix=$GITHUB_WORKSPACE/protobuf/install
+          ../configure --prefix="$GITHUB_WORKSPACE/protobuf/install"
           make -j4 && make install
 
 #    # Build googletest
