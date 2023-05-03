@@ -26,9 +26,9 @@ class Locations : public CBase_Locations {
   int day;
 
  public:
-  Locations(std::string scenarioPath);
+  explicit Locations(std::string scenarioPath);
   explicit Locations(CkMigrateMessage *msg);
-  void pup(PUP::er &p);
+  void pup(PUP::er &p);  // NOLINT(runtime/references)
   void ReceiveVisitMessages(VisitMessage visitMsg);
   void ComputeInteractions();  // calls ReceiveInfections
   // Load location data from CSV.

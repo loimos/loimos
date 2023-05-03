@@ -40,7 +40,7 @@ class Person : public DataInterface {
   Person& operator=(Person&&) = default;
   ~Person() = default;
   // Lets charm++ migrate objects
-  void pup(PUP::er &p);
+  void pup(PUP::er &p);  // NOLINT(runtime/references)
   // Disease model functions.
   void EndOfDayStateUpdate(DiseaseModel *diseaseModel,
       std::default_random_engine *generator);

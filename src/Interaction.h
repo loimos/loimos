@@ -23,7 +23,7 @@ struct Interaction {
   int endTime;
 
   // Lets us send potential infections via charm++
-  void pup(PUP::er &p);
+  void pup(PUP::er &p);  // NOLINT(runtime/references)
 
   // We need this in order to emplace Interactions...
   Interaction(

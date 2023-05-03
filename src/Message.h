@@ -39,7 +39,7 @@ struct InteractionMessage {
     : locationIdx(locationIdx_), personIdx(personIdx_),
     interactions(interactions_) {}
 
-  void pup(PUP::er& p) {
+  void pup(PUP::er& p) {  // NOLINT(runtime/references)
     p | locationIdx;
     p | personIdx;
     p | interactions;

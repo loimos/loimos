@@ -37,7 +37,7 @@ class People : public CBase_People {
  public:
   explicit People(std::string scenarioPath);
   explicit People(CkMigrateMessage *msg);
-  void pup(PUP::er &p);
+  void pup(PUP::er &p);  // NOLINT(runtime/references)
   void SendVisitMessages();
   void SyntheticSendVisitMessages();
   void RealDataSendVisitMessages();

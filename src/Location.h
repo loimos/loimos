@@ -88,7 +88,7 @@ class Location : public DataInterface {
   Location& operator=(const Location&) = default;
   Location& operator=(Location&&) = default;
   // Lets us migrate these objects
-  void pup(PUP::er &p);
+  void pup(PUP::er &p);  // NOLINT(runtime/references)
   void setGenerator(std::default_random_engine *generator);
   // Adds an event represnting a person either arriving or departing
   // from this location
