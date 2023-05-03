@@ -17,7 +17,7 @@ import clustering_helpers as ch
 
 
 def geo_cluster_recursive(locations_to_group, c_depth, max_in_cluster, MAX_DEPTH=3):
-    """ Recursive helper for geo partitioning scheme."""
+    """Recursive helper for geo partitioning scheme."""
     # Always will form initial groups based on initial depth.
     clusters = defaultdict(list)
     for lid, admin_levels in locations_to_group:

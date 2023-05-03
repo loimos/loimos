@@ -6,7 +6,7 @@
 
 
 def split_large_clusters(clusters, max_in_cluster):
-    """ Breaks clusters that are above the maximum size into (n-1) full clusters
+    """Breaks clusters that are above the maximum size into (n-1) full clusters
     and 1 partially fully cluster. """
     # Detects if any clusters are oversized and if so creates a list of new
     # clusters to replace that one.
@@ -19,7 +19,10 @@ def split_large_clusters(clusters, max_in_cluster):
                 range(0, total_in_cluster, max_in_cluster)
             ):
                 temp.append(
-                    (f"{name}_{new_cluster_num}", values[i : i + max_in_cluster],)
+                    (
+                        f"{name}_{new_cluster_num}",
+                        values[i : i + max_in_cluster],
+                    )
                 )
             new_clusters.append((name, temp))
 
@@ -32,8 +35,8 @@ def split_large_clusters(clusters, max_in_cluster):
 
 
 def recombine_clusters(clusters, max_in_cluster):
-    """ Given a list of complete and incomplete clusters, this function combines
-    those clusters into n-1 full clusters and at most 1 partial cluster. """
+    """Given a list of complete and incomplete clusters, this function combines
+    those clusters into n-1 full clusters and at most 1 partial cluster."""
     if len(clusters) <= 1:
         return clusters
 
