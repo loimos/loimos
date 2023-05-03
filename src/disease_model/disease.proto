@@ -63,11 +63,11 @@ message DiseaseModel {
 
         // Defines the time transition model for the node.
         oneof dwell_time_distribution {
-          Dist_Uniform   uniform   =  9;
-          Dist_Normal    normal    = 10;
-          Dist_Fixed     fixed    = 11;
-          Dist_Forever   forever   = 12;
-          Dist_Discrete discrete = 13;
+          DistUniform   uniform  =  9;
+          DistNormal    normal   = 10;
+          DistFixed     fixed    = 11;
+          DistForever   forever  = 12;
+          DistDiscrete  discrete = 13;
         }
       }
       // A transition state has one vertex and multiple edges.
