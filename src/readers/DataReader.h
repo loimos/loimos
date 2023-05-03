@@ -76,7 +76,7 @@ class DataReader {
   static int parseObjectData(const std::string &rawData,
       const loimos::proto::Data_Field *field, int fieldIdx, T *obj) {
     std::vector<union Data> *data = &obj->getData();
-  
+
     // Parse byte stream to the correct representation.
     if (field->has_uniqueid()) {
       obj->setUniqueId(std::stoi(rawData));
@@ -84,10 +84,10 @@ class DataReader {
     } else {
       if (field->has_b10int() || field->has_foreignid()) {
         data->at(fieldIdx).int_b10 = std::stoi(rawData);
-  
+
       } else if (field->has_label()) {
         data->at(fieldIdx).str = new std::string(rawData);
-  
+
       } else if (field->has_bool_()) {
         if (rawData.length() == 1) {
           data->at(fieldIdx).boolean =
@@ -109,15 +109,15 @@ class DataReader {
     int duration = -1;
     // TODO(IanCostello) don't reallocate this every time.
     char buf[MAX_INPUT_lineLength];
-  
+
     // Get header line.
     input->getline(buf, MAX_INPUT_lineLength);
-  
+
     // Read over people data format.
     int attrIndex = 0;
     int numDataFields = 0;
     int leftCommaLocation = 0;
-  
+
     int lineLength = input->gcount();
     for (int c = 0; c < lineLength; c++) {
       // Scan for the next attributes - comma separated.
@@ -135,20 +135,20 @@ class DataReader {
           } else {
             start[dataLen] = 0;
           }
-  
+
           // Parse byte stream to the correct representation.
           if (field->has_uniqueid()) {
             personId = std::atoi(start);
-  
+
           } else if (field->has_foreignid()) {
             locationId = std::atoi(start);
-  
+
           } else if (field->has_starttime()) {
             startTime = std::atoi(start);
-  
+
           } else if (field->has_duration()) {
             duration = std::atoi(start);
-  
+
           } else {
             numDataFields++;
           }
