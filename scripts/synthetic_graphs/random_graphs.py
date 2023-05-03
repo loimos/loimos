@@ -20,10 +20,10 @@ def generate_barabasi_albert(num_nodes, edges_added_per_node):
     we randomly connect it to M existing nodes with a probability proportional
     to the degree of that node. (E.g. you are more likely to connect to nodes
     that already have a high degree).
-    
+
     Args:
         num_nodes: Number of total nodes in the graph.
-        edges_added_per_node: The number of edges to connect each 
+        edges_added_per_node: The number of edges to connect each
     """
     graph = snap.TUNGraph.New()
     assert num_nodes >= 0
@@ -42,8 +42,7 @@ def generate_barabasi_albert(num_nodes, edges_added_per_node):
 
     # For every additional node, we randomly connect it to exactly M
     for i in range(edges_added_per_node, num_nodes):
-        nodes_to_connect_to = random.sample(population=nodes,
-                                            k=edges_added_per_node)
+        nodes_to_connect_to = random.sample(population=nodes, k=edges_added_per_node)
         nodes.append(i)
         graph.AddNode(i)
         for other_node in nodes_to_connect_to:
@@ -69,10 +68,11 @@ def _get_lattice_neighbor(num_nodes, current_node, neighbor):
 
 def generate_watts_strogatz(num_nodes, mean_degree_k, beta):
     """Creates a watts strogatz random graph.
-    
+
     The algorithm has two stages.
     In the first stage, we create a regular ring lattice.
-    E.x https://www.researchgate.net/figure/FIGURE-A1-A-regular-ring-lattice-with-N-20-vertices_fig2_276832512
+    Ex: https://www.researchgate.net/figure/
+    FIGURE-A1-A-regular-ring-lattice-with-N-20-vertices_fig2_276832512
     A ring lattice is a structure where we lay out all N nodes in a circle and
     each node is connected to its closest K neighbors on the ring.
 

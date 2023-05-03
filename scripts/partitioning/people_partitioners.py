@@ -8,6 +8,7 @@
 Algorithms that perform partitioning on people set.
 """
 
+
 # Now assign the people to clusters
 def count_in_list(listv, cluster):
     """ Returns how many elements of listv are in cluster. """
@@ -17,14 +18,15 @@ def count_in_list(listv, cluster):
             count += 1
     return count
 
+
 def greedy_affinity_to_clusters(clusters, limit_people, people_location_visit_graph):
     """ Greedily assigns people to clusters based on which non-full cluster
-    that person has the greatest number of shared visits to. 
+    that person has the greatest number of shared visits to.
 
     Args:
         clusters: The location ids in each cluster as an array of sets.
         limit_people: The maximum people allowed in a group, as an int.
-        people_location_visit_graph: 2D array (num_locations, num_people) that 
+        people_location_visit_graph: 2D array (num_locations, num_people) that
             tracks the number of times person X visited location Y.
 
     Returns:
@@ -39,7 +41,7 @@ def greedy_affinity_to_clusters(clusters, limit_people, people_location_visit_gr
     for index, count in enumerate(people_location_visit_graph.sum(axis=1)):
         people_sorted_by_number_of_visits.append((count, index))
     people_sorted_by_number_of_visits.sort(reverse=True)
-        
+
     # For each person assign them to non-full cluster for which they have the
     # greatest number of visits to. O(PL). Switching this logic to sparse
     # matrices would lead to significant speedup.
