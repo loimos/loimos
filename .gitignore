@@ -1,7 +1,7 @@
 # No generated code files
 *.decl.h
 *.def.h
-*.pb.C
+*.pb.cpp
 *.pb.h
 *.pb.cc
 
