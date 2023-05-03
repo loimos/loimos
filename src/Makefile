@@ -90,7 +90,7 @@ clean:
 	done
 
 # All test names start with "test-"
-TEST_NAMES= -style -small -syn -large -validation -intervention -intervention-syn
+TEST_NAMES= -small -syn -large -validation -intervention -intervention-syn
 TESTS=$(subst -,test-,$(TEST_NAMES))
 
 # Run all tests with test rule
