@@ -11,7 +11,7 @@ Algorithms that perform partitioning on people set.
 
 # Now assign the people to clusters
 def count_in_list(listv, cluster):
-    """ Returns how many elements of listv are in cluster. """
+    """ Returns how many elements of listv are in cluster."""
     count = 0
     for v in listv:
         if v in cluster:
@@ -20,7 +20,8 @@ def count_in_list(listv, cluster):
 
 
 def greedy_affinity_to_clusters(clusters, limit_people, people_location_visit_graph):
-    """ Greedily assigns people to clusters based on which non-full cluster
+    """
+    Greedily assigns people to clusters based on which non-full cluster
     that person has the greatest number of shared visits to.
 
     Args:

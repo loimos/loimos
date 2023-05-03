@@ -19,10 +19,7 @@ def split_large_clusters(clusters, max_in_cluster):
                 range(0, total_in_cluster, max_in_cluster)
             ):
                 temp.append(
-                    (
-                        f"{name}_{new_cluster_num}",
-                        values[i : i + max_in_cluster],  # noqa
-                    )
+                    (f"{name}_{new_cluster_num}", values[i : i + max_in_cluster],)
                 )
             new_clusters.append((name, temp))
 
