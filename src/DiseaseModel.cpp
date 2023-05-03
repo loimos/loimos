@@ -61,7 +61,7 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     CkAbort("Could not parse protobuf!");
   }
   diseaseModelStream.close();
-  assert(model->disease_state_size() != 0);
+  assert(model->disease_states_size() != 0);
 
   // Setup other shared PE objects.
   if (!syntheticRun) {
@@ -129,7 +129,7 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
  * Returns the name of the state at a given index
  */
 std::string DiseaseModel::lookupStateName(int state) const {
-  return model->disease_state(state).state_label();
+  return model->disease_states(state).state_label();
 }
 
 /**
@@ -152,7 +152,7 @@ DiseaseModel::transitionFromState(int fromState,
     std::default_random_engine *generator) const {
   // Get current state and next transition set to use.
   const loimos::proto::DiseaseModel_DiseaseState *currState =
-    &model->disease_state(fromState);
+    &model->disease_states(fromState);
 
   // Two cases
   if (currState->has_timed_transition()) {
@@ -162,7 +162,7 @@ DiseaseModel::transitionFromState(int fromState,
       *transition_set = &(currState->timed_transition());
 
     // Check if any transitions to be made.
-    int transitionSetSize = transition_set->transition_size();
+    int transitionSetSize = transition_set->transitions_size();
     if (transitionSetSize == 0) {
       return std::make_tuple(fromState, std::numeric_limits<Time>::max());
     }
@@ -175,7 +175,7 @@ DiseaseModel::transitionFromState(int fromState,
     for (int i = 0; i < transitionSetSize; i++) {
       const loimos::proto::
         DiseaseModel_DiseaseState_TimedTransitionSet_StateTransition
-        *transition = &transition_set->transition(i);
+        *transition = &transition_set->transitions(i);
 
       // TODO(IanCostello): Create a CDF vector in initialization.
       cdfSoFar += transition->with_prob();
@@ -190,7 +190,7 @@ DiseaseModel::transitionFromState(int fromState,
 
   } else if (currState->has_exposure_transition()) {
     return std::make_tuple(
-        currState->exposure_transition().transition(0).next_state(), 0);
+        currState->exposure_transition().transitions(0).next_state(), 0);
 
     /*
     // If already infected then they are settling in this state so no transition.
@@ -260,7 +260,7 @@ Time DiseaseModel::timeDefToSeconds(Time_Def time) const {
 
 /** Returns the total number of disease states */
 int DiseaseModel::getNumberOfStates() const {
-  return model->disease_state_size();
+  return model->disease_states_size();
 }
 
 /** Returns the initial starting healthy and exposed state */
@@ -293,17 +293,17 @@ int DiseaseModel::getHealthyState(const std::vector<Data> &dataField) const {
 
 /** Returns if someone is infectious */
 bool DiseaseModel::isInfectious(int personState) const {
-  return model->disease_state(personState).infectivity() != 0.0;
+  return model->disease_states(personState).infectivity() != 0.0;
 }
 
 /** Returns if someone is susceptible */
 bool DiseaseModel::isSusceptible(int personState) const {
-  return model->disease_state(personState).susceptibility() != 0.0;
+  return model->disease_states(personState).susceptibility() != 0.0;
 }
 
 /** Returns the name of the person's state, as a C-style string */
 const char *DiseaseModel::getStateLabel(int personState) const {
-  return model->disease_state(personState).state_label().c_str();
+  return model->disease_states(personState).state_label().c_str();
 }
 
 /**
@@ -319,9 +319,9 @@ double DiseaseModel::getLogProbNotInfected(Event susceptibleEvent,
     // ...a scaling factor (normalizes based on the unit of time)...
     model->transmissibility()
     // ...the susceptibility of the susceptible person...
-    * model->disease_state(susceptibleEvent.personState).susceptibility()
+    * model->disease_states(susceptibleEvent.personState).susceptibility()
     // ...and the infectivity of the infectious person
-    * model->disease_state(infectiousEvent.personState).infectivity();
+    * model->disease_states(infectiousEvent.personState).infectivity();
 
   // The probability of not being infected in a period of time is decided based
   // on a geometric probability distribution, with the lenght of time the two
@@ -343,8 +343,8 @@ double DiseaseModel::getPropensity(int susceptibleState, int infectiousState,
   // later, but for now we ommit most of them (which is equivalent to setting
   // them all to one)
   return model->transmissibility() * dt
-    * model->disease_state(susceptibleState).susceptibility()
-    * model->disease_state(infectiousState).infectivity();
+    * model->disease_states(susceptibleState).susceptibility()
+    * model->disease_states(infectiousState).infectivity();
 }
 
 /**
@@ -384,7 +384,7 @@ double DiseaseModel::getCompilance() const {
 bool DiseaseModel::shouldPersonIsolate(int healthState) {
   return interventionToggled
     && interventionDef->stayathome()
-    && model->disease_state(healthState).symptomatic();
+    && model->disease_states(healthState).symptomatic();
 }
 
 /**

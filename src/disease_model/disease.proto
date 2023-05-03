@@ -4,89 +4,90 @@
 // SPDX-License-Identifier: MIT
 
 // This disease model defines a simple model without important features such
-// variable latencies, different symptom settings, and variable sets of edges. 
-// It serves as a simple to read example of the format. 
+// variable latencies, different symptom settings, and variable sets of edges.
+// It serves as a simple to read example of the format.
 
 syntax = "proto3";
 package loimos.proto;
-import "distribution.proto"; 
+import "distribution.proto";
 
 // Note that we can use plugin insertion points to input code.
-// https://developers.google.com/protocol-buffers/docs/reference/cpp-generated#plugins
+// https://developers.google.com/protocol-buffers/docs/reference/
+//   cpp-generated#plugins
 
 // Defines the Probabilistic Timed Transition Systems (PTTS)
 // of the disease model.
 message DiseaseModel {
-    // Defines the unique disease identifier.
-    string label = 1;
-    double transmissibility = 2;
+  // Defines the unique disease identifier.
+  string label = 1;
+  double transmissibility = 2;
 
-    message StartingCondition {
-      int32 starting_state = 1;
-      int32 lower = 2;
-      int32 upper = 3;
-    }
-    repeated StartingCondition starting_states = 3;
+  message StartingCondition {
+    int32 starting_state = 1;
+    int32 lower = 2;
+    int32 upper = 3;
+  }
+  repeated StartingCondition starting_states = 3;
 
-    // Defines a vertex in the graph and its outbound nodes.
-    message DiseaseState {
-        // Defines a state of the disease model.
-        string state_label = 1;
-        double infectivity = 2;
-        double susceptibility = 3;
-        // Incapacitation defines the level of restricted movement caused
-        // by the disease.
-        double incapacitation = 4;
-        bool symptomatic = 5;
+  // Defines a vertex in the graph and its outbound nodes.
+  message DiseaseState {
+    // Defines a state of the disease model.
+    string state_label = 1;
+    double infectivity = 2;
+    double susceptibility = 3;
+    // Incapacitation defines the level of restricted movement caused
+    // by the disease.
+    double incapacitation = 4;
+    bool symptomatic = 5;
 
-        // Level of non-disease-specific symptoms.
-        // oneof prodrome_or_vulnerability {
-        //   int32 prodrome = 5;
-        //   int32 vulnerability = 6; 
-        // }
-        
-        // TODO: Fill in this definition.
-        // oneof symptomatic_or_tracing {
-        //   int32 symptomatic = 7;
-        //   int32 tracing = 8;
-        // }
+    // Level of non-disease-specific symptoms.
+    // oneof prodrome_or_vulnerability {
+    //   int32 prodrome = 5;
+    //   int32 vulnerability = 6;
+    // }
 
-        // Defines a set of edges that should be used
-        // for a certain intervention. For example, a vaccinated patient
-        // may skip directly from uninfected to infected.
-        message TimedTransitionSet {
-          // Defines a transition. For example (latent_1 -> symptom_1).
-          message StateTransition {
-            int32 next_state = 2;
-            double with_prob = 3;
+    // TODO: Fill in this definition.
+    // oneof symptomatic_or_tracing {
+    //   int32 symptomatic = 7;
+    //   int32 tracing = 8;
+    // }
 
-            // Defines the time transition model for the node.
-            oneof dwell_time_distribution {
-              Dist_Uniform   uniform   =  9;
-              Dist_Normal    normal    = 10;
-              Dist_Fixed     fixed    = 11;
-              Dist_Forever   forever   = 12;
-              Dist_Discrete discrete = 13;
-            }
-          }
-          // A transition state has one vertex and multiple edges.
-          repeated StateTransition transition = 6;
+    // Defines a set of edges that should be used
+    // for a certain intervention. For example, a vaccinated patient
+    // may skip directly from uninfected to infected.
+    message TimedTransitionSet {
+      // Defines a transition. For example (latent_1 -> symptom_1).
+      message StateTransition {
+        int32 next_state = 2;
+        double with_prob = 3;
+
+        // Defines the time transition model for the node.
+        oneof dwell_time_distribution {
+          Dist_Uniform   uniform   =  9;
+          Dist_Normal    normal    = 10;
+          Dist_Fixed     fixed    = 11;
+          Dist_Forever   forever   = 12;
+          Dist_Discrete discrete = 13;
         }
-
-        message ExposureTransitionSet {
-          message ExposureTransition {
-            // Describes 
-            int32 next_state = 2; 
-          }
-          repeated ExposureTransition transition = 1;
-        }
-
-        oneof transition_type {
-          TimedTransitionSet timed_transition = 14;
-          ExposureTransitionSet exposure_transition = 15;
-        }        
+      }
+      // A transition state has one vertex and multiple edges.
+      repeated StateTransition transitions = 6;
     }
 
-    // A model is graph of state transitions.
-    repeated DiseaseState disease_state = 4;
+    message ExposureTransitionSet {
+      message ExposureTransition {
+        // Describes
+        int32 next_state = 2;
+      }
+      repeated ExposureTransition transitions = 1;
+    }
+
+    oneof transition_type {
+      TimedTransitionSet timed_transition = 14;
+      ExposureTransitionSet exposure_transition = 15;
+    }
+  }
+
+  // A model is graph of state transitions.
+  repeated DiseaseState disease_states = 4;
 }

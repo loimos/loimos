@@ -129,13 +129,13 @@ def convert_file(filepath):
         disease_state['susceptibility'] = state['susceptibility']
         if len(state['paths']):
             disease_state['timed_transition'] = {
-                "transition": create_transition_set(state['paths'])
+                "transitions": create_transition_set(state['paths'])
             }
         elif len(state['exp_paths']):
             disease_state['exposure_transition'] = {
-                "transition": {"next_state": state_names_to_index[state['exp_paths'][0]]}
+                "transitions": {"next_state": state_names_to_index[state['exp_paths'][0]]}
             }
-        converted_states.append({"disease_state": disease_state})
+        converted_states.append({"disease_states": disease_state})
 
     # Output as textproto.
     to_textproto({"label": "TODO_FILL_IN"})
