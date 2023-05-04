@@ -18,6 +18,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <sstream>
+#include <limits>
 #include <vector>
 #include <random>
 #include <unordered_set>
@@ -50,8 +51,6 @@
 /* readonly */ int numDaysWithRealData;
 /* readonly */ bool syntheticRun;
 /* readonly */ int contactModelType;
-/* readonly */ std::string scenarioPath;
-/* readonly */ std::string scenarioId;
 /* readonly */ int firstPersonIdx;
 /* readonly */ int firstLocationIdx;
 /* readonly */ uint64_t totalVisits;
@@ -74,68 +73,59 @@ double dataLoadingStartTime;
 /* readonly */ bool interventionStategy;
 
 class TraceSwitcher : public CBase_TraceSwitcher {
-  public:
-    #ifdef ENABLE_TRACING
-    TraceSwitcher() : CBase_TraceSwitcher(){}
-
-    void traceOn(){
-      traceBegin();
-      contribute(CkCallback(CkReductionTarget(Main, traceSwitchOn),mainProxy));
-    };
-
-    void traceOff(){
-      traceEnd();
-      contribute(CkCallback(CkReductionTarget(Main, traceSwitchOff),mainProxy));
-    };
-
-    void traceFlush(){
-      traceEnd();
-      traceFlushLog();
-      traceBegin();
-    };
-
-    void reportMemoryUsage(){
-      // Find this process's memory usage
-      struct rusage self_usage;
-      getrusage(RUSAGE_SELF, &self_usage);
-
-      // Account for the fact that multiple threads may be run on this process
-      self_usage.ru_maxrss /= CkNodeSize(CkMyNode());
-
-      pid_t pid = getpid();
-      long result[2];
-      result[0] = pid;
-      result[1] = self_usage.ru_maxrss;
-
-      CkCallback cb(CkReductionTarget(Main, printMemoryUsage), mainProxy);
-      contribute(sizeof(long), &self_usage.ru_maxrss, CkReduction::sum_long, cb);
-
-      #if ENABLE_DEBUG >= DEBUG_BY_CHARE
-        CkPrintf("  Process %ld is using %ld kb\n",
-            (int) pid, self_usage.ru_maxrss);
-      #endif
-    };
-    #endif // ENABLE_TRACING
-
-    #ifdef ENABLE_LB
-    void instrumentOn(){
-      LBTurnInstrumentOn();
-      contribute(CkCallback(CkReductionTarget(Main, instrumentSwitchOn),
-            mainProxy));
-    }
-
-    void instrumentOff(){
-      LBTurnInstrumentOff();
-      contribute(CkCallback(CkReductionTarget(Main, instrumentSwitchOff),
-            mainProxy));
-    }
-    #endif // ENABLE_LB
+ public:
+  #ifdef ENABLE_TRACING
+  TraceSwitcher() : CBase_TraceSwitcher() {}
+  void traceOn() {
+    traceBegin();
+    contribute(CkCallback(CkReductionTarget(Main, traceSwitchOn), mainProxy));
+  }
+  void traceOff() {
+    traceEnd();
+    contribute(CkCallback(CkReductionTarget(Main, traceSwitchOff), mainProxy));
+  }
+  void traceFlush() {
+    traceEnd();
+    traceFlushLog();
+    traceBegin();
+  }
+  void reportMemoryUsage() {
+    // Find this process's memory usage
+    struct rusage self_usage;
+    getrusage(RUSAGE_SELF, &self_usage);
+    // Account for the fact that multiple threads may be run on this process
+    self_usage.ru_maxrss /= CkNodeSize(CkMyNode());
+    pid_t pid = getpid();
+    int32_t result[2];
+    result[0] = pid;
+    result[1] = self_usage.ru_maxrss;
+    CkCallback cb(CkReductionTarget(Main, printMemoryUsage), mainProxy);
+    contribute(sizeof(int32_t), &self_usage.ru_maxrss, CkReduction::sum_long, cb);
+    #if ENABLE_DEBUG >= DEBUG_BY_CHARE
+      CkPrintf("  Process %ld is using %ld kb\n",
+          static_cst<int>(pid), self_usage.ru_maxrss);
+    #endif
+  }
+  #endif  // ENABLE_TRACING
+  #ifdef ENABLE_LB
+  void instrumentOn() {
+    LBTurnInstrumentOn();
+    contribute(CkCallback(CkReductionTarget(Main, instrumentSwitchOn),
+          mainProxy));
+  }
+  void instrumentOff() {
+    LBTurnInstrumentOff();
+    contribute(CkCallback(CkReductionTarget(Main, instrumentSwitchOff),
+          mainProxy));
+  }
+  #endif  // ENABLE_LB
 };
 
 Main::Main(CkArgMsg* msg) {
   // parsing command line arguments
-  if(msg->argc < 7){
-    CkAbort("Error, usage %s <people> <locations> <people subsets> <location subsets> <days> <disease_model_path> <scenario_folder (optional)>\n", msg->argv[0]);
+  if (msg->argc < 7) {
+    CkAbort("Error, usage %s <people> <locations> <people subsets> <location subsets>"
+    " <days> <disease_model_path> <scenario_folder (optional)>\n", msg->argv[0]);
   }
 #ifdef ENABLE_DEBUG
   CkPrintf("Debug printing enabled (verbosity at level %d)\n", ENABLE_DEBUG);
@@ -188,7 +178,8 @@ Main::Main(CkArgMsg* msg) {
     }
 
     if (-1 == synLocalLocationGridWidth || -1 == synLocalLocationGridHeight) {
-      CkAbort("Error: dimensions of location chare grid must divide those of location grid:\r\nchare grid is %d by %d, location grid is %d by %d\r\n",
+      CkAbort("Error: dimensions of location chare grid must divide those "
+          "of location grid:\r\nchare grid is %d by %d, location grid is %d by %d\r\n",
         synLocationPartitionGridWidth, synLocationPartitionGridHeight,
         synLocationGridWidth, synLocationGridHeight);
     }
@@ -214,7 +205,9 @@ Main::Main(CkArgMsg* msg) {
 #endif
 
   // Handle both real data runs or runs using synthetic populations.
-  if(syntheticRun) {
+  std::string scenarioPath;
+  std::string scenarioId;
+  if (syntheticRun) {
     firstPersonIdx = 0;
     firstLocationIdx = 0;
   } else {
@@ -226,7 +219,7 @@ Main::Main(CkArgMsg* msg) {
   }
 
   // Detemine which contact modle to use
-  contactModelType = (int) ContactModelType::constant_probability;
+  contactModelType = static_cast<int>(ContactModelType::constant_probability);
   interventionStategy = false;
   int interventionStategyLocation = -1;
   for (; argNum < msg->argc; ++argNum) {
@@ -235,8 +228,8 @@ Main::Main(CkArgMsg* msg) {
     // We can just use a flag for now in the CLI, since we only have two
     // models and that's easier to parse, but we may eventually have more,
     // which is why we use an enum to actually hold the model value
-    if ("-m" == tmp or "--min-max-alpha" == tmp) {
-      contactModelType = (int) ContactModelType::min_max_alpha;
+    if ("-m" == tmp || "--min-max-alpha" == tmp) {
+      contactModelType = static_cast<int>(ContactModelType::min_max_alpha);
 
     } else if ("-i" == tmp && argNum + 1 < msg->argc) {
       interventionStategyLocation = ++argNum;
@@ -245,11 +238,17 @@ Main::Main(CkArgMsg* msg) {
   }
 
   // setup main proxy
-  CkPrintf("\nRunning Loimos on %d PEs with %d people, %d locations, %d people chares, %d location chares, and %d days\n", CkNumPes(), numPeople, numLocations, numPeoplePartitions, numLocationPartitions, numDays);
+  CkPrintf("\nRunning Loimos on %d PEs with %d people, %d locations, "
+      "%d people chares, %d location chares, and %d days\n",
+    CkNumPes(), numPeople, numLocations, numPeoplePartitions,
+    numLocationPartitions, numDays);
   mainProxy = thisProxy;
 
-  if(syntheticRun) {
-    CkPrintf("Synthetic run with (%d, %d) person grid and (%d, %d) location grid. Average degree of %d\n\n", synPeopleGridWidth, synPeopleGridHeight, synLocationGridWidth, synLocationGridHeight, averageDegreeOfVisit);
+  if (syntheticRun) {
+    CkPrintf("Synthetic run with (%d, %d) person grid and "
+        "(%d, %d) location grid. Average degree of %d\n\n",
+      synPeopleGridWidth, synPeopleGridHeight, synLocationGridWidth,
+      synLocationGridHeight, averageDegreeOfVisit);
   }
 
 #ifdef ENABLE_UNIT_TESTING
@@ -293,13 +292,13 @@ Main::Main(CkArgMsg* msg) {
 #endif
   }
 
-  chareCount = numPeoplePartitions; // Number of chare arrays/groups
+  chareCount = numPeoplePartitions;  // Number of chare arrays/groups
   createdCount = 0;
 
   dataLoadingStartTime = CkWallTimer();
 
-  peopleArray = CProxy_People::ckNew(numPeoplePartitions);
-  locationsArray = CProxy_Locations::ckNew(numLocationPartitions);
+  peopleArray = CProxy_People::ckNew(scenarioPath, numPeoplePartitions);
+  locationsArray = CProxy_Locations::ckNew(scenarioPath, numLocationPartitions);
 
 #ifdef ENABLE_TRACING
   traceArray = CProxy_TraceSwitcher::ckNew();
@@ -352,11 +351,11 @@ Main::Main(CkArgMsg* msg) {
   }
 
   aggregatorProxy = CProxy_Aggregator::ckNew(visitParams, interactParams);
-#endif //USE_HYPERCOMM
+#endif  // USE_HYPERCOMM
 }
 
 void Main::CharesCreated() {
-  //CkPrintf("  %d of %d chares created\n", createdCount, chareCount);
+  // CkPrintf("  %d of %d chares created\n", createdCount, chareCount);
   if (++createdCount == chareCount) {
     CkPrintf("\nFinished loading people and location data in %lf seconds.\n",
         CkWallTimer() - dataLoadingStartTime);
@@ -395,18 +394,12 @@ void Main::SeedInfections() {
       personIdx,
       numPeople,
       numPeoplePartitions,
-      firstPersonIdx
-    );
+      firstPersonIdx);
 
     // Make a super contagious visit for that person.
     std::vector<Interaction> interactions;
     interactions.emplace_back(
-      std::numeric_limits<double>::max(),
-      0,
-      0,
-      0,
-      std::numeric_limits<int>::max()
-    );
+      std::numeric_limits<double>::max(), 0, 0, 0, std::numeric_limits<int>::max());
 
     InteractionMessage interMsg(-1, personIdx, interactions);
     #ifdef USE_HYPERCOMM
@@ -414,11 +407,11 @@ void Main::SeedInfections() {
     if (agg->interact_aggregator) {
       agg->interact_aggregator->send(peopleArray[peoplePartitionIdx], interMsg);
     } else {
-    #endif // USE_HYPERCOMM
+    #endif  // USE_HYPERCOMM
       peopleArray[peoplePartitionIdx].ReceiveInteractions(interMsg);
     #ifdef USE_HYPERCOMM
     }
-    #endif // USE_HYPERCOMM
+    #endif  // USE_HYPERCOMM
   }
 }
 

@@ -4,11 +4,13 @@
  * SPDX-License-Identifier: MIT
  */
 
-#ifndef __MESSAGE_H__
-#define __MESSAGE_H__
+#ifndef MESSAGE_H_
+#define MESSAGE_H_
 
 #include "Interaction.h"
 #include "pup_stl.h"
+
+#include <vector>
 
 struct VisitMessage {
   int locationIdx;
@@ -18,7 +20,7 @@ struct VisitMessage {
   int visitEnd;
 
   VisitMessage() {}
-  VisitMessage(CkMigrateMessage *msg) {}
+  explicit VisitMessage(CkMigrateMessage *msg) {}
   VisitMessage(int locationIdx_, int personIdx_, int personState_, int visitStart_,
       int visitEnd_) : locationIdx(locationIdx_), personIdx(personIdx_),
       personState(personState_), visitStart(visitStart_), visitEnd(visitEnd_) {}
@@ -31,17 +33,17 @@ struct InteractionMessage {
   std::vector<Interaction> interactions;
 
   InteractionMessage() {}
-  InteractionMessage(CkMigrateMessage *msg) {}
+  explicit InteractionMessage(CkMigrateMessage *msg) {}
   InteractionMessage(int locationIdx_, int personIdx_,
       const std::vector<Interaction>& interactions_)
     : locationIdx(locationIdx_), personIdx(personIdx_),
     interactions(interactions_) {}
 
-  void pup(PUP::er& p) {
+  void pup(PUP::er& p) {  // NOLINT(runtime/references)
     p | locationIdx;
     p | personIdx;
     p | interactions;
   }
 };
 
-#endif // __MESSAGE_H__
+#endif  // MESSAGE_H_

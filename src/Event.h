@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-#ifndef __EVENT_H__
-#define __EVENT_H__
+#ifndef EVENT_H_
+#define EVENT_H_
 
 #include "Defs.h"
 
@@ -38,4 +38,4 @@ struct Event {
 };
 PUPbytes(Event);
 
-#endif // __EVENT_H__
+#endif  // EVENT_H_

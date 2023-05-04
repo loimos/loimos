@@ -4,10 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-#ifndef __DEFS_H__
-#define __DEFS_H__
-
 #include "Defs.h"
+
 #include <cmath>
 
 /**
@@ -18,8 +16,8 @@
  *    int numPartitions: The total number of chares.
  *
  */
-int getNumElementsPerPartition(int numElements, int numPartitions){
-  return floor((float)numElements/(float)numPartitions);
+int getNumElementsPerPartition(int numElements, int numPartitions) {
+  return floor(static_cast<float>(numElements)/numPartitions);
 }
 
 
@@ -32,10 +30,10 @@ int getNumElementsPerPartition(int numElements, int numPartitions){
  *    int partitionIndex: Chare index
  *
  */
-int getNumLocalElements(int numElements, int numPartitions, int partitionIndex){
-  int elementsPerPartition = getNumElementsPerPartition(numElements,numPartitions);
-  if(partitionIndex == (numPartitions-1))
-    return numElements - elementsPerPartition*(numPartitions-1);
+int getNumLocalElements(int numElements, int numPartitions, int partitionIndex) {
+  int elementsPerPartition = getNumElementsPerPartition(numElements, numPartitions);
+  if (partitionIndex == (numPartitions - 1))
+    return numElements - elementsPerPartition*(numPartitions - 1);
   return elementsPerPartition;
 }
 
@@ -51,10 +49,11 @@ int getNumLocalElements(int numElements, int numPartitions, int partitionIndex){
  *
  * Notes: Will likely change as we introduce active load balancing.
  */
-int getPartitionIndex(int globalIndex, int numElements, int numPartitions, int offset){
-  int partitionIndex = (globalIndex - offset) /getNumElementsPerPartition(numElements,numPartitions);
-  if(partitionIndex >= numPartitions)
-    return (numPartitions-1);
+int getPartitionIndex(int globalIndex, int numElements, int numPartitions, int offset) {
+  int partitionIndex = (globalIndex - offset)
+    / getNumElementsPerPartition(numElements, numPartitions);
+  if (partitionIndex >= numPartitions)
+    return (numPartitions - 1);
   return partitionIndex;
 }
 
@@ -70,9 +69,10 @@ int getPartitionIndex(int globalIndex, int numElements, int numPartitions, int o
  *      could be replaced with a better system.
  *
  */
-int getLocalIndex(int globalIndex, int numElements, int numPartitions, int offset){
-  int partitionIndex = getPartitionIndex(globalIndex,numElements,numPartitions, offset);
-  int elementsPerPartition = getNumElementsPerPartition(numElements,numPartitions);
+int getLocalIndex(int globalIndex, int numElements, int numPartitions, int offset) {
+  int partitionIndex = getPartitionIndex(globalIndex, numElements, numPartitions,
+    offset);
+  int elementsPerPartition = getNumElementsPerPartition(numElements, numPartitions);
   return (globalIndex - offset) - partitionIndex*elementsPerPartition;
 }
 
@@ -88,9 +88,8 @@ int getLocalIndex(int globalIndex, int numElements, int numPartitions, int offse
  *      could be replaced with a better system.
  *
  */
-int getGlobalIndex(int localIndex, int partitionIndex, int numElements, int numPartitions, int offset){
-  int elementsPerPartition = getNumElementsPerPartition(numElements,numPartitions);
-  return partitionIndex*elementsPerPartition+localIndex + offset;
+int getGlobalIndex(int localIndex, int partitionIndex, int numElements,
+    int numPartitions, int offset) {
+  int elementsPerPartition = getNumElementsPerPartition(numElements, numPartitions);
+  return partitionIndex*elementsPerPartition + localIndex + offset;
 }
-
-#endif // __DEFS_H__

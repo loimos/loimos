@@ -14,12 +14,12 @@
 
 namespace {
 
-std::string PATH_TO_DISEASE_MODEL =
-    "../data/disease_models/validation_model.textproto";
-std::string SCENARIO_PATH = "../data/populations/validation_set";
-
 class DiseaseModelTest : public ::testing::Test {
-protected:
+ protected:
+  std::string PATH_TO_DISEASE_MODEL =
+    "../data/disease_models/validation_model.textproto";
+  std::string SCENARIO_PATH = "../data/populations/validation_set";
+
   virtual void SetUp() {
     diseaseModel = new DiseaseModel(PATH_TO_DISEASE_MODEL, SCENARIO_PATH);
   }
@@ -39,9 +39,9 @@ TEST_F(DiseaseModelTest, InfectionTest) {
   // Person should make a transition as they have no time in state left.
   int originalState = person->state;
   std::default_random_engine generator;
-  EXPECT_EQ(person->state, 3); // Start in healthy risky.
+  EXPECT_EQ(person->state, 3);  // Start in healthy risky.
   person->EndOfDayStateUpdate(diseaseModel, &generator);
-  EXPECT_EQ(person->state, 4); // Should transition
+  EXPECT_EQ(person->state, 4);  // Should transition
   EXPECT_EQ(person->secondsLeftInState, 3 * (60 * 60 * 24));
 }
 
@@ -52,4 +52,4 @@ TEST_F(DiseaseModelTest, TestModelLoad) {
   EXPECT_EQ(diseaseModel->lookupStateName(1), "infectious_safe");
 }
 
-}
+}  // namespace

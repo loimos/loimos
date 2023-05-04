@@ -1,176 +1,176 @@
-field {
+fields {
     field_name: "lid"
-    uniqueId {}
+    unique_id {}
 }
-field {
+fields {
     field_name: "longitude"
     ignore {}
 }
-field {
+fields {
     field_name: "latitude"
     ignore {}
 }
-field {
+fields {
     field_name: "altitude"
     ignore {}
 }
-field {
+fields {
     field_name: "admin1"
     ignore {}
 }
-field {
+fields {
     field_name: "admin2"
     ignore {}
 }
-field {
+fields {
     field_name: "admin3"
     ignore {}
 }
-field {
+fields {
     field_name: "admin4"
     ignore {}
 }
-field {
+fields {
     field_name: "work"
     ignore {}
 }
-field {
+fields {
     field_name: "shopping"
     ignore {}
 }
-field {
+fields {
     field_name: "school"
     ignore {}
 }
-field {
+fields {
     field_name: "other"
     ignore {}
 }
-field {
+fields {
     field_name: "college"
     ignore {}
 }
-field {
+fields {
     field_name: "religion"
     ignore {}
 }
-field {
+fields {
     field_name: "designation"
     ignore {}
 }
-field {
+fields {
     field_name: "home"
     ignore {}
 }
-field {
+fields {
     field_name: "area_sqm"
     ignore {}
 }
-field {
+fields {
     field_name: "associate_link_func_class"
     ignore {}
 }
-field {
+fields {
     field_name: "pub_pk"
     ignore {}
 }
-field {
+fields {
     field_name: "pub_kg"
     ignore {}
 }
-field {
+fields {
     field_name: "pub_01"
     ignore {}
 }
-field {
+fields {
     field_name: "pub_02"
     ignore {}
 }
-field {
+fields {
     field_name: "pub_03"
     ignore {}
 }
-field {
+fields {
     field_name: "pub_04"
     ignore {}
 }
-field {
+fields {
     field_name: "pub_05"
     ignore {}
 }
-field {
+fields {
     field_name: "pub_06"
     ignore {}
 }
-field {
+fields {
     field_name: "pub_07"
     ignore {}
 }
-field {
+fields {
     field_name: "pub_08"
     ignore {}
 }
-field {
+fields {
     field_name: "pub_09"
     ignore {}
 }
-field {
+fields {
     field_name: "pub_10"
     ignore {}
 }
-field {
+fields {
     field_name: "pub_11"
     ignore {}
 }
-field {
+fields {
     field_name: "pub_12"
     ignore {}
 }
-field {
+fields {
     field_name: "total_visits"
     ignore {}
 }
-field {
+fields {
     field_name: "total_on_day_0"
     ignore {}
 }
-field {
+fields {
     field_name: "total_on_day_1"
     ignore {}
 }
-field {
+fields {
     field_name: "total_on_day_2"
     ignore {}
 }
-field {
+fields {
     field_name: "total_on_day_3"
     ignore {}
 }
-field {
+fields {
     field_name: "total_on_day_4"
     ignore {}
 }
-field {
+fields {
     field_name: "total_on_day_5"
     ignore {}
 }
-field {
+fields {
     field_name: "total_on_day_6"
     ignore {}
 }
-field {
+fields {
     field_name: "average_daily_total"
     ignore {}
 }
-field {
+fields {
     field_name: "median_daily_total"
     ignore {}
 }
-field {
+fields {
     field_name: "max_daily_total"
     ignore {}
 }
-field {
+fields {
     field_name: "max_simultaneous_visits"
     b10int {}
 }

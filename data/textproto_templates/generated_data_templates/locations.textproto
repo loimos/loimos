@@ -1,4 +1,4 @@
-field {
+fields {
     field_name: "lid"
-    uniqueId {}
+    unique_id {}
 }

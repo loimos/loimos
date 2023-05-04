@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-#ifndef __LOCATIONS_H__
-#define __LOCATIONS_H__
+#ifndef LOCATIONS_H_
+#define LOCATIONS_H_
 
 #include "Location.h"
 #include "DiseaseModel.h"
@@ -14,29 +14,28 @@
 
 #include <vector>
 #include <set>
+#include <string>
 
 class Locations : public CBase_Locations {
-  private:
-    int numLocalLocations;
-    std::vector<Location> locations;
-    std::default_random_engine generator;
-    DiseaseModel *diseaseModel;
-    ContactModel *contactModel;
-    int day;
+ private:
+  int numLocalLocations;
+  std::vector<Location> locations;
+  std::default_random_engine generator;
+  DiseaseModel *diseaseModel;
+  ContactModel *contactModel;
+  int day;
 
-  public:
-    Locations();
-    Locations(CkMigrateMessage *msg);
-    void pup(PUP::er &p);
-    void ReceiveVisitMessages(VisitMessage visitMsg);
-    void ComputeInteractions(); // calls ReceiveInfections
-
-    // Load location data from CSV.
-    void loadLocationData();
-
-    #ifdef ENABLE_LB
-    void ResumeFromSync();
-    #endif // ENABLE_LB
+ public:
+  explicit Locations(std::string scenarioPath);
+  explicit Locations(CkMigrateMessage *msg);
+  void pup(PUP::er &p);  // NOLINT(runtime/references)
+  void ReceiveVisitMessages(VisitMessage visitMsg);
+  void ComputeInteractions();  // calls ReceiveInfections
+  // Load location data from CSV.
+  void loadLocationData(std::string scenarioPath);
+  #ifdef ENABLE_LB
+  void ResumeFromSync();
+  #endif  // ENABLE_LB
 };
 
-#endif // __LOCATIONS_H__
+#endif  // LOCATIONS_H_

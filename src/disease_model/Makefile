@@ -7,7 +7,7 @@ include ../Makefile.include
 
 PROTOS      = disease.proto distribution.proto
 TMP_SRCS    = $(subst .proto,.pb.cc,$(PROTOS)) 
-SRCS        = $(subst .proto,.pb.C,$(PROTOS)) 
+SRCS        = $(subst .proto,.pb.cpp,$(PROTOS)) 
 OBJS        = $(subst .proto,.pb.o,$(PROTOS)) 
 
 .PHONY:all
@@ -16,12 +16,12 @@ all: $(OBJS)
 $(TMP_SRCS): %.pb.cc: $(PROTOS)
 	$(PROTOC) --cpp_out=. $^
 
-$(SRCS): %.pb.C: %.pb.cc
+$(SRCS): %.pb.cpp: %.pb.cc
 	mv $< $@
 
-$(OBJS): %.pb.o: %.pb.C %.pb.h
+$(OBJS): %.pb.o: %.pb.cpp %.pb.h
 	$(CXX) $(CXXFLAGS) $< -c -o $@
 
 .PHONY:clean
 clean:
-	rm -f *.pb.C *.pb.h *.pb.o
+	rm -f $(TMP_SRCS) $(SRCS) $(OBJS)

@@ -13,6 +13,7 @@
 #include "Location.h"
 #include "Event.h"
 #include "Defs.h"
+#include "readers/Preprocess.h"
 #include "readers/DataReader.h"
 #include "Person.h"
 #include "pup_stl.h"
@@ -22,19 +23,19 @@
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
+#include <string>
 
-Locations::Locations() {
+Locations::Locations(std::string scenarioPath) {
   day = 0;
 
-  //Must be set to true to make AtSync work
+  // Must be set to true to make AtSync work
   usesAtSync = true;
 
   // Getting number of locations assigned to this chare
   numLocalLocations = getNumLocalElements(
     numLocations,
     numLocationPartitions,
-    thisIndex
-  );
+    thisIndex);
 
   // Init disease states
   diseaseModel = globDiseaseModel.ckLocalBranch();
@@ -50,12 +51,13 @@ Locations::Locations() {
   // Load application data
   if (syntheticRun) {
     locations.reserve(numLocalLocations);
-    int firstIdx = thisIndex * getNumLocalElements(numLocations, numLocationPartitions, 0);
+    int firstIdx = thisIndex * getNumLocalElements(numLocations,
+      numLocationPartitions, 0);
     for (int p = 0; p < numLocalLocations; p++) {
       locations.emplace_back(0, firstIdx + p, &generator, diseaseModel);
     }
   } else {
-    loadLocationData();
+    loadLocationData(scenarioPath);
   }
 
   // Notify Main
@@ -64,9 +66,9 @@ Locations::Locations() {
   #endif
 }
 
-Locations::Locations(CkMigrateMessage *msg) {};
+Locations::Locations(CkMigrateMessage *msg) {}
 
-void Locations::loadLocationData() {
+void Locations::loadLocationData(std::string scenarioPath) {
   double startTime = CkWallTimer();
 
   // Init local.
@@ -76,7 +78,8 @@ void Locations::loadLocationData() {
   int firstIdx = thisIndex * getNumElementsPerPartition(numLocations,
       numLocationPartitions);
   for (int p = 0; p < numLocalLocations; p++) {
-    locations.emplace_back(numAttributesPerLocation, firstIdx + p, &generator, diseaseModel);
+    locations.emplace_back(numAttributesPerLocation, firstIdx + p,
+      &generator, diseaseModel);
   }
 
   // Load in location information.
@@ -85,13 +88,15 @@ void Locations::loadLocationData() {
     thisIndex,
     numLocations,
     numLocationPartitions,
-    firstLocationIdx
-  ) - firstLocationIdx;
+    firstLocationIdx) - firstLocationIdx;
   int endingLineIndex = startingLineIndex + numLocalLocations;
   std::string line;
 
+  std::string scenarioId = getScenarioId(numPeople, numPeoplePartitions,
+    numLocations, numLocationPartitions);
   std::ifstream locationData(scenarioPath + "locations.csv");
-  std::ifstream locationCache(scenarioPath + scenarioId + "_locations.cache", std::ios_base::binary);
+  std::ifstream locationCache(scenarioPath + scenarioId
+    + "_locations.cache", std::ios_base::binary);
   if (!locationData || !locationCache) {
     CkAbort("Could not open person data input.");
   }
@@ -99,21 +104,20 @@ void Locations::loadLocationData() {
   // Find starting line for our data through location cache.
   locationCache.seekg(thisIndex * sizeof(uint64_t));
   uint64_t locationOffset;
-  locationCache.read((char *) &locationOffset, sizeof(uint64_t));
+  locationCache.read(reinterpret_cast<char *>(&locationOffset), sizeof(uint64_t));
   locationData.seekg(locationOffset);
 
   // Read in our location data.
   DataReader<Location>::readData(
       &locationData,
       diseaseModel->locationDef,
-      &locations
-  );
+      &locations);
   locationData.close();
   locationCache.close();
 
   // Let contact model add any attributes it needs to the locations
-  for (Location &location: locations) {
-    contactModel->computeLocationValues(location);
+  for (Location &location : locations) {
+    contactModel->computeLocationValues(&location);
   }
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
@@ -133,7 +137,7 @@ void Locations::pup(PUP::er &p) {
     contactModel = createContactModel();
     contactModel->setGenerator(&generator);
 
-    for (Location &loc: locations) {
+    for (Location &loc : locations) {
       loc.setGenerator(&generator);
     }
   }
@@ -145,15 +149,13 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
     visitMsg.locationIdx,
     numLocations,
     numLocationPartitions,
-    firstLocationIdx
-  );
+    firstLocationIdx);
 
-  //CkPrintf("Visiting location %d (%d of %d locally)\r\n",
-  //  visitMsg.locationIdx, localLocIdx, numLocalLocations);
-
-  // Wrap vist info...
-  Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.personState, visitMsg.visitStart };
-  Event departure { DEPARTURE, visitMsg.personIdx, visitMsg.personState, visitMsg.visitEnd };
+  // Wrap visit info...
+  Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.personState,
+    visitMsg.visitStart };
+  Event departure { DEPARTURE, visitMsg.personIdx, visitMsg.personState,
+    visitMsg.visitEnd };
   Event::pair(&arrival, &departure);
 
   // ...and queue it up at the appropriate location
@@ -172,7 +174,7 @@ void Locations::ComputeInteractions() {
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
   if (0 == day) {
     CkPrintf("    Process %d, thread %d: %d visits, %d locations\n",
-      CkMyNode(), CkMyPe(), numVisits, (int) locations.size());
+      CkMyNode(), CkMyPe(), numVisits, static_cast<int>(locations.size()));
   }
 #endif
 
@@ -188,4 +190,4 @@ void Locations::ResumeFromSync() {
   CkCallback cb(CkReductionTarget(Main, locationsLBComplete), mainProxy);
   contribute(cb);
 }
-#endif // ENABLE_LB
+#endif  // ENABLE_LB

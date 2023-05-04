@@ -4,18 +4,23 @@
  * SPDX-License-Identifier: MIT
  */
 
-#ifndef __PREPROCESS_H__
-#define __PREPROCESS_H__
+#ifndef READERS_PREPROCESS_H_
+#define READERS_PREPROCESS_H_
 
 #include <tuple>
 #include <string>
 
-// Helper functions.
-int getDay(int timeInSeconds);
-int buildObjectLookupCache(std::string inputPath, std::string outputPath, int numObjs, int numChares, std::string pathToCsvDefinition);
-void buildActivityCache(std::string inputPath, std::string outputPath, int numPeople, int numDays, int firstPersonIdx, std::string pathToCsvDefinition);
-
 // Main entry point.
-std::tuple<int, int, std::string> buildCache(std::string scenarioPath, int numPeople, int peopleChares, int numLocations, int numLocationChares, int numDays);
+std::tuple<int, int, std::string> buildCache(std::string scenarioPath, int numPeople,
+  int peopleChares, int numLocations, int numLocationChares, int numDays);
 
-#endif //__PREPROCESS_H__
+// Helper functions.
+int buildObjectLookupCache(std::string inputPath, std::string outputPath, int numObjs,
+  int numChares, std::string pathToCsvDefinition);
+void buildActivityCache(std::string inputPath, std::string outputPath, int numPeople,
+  int numDays, int firstPersonIdx, std::string pathToCsvDefinition);
+int getDay(int timeInSeconds);
+std::string getScenarioId(int numPeople, int numPeopleChares, int numLocations,
+    int numLocationChares);
+
+#endif  // READERS_PREPROCESS_H_

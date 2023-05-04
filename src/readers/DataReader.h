@@ -4,166 +4,170 @@
  * SPDX-License-Identifier: MIT
  */
 
-#ifndef __DATA_READER_H__
-#define __DATA_READER_H__
-#include <vector>
-#include <stdio.h>
-#include <string>
-#include <fstream>
+#ifndef READERS_DATAREADER_H_
+#define READERS_DATAREADER_H_
 
 #include "../Defs.h"
 #include "data.pb.h"
 #include "DataInterface.h"
 
-#define MAX_INPUT_lineLength (std::streamsize) 262144 // 2^18
+#include <vector>
+#include <stdio.h>
+#include <string>
+#include <fstream>
+#include <tuple>
 
-namespace DataTypes {
-    enum DataType { int_b10, uint_32, string, probability, category };
-}
-
-union Data {
-    int int_b10;
-    bool boolean;
-    uint32_t uint_32;
-    double probability;
-    uint16_t category;
-    std::string *str;
-};
-PUPbytes(union Data);
+#define MAX_INPUT_lineLength (std::streamsize) 262144  // 2^18
 
 /**
  * Defines a generic data reader for any child class of DataInterface.
  * Array definition is child object dependent so this required that the
  * code be defined in the .h file rather than in the .C.
  */
-template <class T>
+template <class T = DataInterface>
 class DataReader {
-    public:
-        static void readData(std::ifstream *input, loimos::proto::CSVDefinition *dataFormat,
-                    std::vector<T> *dataObjs) {
-            // TODO make this 2^16 and support longer lines through multiple reads.
-            char buf[MAX_INPUT_lineLength];
-            // Rows to read.
-            for (T &obj : *dataObjs) {
-                // Get next line.
-                input->getline(buf, MAX_INPUT_lineLength);
+ public:
+  static void readData(std::ifstream *input,
+      loimos::proto::CSVDefinition *dataFormat,
+      std::vector<T> *dataObjs) {
+    char buf[MAX_INPUT_lineLength];
+    // Rows to read.
+    for (T &obj : *dataObjs) {
+      // Get next line.
+      input->getline(buf, MAX_INPUT_lineLength);
 
-                // Read over people data format.
-                int attrIndex = 0;
-                // Tracks how many non-ignored fields there have been.
-                int numDataFields = 0;
-                int leftCommaLocation = 0;
-                std::vector<union Data> &objData = obj.getDataField();
+      // Read over people data format.
+      int attrIndex = 0;
+      // Tracks how many non-ignored fields there have been.
+      int numDataFields = 0;
+      int leftCommaLocation = 0;
 
-                int lineLength = input->gcount();
-                for (int c = 0; c < lineLength; c++) {
-                    // Scan for the next attrbiutes - comma separted.
-                    if (buf[c] == CSV_DELIM || c + 1 == lineLength) {
-                        // Get next attribute type.
-                        loimos::proto::Data_Field const *field = &dataFormat->field(attrIndex);
-                        uint16_t dataLen = c - leftCommaLocation;
-                        if (field->has_ignore() || dataLen == 0) {
-                            // Skip
-                        } else {
-                            // Process data.
-                            char *start = buf + leftCommaLocation;
-                            if (c + 1 == lineLength) {
-                                dataLen += 1;
-                            }
-
-                            // Parse byte stream to the correct representation.
-                            if (field->has_uniqueid()) {
-                                obj.setUniqueId(std::stoi(std::string(start, dataLen)));
-                            } else {
-                                if (field->has_b10int() || field->has_foreignid()) {
-                                    // TODO parse this directly.
-                                    objData[numDataFields].int_b10 =
-                                        std::stoi(std::string(start, dataLen));
-                                } else if (field->has_label()) {
-                                    objData[numDataFields].str =
-                                        new std::string(start, dataLen);
-                                } else if (field->has_bool_()) {
-                                    if (dataLen == 1) {
-                                        objData[numDataFields].boolean =
-                                        (start[0] == 't' || start[0] == '1');
-                                    } else {
-                                        objData[numDataFields].boolean = false;
-                                    }
-                                }
-                                numDataFields++;
-                            }
-                        }
-                        leftCommaLocation = c + 1;
-                        attrIndex++;
-                    }
-                }
-            }
+      int lineLength = input->gcount();
+      for (int c = 0; c < lineLength; c++) {
+        // Scan for the next attributes - comma separated.
+        if (buf[c] != CSV_DELIM && c + 1 != lineLength) {
+          continue;
         }
 
-        static int getNonZeroAttributes(loimos::proto::CSVDefinition *dataFormat) {
-            int count = 0;
-            for (int c = 0; c < dataFormat->field_size(); c++) {
-                if(!dataFormat->field(c).has_ignore()) {
-                    count += 1;
-                }
-            }
-            return count - 1;
+        // Get next attribute type.
+        loimos::proto::DataField const *field = &dataFormat->fields(attrIndex);
+        uint16_t dataLen = c - leftCommaLocation;
+        if (field->has_ignore() || dataLen == 0) {
+          // Skip
+        } else {
+          // Process data.
+          char *start = buf + leftCommaLocation;
+          if (c + 1 == lineLength) {
+            dataLen += 1;
+          }
+          std::string rawData(start, dataLen);
+          numDataFields +=
+            DataReader<T>::parseObjectData(rawData, field, numDataFields, &obj);
         }
 
-        static std::tuple<int, int, int, int> parseActivityStream(std::ifstream *input, loimos::proto::CSVDefinition *dataFormat, std::vector<union Data> *attributes) {
-            int personId = -1;
-            int locationId = -1;
-            int startTime = -1;
-            int duration = -1;
-            // TODO don't reallocate this everytime.
-            char buf[MAX_INPUT_lineLength];
+        leftCommaLocation = c + 1;
+        attrIndex++;
+      }
+    }
+  }
 
-            // Get header line.
-            input->getline(buf, MAX_INPUT_lineLength);
+  // Returns 1 if another field was set in the data vector of obj
+  // and 0 otherwise
+  static int parseObjectData(const std::string &rawData,
+      const loimos::proto::DataField *field, int fieldIdx, T *obj) {
+    std::vector<union Data> *data = &obj->getData();
 
-            // Read over people data format.
-            int attrIndex = 0;
-            int numDataFields = 0;
-            int leftCommaLocation = 0;
+    // Parse byte stream to the correct representation.
+    if (field->has_unique_id()) {
+      obj->setUniqueId(std::stoi(rawData));
+      return 0;
+    } else {
+      if (field->has_b10int() || field->has_foreign_id()) {
+        data->at(fieldIdx).int_b10 = std::stoi(rawData);
 
-            int lineLength = input->gcount();
-            for (int c = 0; c < lineLength; c++) {
-                // Scan for the next attrbiutes - comma separted.
-                if (buf[c] == CSV_DELIM || c + 1 == lineLength) {
-                    // Get next attribute type.
-                    loimos::proto::Data_Field const *field = &dataFormat->field(attrIndex);
-                    uint16_t dataLen = c - leftCommaLocation;
-                    if (field->has_ignore() || dataLen == 0) {
-                        // Skip
-                    } else if (numDataFields <= 3) {
-                        // Process data.
-                        char *start = buf + leftCommaLocation;
-                        if (c + 1 == lineLength) {
-                            dataLen += 1;
-                        } else {
-                            start[dataLen] = 0;
-                        }
+      } else if (field->has_label()) {
+        data->at(fieldIdx).str = new std::string(rawData);
 
-                        // Parse byte stream to the correct representation.
-                        if (field->has_uniqueid()) {
-                            personId = std::atoi(start);
-                        } else if (field->has_foreignid()) {
-                            locationId = std::atoi(start);
-                        } else if (field->has_starttime()) {
-                            startTime = std::atoi(start);
-                        } else if (field->has_duration()) {
-                            duration = std::atoi(start);
-                        } else {
-                            // TODO process.
-                            numDataFields++;
-                        }
-
-                    }
-                    leftCommaLocation = c + 1;
-                    attrIndex++;
-                }
-            }
-            return std::make_tuple(personId, locationId, startTime, duration);
+      } else if (field->has_bool_()) {
+        if (rawData.length() == 1) {
+          data->at(fieldIdx).boolean =
+            (rawData[0] == 't' || rawData[0] == '1');
+        } else {
+          data->at(fieldIdx).boolean = false;
         }
+      }
+
+      return 1;
+    }
+  }
+
+  static std::tuple<int, int, int, int> parseActivityStream(std::ifstream *input,
+      loimos::proto::CSVDefinition *dataFormat, std::vector<union Data> *attributes) {
+    int personId = -1;
+    int locationId = -1;
+    int startTime = -1;
+    int duration = -1;
+    // TODO(IanCostello) don't reallocate this every time.
+    char buf[MAX_INPUT_lineLength];
+
+    // Get header line.
+    input->getline(buf, MAX_INPUT_lineLength);
+
+    // Read over people data format.
+    int attrIndex = 0;
+    int numDataFields = 0;
+    int leftCommaLocation = 0;
+
+    int lineLength = input->gcount();
+    for (int c = 0; c < lineLength; c++) {
+      // Scan for the next attributes - comma separated.
+      if (buf[c] == CSV_DELIM || c + 1 == lineLength) {
+        // Get next attribute type.
+        loimos::proto::DataField const *field = &dataFormat->fields(attrIndex);
+        uint16_t dataLen = c - leftCommaLocation;
+        if (field->has_ignore() || dataLen == 0) {
+          // Skip
+        } else if (numDataFields <= 3) {
+          // Process data.
+          char *start = buf + leftCommaLocation;
+          if (c + 1 == lineLength) {
+            dataLen += 1;
+          } else {
+            start[dataLen] = 0;
+          }
+
+          // Parse byte stream to the correct representation.
+          if (field->has_unique_id()) {
+            personId = std::atoi(start);
+
+          } else if (field->has_foreign_id()) {
+            locationId = std::atoi(start);
+
+          } else if (field->has_start_time()) {
+            startTime = std::atoi(start);
+
+          } else if (field->has_duration()) {
+            duration = std::atoi(start);
+
+          } else {
+            numDataFields++;
+          }
+        }
+        leftCommaLocation = c + 1;
+        attrIndex++;
+      }
+    }
+    return std::make_tuple(personId, locationId, startTime, duration);
+  }
+
+  static int getNonZeroAttributes(loimos::proto::CSVDefinition *dataFormat) {
+    int count = 0;
+    for (int c = 0; c < dataFormat->fields_size(); c++) {
+      if (!dataFormat->fields(c).has_ignore()) {
+        count += 1;
+      }
+    }
+    return count - 1;
+  }
 };
-#endif //__DATA_READER_H__
+#endif  // READERS_DATAREADER_H_

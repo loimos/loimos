@@ -7,6 +7,7 @@ include Makefile.include
 
 OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o \
          Defs.o Event.o Interaction.o readers/Preprocess.o \
+				 readers/DataInterface.o \
          disease_model/disease.pb.o disease_model/distribution.pb.o \
 		     readers/data.pb.o contact_model/ContactModel.o \
 				 contact_model/MinMaxAlphaModel.o readers/interventions.pb.o
@@ -61,13 +62,13 @@ $(BIN): $(OBJS) $(UNIT_TEST_OBJS) $(DECLS)
 $(DECLS): %.decl.h: %.ci
 	$(CHARMC) $< $(OPTS)
 
-# Build .o files from the corresponding .C and .h files
-$(OBJS): %.o: %.C %.h $(DECLS) $(DEFS)
+# Build .o files from the corresponding .cpp and .h files
+$(OBJS): %.o: %.cpp %.h $(DECLS) $(DEFS)
 	$(CHARMC) $(CXXFLAGS) -c -o $@ $<
 
-# Build .o files from just the .C files for unit tests 
+# Build .o files from just the .cpp files for unit tests 
 # (they don't have .h files)
-$(UNIT_TEST_OBJS): %.o: %.C $(DECLS) $(DEFS)
+$(UNIT_TEST_OBJS): %.o: %.cpp $(DECLS) $(DEFS)
 	$(CHARMC) $(CXXFLAGS) -c -o $@ $<
 
 # Subdirs will build the protobuf object files
@@ -95,6 +96,9 @@ TESTS=$(subst -,test-,$(TEST_NAMES))
 # Run all tests with test rule
 .PHONY:test $(TESTS)
 test: $(TESTS)
+
+test-style:
+	cpplint --extensions=C,h,ci --root=loimos/src --recursive . &> linter-errors.log
 
 test-small: all
 	./charmrun +p4 ./loimos 0 100 735 2 2 30 7 test-small.csv ../data/disease_models/covid19.textproto ../data/populations/synthetic_small_city/ --min-max-alpha ++local

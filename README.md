@@ -16,11 +16,12 @@ and runtime in which Loimos is implemented.
 2. Google's Protocol Buffers, or [Protobuf](https://github.com/protocolbuffers/protobuf),
 which Loimos uses to format and parse many of its input files.
 
-These dependencies may be installed from source by following the instructions available on the project GitHub repositories, or through the Spack package manager (as `charmpp` and `protobuf`, respectively). We recommend building or installing Charm++ twice: once with the `smp` argument passed to `./build` and once without, as Charm++'s Shared Memory Parallelism (SMP) mode is helpful on some machines and node counts but not on others.
+These dependencies may be installed from source by following the instructions available on the project GitHub repositories, or through the Spack package manager (as `charmpp` and `protobuf`, respectively).
+We recommend building or installing Charm++ twice: once with the `smp` argument passed to `./build` and once without, as Charm++'s Shared Memory Parallelism (SMP) mode is helpful on some machines and node counts but not on others.
 
 Once both Charm++ and Protobuf are installed, several environment variables need to be set so that Loimos can properly locate your installations. We recommend adding the following lines to your `~/.bashrc`, `~/.bash_profile`, or equivalent configuration file:
 
-```
+```bash
 export CHARM_HOME="/<full/path/to/install/dir>/charm/<version>"
 export PROTOBUF_HOME="/<full/path/to/install/dir>"
 export LD_LIBRARY_PATH="$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH"
@@ -39,11 +40,12 @@ Once Loimos's dependencies have been installed as outlined above, it can be buil
 
 Loimos has a number of compile-time options that can be used to produce executables tuned for different purposes. These are generally passed to the build system by setting various environment variables. For example, an SMP version of Loimos can be build with
 
-```
+```bash
 ENABLE_SMP=1 make
 ```
 
-We recommend running `make clean` before building Loimos with a different configuration. Loimos's various compile-time options are summarized below. Note that some options append a suffix to the executable. When multiple such options are used, these suffixes will be added in the order in which the appear in the table below. For example, building with `ENABLE_SMP=1 make` will build the executable `loimos-smp`, whereas building with `ENABLE_SMP=1 ENABLE_LB=1 ENABLE_DEBUG=2 make` will build the executable `loimos-smp-lb`, with the debug level not impacting the executable name.
+We recommend running `make clean` before building Loimos with a different configuration. Loimos's various compile-time options are summarized below. Note that some options append a suffix to the executable.
+When multiple such options are used, these suffixes will be added in the order in which the appear in the table below. For example, building with `ENABLE_SMP=1 make` will build the executable `loimos-smp`, whereas building with `ENABLE_SMP=1 ENABLE_LB=1 ENABLE_DEBUG=2 make` will build the executable `loimos-smp-lb`, with the debug level not impacting the executable name.
 
 | Environment Variable  | Value | Executable Suffix | Explanation                                                                   |
 |-----------------------|-------|-------------------|-------------------------------------------------------------------------------|
@@ -54,16 +56,20 @@ We recommend running `make clean` before building Loimos with a different config
 | `ENABLE_DEBUG`        | 1     |                   | Basic debug information                                                       |
 |                       | 2     |                   | Verbose debug information                                                     |
 |                       | 3     |                   | Chare-level debug information                                                 |
-|                       | 4     |                   | People- and location-level debug information                                  
+|                       | 4     |                   | People- and location-level debug information                                  |
 
 ## Running the Code
 
 ### Quick Start
-A quick test run may be run to verify that the build was successful using `<compile options> make test-small` with the same compile-time options used to build the executable. This test should only take a couple seconds to run. A more through test suite can be run using `<compile options> make test`, although this will take longer to run (generally under 5 minutes), and so we recommend either submitting them as a batch script or in an interactive allocation on your cluster of choice. Note that we use the default executable, `loimos`, for all further example commands below. If you used any compile-time options that change the executable name, replace `loimos` with the appropriate executable name.
+A quick test run may be run to verify that the build was successful using `<compile options> make test-small` with the same compile-time options used to build the executable. This test should only take a couple seconds to run.
+A more through test suite can be run using `<compile options> make test`, although this will take longer to run (generally under 5 minutes), and so we recommend either submitting them as a batch script or in an interactive allocation on your cluster of choice.
+Note that we use the default executable, `loimos`, for all further example commands below. If you used any compile-time options that change the executable name, replace `loimos` with the appropriate executable name.
 
 For a more substantial test, run the following command on a 64 task MPI allocation:
 
-```srun -n 64 ./loimos 1 2349 2349 1248 1248 5 8 8 64 16 on-the-fly-md-out.csv ../data/disease_models/covid19_onepath.textproto```
+```bash
+srun -n 64 ./loimos 1 2349 2349 1248 1248 5 8 8 64 16 on-the-fly-md-out.csv ../data/disease_models/covid19_onepath.textproto
+```
 
 This command will run Loimos on a purely synthetic population about the size of the state of Maryland (~5.5 million people and ~1.5 million locations) with 64 processes.
 
@@ -72,7 +78,9 @@ Loimos can either generate a purely synthetic population on-the-fly or load a pr
 
 To generate a synthetic population on-the-fly, run Loimos with a command line in the following form:
 
-```./loimos 1 <PGW> <PGH> <LGW> <LGH> <NV> <LPGW> <LPGH> <NPP> <ND> <OF> <DF>```
+```bash
+./loimos 1 <PGW> <PGH> <LGW> <LGH> <NV> <LPGW> <LPGH> <NPP> <ND> <OF> <DF>
+```
 
 Where
 - `PGW` is the people grid width.
@@ -89,7 +97,9 @@ Where
 
 For pre-defined populations, run Loimos with the command:
 
-```./loimos 0 <NP> <NL> <NPP> <NLP> <ND> <NDV> <OF> <DF> <SD> [-m] [-i <IF>]```
+```bash
+./loimos 0 <NP> <NL> <NPP> <NLP> <ND> <NDV> <OF> <DF> <SD> [-m] [-i <IF>]
+```
 
 Where
 - `NP` is the number of people.

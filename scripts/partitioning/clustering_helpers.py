@@ -4,9 +4,10 @@
 # SPDX-License-Identifier: MIT
 #
 
+
 def split_large_clusters(clusters, max_in_cluster):
-    """ Breaks clusters that are above the maximum size into (n-1) full clusters
-    and 1 partially fully cluster. """
+    """Breaks clusters that are above the maximum size into (n-1) full clusters
+    and 1 partially fully cluster."""
     # Detects if any clusters are oversized and if so creates a list of new
     # clusters to replace that one.
     new_clusters = []
@@ -14,8 +15,15 @@ def split_large_clusters(clusters, max_in_cluster):
         total_in_cluster = len(values)
         if total_in_cluster > max_in_cluster:
             temp = []
-            for new_cluster_num, i in enumerate(range(0, total_in_cluster, max_in_cluster)):
-                temp.append((f"{name}_{new_cluster_num}", values[i:i+max_in_cluster]))
+            for new_cluster_num, i in enumerate(
+                range(0, total_in_cluster, max_in_cluster)
+            ):
+                temp.append(
+                    (
+                        f"{name}_{new_cluster_num}",
+                        values[i : i + max_in_cluster],
+                    )
+                )
             new_clusters.append((name, temp))
 
     # Replace single large clusters with batch of smaller ones
@@ -25,12 +33,13 @@ def split_large_clusters(clusters, max_in_cluster):
             clusters[name] = values
     return clusters
 
+
 def recombine_clusters(clusters, max_in_cluster):
-    """ Given a list of complete and incomplete clusters, this function combines
-    those clusters into n-1 full clusters and at most 1 partial cluster. """
+    """Given a list of complete and incomplete clusters, this function combines
+    those clusters into n-1 full clusters and at most 1 partial cluster."""
     if len(clusters) <= 1:
         return clusters
-        
+
     # We will shift data from the clusters at the back to the front
     keys = list(clusters.keys())
     c_front = 0
@@ -41,7 +50,7 @@ def recombine_clusters(clusters, max_in_cluster):
         if lacking_from_front == 0:
             c_front += 1
             continue
-            
+
         # May or may not be enough elements in the current last cluster to give.
         back_to_give = len(clusters[keys[c_back]])
         if lacking_from_front >= back_to_give:
@@ -59,6 +68,7 @@ def recombine_clusters(clusters, max_in_cluster):
                 clusters[keys[c_front]].append(clusters[keys[c_back]].pop(0))
             c_front += 1
     return clusters
+
 
 # Clustering helper.
 def get_max_in_set(row, unassigned):

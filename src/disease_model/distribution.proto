@@ -5,33 +5,40 @@
 
 syntax = "proto3";
 
-message Time_Def {
-  oneof days_ { float days = 1; }
-  oneof hours_ { float hours = 2; }
-  oneof minutes_ { float minutes = 3; }
+message TimeDef {
+  oneof days_ {
+    float days = 1;
+  }
+  oneof hours_ {
+    float hours = 2;
+  }
+  oneof minutes_ {
+    float minutes = 3;
+  }
 }
 
-message Dist_Uniform {
-  Time_Def tmin = 1; // lower bound, SimTime type
-  Time_Def tmax = 2; // upper bound, SimTime type
+message DistUniform {
+  TimeDef tmin = 1; // lower bound, SimTime type
+  TimeDef tmax = 2; // upper bound, SimTime type
 }
 
-message Dist_Normal {
-  Time_Def tmean = 1;  // SimTime type
-  Time_Def tvariance = 2; // SimTime type
+message DistNormal {
+  TimeDef tmean = 1;  // SimTime type
+  TimeDef tvariance = 2; // SimTime type
 }
 
-message Dist_Forever {}
+message DistForever {
+}
 
-message Dist_Discrete {
+message DistDiscrete {
   message Bin {
-    Time_Def tval = 1; // lower bound of the values in the bin, SimTime type
+    TimeDef tval = 1; // lower bound of the values in the bin, SimTime type
     double with_prob = 2; // probability/frequency of the bin
   }
-  repeated Bin bin = 1;
+  repeated Bin bins = 1;
 }
 
-message Dist_Fixed {
-  Time_Def time_in_state = 1;
+message DistFixed {
+  TimeDef time_in_state = 1;
 }
 

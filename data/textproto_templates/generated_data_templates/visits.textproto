@@ -1,16 +1,16 @@
-field {
+fields {
     field_name: "pid"
-    uniqueId {}
+    unique_id {}
 }
-field {
+fields {
     field_name: "lid"
-    foreignId {}
+    foreign_id {}
 }
-field {
+fields {
     field_name: "start_time"
-    startTime {}
+    start_time {}
 }
-field {
+fields {
     field_name: "duration"
     duration {}
 }

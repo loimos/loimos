@@ -10,4 +10,4 @@ all: $(OBJS)
 
 .PHONY:clean
 clean:
-	rm -f *.o *.pb.C *.pb.h *.pb.o
+	rm -f *.o
