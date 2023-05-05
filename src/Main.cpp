@@ -406,7 +406,10 @@ void Main::SeedInfections() {
     // Use set to check membership becuase it's faster and we can spare the
     // memory; INITIAL_INFECTIONS should be fairly small
     initialInfectionsSet.reserve(INITIAL_INFECTIONS);
-    while (initialInfectionsSet.size() < INITIAL_INFECTIONS) {
+    while (initialInfectionsSet.size() < INITIAL_INFECTIONS
+        // This loop will go forever on small test populations without
+        // this check
+        && initialInfectionsSet.size() < numPeople) {
       int personIdx = personDistrib(generator);
       if (initialInfectionsSet.count(personIdx) == 0) {
         initialInfections.emplace_back(personIdx);
@@ -415,7 +418,9 @@ void Main::SeedInfections() {
     }
   }
 
-  for (int i = 0; i < INITIAL_INFECTIONS_PER_DAY; ++i) {
+  // Check for empty is to avoid issues with small test populations
+  for (int i = 0; i < INITIAL_INFECTIONS_PER_DAY && !initialInfections.empty();
+      ++i) {
     int personIdx = initialInfections.back();
     initialInfections.pop_back();
 
