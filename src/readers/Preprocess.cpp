@@ -156,7 +156,8 @@ void buildActivityCache(std::string inputPath, std::string outputPath,
   csvConfigDefStream.close();
 
   // Create position vector for each person.
-  std::size_t totalDataSize = numPeople * DAYS_IN_WEEK * sizeof(uint64_t);
+  std::size_t totalDataSize = numPeople * numDaysWithRealData
+    * sizeof(uint64_t);
   uint64_t *elements = reinterpret_cast<uint64_t *>(malloc(totalDataSize));
   if (elements == NULL) {
     CkAbort("Failed to malloc enoough memory for preprocessing.\n");
