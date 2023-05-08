@@ -36,8 +36,8 @@
 #define INFECTION_PERIOD 4
 
 // Event types
-#define ARRIVAL 0
-#define DEPARTURE 1
+#define ARRIVAL 1
+#define DEPARTURE 0
 
 // Time
 const Time DAY_LENGTH = 3600 * 24;
