@@ -153,6 +153,19 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
     numLocationPartitions,
     firstLocationIdx);
 
+#ifdef ENABLE_DEBUG
+  int trueIdx = locations[localLocIdx].getUniqueId();
+  if (visitMsg.locationIdx != trueIdx) {
+    CkAbort("Error on chare %d: Visit by person %d to loc %d recieved by "
+        "loc %d (local %d)\n",
+        thisIndex, visitMsg.personIdx, visitMsg.locationIdx, trueIdx,
+        localLocIdx);
+  }
+#endif
+
+  //CkPrintf("Visiting location %d (%d of %d locally)\r\n",
+  //  visitMsg.locationIdx, localLocIdx, numLocalLocations);
+
   // Wrap visit info...
   Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.personState,
     visitMsg.visitStart };

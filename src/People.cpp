@@ -463,6 +463,20 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
   int localIdx = getLocalIndex(interMsg.personIdx, numPeople,
     numPeoplePartitions, firstPersonIdx);
 
+#ifdef ENABLE_DEBUG
+  int trueIdx = people[localIdx].getUniqueId();
+  if (interMsg.personIdx != trueIdx) {
+    CkAbort("Error on chare %d: Person %d's exposure at loc %d recieved by "
+        "person %d (local %d)\n",
+        thisIndex, interMsg.personIdx, interMsg.locationIdx, trueIdx,
+        localIdx);
+    //CkPrintf("    Chare %d: Person %d's exposure at loc %d recieved by "
+    //    "person %d (local %d, diff %d)\n",
+    //    thisIndex, interMsg.personIdx, interMsg.locationIdx, trueIdx,
+    //    localIdx, interMsg.personIdx - trueIdx);
+  }
+#endif
+
   if (0 > localIdx) {
     CkAbort("    Delivered message to person %d (%d on chare %d)\n",
         interMsg.personIdx, localIdx, thisIndex);

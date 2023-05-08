@@ -40,6 +40,7 @@ class Location : public DataInterface {
   // Maps each susceptible person's id to a list of interactions with people
   // who could have infected them
   std::unordered_map<int, std::vector<Interaction> > interactions;
+
   bool complysWithShutdown;
   int day;
 
