@@ -18,7 +18,7 @@
  *
  */
 int getNumElementsPerPartition(int numElements, int numPartitions) {
-  return floor(static_cast<float>(numElements)/numPartitions);
+  return ceil(static_cast<float>(numElements)/numPartitions);
 }
 
 
