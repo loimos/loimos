@@ -25,7 +25,7 @@
 #include <sstream>
 #include <google/protobuf/text_format.h>
 
-#define MAX_WRITE_SIZE 65536  // 2^16
+#define MAX_WRITE_SIZE 65536 // 2^16
 
 /**
  * This file preprocesses a given input file.
@@ -63,7 +63,7 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath,
    */
   // Open activity stream..
   std::ifstream activityStream(inputPath, std::ios_base::binary);
-  int objPerChare = numObjs / numChares;
+  int objPerChare = getNumElementsPerPartition(numObjs, numChares);
 
   // Read config file.
   loimos::proto::CSVDefinition csvDefinition;
@@ -99,6 +99,9 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath,
   }
   int firstIdx = std::atoi(tok);
   free(str);
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
+  CkPrintf("  Found first id as %d\n", firstIdx);
+#endif
 
   // Check if file cache already created.
   std::ifstream existenceCheck(outputPath, std::ios_base::binary);
@@ -106,6 +109,7 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath,
     printf("Using existing cache.\n");
     existenceCheck.close();
     return firstIdx;
+
   } else {
     existenceCheck.close();
     std::ofstream outputStream(outputPath, std::ios_base::binary);
@@ -115,7 +119,10 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath,
         sizeof(uint64_t));
 
       // Skip next n lines.
-      for (int i = 0; i < objPerChare; i++) {
+      // We already read the first location on the first chare to get
+      // its id, so don't double count that line
+      int numObjs = objPerChare - (0 == chareNum);
+      for (int i = 0; i < numObjs; i++) {
         std::getline(activityStream, line);
       }
       currentPosition = activityStream.tellg();
