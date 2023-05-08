@@ -40,8 +40,8 @@ People::People(std::string scenarioPath) {
   usesAtSync = true;
 
   day = 0;
-  // generator.seed(thisIndex);
   generator.seed(time(NULL));
+  // generator.seed(thisIndex);
 
   // Initialize disease model
   diseaseModel = globDiseaseModel.ckLocalBranch();
@@ -51,12 +51,18 @@ People::People(std::string scenarioPath) {
   stateSummaries.resize((totalStates + 2) * numDays, 0);
 
   // Get the number of people assigned to this chare
-  numLocalPeople = getNumLocalElements(numPeople, numPeoplePartitions,
-    thisIndex);
-  int firstPersonIdx = thisIndex * getNumElementsPerPartition(numPeople,
-      numPeoplePartitions);
-
+  numLocalPeople = getNumLocalElements(
+    numPeople,
+    numPeoplePartitions,
+    thisIndex
+  );
+  int firstLocalPersonIdx = getFirstIndex(thisIndex, numPeople,
+      numPeoplePartitions, firstPersonIdx);
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
+  CkPrintf("  Chare %d has %d people (%d-%d)\n",
+      thisIndex, numLocalPeople, firstLocalPersonIdx,
+      firstLocalPersonIdx + numLocalPeople - 1);
+
   double startTime = CkWallTimer();
 #endif
 
@@ -73,7 +79,7 @@ People::People(std::string scenarioPath) {
       age.int_b10 = age_dist(generator);
       std::vector<Data> dataField = { age };
 
-      p.setUniqueId(firstPersonIdx + i);
+      p.setUniqueId(firstLocalPersonIdx + i);
       p.state = diseaseModel->getHealthyState(dataField);
 
       // We set persons next state to equal current state to signify
@@ -188,8 +194,8 @@ void People::loadVisitData(std::ifstream *activityData) {
       if (seekPos == EMPTY_VISIT_SCHEDULE) {
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
         CkPrintf("  No visits on day %d in people chare %d\n", day, thisIndex);
-        continue;
 #endif
+        continue;
       }
 
       activityData->seekg(seekPos, std::ios_base::beg);
@@ -460,7 +466,7 @@ void People::RealDataSendVisitMessages() {
 }
 
 void People::ReceiveInteractions(InteractionMessage interMsg) {
-  int localIdx = getLocalIndex(interMsg.personIdx, numPeople,
+  int localIdx = getLocalIndex(interMsg.personIdx, thisIndex, numPeople,
     numPeoplePartitions, firstPersonIdx);
 
 #ifdef ENABLE_DEBUG
@@ -470,10 +476,6 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
         "person %d (local %d)\n",
         thisIndex, interMsg.personIdx, interMsg.locationIdx, trueIdx,
         localIdx);
-    //CkPrintf("    Chare %d: Person %d's exposure at loc %d recieved by "
-    //    "person %d (local %d, diff %d)\n",
-    //    thisIndex, interMsg.personIdx, interMsg.locationIdx, trueIdx,
-    //    localIdx, interMsg.personIdx - trueIdx);
   }
 #endif
 

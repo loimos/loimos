@@ -65,9 +65,11 @@ int getNumLocalElements(int numElements, int numPartitions, int partitionIndex);
 
 int getPartitionIndex(int globalIndex, int numElements, int numPartitions, int offset);
 
-int getLocalIndex(int globalIndex, int numElements, int numPartitions, int offset);
+int getFirstIndex(int partitionIndex, int numElements, int numPartitions, int offset);
 
 int getGlobalIndex(int localIndex, int partitionIndex, int numElements,
   int numPartitions, int offset);
 
-#endif  // DEFS_H_
+int getLocalIndex(int globalIndex, int partitionIndex, int numElements, int numPartitions, int offset);
+
+#endif // __DEFS_H__

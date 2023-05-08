@@ -19,6 +19,7 @@
 class Locations : public CBase_Locations {
  private:
   int numLocalLocations;
+  int firstLocalLocationIdx;
   std::vector<Location> locations;
   std::default_random_engine generator;
   DiseaseModel *diseaseModel;

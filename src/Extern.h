@@ -20,6 +20,8 @@ extern /* readonly */ int numPeople;
 extern /* readonly */ int numLocations;
 extern /* readonly */ int numPeoplePartitions;
 extern /* readonly */ int numLocationPartitions;
+extern /* readonly */ int numPeoplePerPartition;
+extern /* readonly */ int numLocationsPerPartition;
 extern /* readonly */ int numDays;
 extern /* readonly */ int numDaysWithRealData;
 extern /* readonly */ int contactModelType;

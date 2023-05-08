@@ -98,6 +98,9 @@ test: $(TESTS)
 test-style:
 	cpplint --extensions=C,h,ci --root=loimos/src --recursive . &> linter-errors.log
 
+test-utopia: all
+	./charmrun +p4 ./loimos 0 19 12 2 2 1 1 test-utopia.csv ../data/disease_models/covid19.textproto ../data/populations/utopia/ --min-max-alpha ++local
+
 test-small: all
 	./charmrun +p4 ./loimos 0 100 735 2 2 30 7 test-small.csv ../data/disease_models/covid19.textproto ../data/populations/synthetic_small_city/ --min-max-alpha ++local
 

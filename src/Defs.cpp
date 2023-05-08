@@ -5,6 +5,7 @@
  */
 
 #include "Defs.h"
+#include "charm++.h"
 
 #include <cmath>
 
@@ -30,10 +31,11 @@ int getNumElementsPerPartition(int numElements, int numPartitions) {
  *    int partitionIndex: Chare index
  *
  */
-int getNumLocalElements(int numElements, int numPartitions, int partitionIndex) {
-  int elementsPerPartition = getNumElementsPerPartition(numElements, numPartitions);
+int getNumLocalElements(int numElements, int numPartitions, int partitionIndex){
+  int elementsPerPartition = getNumElementsPerPartition(numElements,
+      numPartitions);
   if (partitionIndex == (numPartitions - 1))
-    return numElements - elementsPerPartition*(numPartitions - 1);
+    return numElements - elementsPerPartition * (numPartitions - 1);
   return elementsPerPartition;
 }
 
@@ -58,22 +60,20 @@ int getPartitionIndex(int globalIndex, int numElements, int numPartitions, int o
 }
 
 /**
- * Returns local (zero-indexed) position of an object on a chare from its
- * global id.
+ * Returns the first global index of an object present on the specified chare
  *
  * Args:
- *    int globalIndex: The global unique object identifier.
+ *    int partitionIndex: The index of the chare in question
  *    int numElements: The total number of objects of this type.
  *    int numPartitions: The total number of chares.
  *    int offset: The globalIndex number referring to the first object. Likely
  *      could be replaced with a better system.
  *
  */
-int getLocalIndex(int globalIndex, int numElements, int numPartitions, int offset) {
-  int partitionIndex = getPartitionIndex(globalIndex, numElements, numPartitions,
-    offset);
-  int elementsPerPartition = getNumElementsPerPartition(numElements, numPartitions);
-  return (globalIndex - offset) - partitionIndex*elementsPerPartition;
+int getFirstIndex(int partitionIndex, int numElements, int numPartitions, int offset) {
+  int elementsPerPartition = getNumElementsPerPartition(numElements,
+      numPartitions);
+  return partitionIndex * elementsPerPartition + offset;
 }
 
 /**
@@ -82,6 +82,8 @@ int getLocalIndex(int globalIndex, int numElements, int numPartitions, int offse
  *
  * Args:
  *    int localIndex: The local (zero-indexed) unique object identifier.
+ *    int partitionIndex: The index of the chare containing the specified
+ *      object
  *    int numElements: The total number of objects of this type.
  *    int numPartitions: The total number of chares.
  *    int offset: The globalIndex number referring to the first object. Likely
@@ -90,6 +92,28 @@ int getLocalIndex(int globalIndex, int numElements, int numPartitions, int offse
  */
 int getGlobalIndex(int localIndex, int partitionIndex, int numElements,
     int numPartitions, int offset) {
-  int elementsPerPartition = getNumElementsPerPartition(numElements, numPartitions);
-  return partitionIndex*elementsPerPartition + localIndex + offset;
+  int firstLocalIndex = getFirstIndex(partitionIndex, numElements,
+      numPartitions, offset);
+  return firstLocalIndex + localIndex;
+}
+
+/**
+ * Returns local (zero-indexed) position of an object on a chare from its
+ * global id.
+ *
+ * Args:
+ *    int globalIndex: The global unique object identifier.
+ *    int partitionIndex: The index of the chare containing the specified
+ *      object
+ *    int numElements: The total number of objects of this type.
+ *    int numPartitions: The total number of chares.
+ *    int offset: The globalIndex number referring to the first object. Likely
+ *      could be replaced with a better system.
+ *
+ */
+int getLocalIndex(int globalIndex, int partitionIndex, int numElements,
+    int numPartitions, int offset) {
+  int firstLocalIndex = getFirstIndex(partitionIndex, numElements,
+      numPartitions, offset);
+  return globalIndex - firstLocalIndex;
 }

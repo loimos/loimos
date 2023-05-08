@@ -126,7 +126,8 @@ Counter Location::processEvents(
   day++;
 
   #if ENABLE_DEBUG >= DEBUG_VERBOSE
-  return contactModel->getContactProbability(*this) * numInteractions;
+  Counter total = contactModel->getContactProbability(*this) * numInteractions;
+  return total;
   #else
   return 0;
   #endif
@@ -210,12 +211,12 @@ inline void Location::registerInteraction(
 
   // Note that this will create a new vector if this is the first potential
   // infection for the susceptible person in question
-  interactions[susceptibleEvent.personIdx].emplace_back(
-    propensity,
-    infectiousEvent.personIdx,
-    infectiousEvent.personState,
-    startTime,
-    endTime);
+  interactions[susceptibleEvent.personIdx].emplace_back(propensity,
+    infectiousEvent.personIdx, infectiousEvent.personState,
+    startTime, endTime);
+  //CkPrintf("  Person %d interacted with %d from %d to %d\n",
+  //    susceptibleEvent.personIdx, infectiousEvent.personIdx, startTime,
+  //    endTime);
 }
 
 // Simple helper function which send the list of interactions with the

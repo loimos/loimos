@@ -49,6 +49,8 @@
 /* readonly */ int numLocations;
 /* readonly */ int numPeoplePartitions;
 /* readonly */ int numLocationPartitions;
+/* readonly */ int numPeoplePerPartition;
+/* readonly */ int numLocationsPerPartition;
 /* readonly */ int numDays;
 /* readonly */ int numDaysWithRealData;
 /* readonly */ bool syntheticRun;
@@ -204,6 +206,11 @@ Main::Main(CkArgMsg* msg) {
     numDays = atoi(msg->argv[++argNum]);
     numDaysWithRealData = atoi(msg->argv[++argNum]);
   }
+
+  numPeoplePerPartition = getNumElementsPerPartition(numPeople,
+      numPeoplePartitions);
+  numLocationsPerPartition = getNumElementsPerPartition(numLocations,
+      numLocationPartitions);
 
   pathToOutput = std::string(msg->argv[++argNum]);
 #if ENABLE_DEBUG >= DEBUG_BASIC

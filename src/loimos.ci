@@ -7,7 +7,6 @@ mainmodule loimos {
   include "Types.h";
   include "Interaction.h";
   include "Message.h";
-  include "intervention_model/Interventions.h";
 
   #ifdef USE_HYPERCOMM
   include "AggregatorParam.h";
@@ -25,7 +24,10 @@ mainmodule loimos {
   #define SHOULD_LB(day) (day >= LB_START_DAY &&\
     (day - LB_START_DAY) % LB_INTERVAL == 0)
 
-  include "functional";
+  #ifdef USE_HYPERCOMM
+  include "AggregatorParam.h";
+  #endif // USE_HYPERCOMM
+
   include "string";
   include "vector";
   include "memory";
@@ -92,7 +94,7 @@ mainmodule loimos {
         serial{traceArray.instrumentOn();}
         when instrumentSwitchOn() {}
       #endif // ENABLE_LB
-   
+
       serial{
         totalVisits = 0;
         totalInteractions = 0;
@@ -136,6 +138,7 @@ mainmodule loimos {
             stepStartTime = CkWallTimer();
             locationsArray.ComputeInteractions();
             if (DAYS_TO_SEED_INFECTION > day) {
+              //CkPrintf("  Seeding Infections\n");
               SeedInfections();
             }
 
@@ -174,6 +177,11 @@ mainmodule loimos {
               "Iteration %d Execution Time: %lf seconds. Infectious Count: %d.\n",
               day, CkWallTimer() - iterationStartTime, infectiousCount
             );
+
+            // Trigger intervention updates.
+            if (interventionStategy) {
+              globDiseaseModel.toggleIntervention(infectiousCount);
+            }
           }
         }
 
