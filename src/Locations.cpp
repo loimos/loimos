@@ -59,8 +59,10 @@ Locations::Locations(std::string scenarioPath) {
   contactModel->setGenerator(&generator);
 
   // Load application data
-  if (syntheticRun) {
+  if (0 < numLocalLocations) {
     locations.reserve(numLocalLocations);
+  }
+  if (syntheticRun) {
     for (int p = 0; p < numLocalLocations; p++) {
       locations.emplace_back(0, firstLocalLocationIdx + p, &generator,
           diseaseModel);
@@ -83,7 +85,6 @@ void Locations::loadLocationData(std::string scenarioPath) {
   // Init local.
   int numAttributesPerLocation =
     DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
-  locations.reserve(numLocalLocations);
   for (int p = 0; p < numLocalLocations; p++) {
     locations.emplace_back(numAttributesPerLocation, firstLocalLocationIdx + p,
         &generator, diseaseModel);
@@ -162,7 +163,7 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 #ifdef ENABLE_DEBUG
   int trueIdx = locations[localLocIdx].getUniqueId();
   if (visitMsg.locationIdx != trueIdx) {
-    CkAbort("Error on chare %d: Visit by person %d to loc %d recieved by "
+    CkPrintf("Error on chare %d: Visit by person %d to loc %d recieved by "
         "loc %d (local %d)\n",
         thisIndex, visitMsg.personIdx, visitMsg.locationIdx, trueIdx,
         localLocIdx);
