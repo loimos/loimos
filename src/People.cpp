@@ -195,7 +195,7 @@ void People::loadVisitData(std::ifstream *activityData) {
       uint64_t seekPos = person
         .visitOffsetByDay[day % numDaysWithRealData];
       if (seekPos == EMPTY_VISIT_SCHEDULE) {
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
         CkPrintf("  Chare %d: Person %d has no visits on day %d\n",
             thisIndex, person.getUniqueId(), day);
 #endif
