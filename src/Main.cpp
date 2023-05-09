@@ -207,6 +207,15 @@ Main::Main(CkArgMsg* msg) {
     numDaysWithRealData = atoi(msg->argv[++argNum]);
   }
 
+  if (numPeople < numPeoplePartitions) {
+    CkAbort("Error: running on more people chares (%d) than people (%d)",
+        numPeoplePartitions, numPeople);
+  }
+  if (numLocations < numLocationPartitions) {
+    CkAbort("Error: running on more location chares (%d) than locations (%d)",
+        numLocationPartitions, numLocations);
+  }
+
   numPeoplePerPartition = getNumElementsPerPartition(numPeople,
       numPeoplePartitions);
   numLocationsPerPartition = getNumElementsPerPartition(numLocations,
