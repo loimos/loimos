@@ -170,8 +170,10 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   }
 #endif
 
-  //CkPrintf("Visiting location %d (%d of %d locally)\r\n",
-  //  visitMsg.locationIdx, localLocIdx, numLocalLocations);
+  //CkPrintf("    Chare %d: Person %d visiting loc %d from %d to %d\n",//(%d of %d locally)\n",
+  //  thisIndex, visitMsg.personIdx, visitMsg.locationIdx,
+  //  //localLocIdx, numLocalLocations,
+  //  visitMsg.visitStart, visitMsg.visitEnd);
 
   // Wrap visit info...
   Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.personState,
@@ -203,8 +205,10 @@ void Locations::ComputeInteractions() {
     Counter locInters = loc.processEvents(diseaseModel, contactModel);
     numInteractions += locInters;
 
-    //CkPrintf("  Chare %d: loc %d found %d interactions from %d visits\n",
-    //    thisIndex, loc.getUniqueId(), locInters, locVisits);
+    //if (0 < locInters) {
+    //  CkPrintf("    Chare %d: loc %d found %d interactions from %d visits\n",
+    //      thisIndex, loc.getUniqueId(), locInters, locVisits);
+    //}
   }
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   CkCallback cb(CkReductionTarget(Main, ReceiveInteractionsCount), mainProxy);

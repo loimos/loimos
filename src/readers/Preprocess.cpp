@@ -16,6 +16,7 @@
 #include "DataReader.h"
 #include "../Defs.h"
 #include "../Extern.h"
+#include "charm++.h"
 
 #include <string>
 #include <iostream>
@@ -34,19 +35,19 @@
 //                    string object in subfunctions.
 std::tuple<int, int, std::string> buildCache(std::string scenarioPath, int numPeople,
     int numPeopleChares, int numLocations, int numLocationChares, int numDays) {
-  std::string unique_scenario = getScenarioId(numPeople, numPeopleChares,
+  std::string uniqueScenario = getScenarioId(numPeople, numPeopleChares,
       numLocations, numLocationChares);
   // Build person and location cache.
   int firstPersonIdx = buildObjectLookupCache(scenarioPath + "people.csv",
-    scenarioPath + unique_scenario + "_people.cache", numPeople, numPeopleChares,
+    scenarioPath + uniqueScenario + "_people.cache", numPeople, numPeopleChares,
     scenarioPath + "people.textproto");
   int firstLocationIdx = buildObjectLookupCache(scenarioPath + "locations.csv",
-    scenarioPath + unique_scenario + "_locations.cache", numLocations,
+    scenarioPath + uniqueScenario + "_locations.cache", numLocations,
     numLocationChares, scenarioPath + "locations.textproto");
   buildActivityCache(scenarioPath + "visits.csv",
-    scenarioPath + unique_scenario + "_interactions.cache", numPeople, numDays,
+    scenarioPath + uniqueScenario + "_interactions.cache", numPeople, numDays,
     firstPersonIdx, scenarioPath + "visits.textproto");
-  return std::make_tuple(firstPersonIdx, firstLocationIdx, unique_scenario);
+  return std::make_tuple(firstPersonIdx, firstLocationIdx, uniqueScenario);
 }
 
 int buildObjectLookupCache(std::string inputPath, std::string outputPath,
@@ -87,7 +88,7 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath,
   std::string line;
   // Clear header.
   std::getline(activityStream, line);
-  uint64_t currentPosition = activityStream.tellg();;
+  uint64_t currentPosition = activityStream.tellg();
 
   // Special case to get lowest person ID first.
   std::getline(activityStream, line);
@@ -106,7 +107,7 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath,
   // Check if file cache already created.
   std::ifstream existenceCheck(outputPath, std::ios_base::binary);
   if (existenceCheck.good()) {
-    printf("Using existing cache.\n");
+    CkPrintf("Using existing cache.\n");
     existenceCheck.close();
     return firstIdx;
 
@@ -142,14 +143,13 @@ void buildActivityCache(std::string inputPath, std::string outputPath,
   // Check if cache already created.
   std::ifstream existenceCheck(outputPath, std::ios_base::binary);
   if (existenceCheck.good()) {
-    printf("Activity cache already exists.");
+    CkPrintf("Activity cache already exists.");
     return;
   }
 
   std::ifstream activityStream(inputPath, std::ios_base::binary);
   if (!activityStream) {
-    printf("Could not open person data input.\n");
-    exit(1);
+    CkAbort("Error: Could not open visit data input.\n");
   }
 
   // Read config file.
@@ -166,7 +166,7 @@ void buildActivityCache(std::string inputPath, std::string outputPath,
   std::size_t totalDataSize = numPeople * numDaysWithRealData
     * sizeof(uint64_t);
   uint64_t *elements = reinterpret_cast<uint64_t *>(malloc(totalDataSize));
-  if (elements == NULL) {
+  if (NULL == elements) {
     CkAbort("Failed to malloc enoough memory for preprocessing.\n");
   }
   memset(elements, 0xFF, totalDataSize);

@@ -44,6 +44,10 @@ class Location : public DataInterface {
   bool complysWithShutdown;
   int day;
 
+  // Prints all interactions which would result from a depature e given
+  // the present occupancy of the location
+  void printInteractions(const Event &e) const;
+
   // Helper functions to handle when a person leaves this location
   // onDeparture branches to one of the two other functions
   inline void onDeparture(

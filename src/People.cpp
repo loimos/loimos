@@ -139,8 +139,8 @@ void People::loadPeopleData(std::string scenarioPath) {
 
   // Open activity data and cache.
   std::ifstream activityData(scenarioPath + "visits.csv");
-  std::ifstream activityCache(scenarioPath + scenarioId + "_interactions.cache",
-    std::ios_base::binary);
+  std::ifstream activityCache(scenarioPath + scenarioId
+      + "_visits.cache", std::ios_base::binary);
   if (!activityData || !activityCache) {
     CkAbort("Could not open activity input.");
   }
@@ -196,7 +196,8 @@ void People::loadVisitData(std::ifstream *activityData) {
         .visitOffsetByDay[day % numDaysWithRealData];
       if (seekPos == EMPTY_VISIT_SCHEDULE) {
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
-        CkPrintf("  No visits on day %d in people chare %d\n", day, thisIndex);
+        CkPrintf("  Chare %d: Person %d has no visits on day %d\n",
+            thisIndex, person.getUniqueId(), day);
 #endif
         continue;
       }
@@ -216,9 +217,9 @@ void People::loadVisitData(std::ifstream *activityData) {
       if (0 == personId % 10000) {
         CkPrintf("  People chare %d, person %d reading from %u on day %d\n",
             thisIndex, person.getUniqueId(), seekPos, day);
-          CkPrintf("  Person %d (%d) on day %d first visit: %d to %d, at loc %d\n",
-              person.getUniqueId(), personId, day, visitStart,
-              visitStart + visitDuration, locationId);
+        CkPrintf("  Person %d (%d) on day %d first visit: %d to %d, "
+            "at loc %d\n", person.getUniqueId(), personId, day,
+            visitStart, visitStart + visitDuration, locationId);
       }
 #endif
 
@@ -235,6 +236,10 @@ void People::loadVisitData(std::ifstream *activityData) {
           DataReader<Person>::parseActivityStream(activityData,
               diseaseModel->activityDef, NULL);
       }
+
+      //CkPrintf("  Chare %d: person %d has %u visits on day %d (offset %u)\n",
+      //    thisIndex, person.getUniqueId(), person.visitsByDay[day].size(),
+      //    day, seekPos);
     }
   }
   #if ENABLE_DEBUG >= DEBUG_VERBOSE

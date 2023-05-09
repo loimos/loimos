@@ -97,6 +97,7 @@ Counter Location::processEvents(
         } else {
           numPresent--;
           numInteractions += numPresent;
+          //printInteractions(event);
         }
         #endif
         continue;
@@ -115,6 +116,7 @@ Counter Location::processEvents(
         #if ENABLE_DEBUG >= DEBUG_VERBOSE
         numPresent--;
         numInteractions += numPresent;
+        //printInteractions(event);
         #endif
 
         onDeparture(diseaseModel, contactModel, event);
@@ -131,6 +133,21 @@ Counter Location::processEvents(
   #else
   return 0;
   #endif
+}
+
+void Location::printInteractions(const Event &event) const {
+  for (const Event &e: susceptibleArrivals) {
+    CkPrintf("      Loc %d: person %d (%d-%d) met person %d (%d-%d)\n",
+        uniqueId, event.personIdx, event.partnerTime,
+        event.scheduledTime, e.personIdx, e.scheduledTime,
+        e.partnerTime);
+  }
+  for (const Event &e: infectiousArrivals) {
+    CkPrintf("      Loc %d: person %d (%d-%d) met person %d (%d-%d)\n",
+        uniqueId, event.personIdx, event.partnerTime,
+        event.scheduledTime, e.personIdx, e.scheduledTime,
+        e.partnerTime);
+  }
 }
 
 // Simple dispatch to the susceptible/infectious depature handlers
