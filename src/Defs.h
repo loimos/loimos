@@ -61,16 +61,15 @@ const Time MINUTE_LENGTH = 60;
 #define INITIAL_INFECTIONS (INITIAL_INFECTIONS_PER_DAY * DAYS_TO_SEED_INFECTION)
 
 int getNumElementsPerPartition(int numElements, int numPartitions);
-
-int getNumLocalElements(int numElements, int numPartitions, int partitionIndex);
-
-int getPartitionIndex(int globalIndex, int numElements, int numPartitions, int offset);
-
-int getFirstIndex(int partitionIndex, int numElements, int numPartitions, int offset);
-
+int getPartitionIndex(int globalIndex, int numElements,
+    int numPartitions, int offset);
+int getFirstIndex(int partitionIndex, int numElements,
+    int numPartitions, int offset);
+int getNumLocalElements(int numElements, int numPartitions,
+    int partitionIndex);
 int getGlobalIndex(int localIndex, int partitionIndex, int numElements,
-  int numPartitions, int offset);
-
-int getLocalIndex(int globalIndex, int partitionIndex, int numElements, int numPartitions, int offset);
+    int numPartitions, int offset);
+int getLocalIndex(int globalIndex, int partitionIndex, int numElements,
+    int numPartitions, int offset);
 
 #endif // __DEFS_H__

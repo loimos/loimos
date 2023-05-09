@@ -8,6 +8,7 @@
 #include "charm++.h"
 
 #include <cmath>
+#include <algorithm>
 
 /**
  * Returns the number of elements that each chare will track at a minimum.
@@ -19,24 +20,6 @@
  */
 int getNumElementsPerPartition(int numElements, int numPartitions) {
   return ceil(static_cast<float>(numElements)/numPartitions);
-}
-
-
-/**
- * Returns the number of the objects that a particular chare tracks.
- *
- * Args:
- *    int numElements: The total number of objects of this type.
- *    int numPartitions: The total number of chares.
- *    int partitionIndex: Chare index
- *
- */
-int getNumLocalElements(int numElements, int numPartitions, int partitionIndex){
-  int elementsPerPartition = getNumElementsPerPartition(numElements,
-      numPartitions);
-  if (partitionIndex == (numPartitions - 1))
-    return numElements - elementsPerPartition * (numPartitions - 1);
-  return elementsPerPartition;
 }
 
 /**
@@ -74,6 +57,26 @@ int getFirstIndex(int partitionIndex, int numElements, int numPartitions, int of
   int elementsPerPartition = getNumElementsPerPartition(numElements,
       numPartitions);
   return partitionIndex * elementsPerPartition + offset;
+}
+
+/**
+ * Returns the number of the objects that a particular chare tracks.
+ *
+ * Args:
+ *    int numElements: The total number of objects of this type.
+ *    int numPartitions: The total number of chares.
+ *    int partitionIndex: Chare index
+ *
+ */
+int getNumLocalElements(int numElements, int numPartitions, int partitionIndex){
+  int elementsPerPartition = getNumElementsPerPartition(numElements,
+      numPartitions);
+  int firstIndex = getFirstIndex(partitionIndex, numElements, numPartitions,
+      0);
+  if (firstIndex >= numElements) {
+    return 0;
+  }
+  return std::min(elementsPerPartition, numElements - firstIndex);
 }
 
 /**
