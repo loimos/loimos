@@ -11,6 +11,7 @@
 #include <string>
 
 #include "Types.h"
+#include <limits>
 
 // Concat two parts of variable names (for use with other macros)
 // in-direction neccessary so that any macros passed in will be expanded prior
@@ -50,7 +51,7 @@ const Time MINUTE_LENGTH = 60;
 #define AGE_CSV_INDEX 0
 
 // Data loading
-#define EMPTY_VISIT_SCHEDULE 0xFFFFFFFF
+#define EMPTY_VISIT_SCHEDULE std::numeric_limits<uint64_t>::max()
 #define CSV_DELIM ','
 
 #define PERCENTAGE_OF_SEEDING_LOCATIONS 0.001
