@@ -91,9 +91,7 @@ People::People(std::string scenarioPath) {
   } else {
       int numAttributesPerPerson =
         DataReader<Person>::getNonZeroAttributes(diseaseModel->personDef);
-      if (0 < numLocalPeople) {
-        people.reserve(numLocalPeople);
-      }
+      people.reserve(numLocalPeople);
       for (int p = 0; p < numLocalPeople; p++) {
         people.emplace_back(Person(numAttributesPerPerson,
           0, std::numeric_limits<Time>::max()));

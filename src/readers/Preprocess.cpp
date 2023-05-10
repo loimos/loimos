@@ -45,7 +45,7 @@ std::tuple<int, int, std::string> buildCache(std::string scenarioPath, int numPe
     scenarioPath + uniqueScenario + "_locations.cache", numLocations,
     numLocationChares, scenarioPath + "locations.textproto");
   buildActivityCache(scenarioPath + "visits.csv",
-    scenarioPath + uniqueScenario + "_interactions.cache", numPeople, numDays,
+    scenarioPath + uniqueScenario + "_visits.cache", numPeople, numDays,
     firstPersonIdx, scenarioPath + "visits.textproto");
   return std::make_tuple(firstPersonIdx, firstLocationIdx, uniqueScenario);
 }
