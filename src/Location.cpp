@@ -91,7 +91,7 @@ Counter Location::processEvents(
         } else {
           numPresent--;
           numInteractions += numPresent;
-          //printInteractions(event);
+          // printInteractions(event);
         }
         #endif
         continue;
@@ -110,7 +110,7 @@ Counter Location::processEvents(
         #if ENABLE_DEBUG >= DEBUG_VERBOSE
         numPresent--;
         numInteractions += numPresent;
-        //printInteractions(event);
+        // printInteractions(event);
         #endif
 
         onDeparture(diseaseModel, contactModel, event);
@@ -130,13 +130,13 @@ Counter Location::processEvents(
 }
 
 void Location::printInteractions(const Event &event) const {
-  for (const Event &e: susceptibleArrivals) {
+  for (const Event &e : susceptibleArrivals) {
     CkPrintf("      Loc %d: person %d (%d-%d) met person %d (%d-%d)\n",
         uniqueId, event.personIdx, event.partnerTime,
         event.scheduledTime, e.personIdx, e.scheduledTime,
         e.partnerTime);
   }
-  for (const Event &e: infectiousArrivals) {
+  for (const Event &e : infectiousArrivals) {
     CkPrintf("      Loc %d: person %d (%d-%d) met person %d (%d-%d)\n",
         uniqueId, event.personIdx, event.partnerTime,
         event.scheduledTime, e.personIdx, e.scheduledTime,
@@ -225,9 +225,9 @@ inline void Location::registerInteraction(
   interactions[susceptibleEvent.personIdx].emplace_back(propensity,
     infectiousEvent.personIdx, infectiousEvent.personState,
     startTime, endTime);
-  //CkPrintf("  Person %d interacted with %d from %d to %d\n",
-  //    susceptibleEvent.personIdx, infectiousEvent.personIdx, startTime,
-  //    endTime);
+  // CkPrintf("  Person %d interacted with %d from %d to %d\n",
+  //     susceptibleEvent.personIdx, infectiousEvent.personIdx, startTime,
+  //     endTime);
 }
 
 // Simple helper function which send the list of interactions with the

@@ -26,7 +26,7 @@
 #include <sstream>
 #include <google/protobuf/text_format.h>
 
-#define MAX_WRITE_SIZE 65536 // 2^16
+#define MAX_WRITE_SIZE 65536  // 2^16
 
 /**
  * This file preprocesses a given input file.

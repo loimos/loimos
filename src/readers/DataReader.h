@@ -176,7 +176,6 @@ class DataReader {
 
   static int getAttributeIndex(loimos::proto::CSVDefinition *dataFormat,
       std::string attributeName) {
-
     int count = -1;
     for (int i = 0; i < dataFormat->fields_size(); ++i) {
       loimos::proto::DataField const *field = &dataFormat->fields(i);

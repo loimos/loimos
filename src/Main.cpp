@@ -57,8 +57,6 @@
 /* readonly */ int contactModelType;
 /* readonly */ int maxSimVisitsIdx;
 /* readonly */ int ageIdx;
-/* readonly */ std::string scenarioPath;
-/* readonly */ std::string scenarioId;
 /* readonly */ int firstPersonIdx;
 /* readonly */ int firstLocationIdx;
 /* readonly */ Counter totalVisits;
@@ -503,8 +501,8 @@ void Main::SaveStats(int *data) {
   }
 
   outFile.close();
-  //CkPrintf("  Found %lu visits and %lu interactions in summaries\n",
-  //    numVisits, numInteractions);
+  // CkPrintf("  Found %lu visits and %lu interactions in summaries\n",
+  //     numVisits, numInteractions);
 }
 
 #include "loimos.def.h"

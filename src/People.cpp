@@ -51,11 +51,8 @@ People::People(std::string scenarioPath) {
   stateSummaries.resize((totalStates + 2) * numDays, 0);
 
   // Get the number of people assigned to this chare
-  numLocalPeople = getNumLocalElements(
-    numPeople,
-    numPeoplePartitions,
-    thisIndex
-  );
+  numLocalPeople = getNumLocalElements(numPeople,
+      numPeoplePartitions, thisIndex);
   int firstLocalPersonIdx = getFirstIndex(thisIndex, numPeople,
       numPeoplePartitions, firstPersonIdx);
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
@@ -235,9 +232,9 @@ void People::loadVisitData(std::ifstream *activityData) {
               diseaseModel->activityDef, NULL);
       }
 
-      //CkPrintf("  Chare %d: person %d has %u visits on day %d (offset %u)\n",
-      //    thisIndex, person.getUniqueId(), person.visitsByDay[day].size(),
-      //    day, seekPos);
+      // CkPrintf("  Chare %d: person %d has %u visits on day %d (offset %u)\n",
+      //     thisIndex, person.getUniqueId(), person.visitsByDay[day].size(),
+      //     day, seekPos);
     }
   }
   #if ENABLE_DEBUG >= DEBUG_VERBOSE
@@ -434,12 +431,12 @@ void People::RealDataSendVisitMessages() {
   int maxId = 0;
   #endif
   int dayIdx = day % numDaysWithRealData;
-  for (const Person &person: people) {
+  for (const Person &person : people) {
     #if ENABLE_DEBUG >= DEBUG_PER_CHARE
     minId = std::min(minId, person.uniqueId);
     maxId = std::max(maxId, person.uniqueId);
     #endif
-    for (VisitMessage visitMessage: person.visitsByDay[dayIdx]) {
+    for (VisitMessage visitMessage : person.visitsByDay[dayIdx]) {
       visitMessage.personState = person.state;
       #if ENABLE_DEBUG >= DEBUG_VERBOSE
       totalVisitsForDay++;
