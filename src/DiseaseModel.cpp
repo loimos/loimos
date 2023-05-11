@@ -102,7 +102,7 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     }
     locationInputStream.close();
 
-    if ((int) ContactModelType::min_max_alpha == contactModelType) {
+    if ((static_cast<int>(ContactModelType::min_max_alpha == contactModelType)) {
       maxSimVisitsIdx = DataReader<>::getAttributeIndex(locationDef,
           "max_simultaneous_visits");
       if (-1 == maxSimVisitsIdx) {

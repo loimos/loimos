@@ -19,7 +19,7 @@
  *
  */
 int getNumElementsPerPartition(int numElements, int numPartitions) {
-  return ceil(static_cast<float>(numElements)/numPartitions);
+  return ceil(static_cast<float>(numElements) / numPartitions);
 }
 
 /**
@@ -68,7 +68,7 @@ int getFirstIndex(int partitionIndex, int numElements, int numPartitions, int of
  *    int partitionIndex: Chare index
  *
  */
-int getNumLocalElements(int numElements, int numPartitions, int partitionIndex){
+int getNumLocalElements(int numElements, int numPartitions, int partitionIndex) {
   int elementsPerPartition = getNumElementsPerPartition(numElements,
       numPartitions);
   int firstIndex = getFirstIndex(partitionIndex, numElements, numPartitions,

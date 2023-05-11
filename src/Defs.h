@@ -18,7 +18,7 @@
 // to being concatenated
 #define CONCAT(x, y) CONCAT_(x, y)
 #define CONCAT_(x, y) x ## y
-//#define CK_SUM_COUNTER(type) CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE)
+// #define CK_SUM_COUNTER(type) CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE)
 
 // Debug levels
 #define DEBUG_BASIC 1
@@ -54,8 +54,6 @@ const Time MINUTE_LENGTH = 60;
 #define EMPTY_VISIT_SCHEDULE std::numeric_limits<uint64_t>::max()
 #define CSV_DELIM ','
 
-#define PERCENTAGE_OF_SEEDING_LOCATIONS 0.001
-#define INITIAL_INFECTIOUS_PROBABILITY 0.01
 #define DAYS_TO_SEED_INFECTION 7
 #define INITIAL_INFECTIONS_PER_DAY 10
 #define INITIAL_INFECTIONS (INITIAL_INFECTIONS_PER_DAY * DAYS_TO_SEED_INFECTION)
@@ -72,4 +70,4 @@ int getGlobalIndex(int localIndex, int partitionIndex, int numElements,
 int getLocalIndex(int globalIndex, int partitionIndex, int numElements,
     int numPartitions, int offset);
 
-#endif // __DEFS_H__
+#endif  // DEFS_H_
