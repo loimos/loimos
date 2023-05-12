@@ -14,6 +14,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 from utils import ids  # noqa
 
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Samples a given set of locations (along with their "
@@ -39,7 +40,7 @@ def parse_args():
         nargs="+",
         type=int,
         default=None,
-        help="A list of location ids to sample"
+        help="A list of location ids to sample",
     )
     parser.add_argument(
         "-pp",
@@ -47,7 +48,7 @@ def parse_args():
         nargs="+",
         default="people.csv",
         help="The name of the file containing person data within the "
-        + "population dir"
+        + "population dir",
     )
     parser.add_argument(
         "-lp",
@@ -55,7 +56,7 @@ def parse_args():
         nargs="+",
         default="locations.csv",
         help="The name of the file containing location data within the "
-        + "population dir"
+        + "population dir",
     )
     parser.add_argument(
         "-vp",
@@ -63,10 +64,11 @@ def parse_args():
         nargs="+",
         default="visits.csv",
         help="The name of the file containing visit data within the "
-        + "population dir"
+        + "population dir",
     )
 
     return parser.parse_args()
+
 
 def sample_population(people, locations, visits, lids_to_sample):
     locations = locations.iloc[lids_to_sample]
@@ -74,6 +76,7 @@ def sample_population(people, locations, visits, lids_to_sample):
     pids_to_sample = visits["pid"].unique()
     people = people.iloc[pids_to_sample]
     return people, locations, visits
+
 
 def main():
     args = parse_args()
@@ -92,12 +95,13 @@ def main():
     lids_to_sample = args.to_sample
     if lids_to_sample is None:
         busiest_lid = locations["max_simultaneous_visits"].argmax()
-        #print(locations.iloc[busiest_lid])
+        # print(locations.iloc[busiest_lid])
         lids_to_sample = [int(busiest_lid)]
-        #print(lids_to_sample)
+        # print(lids_to_sample)
 
-    people, locations, visits = \
-        sample_population(people, locations, visits, lids_to_sample)
+    people, locations, visits = sample_population(
+        people, locations, visits, lids_to_sample
+    )
     # Remap uses the indices to set pids and lids, so we need to make
     # sure they're contiguous
     people.reset_index(drop=True, inplace=True)
@@ -123,17 +127,19 @@ def main():
 
     # Add an example run line in a batch script to the output dir
     # so that we can start running this right away
-    with open(os.path.join(out_dir, "run.sh"), "w") as run_file: 
+    with open(os.path.join(out_dir, "run.sh"), "w") as run_file:
         num_people = people.shape[0]
         num_locations = locations.shape[0]
         real_out_path = os.path.realpath(out_dir)
-        run_line = f"./charmrun +p4 ./loimos 0 {num_people} {num_locations} " \
-            + f"1 1 7 7 sampled.out ../data/disease_models/covid19.textproto " \
+        run_line = (
+            f"./charmrun +p4 ./loimos 0 {num_people} {num_locations} "
+            + f"1 1 7 7 sampled.out ../data/disease_models/covid19.textproto "
             + f"{real_out_path}\n"
+        )
         run_file.write(run_line)
         print("Try running Loimos on this dataset from loimos/src with:")
         print(f"  {run_line}")
-        
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
