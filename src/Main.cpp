@@ -237,6 +237,11 @@ Main::Main(CkArgMsg* msg) {
   } else {
     // Create data caches.
     scenarioPath = std::string(msg->argv[++argNum]);
+    // This allows users to omit the trailing "/" from the scenario path
+    // while still allowing us to find the files properly
+    if (scenarioPath.back() != '/') {
+      scenarioPath.push_back('/');
+    }
     std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(
         scenarioPath, numPeople, numPeoplePartitions, numLocations,
         numLocationPartitions, numDaysWithRealData);
