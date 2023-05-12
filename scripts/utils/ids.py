@@ -92,70 +92,47 @@ def partitioned_merge(left, right, on, num_tasks=1, num_partitions=128, args={})
 
 
 # Sets the 'pid' column in people and the 'lid' column in locations
-# to the given array/series of values passed as new_people_ids and
-# new_location_ids, respectively, and adjusts the corresponding column(s)
-# in visits accordingly
-def remap(
-    people,
-    locations,
-    visits,
-    new_people_ids=None,
-    new_location_ids=None,
-    num_partitions=1,
-    num_tasks=1,
-):
-    if new_people_ids is not None:
-        # Remap person ids
-        people = people.reindex(new_people_ids)  # makes a copy
-        people = people.reset_index(drop=True)
-        people["temp_id"] = people.index
-        person_remapper = people[["pid", "temp_id"]].copy()
+# to match the row index in each dataframe, and adjusts the corresponding
+# column(s) in visits accordingly
+def remap(people, locations, visits, num_tasks=1, num_partitions=32):
+    groups = [("people", "pid", ["visits"]), ("locations", "lid", ["visits", "people"])]
+    data = {"people": people, "locations": locations, "visits": visits}
 
-        people["pid"] = people["temp_id"]
-        people.drop(["temp_id"], axis=1, inplace=True)
+    # Remap location ids.
+    for to_remap_name, key, external_references in groups:
+        to_remap = data[to_remap_name]
 
-        if 1 == num_partitions:
-            visits = visits.merge(person_remapper, on="pid")
-        else:
-            visits = partitioned_merge(
-                visits,
-                person_remapper,
-                "pid",
+        print(f"{to_remap_name} before remap:")
+        #print(to_remap)
+
+        # Remaps the dataframes existing index to a new dense index.
+        to_remap["new_id"] = to_remap.index
+        remapper = to_remap[[key, "new_id"]].copy()
+        to_remap[key] = to_remap["new_id"]
+        to_remap.drop(["new_id"], axis=1, inplace=True)
+
+        print(f"{to_remap_name} after remap:")
+        print(to_remap)
+
+        # Save changes t
+        data[to_remap_name] = to_remap
+
+        # Replaced foreign key references.
+        # for df in foreign_dfs:
+        # Replace all references of the old keys with the new ones
+        for ref_name in external_references:
+            ref = data[ref_name]
+            # ref = ref.merge(remapper, how='left', left_on=key, right_on=key)
+            ref = partitioned_merge(
+                ref,
+                remapper,
+                key,
+                num_partitions=num_partitions,
                 num_tasks=num_tasks,
                 args={"how": "left"},
             )
-        visits["pid"] = visits["temp_id"]
-        visits.drop(["temp_id"], axis=1, inplace=True)
+            ref[key] = ref["new_id"]
+            ref.drop(["new_id"], axis=1, inplace=True)
+            data[ref_name] = ref
 
-    if new_location_ids is not None:
-        # Remap location ids
-        locations = locations.reindex(new_location_ids)  # makes a copy
-        locations = locations.reset_index(drop=True)
-        locations["temp_id"] = locations.index
-        loc_remapper = locations[["lid", "temp_id"]].copy()
-
-        locations["lid"] = locations["temp_id"]
-        locations.drop(["temp_id"], axis=1, inplace=True)
-
-        if 1 == num_partitions:
-            visits = visits.merge(loc_remapper, on="lid")
-        else:
-            visits = partitioned_merge(
-                visits, loc_remapper, "lid", num_tasks=num_tasks, args={"how": "left"}
-            )
-        visits["lid"] = visits["temp_id"]
-        visits.drop(["temp_id"], axis=1, inplace=True)
-
-        # if 1 == num_partitions:
-        #    people = people.merge(loc_remapper, on='lid')
-        # else:
-        #    people = partitioned_merge(people, loc_remapper, 'lid',
-        #            num_tasks=num_tasks, args={'how': 'left'})
-        # people['hid'] = people['temp_id']
-        # people.drop(["temp_id"], axis = 1, inplace=True)
-
-    # Partitioned merges can sometimes mess up the order
-    # people.sort_values(by='pid', inplace=True)
-    visits.sort_values(by=["pid", "start_time"], inplace=True)
-
-    return people, locations, visits
+    return data["people"], data["locations"], data["visits"]

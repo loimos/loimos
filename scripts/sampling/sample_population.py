@@ -96,13 +96,20 @@ def main():
         lids_to_sample = [int(busiest_lid)]
         #print(lids_to_sample)
 
-    people, locations, visits = sample_population(people, locations, visits, lids_to_sample)
+    people, locations, visits = \
+        sample_population(people, locations, visits, lids_to_sample)
+    # Remap uses the indices to set pids and lids, so we need to make
+    # sure they're contiguous
+    people.reset_index(drop=True, inplace=True)
+    locations.reset_index(drop=True, inplace=True)
     people, locations, visits = ids.remap(people, locations, visits)
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
+        print(f"Created dir {out_dir}")
     for f in glob.glob(os.path.join(in_dir, "*.textproto")):
         shutil.copy(f, out_dir)
+        print(f"  Copied {f} to {out_dir}")
 
     people_out_file = os.path.join(out_dir, args.people_file)
     locations_out_file = os.path.join(out_dir, args.locations_file)

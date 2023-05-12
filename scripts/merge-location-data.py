@@ -13,7 +13,7 @@ import argparse
 import os
 import pandas as pd
 
-from utils.ids import partitioned_merge, init_multiprocessing
+from utils.ids import remap, init_multiprocessing
 
 _DEFAULT_VALUES = {
     "work": 0,
@@ -90,50 +90,6 @@ def combine_residences_and_activities(activity_locations, residence_locations):
     )
 
 
-def id_remapper(people, locations, visits, num_tasks=1, num_partitions=32):
-    groups = [("people", "pid", ["visits"]), ("locations", "lid", ["visits", "people"])]
-    data = {"people": people, "locations": locations, "visits": visits}
-
-    # Remap location ids.
-    for to_remap_name, key, external_references in groups:
-        to_remap = data[to_remap_name]
-
-        print(f"{to_remap_name} before remap:")
-        print(to_remap)
-
-        # Remaps the dataframes existing index to a new dense index.
-        to_remap["new_id"] = to_remap.index
-        remapper = to_remap[[key, "new_id"]].copy()
-        to_remap[key] = to_remap["new_id"]
-        to_remap.drop(["new_id"], axis=1, inplace=True)
-
-        print(f"{to_remap_name} after remap:")
-        print(to_remap)
-
-        # Save changes t
-        data[to_remap_name] = to_remap
-
-        # Replaced foreign key references.
-        # for df in foreign_dfs:
-        # Replace all references of the old keys with the new ones
-        for ref_name in external_references:
-            ref = data[ref_name]
-            # ref = ref.merge(remapper, how='left', left_on=key, right_on=key)
-            ref = partitioned_merge(
-                ref,
-                remapper,
-                key,
-                num_partitions=num_partitions,
-                num_tasks=num_tasks,
-                args={"how": "left"},
-            )
-            ref[key] = ref["new_id"]
-            ref.drop(["new_id"], axis=1, inplace=True)
-            data[ref_name] = ref
-
-    return data["people"], data["locations"], data["visits"]
-
-
 if __name__ == "__main__":
     args = parse_args()
 
@@ -186,10 +142,10 @@ if __name__ == "__main__":
     # Combines activity and residence locations.
     combined = combine_residences_and_activities(activity_locations, residences)
     # Make sure people ids are contiguous
-    people.reset_index().drop("index", axis=1)
+    people.reset_index(drop=True, inplace=True)
 
     # Remap all ids
-    people, combined, visits = id_remapper(
+    people, combined, visits = remap(
         people, combined, visits, num_tasks=num_tasks, num_partitions=num_partitions
     )
 
