@@ -102,8 +102,8 @@ def remap(people, locations, visits, num_tasks=1, num_partitions=32):
     for to_remap_name, key, external_references in groups:
         to_remap = data[to_remap_name]
 
-        print(f"{to_remap_name} before remap:")
-        #print(to_remap)
+        # print(f"{to_remap_name} before remap:")
+        # print(to_remap)
 
         # Remaps the dataframes existing index to a new dense index.
         to_remap["new_id"] = to_remap.index
@@ -111,8 +111,8 @@ def remap(people, locations, visits, num_tasks=1, num_partitions=32):
         to_remap[key] = to_remap["new_id"]
         to_remap.drop(["new_id"], axis=1, inplace=True)
 
-        print(f"{to_remap_name} after remap:")
-        print(to_remap)
+        # print(f"{to_remap_name} after remap:")
+        # print(to_remap)
 
         # Save changes t
         data[to_remap_name] = to_remap

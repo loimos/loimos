@@ -119,5 +119,21 @@ def main():
     locations.to_csv(locations_out_file, index=False)
     visits.to_csv(visits_out_file, index=False)
 
+    print(f"Sampled sub-population saved under {out_dir}")
+
+    # Add an example run line in a batch script to the output dir
+    # so that we can start running this right away
+    with open(os.path.join(out_dir, "run.sh"), "w") as run_file: 
+        num_people = people.shape[0]
+        num_locations = locations.shape[0]
+        real_out_path = os.path.realpath(out_dir)
+        run_line = f"./charmrun +p4 ./loimos 0 {num_people} {num_locations} " \
+            + f"1 1 7 7 sampled.out ../data/disease_models/covid19.textproto " \
+            + f"{real_out_path}\n"
+        run_file.write(run_line)
+        print("Try running Loimos on this dataset from loimos/src with:")
+        print(f"  {run_line}")
+        
+
 if __name__ == '__main__':
     main()
