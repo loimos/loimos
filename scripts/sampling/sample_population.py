@@ -2,7 +2,17 @@
 
 import argparse
 import os
+import sys
+import glob
+import shutil
+
 import pandas as pd
+
+# Python modules need to either be in/below this dir or in the path
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.append(parentdir)
+from utils import ids  # noqa
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -12,26 +22,24 @@ def parse_args():
 
     # Positional/required arguments:
     parser.add_argument(
-        "population_dir",
-        metavar="P",
-        help="The path to directory containing data files for a population",
+        "in_dir",
+        metavar="I",
+        help="A path to a directory containing data on the population to sample from",
+    )
+    parser.add_argument(
+        "out_dir",
+        metavar="O",
+        help="The name of the directory where the sampled popualtion should be saved",
     )
 
     # Named/optional arguments:
     parser.add_argument(
-        "-l",
-        "--locations",
+        "-s",
+        "--to-sample",
         nargs="+",
+        type=int,
         default=None,
         help="A list of location ids to sample"
-    )
-    parser.add_argument(
-        "-lp",
-        "--locations-file",
-        nargs="+",
-        default="locations.csv",
-        help="The name of the file containing location data within the "
-        + "population dir"
     )
     parser.add_argument(
         "-pp",
@@ -39,6 +47,14 @@ def parse_args():
         nargs="+",
         default="people.csv",
         help="The name of the file containing person data within the "
+        + "population dir"
+    )
+    parser.add_argument(
+        "-lp",
+        "--locations-file",
+        nargs="+",
+        default="locations.csv",
+        help="The name of the file containing location data within the "
         + "population dir"
     )
     parser.add_argument(
@@ -52,22 +68,49 @@ def parse_args():
 
     return parser.parse_args()
 
+def sample_population(people, locations, visits, lids_to_sample):
+    locations = locations.iloc[lids_to_sample]
+    visits = visits[visits["lid"].isin(lids_to_sample)]
+    pids_to_sample = visits["pid"].unique()
+    people = people.iloc[pids_to_sample]
+    return people, locations, visits
+
 def main():
     args = parse_args()
 
-    in_dir = args.population_dir
-    locations_file = os.path.join(in_dir, args.locations_file)
-    people_file = os.path.join(in_dir, args.people_file)
-    visits_file = os.path.join(in_dir, args.visits_file)
+    in_dir = args.in_dir
+    out_dir = args.out_dir
 
-    locations = pd.read_csv(locations_file)
-    people = pd.read_csv(people_file)
-    visits = pd.read_csv(visits_file)
+    people_in_file = os.path.join(in_dir, args.people_file)
+    locations_in_file = os.path.join(in_dir, args.locations_file)
+    visits_in_file = os.path.join(in_dir, args.visits_file)
 
-    if args.locations is None:
+    people = pd.read_csv(people_in_file)
+    locations = pd.read_csv(locations_in_file)
+    visits = pd.read_csv(visits_in_file)
+
+    lids_to_sample = args.to_sample
+    if lids_to_sample is None:
         busiest_lid = locations["max_simultaneous_visits"].argmax()
-        print(locations.iloc[busiest_lid])
+        #print(locations.iloc[busiest_lid])
+        lids_to_sample = [int(busiest_lid)]
+        #print(lids_to_sample)
 
+    people, locations, visits = sample_population(people, locations, visits, lids_to_sample)
+    people, locations, visits = ids.remap(people, locations, visits)
+
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    for f in glob.glob(os.path.join(in_dir, "*.textproto")):
+        shutil.copy(f, out_dir)
+
+    people_out_file = os.path.join(out_dir, args.people_file)
+    locations_out_file = os.path.join(out_dir, args.locations_file)
+    visits_out_file = os.path.join(out_dir, args.visits_file)
+
+    people.to_csv(people_out_file, index=False)
+    locations.to_csv(locations_out_file, index=False)
+    visits.to_csv(visits_out_file, index=False)
 
 if __name__ == '__main__':
     main()
