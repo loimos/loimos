@@ -72,6 +72,13 @@ def check_mask(interactions, mask, items="interactions",
         print(f"All {items} {checked_for} "
               + f"({mask.sum()}/{interactions.shape[0]})")
 
+def check_for_duplicates(interactions):
+    duplicate_mask = ~interactions.duplicated()
+
+    check_mask(interactions, duplicate_mask, checked_for="unique")
+
+    return duplicate_mask
+
 def check_overlaps(interactions):
     overlap_mask = (
         (interactions['dep_start'] <= interactions['arr_start'])
@@ -94,10 +101,10 @@ def check_against_visits(interactions, visits):
         interactions, visits, how="left",
         left_on=["lid", "dep_pid", "dep_start", "dep_end"],
         right_on=["lid", "pid", "start_time", "end_time"])
-    
+
     arrival_matched_mask = ~arrivals["duration"].isna()
     departure_matched_mask = ~departures["duration"].isna()
-    
+
     check_mask(interactions, arrival_matched_mask, items="arrivals",
                checked_for="found in visits file")
     check_mask(interactions, departure_matched_mask, items="departures",
@@ -116,6 +123,7 @@ def main():
     visits = pd.read_csv(visits_in_file)
     interactions = pd.read_csv(interactions_in_file)
 
+    check_for_duplicates(interactions)
     check_overlaps(interactions)
     check_against_visits(interactions, visits)
 
