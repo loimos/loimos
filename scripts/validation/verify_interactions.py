@@ -27,18 +27,18 @@ def parse_args():
         metavar="P",
         help="A path to a directory containing data on the population to sample from",
     )
-    parser.add_argument(
-        "log_file",
-        metavar="L",
-        help="A path to a file containing Loimos output (with interactions) "
-        + "to verify",
-    )
 
     # Named/optional arguments:
     parser.add_argument(
+        "-ip",
+        "--interactions-file",
+        default="interactions.csv",
+        help="The name of the file containing Loimos output (with interactions) "
+        + "to verify in the population dir",
+    )
+    parser.add_argument(
         "-pp",
         "--people-file",
-        nargs="+",
         default="people.csv",
         help="The name of the file containing person data within the "
         + "population dir",
@@ -46,7 +46,6 @@ def parse_args():
     parser.add_argument(
         "-lp",
         "--locations-file",
-        nargs="+",
         default="locations.csv",
         help="The name of the file containing location data within the "
         + "population dir",
@@ -110,19 +109,14 @@ def main():
     args = parse_args()
 
     pop_dir = args.pop_dir
-    log_file = args.log_file
 
-    #people_in_file = os.path.join(pop_dir, args.people_file)
-    #locations_in_file = os.path.join(pop_dir, args.locations_file)
     visits_in_file = os.path.join(pop_dir, args.visits_file)
+    interactions_in_file = os.path.join(pop_dir, args.interactions_file)
 
-    #people = pd.read_csv(people_in_file)
-    #locations = pd.read_csv(locations_in_file)
     visits = pd.read_csv(visits_in_file)
-    interactions = pd.read_csv(log_file)
+    interactions = pd.read_csv(interactions_in_file)
 
     check_overlaps(interactions)
-    
     check_against_visits(interactions, visits)
 
 if __name__ == "__main__":
