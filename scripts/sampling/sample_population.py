@@ -162,7 +162,7 @@ def main():
         real_out_path = os.path.realpath(out_dir)
         run_line = (
             f"./charmrun +p4 ./loimos 0 {num_people} {num_locations} "
-            + f"1 1 7 7 sampled.out ../data/disease_models/covid19.textproto "
+            + "1 1 7 7 sampled.out ../data/disease_models/covid19.textproto "
             + f"{real_out_path}\n"
         )
         run_file.write(run_line)

@@ -3,8 +3,6 @@
 import argparse
 import os
 import sys
-import glob
-import shutil
 
 import pandas as pd
 
@@ -91,7 +89,7 @@ def check_for_duplicates(interactions):
         print(flipped_overlaps)
     else:
         print(
-            f"All interactions unique (flipped) "
+            "All interactions unique (flipped) "
             + f"({interactions.shape[0]}/{interactions.shape[0]})"
         )
 
