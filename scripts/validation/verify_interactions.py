@@ -61,56 +61,91 @@ def parse_args():
 
     return parser.parse_args()
 
-def check_mask(interactions, mask, items="interactions",
-               checked_for=""):
+
+def check_mask(interactions, mask, items="interactions", checked_for=""):
     if not mask.all():
         mask = ~mask
-        print(f"{mask.sum()}/{interactions.shape[0]} {items} "
-              + f"weren't {checked_for}:")
+        print(
+            f"{mask.sum()}/{interactions.shape[0]} {items} " + f"weren't {checked_for}:"
+        )
         print(interactions[mask])
     else:
-        print(f"All {items} {checked_for} "
-              + f"({mask.sum()}/{interactions.shape[0]})")
+        print(f"All {items} {checked_for} " + f"({mask.sum()}/{interactions.shape[0]})")
+
 
 def check_for_duplicates(interactions):
     duplicate_mask = ~interactions.duplicated()
+    check_mask(interactions, duplicate_mask, checked_for="unique (not flipped)")
 
-    check_mask(interactions, duplicate_mask, checked_for="unique")
+    swapped = interactions.copy()
+    swapped[
+        ["arr_pid", "arr_start", "arr_end", "dep_pid", "dep_start", "dep_end"]
+    ] = swapped[["dep_pid", "dep_start", "dep_end", "arr_pid", "arr_start", "arr_end"]]
+    flipped_overlaps = pd.merge(interactions, swapped)
+
+    if flipped_overlaps.shape[0] > 0:
+        print(
+            f"{flipped_overlaps.shape[0]}/{interactions.shape[0]} "
+            + "weren't unique (flipped):"
+        )
+        print(flipped_overlaps)
+    else:
+        print(
+            f"All interactions unique (flipped) "
+            + f"({interactions.shape[0]}/{interactions.shape[0]})"
+        )
 
     return duplicate_mask
 
+
 def check_overlaps(interactions):
     overlap_mask = (
-        (interactions['dep_start'] <= interactions['arr_start'])
-        & (interactions['dep_end'] > interactions['arr_start'])
+        (interactions["dep_start"] <= interactions["arr_start"])
+        & (interactions["dep_end"] > interactions["arr_start"])
     ) | (
-        (interactions['arr_start'] <= interactions['dep_start'])
-        & (interactions['arr_end'] > interactions['dep_start'])
+        (interactions["arr_start"] <= interactions["dep_start"])
+        & (interactions["arr_end"] > interactions["dep_start"])
     )
 
     check_mask(interactions, overlap_mask, checked_for="overlapped")
 
     return overlap_mask
 
+
 def check_against_visits(interactions, visits):
     arrivals = pd.merge(
-        interactions, visits, how="left",
+        interactions,
+        visits,
+        how="left",
         left_on=["lid", "arr_pid", "arr_start", "arr_end"],
-        right_on=["lid", "pid", "start_time", "end_time"])
+        right_on=["lid", "pid", "start_time", "end_time"],
+    )
     departures = pd.merge(
-        interactions, visits, how="left",
+        interactions,
+        visits,
+        how="left",
         left_on=["lid", "dep_pid", "dep_start", "dep_end"],
-        right_on=["lid", "pid", "start_time", "end_time"])
+        right_on=["lid", "pid", "start_time", "end_time"],
+    )
 
     arrival_matched_mask = ~arrivals["duration"].isna()
     departure_matched_mask = ~departures["duration"].isna()
 
-    check_mask(interactions, arrival_matched_mask, items="arrivals",
-               checked_for="found in visits file")
-    check_mask(interactions, departure_matched_mask, items="departures",
-               checked_for="found in visits file")
+    check_mask(
+        interactions,
+        arrival_matched_mask,
+        items="arrivals",
+        checked_for="found in visits file",
+    )
+    check_mask(
+        interactions,
+        departure_matched_mask,
+        items="departures",
+        checked_for="found in visits file",
+    )
 
     return arrival_matched_mask, departure_matched_mask
+
 
 def main():
     args = parse_args()
@@ -126,6 +161,7 @@ def main():
     check_for_duplicates(interactions)
     check_overlaps(interactions)
     check_against_visits(interactions, visits)
+
 
 if __name__ == "__main__":
     main()
