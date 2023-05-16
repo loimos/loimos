@@ -36,11 +36,18 @@ def parse_args():
     # Named/optional arguments:
     parser.add_argument(
         "-s",
-        "--to-sample",
+        "--sample-ids",
         nargs="+",
         type=int,
         default=None,
         help="A list of location ids to sample",
+    )
+    parser.add_argument(
+        "-n",
+        "--sample-size",
+        type=int,
+        default=1,
+        help="The size of the sample to draw. Ignored when --sample-ids is " + "pased",
     )
     parser.add_argument(
         "-pp",
@@ -65,6 +72,15 @@ def parse_args():
         default="visits.csv",
         help="The name of the file containing visit data within the "
         + "population dir",
+    )
+    parser.add_argument(
+        "-r",
+        "--random",
+        action="store_true",
+        default=None,
+        help="When passed, the locations are sampled uniformly at random "
+        + "from the population instead of being chosen deterministiclly, "
+        + "as is usual. Ignored when --sample-ids is passed.",
     )
 
     return parser.parse_args()
@@ -92,12 +108,23 @@ def main():
     locations = pd.read_csv(locations_in_file)
     visits = pd.read_csv(visits_in_file)
 
-    lids_to_sample = args.to_sample
+    lids_to_sample = args.sample_ids
     if lids_to_sample is None:
-        busiest_lid = locations["max_simultaneous_visits"].argmax()
-        # print(locations.iloc[busiest_lid])
-        lids_to_sample = [int(busiest_lid)]
-        # print(lids_to_sample)
+        sample_size = args.sample_size
+
+        if args.random:
+            sample = locations.sample(n=sample_size)
+            lids_to_sample = sample["lid"]
+        # The largest locations will probably be the most interesting, so we
+        # sample them by default
+        else:
+            locations.sort_values(
+                "max_simultaneous_visits", inplace=True, ascending=False
+            )
+            lids_to_sample = locations.iloc[:sample_size]["lid"]
+
+    print("Sampling the following locations:")
+    print(lids_to_sample)
 
     people, locations, visits = sample_population(
         people, locations, visits, lids_to_sample
