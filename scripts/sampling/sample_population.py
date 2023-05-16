@@ -115,13 +115,12 @@ def main():
         if args.random:
             sample = locations.sample(n=sample_size)
             lids_to_sample = sample["lid"]
+
         # The largest locations will probably be the most interesting, so we
         # sample them by default
         else:
-            locations.sort_values(
-                "max_simultaneous_visits", inplace=True, ascending=False
-            )
-            lids_to_sample = locations.iloc[:sample_size]["lid"]
+            tmp = locations.sort_values("max_simultaneous_visits", ascending=False)
+            lids_to_sample = tmp.iloc[:sample_size]["lid"]
 
     print("Sampling the following locations:")
     print(lids_to_sample)
@@ -129,11 +128,14 @@ def main():
     people, locations, visits = sample_population(
         people, locations, visits, lids_to_sample
     )
+    print(locations)
+    print(visits)
     # Remap uses the indices to set pids and lids, so we need to make
     # sure they're contiguous
     people.reset_index(drop=True, inplace=True)
     locations.reset_index(drop=True, inplace=True)
     people, locations, visits = ids.remap(people, locations, visits)
+    print(visits)
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
