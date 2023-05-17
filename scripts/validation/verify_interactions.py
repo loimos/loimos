@@ -79,14 +79,14 @@ def check_for_duplicates(interactions):
     swapped[
         ["arr_pid", "arr_start", "arr_end", "dep_pid", "dep_start", "dep_end"]
     ] = swapped[["dep_pid", "dep_start", "dep_end", "arr_pid", "arr_start", "arr_end"]]
-    flipped_overlaps = pd.merge(interactions, swapped)
+    flipped_duplicates = pd.merge(interactions, swapped)
 
-    if flipped_overlaps.shape[0] > 0:
+    if flipped_duplicates.shape[0] > 0:
         print(
-            f"{flipped_overlaps.shape[0]}/{interactions.shape[0]} "
+            f"{flipped_duplicates.shape[0]}/{interactions.shape[0]} "
             + "weren't unique (flipped):"
         )
-        print(flipped_overlaps)
+        print(flipped_duplicates)
     else:
         print(
             "All interactions unique (flipped) "
