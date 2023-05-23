@@ -147,6 +147,42 @@ def write_csv(out_dir, filename, df):
     print(f"Saving results to {path}")
     df.to_csv(path, index=False)
 
+def make_contiguous(df, id_col="lid", offset=0, name="df"):
+    # Check if its already contiguous
+    if (1 == df[id_col].diff()).all():
+        print(f"  {name} are already contiguous; subtracting offset")
+
+        offset -= df[id_col].iloc[0]
+        df[id_col] += offset
+
+        return offset
+
+    else:
+        print(f"  {name} are not already contiguous; using index")
+
+        index_col = f"new_{id_col}"
+        update_record = pd.DataFrame({index_col: df.index, id_col: df[id_col]})
+        df[id_col] = df.index + offset
+
+        return update_record
+
+def update_ids(df, update, id_col="lid", name="df"):
+    # If update is offset
+    if isinstance(update, int):
+        print(f"  Updating {name} using offset")
+        df[id_col] += update
+        return df
+
+    # for arbitary updates (should be DF with two columns: new_col and id_col
+    elif isinstance(update, pd.DataFrame):
+        print(f"  Updating {name} using arbitary mapping")
+        new_col = update.columns[0]
+        new_df = pd.merge(df, update)
+        new_df.drop(columns=id_col, inplace=True)
+        new_df.rename(columns={new_col: id_col}, inplace=True)
+
+        return new_df
+
 def merge_locations(args):
     in_dir = args.in_dir
 
@@ -158,11 +194,10 @@ def merge_locations(args):
     activity_locs.rename(columns={"alid": "lid"}, inplace=True)
     home_locs.rename(columns={"rlid": "lid"}, inplace=True)
 
-    activity_offset = activity_locs["lid"].min()
-    activity_locs["lid"] -= activity_offset
-
-    home_offset = home_locs["lid"].min() - activity_locs["lid"].max() + 1
-    home_locs["lid"] -= activity_offset
+    activity_update = make_contiguous(activity_locs, name="activity locations")
+    home_update = make_contiguous(home_locs,
+                                  offset=activity_locs["lid"].iloc[-1] + 1,
+                                  name="home locations")
 
     # Make sure all columns are shared.
     for col, def_val in DEFAULT_VALUES.items():
@@ -173,18 +208,17 @@ def merge_locations(args):
     locations = pd.concat([activity_locs, home_locs], ignore_index=True)
     write_csv(args.out_dir, args.locations_out_file, locations)
 
-    return activity_offset, home_offset
+    return activity_update, home_update
 
 def fix_people(args):
     people = read_csv(args.in_dir, args.people_in_file, args.region,
                       should_flatten=args.flat)
-    people_offset = people["pid"].min()
-    people["pid"] -= people_offset
+    people_update = make_contiguous(people, id_col="pid", name="people")
     write_csv(args.out_dir, args.people_out_file, people)
 
-    return people_offset
+    return people_update
 
-def merge_visits(args, activity_offset, home_offset, people_offset):
+def merge_visits(args, activity_update, home_update, people_update):
     in_dir = args.in_dir
 
     adult_activity_visits = read_csv(
@@ -201,22 +235,21 @@ def merge_visits(args, activity_offset, home_offset, people_offset):
                            args.region,
                            should_flatten=args.flat)
 
-    adult_activity_visits["lid"] -= activity_offset
-    child_activity_visits["lid"] -= activity_offset
-
     visits = pd.concat(
             [adult_activity_visits, child_activity_visits],
             ignore_index=True)
-    visits["pid"] -= people_offset
+    visits = update_ids(visits, activity_update, name="visit lids")
+    visits = update_ids(visits, people_update, id_col="pid", name="visit pids")
+    visits.sort_values(["pid", "start_time"], inplace=True)
 
     write_csv(args.out_dir, args.visits_out_file, visits)
 
 def main():
     args = parse_args()
 
-    activity_offset, home_offset = merge_locations(args)
-    people_offset = fix_people(args)
-    merge_visits(args, activity_offset, home_offset, people_offset)
+    activity_update, home_update = merge_locations(args)
+    people_update = fix_people(args)
+    merge_visits(args, activity_update, home_update, people_update)
 
 if __name__ == "__main__":
     main()
