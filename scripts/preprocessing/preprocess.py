@@ -2,9 +2,6 @@
 
 import argparse
 import os
-import sys
-import glob
-import shutil
 
 import pandas as pd
 
@@ -66,8 +63,9 @@ def parse_args():
     parser.add_argument(
         "-rai",
         "--residences-assignments-in-file",
-        default=os.path.join("home_location_assignment",
-                             "{region}_household_residence_assignment.csv"),
+        default=os.path.join(
+            "home_location_assignment", "{region}_household_residence_assignment.csv"
+        ),
         help="The name of the file asigning households to home locations "
         + "within the population dir",
     )
@@ -75,8 +73,10 @@ def parse_args():
         "-aai",
         "--activity-loc-adult-assignments-in-file",
         default=os.path.join(
-            "location_assignment", "weekly",
-            "{region}_adult_activity_location_assignment_week.csv"),
+            "location_assignment",
+            "weekly",
+            "{region}_adult_activity_location_assignment_week.csv",
+        ),
         help="The name of the file containing adult visit data within the "
         + "population dir",
     )
@@ -84,8 +84,10 @@ def parse_args():
         "-aci",
         "--activity-loc-child-assignments-in-file",
         default=os.path.join(
-            "location_assignment", "weekly",
-            "{region}_child_activity_location_assignment_week.csv"),
+            "location_assignment",
+            "weekly",
+            "{region}_child_activity_location_assignment_week.csv",
+        ),
         help="The name of the file containing adult visit data within the "
         + "population dir",
     )
@@ -114,10 +116,11 @@ def parse_args():
         "-f",
         "--flat",
         action="store_true",
-        help="Pass this flag if the script should expect a flat input directory"
+        help="Pass this flag if the script should expect a flat input directory",
     )
 
     return parser.parse_args()
+
 
 def read_csv(in_dir, filename, region, should_flatten=False):
     if should_flatten:
@@ -127,10 +130,12 @@ def read_csv(in_dir, filename, region, should_flatten=False):
     print(f"Reading {path}")
     return pd.read_csv(path)
 
+
 def write_csv(out_dir, filename, df):
     path = os.path.join(out_dir, filename)
     print(f"Saving results to {path}")
     df.to_csv(path, index=False)
+
 
 def make_contiguous(df, id_col="lid", offset=0, name="df"):
     # Check if its already contiguous
@@ -151,6 +156,7 @@ def make_contiguous(df, id_col="lid", offset=0, name="df"):
 
         return update_record
 
+
 def update_ids(df, update, id_col="lid", name="df"):
     # If update is offset
     if isinstance(update, int):
@@ -168,21 +174,24 @@ def update_ids(df, update, id_col="lid", name="df"):
 
         return new_df
 
+
 def merge_locations(args):
     in_dir = args.in_dir
 
-    activity_locs = read_csv(in_dir, args.activity_locs_in_file, args.region,
-                             should_flatten=args.flat)
-    home_locs = read_csv(in_dir, args.residences_in_file, args.region,
-                         should_flatten=args.flat)
+    activity_locs = read_csv(
+        in_dir, args.activity_locs_in_file, args.region, should_flatten=args.flat
+    )
+    home_locs = read_csv(
+        in_dir, args.residences_in_file, args.region, should_flatten=args.flat
+    )
 
     activity_locs.rename(columns={"alid": "lid"}, inplace=True)
     home_locs.rename(columns={"rlid": "lid"}, inplace=True)
 
     activity_update = make_contiguous(activity_locs, name="activity locations")
-    home_update = make_contiguous(home_locs,
-                                  offset=activity_locs["lid"].iloc[-1] + 1,
-                                  name="home locations")
+    home_update = make_contiguous(
+        home_locs, offset=activity_locs["lid"].iloc[-1] + 1, name="home locations"
+    )
 
     # Make sure all columns are shared.
     for col, def_val in DEFAULT_VALUES.items():
@@ -195,39 +204,42 @@ def merge_locations(args):
 
     return activity_update, home_update
 
+
 def fix_people(args):
-    people = read_csv(args.in_dir, args.people_in_file, args.region,
-                      should_flatten=args.flat)
+    people = read_csv(
+        args.in_dir, args.people_in_file, args.region, should_flatten=args.flat
+    )
     people_update = make_contiguous(people, id_col="pid", name="people")
     write_csv(args.out_dir, args.people_out_file, people)
 
     return people_update
 
+
 def merge_visits(args, activity_update, home_update, people_update):
     in_dir = args.in_dir
 
     adult_activity_visits = read_csv(
-            in_dir,
-            args.activity_loc_adult_assignments_in_file,
-            args.region,
-            should_flatten=args.flat)
+        in_dir,
+        args.activity_loc_adult_assignments_in_file,
+        args.region,
+        should_flatten=args.flat,
+    )
     child_activity_visits = read_csv(
-            in_dir,
-            args.activity_loc_child_assignments_in_file,
-            args.region,
-            should_flatten=args.flat)
-    home_visits = read_csv(in_dir, args.residences_assignments_in_file,
-                           args.region,
-                           should_flatten=args.flat)
+        in_dir,
+        args.activity_loc_child_assignments_in_file,
+        args.region,
+        should_flatten=args.flat,
+    )
 
     visits = pd.concat(
-            [adult_activity_visits, child_activity_visits],
-            ignore_index=True)
+        [adult_activity_visits, child_activity_visits], ignore_index=True
+    )
     visits = update_ids(visits, activity_update, name="visit lids")
     visits = update_ids(visits, people_update, id_col="pid", name="visit pids")
     visits.sort_values(["pid", "start_time"], inplace=True)
 
     write_csv(args.out_dir, args.visits_out_file, visits)
+
 
 def main():
     args = parse_args()
@@ -235,6 +247,7 @@ def main():
     activity_update, home_update = merge_locations(args)
     people_update = fix_people(args)
     merge_visits(args, activity_update, home_update, people_update)
+
 
 if __name__ == "__main__":
     main()

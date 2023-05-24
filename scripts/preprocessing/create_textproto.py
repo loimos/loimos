@@ -2,9 +2,6 @@
 
 import argparse
 import os
-import sys
-import glob
-import shutil
 
 import pandas as pd
 
@@ -29,6 +26,7 @@ TEXTPROTO_ENTRY = """fields {{
     {dtype}: {{}}
 }}
 """
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -68,6 +66,7 @@ def parse_args():
 
     return parser.parse_args()
 
+
 def create_textproto(pop_dir, csv_filename, dtypes):
     csv_path = os.path.join(pop_dir, csv_filename)
     tmp, _ = os.path.splitext(csv_path)
@@ -79,12 +78,14 @@ def create_textproto(pop_dir, csv_filename, dtypes):
             dtype = dtypes.get(c, DEFAULT_TYPE)
             f.write(TEXTPROTO_ENTRY.format(name=c, dtype=dtype))
 
+
 def main():
     args = parse_args()
 
     create_textproto(args.pop_dir, args.people_file, PEOPLE_TYPES)
     create_textproto(args.pop_dir, args.locations_file, LOCATIONS_TYPES)
     create_textproto(args.pop_dir, args.visits_file, VISITS_TYPES)
+
 
 if __name__ == "__main__":
     main()
