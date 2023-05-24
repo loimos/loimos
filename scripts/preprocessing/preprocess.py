@@ -8,12 +8,6 @@ import shutil
 
 import pandas as pd
 
-# Python modules need to either be in/below this dir or in the path
-currentdir = os.path.dirname(os.path.realpath(__file__))
-parentdir = os.path.dirname(currentdir)
-sys.path.append(parentdir)
-from utils import ids  # noqa
-
 DEFAULT_VALUES = {
     "work": 0,
     "school": 0,
@@ -51,7 +45,6 @@ def parse_args():
     parser.add_argument(
         "-pi",
         "--people-in-file",
-        nargs="+",
         default=os.path.join("base_population", "{region}_person.csv"),
         help="The name of the file containing person data within the "
         + "population dir",
@@ -59,7 +52,6 @@ def parse_args():
     parser.add_argument(
         "-ri",
         "--residences-in-file",
-        nargs="+",
         default=os.path.join("locations", "{region}_residence_locations.csv"),
         help="The name of the file containing home location data within the "
         + "population dir",
@@ -67,7 +59,6 @@ def parse_args():
     parser.add_argument(
         "-ai",
         "--activity-locs-in-file",
-        nargs="+",
         default=os.path.join("locations", "{region}_activity_locations.csv"),
         help="The name of the file containing home location data within the "
         + "population dir",
@@ -75,7 +66,6 @@ def parse_args():
     parser.add_argument(
         "-rai",
         "--residences-assignments-in-file",
-        nargs="+",
         default=os.path.join("home_location_assignment",
                              "{region}_household_residence_assignment.csv"),
         help="The name of the file asigning households to home locations "
@@ -84,7 +74,6 @@ def parse_args():
     parser.add_argument(
         "-aai",
         "--activity-loc-adult-assignments-in-file",
-        nargs="+",
         default=os.path.join(
             "location_assignment", "weekly",
             "{region}_adult_activity_location_assignment_week.csv"),
@@ -94,7 +83,6 @@ def parse_args():
     parser.add_argument(
         "-aci",
         "--activity-loc-child-assignments-in-file",
-        nargs="+",
         default=os.path.join(
             "location_assignment", "weekly",
             "{region}_child_activity_location_assignment_week.csv"),
@@ -104,7 +92,6 @@ def parse_args():
     parser.add_argument(
         "-po",
         "--people-out-file",
-        nargs="+",
         default="people.csv",
         help="The name of the file containing person data within the "
         + "population dir",
@@ -112,7 +99,6 @@ def parse_args():
     parser.add_argument(
         "-lo",
         "--locations-out-file",
-        nargs="+",
         default="locations.csv",
         help="The name of the file containing location data within the "
         + "population dir",
@@ -120,7 +106,6 @@ def parse_args():
     parser.add_argument(
         "-vo",
         "--visits-out-file",
-        nargs="+",
         default="visits.csv",
         help="The name of the file containing visit data within the "
         + "population dir",
