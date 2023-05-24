@@ -29,7 +29,7 @@ def find_max_simultaneous_visits(lid, visits):
     end_times = []
     if lid % 1000000 == 0:
         print("location {} has {} visits".format(lid, len(visits)))
-        print(visits.memory_usage())
+        #print(visits.memory_usage())
     for _, row in visits.iterrows():
         # Filter out end_times not in range.
         start_time = row["start_time"]
@@ -120,7 +120,7 @@ if __name__ == "__main__":
         .count()
         .rename({"start_time": "total_visits"}, axis=1)
     )
-    print(max_visits)
+    #print(max_visits)
     end_time = time.perf_counter()
     print("Calculating total visits:", end_time - start_time)
 
@@ -155,7 +155,7 @@ if __name__ == "__main__":
     # Calculate the maximum simulatenous visits using as many processes
     # as possible
     start_time = time.perf_counter()
-    print(visits.memory_usage())
+    #print(visits.memory_usage())
     # max_visits = pd.DataFrame(max_visits)
     if args.n_tasks > 1:
         # The default way of starting new processes - fork - duplicates the
@@ -177,8 +177,8 @@ if __name__ == "__main__":
     end_time = time.perf_counter()
     print("Calculating maximum simultaneous visits:", end_time - start_time)
 
-    print(max_visits.columns)
-    print(max_visits.index)
+    #print(max_visits.columns)
+    #print(max_visits.index)
 
     # We need the max visit data to be a location attribute, so combine it
     # with the location data
@@ -189,26 +189,28 @@ if __name__ == "__main__":
     overlap = set(np.intersect1d(locations.columns, max_visits.columns))
     locations.drop(axis="columns", labels=overlap - {LID_COL}, inplace=True)
     output_df = locations.merge(max_visits, how="left", on=LID_COL)
-    print(output_df)
-    print(output_df.columns)
+    #print(output_df)
+    #print(output_df.columns)
 
     # Zero out the heuristic values for any location with no visits
     output_df.fillna(0, inplace=True)
 
     # Fix types of heuristic coluns so that we can read in integer attributes
     # properly in loimos
-    output_dtypes = {}
+    output_dtypes = {
+        "max_simultaneous_visits": int,
+        "total_visits": int,
+    }
     if "daynum" in visits:
         output_dtypes.update(
             {
                 "median_daily_total": int,
                 "max_daily_total": int,
-                "max_simultaneous_visits": int,
             }
         )
+    output_dtypes.update({c: int for c in output_df.columns if "pub" in c})
     output_dtypes.update({c: int for c in renaming})
     output_df = output_df.astype(output_dtypes)
-    print(output_df.dtypes)
 
     # Output with index column which is the lids.
     output_df.to_csv(output_file, index=False)
