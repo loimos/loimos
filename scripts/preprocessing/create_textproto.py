@@ -73,7 +73,7 @@ def create_textproto(pop_dir, csv_filename, dtypes):
     tmp, _ = os.path.splitext(csv_path)
     textproto_path = tmp + ".textproto"
 
-    df = pd.read_csv(csv_path)
+    df = pd.read_csv(csv_path, nrows=1)
     with open(textproto_path, "w") as f:
         for c in df.columns:
             dtype = dtypes.get(c, DEFAULT_TYPE)
