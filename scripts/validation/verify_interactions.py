@@ -3,6 +3,8 @@
 import argparse
 import os
 import sys
+import glob
+import functools
 
 import pandas as pd
 
@@ -29,10 +31,11 @@ def parse_args():
     # Named/optional arguments:
     parser.add_argument(
         "-ip",
-        "--interactions-file",
-        default="interactions.csv",
-        help="The name of the file containing Loimos output (with interactions) "
-        + "to verify in the population dir",
+        "--interactions-files",
+        default=["interactions_chare_*.csv"],
+        nargs="+",
+        help="The names of the files containing Loimos output (with "
+        "interactions) to verify in the population dir",
     )
     parser.add_argument(
         "-pp",
@@ -58,6 +61,27 @@ def parse_args():
     )
 
     return parser.parse_args()
+
+
+INTERACTION_COLUMNS = ["lid", "dep_pid", "dep_start", "dep_end",
+        "arr_pid", "arr_start", "arr_end"]
+def read_interactions(pop_dir, in_files):
+    interactions_in_files = functools.reduce(
+            lambda l, f: l + glob.glob(os.path.join(pop_dir, f)),
+            in_files, [])
+
+    interactions = None
+    total_interactions = 0
+    for f in interactions_in_files:
+        if os.stat(f).st_size > 0:
+            df = pd.read_csv(f, names=INTERACTION_COLUMNS)
+            total_interactions += df.shape[0]
+            if interactions is None:
+                interactions = df
+            else:
+                interactions = pd.concat([interactions, df])
+
+    return interactions
 
 
 def check_mask(interactions, mask, items="interactions", checked_for=""):
@@ -151,10 +175,11 @@ def main():
     pop_dir = args.pop_dir
 
     visits_in_file = os.path.join(pop_dir, args.visits_file)
-    interactions_in_file = os.path.join(pop_dir, args.interactions_file)
-
     visits = pd.read_csv(visits_in_file)
-    interactions = pd.read_csv(interactions_in_file)
+    # End time is not a required variable for visits
+    visits["end_time"] = visits["start_time"] + visits["duration"]
+
+    interactions = read_interactions(pop_dir, args.interactions_files)
 
     check_for_duplicates(interactions)
     check_overlaps(interactions)
