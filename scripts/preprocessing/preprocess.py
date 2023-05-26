@@ -32,13 +32,16 @@ def parse_args():
         metavar="I",
         help="A path to a directory containing data on the population to sample from",
     )
-    parser.add_argument(
-        "out_dir",
-        metavar="O",
-        help="The name of the directory where the sampled popualtion should be saved",
-    )
 
     # Named/optional arguments:
+    parser.add_argument(
+        "-o", "--out-dir",
+        default=None,
+        help="The name of the directory where the sampled population "
+             + "should be saved. If this argument is not specified, "
+             + "the same path will be used for the input and output "
+             + "directories"
+    )
     parser.add_argument(
         "-pi",
         "--people-in-file",
@@ -119,8 +122,13 @@ def parse_args():
         help="Pass this flag if the script should expect a flat input directory",
     )
 
-    return parser.parse_args()
+    args = parser.parse_args()
 
+    # Assume out and in dirs are the same by default for convience
+    if args.out_dir is None:
+        args.out_dir = args.in_dir
+
+    return args
 
 def read_csv(in_dir, filename, region, should_flatten=False):
     if should_flatten:
@@ -151,7 +159,9 @@ def make_contiguous(df, id_col="lid", offset=0, name="df"):
         print(f"  {name} are not already contiguous; using index")
 
         index_col = f"new_{id_col}"
+        old_col = f"old_{id_col}"
         update_record = pd.DataFrame({index_col: df.index, id_col: df[id_col]})
+        df[old_col] = df[id_col]
         df[id_col] = df.index + offset
 
         return update_record
@@ -188,9 +198,11 @@ def merge_locations(args):
     activity_locs.rename(columns={"alid": "lid"}, inplace=True)
     home_locs.rename(columns={"rlid": "lid"}, inplace=True)
 
-    activity_update = make_contiguous(activity_locs, name="activity locations")
+    activity_update = make_contiguous(activity_locs,
+                                      name="activity locations")
     home_update = make_contiguous(
-        home_locs, offset=activity_locs["lid"].iloc[-1] + 1, name="home locations"
+        home_locs, offset=activity_locs["lid"].iloc[-1] + 1,
+        name="home locations"
     )
 
     # Make sure all columns are shared.
@@ -234,7 +246,12 @@ def merge_visits(args, activity_update, home_update, people_update):
     visits = pd.concat(
         [adult_activity_visits, child_activity_visits], ignore_index=True
     )
-    visits = update_ids(visits, activity_update, name="visit lids")
+
+    loc_update = activity_update
+    if isinstance(activity_update, pd.DataFrame):
+        loc_update = pd.concat([activity_update, home_update])
+
+    visits = update_ids(visits, loc_update, name="visit lids")
     visits = update_ids(visits, people_update, id_col="pid", name="visit pids")
     visits.sort_values(["pid", "start_time"], inplace=True)
 
