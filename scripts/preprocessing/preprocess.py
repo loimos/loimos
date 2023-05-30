@@ -130,6 +130,7 @@ def parse_args():
 
     return args
 
+
 def read_csv(in_dir, filename, region, should_flatten=False):
     if should_flatten:
         filename = os.path.basename(filename)
@@ -145,14 +146,19 @@ def write_csv(out_dir, filename, df):
     df.to_csv(path, index=False)
 
 
-def make_contiguous(df, id_col="lid", offset=0, name="df"):
+def is_contiguous(df, col="lid"):
+    return (1 == df[col].diff())[1:].all()
+
+
+def make_contiguous(df, id_col="lid", offset=0, name="df", suplimental_cols=list()):
     # Check if its already contiguous
-    if (1 == df[id_col].diff()).all():
+    if is_contiguous(df, col=id_col):
         print(f"  {name} are already contiguous; subtracting offset")
 
-        offset -= df[id_col].iloc[0]
+        offset -= int(df[id_col].iloc[0])
         df[id_col] += offset
 
+        assert(is_contiguous(df, col=id_col))
         return offset
 
     else:
@@ -160,14 +166,18 @@ def make_contiguous(df, id_col="lid", offset=0, name="df"):
 
         index_col = f"new_{id_col}"
         old_col = f"old_{id_col}"
-        update_record = pd.DataFrame({index_col: df.index, id_col: df[id_col]})
+        update_cols = {index_col: df.index + offset, id_col: df[id_col]}
+        update_cols.update({c: df[c] for c in suplimental_cols})
+        update_record = pd.DataFrame(update_cols)
+
         df[old_col] = df[id_col]
         df[id_col] = df.index + offset
 
+        assert(is_contiguous(df, col=id_col))
         return update_record
 
 
-def update_ids(df, update, id_col="lid", name="df"):
+def update_ids(df, update, id_col="lid", name="df", suplimental_cols=[]):
     # If update is offset
     if isinstance(update, int):
         print(f"  Updating {name} using offset")
@@ -176,15 +186,21 @@ def update_ids(df, update, id_col="lid", name="df"):
 
     # for arbitary updates (should be DF with two columns: new_col and id_col
     elif isinstance(update, pd.DataFrame):
+        num_rows = df.shape[0]
         print(f"  Updating {name} using arbitary mapping")
         new_col = update.columns[0]
-        new_df = pd.merge(df, update)
+        new_df = pd.merge(df, update, how="left",
+                          on=[id_col] + suplimental_cols)
+        assert(num_rows == new_df.shape[0])
+        #if num_rows != new_df.shape[0]:
+        #    print(f"Had {num_rows} before, but now have {new_df.shape[0]}")
         new_df.drop(columns=id_col, inplace=True)
         new_df.rename(columns={new_col: id_col}, inplace=True)
 
         return new_df
 
 
+LOC_SUPLIMENTAL_COLS = ["longitude", "latitude"]
 def merge_locations(args):
     in_dir = args.in_dir
 
@@ -199,10 +215,12 @@ def merge_locations(args):
     home_locs.rename(columns={"rlid": "lid"}, inplace=True)
 
     activity_update = make_contiguous(activity_locs,
-                                      name="activity locations")
+                                      name="activity locations",
+                                      suplimental_cols=LOC_SUPLIMENTAL_COLS)
     home_update = make_contiguous(
-        home_locs, offset=activity_locs["lid"].iloc[-1] + 1,
-        name="home locations"
+        home_locs, offset=activity_locs["lid"].max() + 1,
+        name="home locations",
+        suplimental_cols=LOC_SUPLIMENTAL_COLS
     )
 
     # Make sure all columns are shared.
@@ -246,12 +264,17 @@ def merge_visits(args, activity_update, home_update, people_update):
     visits = pd.concat(
         [adult_activity_visits, child_activity_visits], ignore_index=True
     )
+    print(f"loaded {visits.shape[0]} visits")
 
     loc_update = activity_update
     if isinstance(activity_update, pd.DataFrame):
-        loc_update = pd.concat([activity_update, home_update])
+        loc_update = pd.concat([activity_update, home_update],
+                ignore_index=True)
+        write_csv(args.out_dir, "activity_update.csv", activity_update)
+        write_csv(args.out_dir, "home_update.csv", home_update)
 
-    visits = update_ids(visits, loc_update, name="visit lids")
+    visits = update_ids(visits, loc_update, name="visit lids",
+                        suplimental_cols=LOC_SUPLIMENTAL_COLS)
     visits = update_ids(visits, people_update, id_col="pid", name="visit pids")
     visits.sort_values(["pid", "start_time"], inplace=True)
 
