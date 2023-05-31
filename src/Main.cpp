@@ -345,8 +345,15 @@ Main::Main(CkArgMsg* msg) {
 
   dataLoadingStartTime = CkWallTimer();
 
-  peopleArray = CProxy_People::ckNew(scenarioPath, numPeoplePartitions);
-  locationsArray = CProxy_Locations::ckNew(scenarioPath, numLocationPartitions);
+#ifdef ENABLE_RANDOM_SEED
+  seed = time(NULL);
+#else
+  seed = 0;
+#endif
+
+  peopleArray = CProxy_People::ckNew(seed, scenarioPath, numPeoplePartitions);
+  locationsArray = CProxy_Locations::ckNew(seed, scenarioPath,
+      numLocationPartitions);
 
 #ifdef ENABLE_TRACING
   traceArray = CProxy_TraceSwitcher::ckNew();
@@ -413,7 +420,7 @@ void Main::CharesCreated() {
 }
 
 void Main::SeedInfections() {
-  std::default_random_engine generator(time(NULL));
+  std::default_random_engine generator(seed);
 
   // Determine all of the intitial infections on the first day so we can
   // guarentee they are unique (not checking this quickly runs into birthday

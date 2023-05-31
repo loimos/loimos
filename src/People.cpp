@@ -35,13 +35,12 @@ std::uniform_real_distribution<> unitDistrib(0, 1);
 #define ONE_ATTR 1
 #define DEFAULT_
 
-People::People(std::string scenarioPath) {
+People::People(int seed, std::string scenarioPath) {
   // Must be set to true to make AtSync work
   usesAtSync = true;
 
   day = 0;
-  generator.seed(time(NULL));
-  // generator.seed(thisIndex);
+  generator.seed(seed + thisIndex);
 
   // Initialize disease model
   diseaseModel = globDiseaseModel.ckLocalBranch();

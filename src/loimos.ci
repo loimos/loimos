@@ -304,7 +304,7 @@ mainmodule loimos {
   #endif // USE_HYPERCOMM
 
   array [1D] People {
-    entry People(std::string scenarioPath);
+    entry People(int seed, std::string scenarioPath);
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
     entry void ReceiveInteractions(InteractionMessage);
     entry void EndOfDayStateUpdate(); // contribute call to ReceiveInfectiousCount
@@ -315,7 +315,7 @@ mainmodule loimos {
   };
 
   array [1D] Locations {
-    entry Locations(std::string scenarioPath);
+    entry Locations(int seed, std::string scenarioPath);
     entry void ReceiveVisitMessages(VisitMessage);
     entry void ComputeInteractions(); // calls ReceiveInteractions
     entry void AtSync();

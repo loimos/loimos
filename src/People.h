@@ -40,7 +40,7 @@ class People : public CBase_People {
   void loadVisitData(std::ifstream *activityData);
 
  public:
-  explicit People(std::string scenarioPath);
+  explicit People(int seed, std::string scenarioPath);
   explicit People(CkMigrateMessage *msg);
   void pup(PUP::er &p);  // NOLINT(runtime/references)
   void SendVisitMessages();

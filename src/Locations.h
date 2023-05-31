@@ -27,7 +27,7 @@ class Locations : public CBase_Locations {
   int day;
 
  public:
-  explicit Locations(std::string scenarioPath);
+  explicit Locations(int seed, std::string scenarioPath);
   explicit Locations(CkMigrateMessage *msg);
   void pup(PUP::er &p);  // NOLINT(runtime/references)
   void ReceiveVisitMessages(VisitMessage visitMsg);

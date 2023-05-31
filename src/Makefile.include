@@ -73,4 +73,9 @@ ifdef ENABLE_LB
 LIBS     += -balancer GreedyLB -balancer RefineLB
 endif
 
+# Set the ENABLE_RANDOM_SEED environment variable to compile for unit testing
+ifdef ENABLE_RANDOM_SEED
+OPTS      = -DENABLE_RANDOM_SEED
+endif
+
 CXXFLAGS  = $(OPTS) -std=c++11 -Wall $(INCLUDES)

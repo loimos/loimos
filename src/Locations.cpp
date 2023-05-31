@@ -27,7 +27,7 @@
 #include <fstream>
 #include <string>
 
-Locations::Locations(std::string scenarioPath) {
+Locations::Locations(int seed, std::string scenarioPath) {
   day = 0;
 
   // Must be set to true to make AtSync work
@@ -51,8 +51,7 @@ Locations::Locations(std::string scenarioPath) {
   diseaseModel = globDiseaseModel.ckLocalBranch();
 
   // Seed random number generator via branch ID for reproducibility
-  generator.seed(time(NULL));
-  // generator.seed(thisIndex);
+  generator.seed(seed + thisIndex);
 
   // Init contact model
   contactModel = createContactModel();
