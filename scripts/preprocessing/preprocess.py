@@ -8,6 +8,7 @@ import pandas as pd
 DEFAULT_VALUES = {
     "work": 0,
     "school": 0,
+    "shopping": 0,
     "other": 0,
     "college": 0,
     "religion": 0,
