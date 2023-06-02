@@ -9,6 +9,7 @@
 #include "People.h"
 #include "Event.h"
 #include "Defs.h"
+#include "Extern.h"
 #include "DiseaseModel.h"
 #include "contact_model/ContactModel.h"
 
@@ -30,9 +31,9 @@ Location::Location(int numAttributes, int uniqueIdx,
   int tableSize = diseaseModel->locationTable.size();
   if (tableSize != 0) {
     this->locationData.resize(tableSize);
-    for (int i = numAttributes; i < this->locationData.size(); i++) {
+    for (int i = numAttributes; i < tableSize; i++) {
       locationData[i] =
-        diseaseModel->locationTable.getDefaultValue(i - numAttributes);
+        diseaseModel->locationTable.getDefaultValue(i);
     }
   }
   day = 0;

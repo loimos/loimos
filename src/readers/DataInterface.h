@@ -12,8 +12,10 @@
 #include <vector>
 #include <string>
 
+#include "pup_stl.h"
+
 namespace DataTypes {
-  enum DataType { int_b10, uint_32, string, probability, category };
+  enum DataType { int_b10, uint_32, string, probability, category, boolean};
 }
 
 union Data {

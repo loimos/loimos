@@ -7,11 +7,13 @@
 #include "loimos.decl.h"
 #include "People.h"
 #include "Defs.h"
+#include "Extern.h"
 #include "Interaction.h"
 #include "DiseaseModel.h"
 #include "Person.h"
 #include "readers/Preprocess.h"
 #include "readers/DataReader.h"
+#include "Interventions.h"
 
 #ifdef USE_HYPERCOMM
   #include "Aggregator.h"
@@ -38,6 +40,7 @@ People::People(std::string scenarioPath) {
   day = 0;
   // generator.seed(thisIndex);
   generator.seed(time(NULL));
+  //&generator
 
   // Initialize disease model
   diseaseModel = globDiseaseModel.ckLocalBranch();
@@ -454,21 +457,19 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
     interMsg.interactions.cbegin(), interMsg.interactions.cend());
 }
 
-void People::ReceiveIntervention(InterventionMessage interMsg) {
-  int localIdx = getLocalIndex(
-    interMsg.personIdx,
-    numPeople,
-    numPeoplePartitions,
-    firstPersonIdx
-  );
-  int attrIndex = interMsg.attrIndex;
-  double newValue = interMsg.newValue;
+void People::ReceiveIntervention(std::shared_ptr<BaseIntervention> intervention) {
+  for (Person &person : people) {
+    if (intervention->test(person, &generator)) { //(pointer) generator as second argument
+      intervention->apply(person); //possibly add to apply (for randomness in application)
+    }
+  }
+}
 
 
   Person &person = people[localIdx];
-  CkPrintf("Changed persondata value of %f to new value of %f\n",person.personData[attrIndex].probability, newValue);
+  CkPrintf("Changed persondata value of %f to new value of %f\n",
+      person.personData[attrIndex].probability, newValue);
   person.personData[attrIndex].probability = newValue;
-
 }
 
 

@@ -10,7 +10,7 @@ OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o  \
 				 readers/DataInterface.o \
          disease_model/disease.pb.o disease_model/distribution.pb.o \
 		     readers/data.pb.o contact_model/ContactModel.o AttributeTable.o\
-				 contact_model/MinMaxAlphaModel.o readers/interventions.pb.o
+				 Interventions.o contact_model/MinMaxAlphaModel.o readers/interventions.pb.o
 DEFS   = loimos.def.h Defs.h readers/DataReader.h
 DECLS  = loimos.decl.h
 

@@ -16,6 +16,7 @@
 #include "loimos.decl.h"
 #include "DiseaseModel.h"
 #include "Defs.h"
+#include "Extern.h"
 #include "Event.h"
 #include "readers/DataReader.h"
 #include "disease_model/disease.pb.h"

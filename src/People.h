@@ -11,7 +11,9 @@
 #include "Interaction.h"
 #include "Person.h"
 #include "Message.h"
+#include "Interventions.h"
 
+#include <functional>
 #include <random>
 #include <vector>
 #include <tuple>
@@ -22,15 +24,16 @@
 #define LOCATION_LAMBDA 5.2
 
 class People : public CBase_People {
-<<<<<<< develop
  private:
   int numLocalPeople;
   int day;
   int totalVisitsForDay;
+
   std::vector<Person> people;
   std::default_random_engine generator;
   DiseaseModel *diseaseModel;
   std::vector<int> stateSummaries;
+
   void ProcessInteractions(Person *person);
   void loadPeopleData(std::string scenarioPath);
   void loadVisitData(std::ifstream *activityData);
@@ -45,7 +48,7 @@ class People : public CBase_People {
   void ReceiveInteractions(InteractionMessage interMsg);
   void EndOfDayStateUpdate();
   void SendStats();
-  void ReceiveIntervention(InterventionMessage interMsg);
+  void ReceiveIntervention(std::shared_ptr<BaseIntervention> v);
   #ifdef ENABLE_LB
   void ResumeFromSync();
   #endif  // ENABLE_LB

@@ -9,6 +9,8 @@
 
 #include "Interaction.h"
 #include "pup_stl.h"
+#include <functional>
+typedef int (*func)(int);
 
 #include <vector>
 

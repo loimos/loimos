@@ -10,6 +10,7 @@
 #include <vector>
 #include <string>
 #include "charm++.h"
+#include "Interventions.h"
 
 class Main : public CBase_Main {
   Main_SDAG_CODE
@@ -17,6 +18,7 @@ class Main : public CBase_Main {
   std::string pathToOutput;
   std::vector<int> accumulated;
   std::vector<int> initialInfections;
+  std::vector<std::shared_ptr<BaseIntervention>> interventions;
   DiseaseModel* diseaseModel;
   int chareCount;
   int createdCount;
@@ -25,6 +27,8 @@ class Main : public CBase_Main {
   explicit Main(CkArgMsg* msg);
   void CharesCreated();
   void SeedInfections();
+  void InitializeIntervention();
+  std::vector<std::shared_ptr<BaseIntervention>> GetInterventions();
   void SaveStats(int *data);
 };
 

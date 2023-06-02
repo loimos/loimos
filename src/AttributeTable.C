@@ -26,7 +26,7 @@ Attribute AttributeTable::getAttribute(int i) {
 union Data AttributeTable::getDefaultValue(int i) const {
     return list[i].defaultValue;
 }
-std::string AttributeTable::getName(int i) {
+std::string AttributeTable::getName(int i) const {
     return list[i].name;
 }
 DataType AttributeTable::getDataType(int i) {
@@ -55,6 +55,20 @@ Attribute createAttribute(union Data val, DataType dtype, std::string name, int 
     a.index = index;
     return a;
 }
+
+int AttributeTable::getAttribute(std::string name) const{
+    for (int i = 0; i < this->size(); i++) {
+        if (this->getName(i).c_str() == name) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+/*void AttributeTable::pup(PUP::er &p) {
+    p | list;
+    p | isPersonTable;
+}*/
 
 void AttributeTable::populateTable(std::string fname) {
     std::ifstream infile(fname);
