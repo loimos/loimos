@@ -10,6 +10,7 @@
 #include "Event.h"
 #include "Defs.h"
 #include "Extern.h"
+#include "Extern.h"
 #include "DiseaseModel.h"
 #include "contact_model/ContactModel.h"
 
