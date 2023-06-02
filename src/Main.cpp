@@ -13,6 +13,7 @@
 #include "contact_model/ContactModel.h"
 #include "readers/Preprocess.h"
 #include "AttributeTable.h"
+#include "Interventions.h"
 
 #include <string>
 #include <tuple>
@@ -454,6 +455,14 @@ void Main::CharesCreated() {
 
     mainProxy.run();
   }
+}
+
+void Main::InitializeIntervention() {
+  this->interventions.push_back(std::make_shared<VaccinationIntervention>(diseaseModel->personTable));
+}
+
+std::vector<std::shared_ptr<BaseIntervention>> Main::GetInterventions() {
+  return this->interventions;
 }
 
 void Main::SeedInfections() {

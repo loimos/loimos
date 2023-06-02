@@ -545,13 +545,7 @@ void People::SendStats() {
   contribute(stateSummaries, CkReduction::sum_int, cb);
 }
 
-<<<<<<< develop:src/People.cpp
 void People::ProcessInteractions(Person *person) {
-=======
-
-
-void People::ProcessInteractions(Person &person) {
->>>>>>> HEAD~1:src/People.C
   double totalPropensity = 0.0;
   int numInteractions = static_cast<int>(person->interactions.size());
   for (int i = 0; i < numInteractions; ++i) {
