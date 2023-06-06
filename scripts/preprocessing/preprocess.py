@@ -285,6 +285,9 @@ def merge_visits(args, activity_update, home_update, people_update):
 def main():
     args = parse_args()
 
+    if not os.path.isdir(args.out_dir):
+        os.makedirs(args.out_dir)
+
     activity_update, home_update = merge_locations(args)
     people_update = fix_people(args)
     merge_visits(args, activity_update, home_update, people_update)
