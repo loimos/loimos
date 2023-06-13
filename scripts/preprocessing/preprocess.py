@@ -191,17 +191,39 @@ def update_ids(df, update, id_col="lid", name="df", suplimental_cols=[]):
         print(f"  Updating {name} using arbitary mapping")
         new_col = update.columns[0]
         old_col = f"old_{id_col}"
+        merge_cols = [id_col] + suplimental_cols
         new_df = pd.merge(df, update, how="left",
-                          on=[id_col] + suplimental_cols)
+                          on=merge_cols)
         assert(num_rows == new_df.shape[0])
         #if num_rows != new_df.shape[0]:
         #    print(f"Had {num_rows} before, but now have {new_df.shape[0]}")
 
         # Make sure the transformation is inverible
         tmp = new_df.drop(columns=id_col)
+        inverted_cols = [new_col] + suplimental_cols
         inverted_df = pd.merge(tmp, update, how="left",
-                               on=[new_col] + suplimental_cols)
+                               on=inverted_cols)
         assert((inverted_df[df.columns] == df).all(axis=None))
+
+        # Make sure the number of visits per location is unchanged by this
+        # transformation
+        new_counts = new_df[merge_cols + [new_col]]\
+                .groupby(merge_cols)\
+                .count()\
+                .rename(columns={new_col: "count"})\
+                .reset_index()\
+                .merge(update, on=merge_cols)\
+                .sort_values(merge_cols + [new_col])\
+                .reset_index(drop=True)
+        old_counts = new_df[inverted_cols + [id_col]]\
+                .groupby(inverted_cols)\
+                .count()\
+                .rename(columns={id_col: "count"})\
+                .reset_index()\
+                .merge(update, on=inverted_cols)\
+                .sort_values(merge_cols + [new_col])[new_counts.columns]\
+                .reset_index(drop=True)
+        assert((new_counts == old_counts).all(axis=None))
 
         new_df.rename(columns={id_col: old_col, new_col: id_col}, inplace=True)
 
