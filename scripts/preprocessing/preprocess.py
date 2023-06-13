@@ -190,13 +190,20 @@ def update_ids(df, update, id_col="lid", name="df", suplimental_cols=[]):
         num_rows = df.shape[0]
         print(f"  Updating {name} using arbitary mapping")
         new_col = update.columns[0]
+        old_col = f"old_{id_col}"
         new_df = pd.merge(df, update, how="left",
                           on=[id_col] + suplimental_cols)
         assert(num_rows == new_df.shape[0])
         #if num_rows != new_df.shape[0]:
         #    print(f"Had {num_rows} before, but now have {new_df.shape[0]}")
-        new_df.drop(columns=id_col, inplace=True)
-        new_df.rename(columns={new_col: id_col}, inplace=True)
+
+        # Make sure the transformation is inverible
+        tmp = new_df.drop(columns=id_col)
+        inverted_df = pd.merge(tmp, update, how="left",
+                               on=[new_col] + suplimental_cols)
+        assert((inverted_df[df.columns] == df).all(axis=None))
+
+        new_df.rename(columns={id_col: old_col, new_col: id_col}, inplace=True)
 
         return new_df
 
