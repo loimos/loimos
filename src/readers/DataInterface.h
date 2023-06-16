@@ -7,15 +7,14 @@
 #ifndef READERS_DATAINTERFACE_H_
 #define READERS_DATAINTERFACE_H_
 
-#include "charm++.h"
-
 #include <vector>
 #include <string>
 
+#include "charm++.h"
 #include "pup_stl.h"
 
 namespace DataTypes {
-  enum DataType { int_b10, uint_32, string, probability, category, boolean};
+  enum DataType {int_b10, uint_32, string, probability, category, boolean};
 }
 
 union Data {

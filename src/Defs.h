@@ -7,8 +7,6 @@
 #ifndef DEFS_H_
 #define DEFS_H_
 
-#include "loimos.decl.h"
-
 #include <vector>
 #include <string>
 

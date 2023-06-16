@@ -10,7 +10,8 @@ OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o  \
 				 readers/DataInterface.o \
          disease_model/disease.pb.o disease_model/distribution.pb.o \
 		     readers/data.pb.o contact_model/ContactModel.o AttributeTable.o\
-				 Interventions.o contact_model/MinMaxAlphaModel.o readers/interventions.pb.o
+				 Interventions.o contact_model/MinMaxAlphaModel.o \
+				 readers/interventions.pb.o
 DEFS   = loimos.def.h Defs.h readers/DataReader.h
 DECLS  = loimos.decl.h
 
@@ -44,7 +45,7 @@ endif
 ifdef ENABLE_TRACING
 PROJECTION_FLAGS = -tracemode projections
 else
-PROJECTION_FLAGS = 
+PROJECTION_FLAGS =
 endif
 
 SUBDIRS = disease_model contact_model readers tests
@@ -66,7 +67,7 @@ $(DECLS): %.decl.h: %.ci
 $(OBJS): %.o: %.cpp %.h $(DECLS) $(DEFS)
 	$(CHARMC) $(CXXFLAGS) -c -o $@ $<
 
-# Build .o files from just the .cpp files for unit tests 
+# Build .o files from just the .cpp files for unit tests
 # (they don't have .h files)
 $(UNIT_TEST_OBJS): %.o: %.cpp $(DECLS) $(DEFS)
 	$(CHARMC) $(CXXFLAGS) -c -o $@ $<
@@ -82,7 +83,7 @@ all-sub:
 
 .PHONY:clean
 clean:
-	rm -f *.o charmrun $(BIN) *.decl.h *.def.h 
+	rm -f *.o charmrun $(BIN) *.decl.h *.def.h
 	@for d in $(SUBDIRS); do \
 		cd $$d; \
 		$(MAKE) clean; \

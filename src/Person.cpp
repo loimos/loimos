@@ -32,10 +32,9 @@ Person::Person(int numAttributes, int startingState, int timeLeftInState) {
   // Treat file-read and realdata attributes same, no need to make distinction
   int tableSize = diseaseModel->personTable.size();
   if (tableSize != 0) {
-    this->personData.resize(tableSize);
+    this->data.resize(tableSize);
     for (int i = numAttributes; i < tableSize; i++) {
-      this->personData[i] =
-        diseaseModel->personTable.getDefaultValue(i);
+      this->data[i] = diseaseModel->personTable.getDefaultValue(i);
     }
   }
 

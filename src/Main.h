@@ -7,10 +7,12 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
-#include <vector>
-#include <string>
 #include "charm++.h"
 #include "Interventions.h"
+
+#include <vector>
+#include <string>
+#include <memory>
 
 class Main : public CBase_Main {
   Main_SDAG_CODE

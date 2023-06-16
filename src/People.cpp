@@ -67,24 +67,29 @@ People::People(std::string scenarioPath) {
 
     // Init peoples ids and randomly init ages.
     std::uniform_int_distribution<int> age_dist(0, 100);
-    for (int p = 0; p < numLocalPeople; p++) {
+    int i = 0;
+    for (Person &p : people) {
 
       Data age;
       age.int_b10 = age_dist(generator);
       std::vector<Data> dataField = { age };
 
 
-      for (int j = 0; j < people[p].personData.size(); ++j) {
+      int j = 0;
+      for (const Data &d : p.getData()) {
         CkPrintf("Default (local) person %d with field %d having value %lf\n",
-            people[p].uniqueId, j, people[p].personData[j].probability);
+            p.getUniqueId(), j, d.probability);
+        j++;
       }
 
-      people[p].setUniqueId(firstPersonIdx + p);
-      people[p].state = diseaseModel->getHealthyState(dataField);
+      p.setUniqueId(firstPersonIdx + i);
+      p.state = diseaseModel->getHealthyState(dataField);
 
       // We set persons next state to equal current state to signify
       // that they are not in a disease model progression.
-      people[p].next_state = people[p].state;
+      p.next_state = p.state;
+
+      i++;
     }
   } else {
       int numAttributesPerPerson =
@@ -460,18 +465,10 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
 void People::ReceiveIntervention(std::shared_ptr<BaseIntervention> intervention) {
   for (Person &person : people) {
     if (intervention->test(person, &generator)) { //(pointer) generator as second argument
-      intervention->apply(person); //possibly add to apply (for randomness in application)
+      intervention->apply(&person); //possibly add to apply (for randomness in application)
     }
   }
 }
-
-
-  Person &person = people[localIdx];
-  CkPrintf("Changed persondata value of %f to new value of %f\n",
-      person.personData[attrIndex].probability, newValue);
-  person.personData[attrIndex].probability = newValue;
-}
-
 
 void People::EndOfDayStateUpdate() {
   // Get ready to count today's states
@@ -506,13 +503,7 @@ void People::SendStats() {
   contribute(stateSummaries, CkReduction::sum_int, cb);
 }
 
-<<<<<<< develop:src/People.cpp
 void People::ProcessInteractions(Person *person) {
-=======
-
-
-void People::ProcessInteractions(Person &person) {
->>>>>>> HEAD~1:src/People.C
   double totalPropensity = 0.0;
   int numInteractions = static_cast<int>(person->interactions.size());
   for (int i = 0; i < numInteractions; ++i) {

@@ -6,27 +6,28 @@
 mainmodule loimos {
   include "Interaction.h";
   include "Message.h";
-  include "functional";
   include "Interventions.h";
-  
+
+  #ifdef USE_HYPERCOMM
+  include "AggregatorParam.h";
+  #endif // USE_HYPERCOMM
+
   // Profiling/LB parameters (these are here because Defs.h depends on having
   // CBase_* classes defined, and these constants are only used in this file)
   #define PROFILING_START_DAY DAYS_IN_WEEK
   #define PROFILING_INTERVAL 3
   #define SHOULD_PROFILE(day) (day >= PROFILING_START_DAY &&\
     (day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0)
-  
+
   #define LB_START_DAY 6
   #define LB_INTERVAL DAYS_IN_WEEK
   #define SHOULD_LB(day) (day >= LB_START_DAY &&\
     (day - LB_START_DAY) % LB_INTERVAL == 0)
-  
-  #ifdef USE_HYPERCOMM
-  include "AggregatorParam.h";
-  #endif // USE_HYPERCOMM
 
+  include "functional";
   include "string";
   include "vector";
+  include "memory";
   include "sys/time.h";
   include "sys/resource.h";
 
@@ -86,8 +87,8 @@ mainmodule loimos {
         serial{traceArray.instrumentOn();}
         when instrumentSwitchOn() {}
       #endif // ENABLE_LB
-   
-      serial{ 
+
+      serial{
         totalTime.resize(TOTAL_TIME_SIZE, 0);
         CkPrintf("Running ...\n\n");
         simulationStartTime = CkWallTimer();
@@ -122,7 +123,7 @@ mainmodule loimos {
             CkPrintf("  Visit messages took %fs\n",
               diff);
             totalTime[TOTAL_VISITS_TIME_INDEX] += diff;
-            
+
             //CkPrintf("  Compute Interactions\n");
             stepStartTime = CkWallTimer();
             locationsArray.ComputeInteractions();
@@ -134,7 +135,7 @@ mainmodule loimos {
               std::shared_ptr<BaseIntervention> intervention = GetInterventions()[0];
               peopleArray.ReceiveIntervention(intervention);
             }
-            
+
             CkStartQD(CkCallback(
               CkIndex_Main::ComputedInteractions(),
               mainProxy
@@ -147,7 +148,7 @@ mainmodule loimos {
             CkPrintf("  Interaction messages took %fs\n",
               diff);
             totalTime[TOTAL_INTERACTIONS_TIME_INDEX] += diff;
-            
+
             //CkPrintf("  End of day state update starting\n");
             stepStartTime = CkWallTimer();
             peopleArray.EndOfDayStateUpdate();
@@ -159,7 +160,7 @@ mainmodule loimos {
             CkPrintf("  End of day state update and reduction took %fs\n",
               diff);
             totalTime[TOTAL_EOD_UPDATE_TIME_INDEX] += diff;
-            
+
             // Use this count as desired here
             if (interventionStategy) {
               globDiseaseModel.toggleIntervention(infectiousCount);
@@ -170,7 +171,7 @@ mainmodule loimos {
               "Iteration %d Execution Time: %lf seconds. Infectious Count: %d.\n",
               day, CkWallTimer() - iterationStartTime, infectiousCount
             );
-            
+
             // Trigger intervention updates.
             if (interventionStategy) {
               globDiseaseModel.toggleIntervention(infectiousCount);
@@ -182,7 +183,7 @@ mainmodule loimos {
           // Turn off instrumentation before we start load balancing
           serial{traceArray.instrumentOff();}
           when instrumentSwitchOff() {}
-          
+
           if (SHOULD_LB(day)) {
             serial {
               locationsArray.AtSync();
@@ -196,7 +197,7 @@ mainmodule loimos {
             }
           }
         #endif // ENABLE_LB
-      
+
 
         #ifdef ENABLE_TRACING
           if (SHOULD_PROFILE(day)) {
@@ -204,7 +205,7 @@ mainmodule loimos {
             when traceSwitchOff(){
               serial{traceArray.traceFlush();}
             }
-            
+
             // Toggled by ENABLE_TRACING to group profiling code
             serial{traceArray.reportMemoryUsage();}
             when printMemoryUsage(long usage) {
@@ -213,10 +214,10 @@ mainmodule loimos {
               }
             }
           }
-          
+
         #endif // ENABLE_TRACING
       }
-      serial { 
+      serial {
         CkPrintf("Finished simulating %d days in %lf seconds.\n", numDays, (CkWallTimer() - simulationStartTime));
         CkPrintf("  Visit messages took %lf seconds\n",
           totalTime[TOTAL_VISITS_TIME_INDEX]);
@@ -224,7 +225,7 @@ mainmodule loimos {
           totalTime[TOTAL_INTERACTIONS_TIME_INDEX]);
         CkPrintf("  End of day update and reduction took %lf seconds\n",
           totalTime[TOTAL_EOD_UPDATE_TIME_INDEX]);
-        
+
         peopleArray.SendStats();
       }
       when ReceiveStats(CkReductionMsg *summary) {
@@ -234,11 +235,11 @@ mainmodule loimos {
         }
       }
       serial {
-        CkExit(); 
+        CkExit();
       }
     };
     entry void SeedInfections();
-    entry void StartComputingInteractions(); 
+    entry void StartComputingInteractions();
     entry void ComputedInteractions();
     #ifdef ENABLE_DEBUG
     entry [reductiontarget] void ReceiveVisitsCount(int visitsCount) {
