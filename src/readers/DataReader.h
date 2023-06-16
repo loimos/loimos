@@ -17,7 +17,7 @@
 #include <fstream>
 #include <tuple>
 
-#define MAX_INPUT_lineLength (std::streamsize) 262144 // 2^18
+#define MAX_INPUT_lineLength (std::streamsize) 262144  // 2^18
 #define CSV_DELIM ','
 
 /**

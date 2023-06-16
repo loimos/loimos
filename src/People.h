@@ -20,6 +20,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 #define LOCATION_LAMBDA 5.2
 

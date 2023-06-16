@@ -38,7 +38,8 @@ bool VaccinationIntervention::test(const DataInterface &p,
   std::uniform_real_distribution<double> distribution(0.0, 1.0);
 
   // CkPrintf("Vaccinated:%d, riskProbability: %f, selected for vaccine %d\n",
-  //     p.getValue(vaccinatedIndex).boolean, p.getValue(riskIndex).probability, applied);
+  //     p.getValue(vaccinatedIndex).boolean, p.getValue(riskIndex).probability,
+  //     applied);
   return !p.getValue(vaccinatedIndex).boolean
     && distribution(*generator) < vaccinationProbability;
 }

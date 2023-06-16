@@ -147,42 +147,6 @@ Main::Main(CkArgMsg* msg) {
   int baseRunInfo = 0;
 
   if (syntheticRun) {
-    //Populate global attributes vector from file
-    /*
-    std::ifstream infile("att");
-    std::string value;
-    std::string dataType;
-    std::string attributeType;
-    std::string name;
-    AttributeTable t;
-    while (infile >> dataType >> name >> value >> attributeType) {
-      //CkPrintf("Heads: %s, %s, %s, %s, %d\n", value.c_str(),dataType.c_str(),attributeType,name, test);
-      if (dataType != "type") {
-        Data d;
-        if (dataType == "double") {
-          d.probability = {std::stod(value)};
-        } else if (dataType == "int" || dataType == "uint16_t") {
-          d.int_b10 = {std::stoi(value)};
-        } else if (dataType == "bool") {
-          d.boolean = {value == "1" || value == "t"};
-        } else if (dataType == "string") {
-          d.*str = {value};
-        } else if (dataType == "uint32_t") {
-          d.uint_32 = {std::stoul(value)};
-        }
-        Attribute a = createAttribute(d,dataType,attributeType,name);
-        //CkPrintf("Att: %s\n", dataType);
-        t.list.emplace_back(createAttribute(d,dataType,attributeType,name));
-      }
-    }
-
-    for (int i = 0; i < t.list.size(); i++) {
-        CkPrintf("Trait: %s, i: %d\n", t.getName(i).c_str(),i);
-    }
-    for (int i = 0; i < t.list.size(); i++) {
-        CkPrintf("Trait: %s, i: %d\n", t.getDataType(i).c_str(),i);
-    }*/// Move to readers
-
     // Get number of people.
     synPeopleGridWidth = atoi(msg->argv[++argNum]);
     synPeopleGridHeight = atoi(msg->argv[++argNum]);
@@ -417,7 +381,8 @@ void Main::CharesCreated() {
 }
 
 void Main::InitializeIntervention() {
-  this->interventions.push_back(std::make_shared<VaccinationIntervention>(diseaseModel->personTable));
+  this->interventions.push_back(
+    std::make_shared<VaccinationIntervention>(diseaseModel->personTable));
 }
 
 std::vector<std::shared_ptr<BaseIntervention>> Main::GetInterventions() {

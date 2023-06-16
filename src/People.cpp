@@ -28,8 +28,9 @@
 #include <fstream>
 #include <functional>
 #include <algorithm>
+#include <memory>
 
-std::uniform_real_distribution<> unitDistrib(0,1);
+std::uniform_real_distribution<> unitDistrib(0, 1);
 #define ONE_ATTR 1
 #define DEFAULT_
 
@@ -40,7 +41,6 @@ People::People(std::string scenarioPath) {
   day = 0;
   // generator.seed(thisIndex);
   generator.seed(time(NULL));
-  //&generator
 
   // Initialize disease model
   diseaseModel = globDiseaseModel.ckLocalBranch();
@@ -61,26 +61,16 @@ People::People(std::string scenarioPath) {
 
   // Create real or fake people
   if (syntheticRun) {
-
-    Person tmp {0, 0, std::numeric_limits<Time>::max() };
+    Person tmp { 0, 0, std::numeric_limits<Time>::max() };
     people.resize(numLocalPeople, tmp);
 
     // Init peoples ids and randomly init ages.
     std::uniform_int_distribution<int> age_dist(0, 100);
     int i = 0;
     for (Person &p : people) {
-
       Data age;
       age.int_b10 = age_dist(generator);
       std::vector<Data> dataField = { age };
-
-
-      int j = 0;
-      for (const Data &d : p.getData()) {
-        CkPrintf("Default (local) person %d with field %d having value %lf\n",
-            p.getUniqueId(), j, d.probability);
-        j++;
-      }
 
       p.setUniqueId(firstPersonIdx + i);
       p.state = diseaseModel->getHealthyState(dataField);
@@ -464,8 +454,8 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
 
 void People::ReceiveIntervention(std::shared_ptr<BaseIntervention> intervention) {
   for (Person &person : people) {
-    if (intervention->test(person, &generator)) { //(pointer) generator as second argument
-      intervention->apply(&person); //possibly add to apply (for randomness in application)
+    if (intervention->test(person, &generator)) {
+      intervention->apply(&person);
     }
   }
 }

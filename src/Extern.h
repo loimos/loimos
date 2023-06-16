@@ -1,12 +1,13 @@
-/* Copyright 2020 The Loimos Project Developers.
+/* Copyright 2020-2023 The Loimos Project Developers.
  * See the top-level LICENSE file for details.
  *
  * SPDX-License-Identifier: MIT
  */
 
-#ifndef __EXTERN_H__
-#define __EXTERN_H__
+#ifndef EXTERN_H_
+#define EXTERN_H_
 
+#include <string>
 
 extern /* readonly */ CProxy_Main mainProxy;
 extern /* readonly */ CProxy_People peopleArray;
@@ -48,4 +49,4 @@ extern /* readonly */ int averageDegreeOfVisit;
 // Intervention
 extern /* readonly */ bool interventionStategy;
 
-#endif //__EXTERN_H__
+#endif  // EXTERN_H_

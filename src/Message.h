@@ -54,7 +54,7 @@ struct InterventionMessage {
   double newValue;
 
   InterventionMessage() {}
-  InterventionMessage(CkMigrateMessage *msg) {}
+  explicit InterventionMessage(CkMigrateMessage *msg) {}
   InterventionMessage(int personIdx_, int attrIndex_, double newValue_)
     : personIdx(personIdx_), attrIndex(attrIndex_), newValue(newValue_) {}
 
