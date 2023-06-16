@@ -23,9 +23,10 @@ struct VisitMessage {
 
   VisitMessage() {}
   explicit VisitMessage(CkMigrateMessage *msg) {}
-  VisitMessage(int locationIdx_, int personIdx_, int personState_, int visitStart_,
-      int visitEnd_) : locationIdx(locationIdx_), personIdx(personIdx_),
-      personState(personState_), visitStart(visitStart_), visitEnd(visitEnd_) {}
+  VisitMessage(int locationIdx_, int personIdx_, int personState_,
+      int visitStart_, int visitEnd_) : locationIdx(locationIdx_),
+      personIdx(personIdx_), personState(personState_),
+      visitStart(visitStart_), visitEnd(visitEnd_) {}
 };
 PUPbytes(VisitMessage);
 

@@ -15,9 +15,13 @@
 
 struct Attribute {
   union Data defaultValue;
-  DataType dataType;
+  DataTypes::DataType dataType;
   std::string name;
-  int index;
+
+  Attribute() {}
+  Attribute(union Data defaultValue_, DataTypes::DataType dataType_,
+      std::string name_) : defaultValue(defaultValue_), dataType(dataType_),
+      name(name_) {}
 };
 
 class AttributeTable {
@@ -28,7 +32,7 @@ class AttributeTable {
   Attribute getAttribute(int i);
   union Data getDefaultValue(int i) const;
   std::string getName(int i) const;
-  DataType getDataType(int i);
+  DataTypes::DataType getDataType(int i);
   bool getTableType();
   bool isPersonTable;
   void populateTable(std::string fname);
@@ -38,8 +42,5 @@ class AttributeTable {
   void resize(int size);
   void readData(loimos::proto::CSVDefinition *dataFormat);
 };
-
-Attribute createAttribute(union Data val, DataType dtype,
-    std::string name, int location);
 
 #endif  // ATTRIBUTETABLE_H_
