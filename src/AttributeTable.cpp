@@ -16,7 +16,7 @@
 
 AttributeTable::AttributeTable(int size, bool isPersonTable) {
   if (size != 0) {
-    this->list.resize(size);
+    this->list.reserve(size);
   }
   this->isPersonTable = isPersonTable;
 }
@@ -24,7 +24,6 @@ AttributeTable::AttributeTable(int size, bool isPersonTable) {
 AttributeTable::AttributeTable(bool isPersonTable) {
   this->isPersonTable = isPersonTable;
 }
-
 Attribute AttributeTable::getAttribute(int i) {
   return list[i];
 }
@@ -34,7 +33,7 @@ union Data AttributeTable::getDefaultValue(int i) const {
 std::string AttributeTable::getName(int i) const {
   return list[i].name;
 }
-DataType AttributeTable::getDataType(int i) {
+DataTypes::DataType AttributeTable::getDataType(int i) {
   return list[i].dataType;
 }
 bool AttributeTable::getTableType() {
@@ -43,21 +42,8 @@ bool AttributeTable::getTableType() {
 int AttributeTable::size() const {
   return this->list.size();
 }
-void AttributeTable::updateIndex(int i, int newIndex) {
-  this->list[i].index = newIndex;
-}
 void AttributeTable::resize(int size) {
   this->list.resize(size);
-}
-
-// Convert attribute and index to actual value as type
-Attribute createAttribute(union Data val, DataType dtype, std::string name, int index) {
-  Attribute a;
-  a.defaultValue = val;
-  a.dataType = dtype;
-  a.name = name;
-  a.index = index;
-  return a;
 }
 
 int AttributeTable::getAttribute(std::string name) const {
@@ -75,7 +61,7 @@ void AttributeTable::populateTable(std::string fname) {
   std::string dataType;
   std::string attributeType;
   std::string name;
-  DataType dataEnum = int_b10;
+  DataTypes::DataType dataEnum = DataTypes::int_b10;
   while (infile >> dataType >> name >> value >> attributeType) {
     // CkPrintf("Heads: %s, %s, %s, %s, %d\n", value.c_str(),
     //     dataType.c_str(), attributeType, name, test);
@@ -83,50 +69,45 @@ void AttributeTable::populateTable(std::string fname) {
         || (attributeType == "l" && !this->isPersonTable))) {
       Data d;
       if (dataType == "double") {
-        dataEnum = probability;
+        dataEnum = DataTypes::probability;
         d.probability = {std::stod(value)};
       } else if (dataType == "int" || dataType == "uint16_t") {
-        dataEnum = int_b10;
+        dataEnum = DataTypes::int_b10;
         d.int_b10 = {std::stoi(value)};
       } else if (dataType == "bool") {
-        dataEnum = boolean;
+        dataEnum = DataTypes::boolean;
         d.boolean = {value == "1" || value == "t"};
       } else if (dataType == "uint32_t") {
-        dataEnum = uint_32;
+        dataEnum = DataTypes::uint_32;
         d.uint_32 = {std::stoul(value)};
       }
-    // CkPrintf("Att: %s\n", dataType);
-    this->list.emplace_back(createAttribute(d, dataEnum, name, 0));
+
+      // CkPrintf("Att: %s\n", dataType);
+      list.emplace_back(d, dataEnum, name);
     }
   }
 }
 
 void AttributeTable::readData(loimos::proto::CSVDefinition *dataFormat) {
-  this->resize(DataReader<Person>::getNonZeroAttributes(dataFormat));
-  int attrInd = 0;
-  bool isPid = true;
+  // this->reserve(DataReader<Person>::getNonZeroAttributes(dataFormat));
   for (int c = 0; c < dataFormat->fields_size(); c++) {
-    if (!dataFormat->fields(c).has_ignore()) {
-      if (!isPid) {
-        loimos::proto::DataField const *field = &dataFormat->fields(c);
-        DataType dataEnum = int_b10;
-        Data d;
-        std::string name = field->field_name();
-        if (field->has_b10int() || field->has_foreign_id()) {
-          d.int_b10 = 1;
-          dataEnum = int_b10;
-        } else if (field->has_label()) {
-          d.str = new std::string("default");
-          dataEnum = string;
-        } else if (field->has_bool_()) {
-          d.boolean = true;
-        }
-        this->list[attrInd] = createAttribute(d, dataEnum, name, attrInd);
-
-        attrInd++;
-      } else {
-        isPid = false;
+    loimos::proto::DataField const &field = dataFormat->fields(c);
+    if (!field.has_ignore() && !field.has_unique_id()
+        && !field.has_foreign_id()) {
+      DataTypes::DataType dataEnum;
+      Data d;
+      if (field.has_b10int()) {
+        d.int_b10 = 1;
+        dataEnum = DataTypes::int_b10;
+      } else if (field.has_label()) {
+        d.str = new std::string("default");
+        dataEnum = DataTypes::string;
+      } else if (field.has_bool_()) {
+        d.boolean = false;
+        dataEnum = DataTypes::boolean;
       }
+
+      list.emplace_back(d, dataEnum, field.field_name());
     }
   }
 }
