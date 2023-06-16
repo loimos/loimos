@@ -75,7 +75,6 @@ People::People(int seed, std::string scenarioPath) {
       age.int_b10 = age_dist(generator);
       std::vector<Data> dataField = { age };
 
-
       p.setUniqueId(firstLocalPersonIdx + i);
       p.state = diseaseModel->getHealthyState(dataField);
 

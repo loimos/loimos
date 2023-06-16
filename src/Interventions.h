@@ -19,7 +19,7 @@ class BaseIntervention : public PUP::able {
   virtual void pup(PUP::er &p);  // NOLINT(runtime/references)
 
   PUPable_decl(BaseIntervention);
-  explicit BaseIntervention() {}
+  BaseIntervention() {}
   explicit BaseIntervention(CkMigrateMessage *m) :
     PUP::able(m) {}  // NOLINT(runtime/references)
 };
