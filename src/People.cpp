@@ -41,7 +41,6 @@ People::People(std::string scenarioPath) {
   day = 0;
   // generator.seed(thisIndex);
   generator.seed(time(NULL));
-  //&generator
 
   // Initialize disease model
   diseaseModel = globDiseaseModel.ckLocalBranch();
@@ -72,7 +71,6 @@ People::People(std::string scenarioPath) {
       Data age;
       age.int_b10 = age_dist(generator);
       std::vector<Data> dataField = { age };
-
 
       p.setUniqueId(firstPersonIdx + i);
       p.state = diseaseModel->getHealthyState(dataField);
