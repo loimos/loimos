@@ -98,7 +98,7 @@ void AttributeTable::populateTable(std::string fname) {
         }
         //CkPrintf("Att: %s\n", dataType);
         this->list.emplace_back(createAttribute(d,dataEnum,name,0));
-      }  
+      }
     }
 }
 
@@ -106,14 +106,14 @@ void AttributeTable::readData(loimos::proto::CSVDefinition *dataFormat) {
     this->resize(DataReader<Person>::getNonZeroAttributes(dataFormat));
     int attrInd = 0;
     bool isPid = true;
-    for (int c = 0; c < dataFormat->field_size(); c++) {
-        if(!dataFormat->field(c).has_ignore()) {
+    for (int c = 0; c < dataFormat->fields_size(); c++) {
+        if(!dataFormat->fields(c).has_ignore()) {
             if (!isPid) {
-                loimos::proto::Data_Field const *field = &dataFormat->field(c);
+                loimos::proto::DataField const *field = &dataFormat->fields(c);
                 DataType dataEnum = int_b10;
                 Data d;
                 std::string name = field->field_name();
-                if (field->has_b10int() || field->has_foreignid()) {
+                if (field->has_b10int() || field->has_foreign_id()) {
                     d.int_b10 = 1;
                     dataEnum = int_b10;
                 } else if (field->has_label()) {
@@ -123,13 +123,13 @@ void AttributeTable::readData(loimos::proto::CSVDefinition *dataFormat) {
                     d.boolean = true;
                 }
                 this->list[attrInd] = createAttribute(d,dataEnum,name,attrInd);
-                
+
                 attrInd++;
             } else {
                 isPid = false;
             }
         }
-    }   
+    }
 }
 
 

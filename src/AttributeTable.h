@@ -3,6 +3,7 @@
 
 #include "readers/DataInterface.h"
 #include "readers/DataReader.h"
+
 #include <string>
 #include <vector>
 
@@ -25,7 +26,7 @@ class AttributeTable
     union Data getDefaultValue(int i) const;
     std::string getName(int i) const;
     DataType getDataType(int i);
-    bool getTableType(); 
+    bool getTableType();
     bool isPersonTable;
     void populateTable(std::string fname);
     int getAttribute(std::string name) const;
