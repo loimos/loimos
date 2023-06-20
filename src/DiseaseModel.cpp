@@ -65,11 +65,6 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
   diseaseModelStream.close();
   assert(model->disease_states_size() != 0);
 
-
-
-  int personTableSize = 0;
-  int locationTableSize = 0;
-
   // Setup other shared PE objects.
   if (!syntheticRun) {
     // Handle people...
@@ -411,6 +406,20 @@ void DiseaseModel::toggleInterventions(int day, int newDailyInfections) {
         || (triggerFlags[i] && tmp.trigger_off() <= infectionRate);
     }
   }
+}
+
+int DiseaseModel::getInterventionIndex(InterventionTestType test) const {
+  if (!interventionStategy) {
+    return -1;
+  }
+
+  for (int i = 0; i < interventionDef->interventions_size(); ++i) {
+    if (test(interventionDef->interventions(i))) {
+      return i;
+    }
+  }
+
+  return -1;
 }
 
 int DiseaseModel::getInterventionIndex(InterventionTestType test) const {
