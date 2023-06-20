@@ -154,7 +154,15 @@ void People::loadPeopleData(std::string scenarioPath) {
   free(buf);
 
   // Initialize intial states. (This will move in the DataLoaderPR)
-  double isolationCompliance = diseaseModel->getCompilance();
+  int index = diseaseModel->getInterventionIndex(
+      [] (const loimos::proto::InterventionModel::Intervention inter) {
+        return inter.has_self_isolation();
+      });
+  double isolationCompliance = 0;
+  if (-1 != index) {
+    isolationCompliance = diseaseModel->getCompliance(index);
+  }
+
   for (Person &person : people) {
     person.state = diseaseModel->getHealthyState(person.getData());
     person.willComply = unitDistrib(generator) < isolationCompliance;

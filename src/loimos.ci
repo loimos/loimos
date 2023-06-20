@@ -163,7 +163,7 @@ mainmodule loimos {
 
             // Use this count as desired here
             if (interventionStategy) {
-              globDiseaseModel.toggleIntervention(infectiousCount);
+              globDiseaseModel.toggleIntervention(day, infectiousCount);
             }
 
             // Print how long this iteration took to run
@@ -171,11 +171,6 @@ mainmodule loimos {
               "Iteration %d Execution Time: %lf seconds. Infectious Count: %d.\n",
               day, CkWallTimer() - iterationStartTime, infectiousCount
             );
-
-            // Trigger intervention updates.
-            if (interventionStategy) {
-              globDiseaseModel.toggleIntervention(infectiousCount);
-            }
           }
         }
 
@@ -303,7 +298,7 @@ mainmodule loimos {
   nodegroup DiseaseModel {
       entry DiseaseModel(std::string pathToModel, std::string scenarioPath,
           std::string pathToIntervention);
-      entry void toggleIntervention(int newDailyInfections);
+      entry void toggleIntervention(int day, int newDailyInfections);
   };
 
   #ifdef USE_HYPERCOMM

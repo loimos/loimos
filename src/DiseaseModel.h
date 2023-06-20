@@ -23,7 +23,9 @@
 #include <string>
 #include <vector>
 
-using Time = int32_t;
+using NameIndexLookupType = std::unordered_map<std::string, int>;
+using InterventionTestType = std::function<
+  bool(const loimos::proto::InterventionModel::Intervention)>;
 
 class DiseaseModel : public CBase_DiseaseModel {
  private:
@@ -40,7 +42,7 @@ class DiseaseModel : public CBase_DiseaseModel {
   Time timeDefToSeconds(TimeDef time) const;
 
   // Intervention related.
-  bool interventionToggled;
+  std::vector<bool> isTriggered;
 
  public:
   DiseaseModel(std::string pathToModel, std::string scenarioPath,
@@ -67,12 +69,13 @@ class DiseaseModel : public CBase_DiseaseModel {
   loimos::proto::CSVDefinition *personDef;
   loimos::proto::CSVDefinition *locationDef;
   loimos::proto::CSVDefinition *activityDef;
-  loimos::proto::Intervention *interventionDef;
+  loimos::proto::InterventionModel *interventionDef;
 
   // Intervention methods
-  void toggleIntervention(int newDailyInfections);
-  double getCompilance() const;
-  bool shouldPersonIsolate(int healthState);
+  void toggleIntervention(int day, int newDailyInfections);
+  int getInterventionIndex(InterventionTestType test) const;
+  double getCompliance(int interventionIndex) const;
+  bool shouldPersonIsolate(int healthState) const;
   bool isLocationOpen(std::vector<Data> *locAttr) const;
   bool complyingWithLockdown(std::default_random_engine *generator) const;
 

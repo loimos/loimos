@@ -9,15 +9,50 @@ package loimos.proto;
 
 import "data.proto";
 
-message Intervention {
-  double new_daily_cases_trigger_on = 1;
-  double new_daily_cases_trigger_off = 2;
-  bool school_closures = 3;
-  bool stay_at_home = 4; 
-  double isolation_compliance = 5;
-  double school_closure_compliance = 6;
-  // CSV Mappings
-  int32 csv_location_of_school = 7;
-  int32 csv_location_of_seeder_bool = 8;
-  int32 seeding_admin_code = 9;
+message InterventionModel {
+  message Trigger {
+    message TriggerType_NewDailyCases {
+      double trigger_on = 1;
+      double trigger_off = 2;
+    }
+
+    message TriggerType_Day {
+      int32 trigger_on  = 1;
+      int32 trigger_off = 2;
+    }
+
+    oneof trigger_type {
+      TriggerType_NewDailyCases new_daily_cases = 1;
+      TriggerType_Day           day             = 2;
+    }
+  }
+
+  message Intervention {
+    double compliance = 1;
+    int32  trigger_index = 2;
+
+    message InterventionType_SelfIsolation {}
+
+    message InterventionType_SchoolClosures {
+      int32 csv_location_of_school = 1;
+    }
+
+    message InterventionType_Vaccination {
+      int32  per_day = 1;
+      double infection_protection = 2;
+      double severe_disease_protection = 3;
+      double transmission_protection = 4;
+      int32  delay = 5;
+    }
+
+    oneof intervention_type {
+      InterventionType_SelfIsolation  self_isolation  = 3;
+      InterventionType_SchoolClosures school_closures = 4;
+      InterventionType_Vaccination    vaccination     = 5;
+    }
+  }
+
+  repeated Trigger triggers = 1;
+  repeated Intervention interventions = 2;
+  repeated DataField attributes = 3;
 }

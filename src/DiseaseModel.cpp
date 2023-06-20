@@ -36,8 +36,6 @@
 #include <vector>
 #include <unordered_map>
 
-using NameIndexLookupType = std::unordered_map<std::string, int>;
-
 // This is currently used to adjust the infection probability so that
 // not everyone gets infected immediately given the small time units
 // (i.e. it normalizes for the size of the smallest time increment used
@@ -65,11 +63,6 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
   }
   diseaseModelStream.close();
   assert(model->disease_states_size() != 0);
-
-
-
-  int personTableSize = 0;
-  int locationTableSize = 0;
 
   // Setup other shared PE objects.
   if (!syntheticRun) {
@@ -122,7 +115,7 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
   locationTable.populateTable("att");
 
   if (interventionStategy) {
-    interventionDef = new loimos::proto::Intervention();
+    interventionDef = new loimos::proto::InterventionModel();
     std::ifstream interventionActivityStream(pathToIntervention);
     if (!interventionActivityStream)
       CkAbort("Could not open intervention textproto!");
@@ -134,10 +127,9 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
       CkAbort("Could not parse protobuf!");
     }
     interventionActivityStream.close();
-  }
 
-  // Always toggle intervention off to start.
-  interventionToggled = false;
+    isTriggered.resize(interventionDef->triggers_size(), false);
+  }
 }
 
 /**
@@ -366,39 +358,59 @@ double DiseaseModel::getPropensity(int susceptibleState, int infectiousState,
  * Intervention Methods
  * TODO: Move to own chare as these become more complex.
  */
-void DiseaseModel::toggleIntervention(int newDailyInfections) {
-  if (!interventionToggled) {
-    if (static_cast<double>(newDailyInfections) / numPeople >=
-          interventionDef->new_daily_cases_trigger_on()) {
-      interventionToggled = true;
-      printf("Intervention toggled!\n");
-    }
-  } else {
-    if (static_cast<double>(newDailyInfections) / numPeople <=
-          interventionDef->new_daily_cases_trigger_off()) {
-      interventionToggled = false;
+void DiseaseModel::toggleIntervention(int day, int newDailyInfections) {
+  for (int i = 0; i < interventionDef->triggers_size(); ++i) {
+    const loimos::proto::InterventionModel::Trigger &trigger =
+      interventionDef->triggers(i);
+
+    // Trigger uses simulation day
+    if (trigger.has_day()) {
+      const auto &tmp = trigger.day();
+      isTriggered[i] = (!isTriggered[i] && tmp.trigger_on() <= day)
+        || (isTriggered[i] && tmp.trigger_off() <= day);
+
+    // Trigger uses number of new cases
+    } else if (trigger.has_new_daily_cases()) {
+      double infectionRate = static_cast<double>(newDailyInfections)
+        / numPeople;
+      const auto &tmp = trigger.new_daily_cases();
+      isTriggered[i] = (!isTriggered[i] && tmp.trigger_on() <= infectionRate)
+        || (isTriggered[i] && tmp.trigger_off() <= infectionRate);
     }
   }
+}
+
+int DiseaseModel::getInterventionIndex(InterventionTestType test) const {
+  if (!interventionStategy) {
+    return -1;
+  }
+
+  for (int i = 0; i < interventionDef->interventions_size(); ++i) {
+    if (test(interventionDef->interventions(i))) {
+      return i;
+    }
+  }
+
+  return -1;
 }
 
 /**
  * For now only the self-isolation intervention has a compilance value
  */
-double DiseaseModel::getCompilance() const {
-  if (interventionStategy && interventionDef->stay_at_home()) {
-    return interventionDef->isolation_compliance();
-  } else {
-    return 0;
-  }
+double DiseaseModel::getCompliance(int interventionIndex) const {
+  return interventionDef->interventions(interventionIndex).compliance();
 }
 
 /**
  * Only thing that causes person to self-isolate is if interventions are
  * triggered, that intervention imposes stay at home, and person is symptomatic.
  */
-bool DiseaseModel::shouldPersonIsolate(int healthState) {
-  return interventionToggled
-    && interventionDef->stay_at_home()
+bool DiseaseModel::shouldPersonIsolate(int healthState) const {
+  int index = getInterventionIndex(
+      [] (const loimos::proto::InterventionModel::Intervention inter) {
+        return inter.has_self_isolation();
+      });
+  return -1 != index && isTriggered[index]
     && model->disease_states(healthState).symptomatic();
 }
 
@@ -406,11 +418,25 @@ bool DiseaseModel::shouldPersonIsolate(int healthState) {
  * Location closed if it is a school and intervention is triggered.
  */
 bool DiseaseModel::isLocationOpen(std::vector<Data> *locAttr) const {
-  return !(interventionToggled && interventionDef->school_closures() &&
-    locAttr->at(interventionDef->csv_location_of_school()).int_b10 > 0);
+  int index = getInterventionIndex(
+      [] (const loimos::proto::InterventionModel::Intervention inter) {
+        return inter.has_school_closures();
+      });
+  return !(-1 != index && isTriggered[index]
+      && locAttr->at(
+        interventionDef->interventions(index)
+          .school_closures()
+          .csv_location_of_school()
+      ).int_b10 > 0);
 }
 
 bool DiseaseModel::complyingWithLockdown(std::default_random_engine *generator) const {
+  int index = getInterventionIndex(
+      [] (const loimos::proto::InterventionModel::Intervention inter) {
+        return inter.has_self_isolation();
+      });
   std::uniform_real_distribution<double> uniform_dist(0, 1);
-  return uniform_dist(*generator) < interventionDef->school_closure_compliance();
+  return -1 != index
+    && uniform_dist(*generator) < interventionDef->interventions(index)
+      .compliance();
 }
