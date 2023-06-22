@@ -130,11 +130,6 @@ mainmodule loimos {
             if (DAYS_TO_SEED_INFECTION > day) {
               SeedInfections();
             }
-            if (day == 0) {
-              InitializeIntervention();
-              std::shared_ptr<BaseIntervention> intervention = GetInterventions()[0];
-              peopleArray.ReceiveIntervention(intervention);
-            }
 
             CkStartQD(CkCallback(
               CkIndex_Main::ComputedInteractions(),
@@ -163,7 +158,7 @@ mainmodule loimos {
 
             // Use this count as desired here
             if (interventionStategy) {
-              globDiseaseModel.toggleIntervention(day, infectiousCount);
+              globDiseaseModel.applyInterventions(day, infectiousCount);
             }
 
             // Print how long this iteration took to run
@@ -233,6 +228,7 @@ mainmodule loimos {
         CkExit();
       }
     };
+
     entry void SeedInfections();
     entry void StartComputingInteractions();
     entry void ComputedInteractions();
@@ -255,7 +251,6 @@ mainmodule loimos {
     entry [reductiontarget] void peopleLBComplete();
     #endif // ENABLE_LB
   };
-
 
   group TraceSwitcher{
     entry TraceSwitcher();
@@ -298,7 +293,7 @@ mainmodule loimos {
   nodegroup DiseaseModel {
       entry DiseaseModel(std::string pathToModel, std::string scenarioPath,
           std::string pathToIntervention);
-      entry void toggleIntervention(int day, int newDailyInfections);
+      entry void applyInterventions(int day, int newDailyInfections);
   };
 
   #ifdef USE_HYPERCOMM

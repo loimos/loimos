@@ -5,36 +5,39 @@
   */
 
 #include "Interventions.h"
-#include "readers/DataInterface.h"
 #include "AttributeTable.h"
+#include "readers/DataInterface.h"
+#include "readers/interventions.pb.h"
 
 #include <vector>
 
-void BaseIntervention::pup(PUP::er &p) {}
-
 bool BaseIntervention::test(const DataInterface &p,
-    std::default_random_engine *generator) {
+    std::default_random_engine *generator) const {
   return false;
 }
 
-void BaseIntervention::apply(DataInterface *p) {}
+void BaseIntervention::apply(DataInterface *p) const {}
 
-VaccinationIntervention::VaccinationIntervention(const AttributeTable &t) {
-  vaccinationProbability = 0.5;
-  this->probIndex = t.getAttribute("prob");
+void BaseIntervention::pup(PUP::er &p) {}
+
+VaccinationIntervention::VaccinationIntervention(
+    const loimos::proto::InterventionModel::Intervention &interventionDef,
+    const AttributeTable &t) {
+  vaccinationProbability = interventionDef.vaccination().probability();
+  vaccinatedSusceptibility = interventionDef.vaccination()
+    .vaccinated_susceptibility();
   this->vaccinatedIndex = t.getAttribute("vaccinated");
-  this->riskIndex = t.getAttribute("risk");
+  this->susceptibilityIndex = t.getAttribute("susceptibility");
 }
 
 void VaccinationIntervention::pup(PUP::er &p) {
   p | vaccinationProbability;
-  p | probIndex;
   p | vaccinatedIndex;
-  p | riskIndex;
+  p | susceptibilityIndex;
 }
 
 bool VaccinationIntervention::test(const DataInterface &p,
-    std::default_random_engine *generator) {
+    std::default_random_engine *generator) const {
   std::uniform_real_distribution<double> distribution(0.0, 1.0);
 
   // CkPrintf("Vaccinated:%d, riskProbability: %f, selected for vaccine %d\n",
@@ -44,10 +47,8 @@ bool VaccinationIntervention::test(const DataInterface &p,
     && distribution(*generator) < vaccinationProbability;
 }
 
-void VaccinationIntervention::apply(DataInterface *p)  {
+void VaccinationIntervention::apply(DataInterface *p) const {
   std::vector<union Data> &objData = p->getData();
-  // CkPrintf("Before apply %f\n",objData[probIndex].probability);
   objData[vaccinatedIndex].boolean = true;
-  objData[probIndex].probability = 0.85;
-  // CkPrintf("After apply %f\n",objData[probIndex].probability);
+  objData[susceptibilityIndex].double_b10 = vaccinatedSusceptibility;
 }

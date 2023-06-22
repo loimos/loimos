@@ -38,11 +38,8 @@ message InterventionModel {
     }
 
     message InterventionType_Vaccination {
-      int32  per_day = 1;
-      double infection_protection = 2;
-      double severe_disease_protection = 3;
-      double transmission_protection = 4;
-      int32  delay = 5;
+      double probability = 1;
+      double vaccinated_susceptibility = 2;
     }
 
     oneof intervention_type {
@@ -54,5 +51,6 @@ message InterventionModel {
 
   repeated Trigger triggers = 1;
   repeated Intervention interventions = 2;
-  repeated DataField attributes = 3;
+  repeated DataField person_attributes = 3;
+  repeated DataField location_attributes = 4;
 }

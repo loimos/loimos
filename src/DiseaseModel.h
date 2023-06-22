@@ -42,9 +42,11 @@ class DiseaseModel : public CBase_DiseaseModel {
   Time timeDefToSeconds(TimeDef time) const;
 
   // Intervention related.
-  std::vector<bool> isTriggered;
+  std::vector<bool> triggerFlags;
+  std::vector<std::shared_ptr<BaseIntervention>> interventions;
 
  public:
+  // move back to private later
   DiseaseModel(std::string pathToModel, std::string scenarioPath,
       std::string pathToIntervention);
   int getIndexOfState(std::string stateLabel) const;
@@ -72,9 +74,12 @@ class DiseaseModel : public CBase_DiseaseModel {
   loimos::proto::InterventionModel *interventionDef;
 
   // Intervention methods
-  void toggleIntervention(int day, int newDailyInfections);
+  void applyInterventions(int day, int newDailyInfections);
+  void toggleInterventions(int day, int newDailyInfections);
+  const std::vector<const BaseIntervention> getInterventions();
   int getInterventionIndex(InterventionTestType test) const;
   double getCompliance(int interventionIndex) const;
+  int getTriggerIndex(int interventionIndex) const;
   bool shouldPersonIsolate(int healthState) const;
   bool isLocationOpen(std::vector<Data> *locAttr) const;
   bool complyingWithLockdown(std::default_random_engine *generator) const;

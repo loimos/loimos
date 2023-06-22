@@ -83,8 +83,11 @@ class DataReader {
       obj->setUniqueId(std::stoi(rawData));
       return 0;
     } else {
-      if (field->has_b10int() || field->has_foreign_id()) {
+      if (field->has_b10int() || field->has_foreign_id() || field->has_int32()) {
         data->at(fieldIdx).int_b10 = std::stoi(rawData);
+
+      } else if (field->has_b10double() || field->has_double_()) {
+        data->at(fieldIdx).double_b10 = std::stod(rawData);
 
       } else if (field->has_label()) {
         data->at(fieldIdx).str = new std::string(rawData);
