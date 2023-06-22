@@ -7,15 +7,17 @@
 #ifndef INTERVENTIONS_H_
 #define INTERVENTIONS_H_
 
-#include "readers/DataInterface.h"
 #include "AttributeTable.h"
+#include "readers/DataInterface.h"
+#include "readers/interventions.pb.h"
 
 #include "charm++.h"
 
 class BaseIntervention : public PUP::able {
  public:
-  virtual bool test(const DataInterface &p, std::default_random_engine *generator);
-  virtual void apply(DataInterface *p);
+  virtual bool test(const DataInterface &p,
+      std::default_random_engine *generator) const;
+  virtual void apply(DataInterface *p) const;
   virtual void pup(PUP::er &p);  // NOLINT(runtime/references)
 
   PUPable_decl(BaseIntervention);
@@ -27,14 +29,18 @@ class BaseIntervention : public PUP::able {
 class VaccinationIntervention : public BaseIntervention {
  public:
   double vaccinationProbability;
-  int riskIndex;
+  double vaccinatedSusceptibility;
   int vaccinatedIndex;
-  int probIndex;
-  bool test(const DataInterface &p, std::default_random_engine *generator) override;
-  void apply(DataInterface *p) override;
+  int susceptibilityIndex;
+
+  bool test(const DataInterface &p, std::default_random_engine *generator)
+    const override;
+  void apply(DataInterface *p) const override;
   void pup(PUP::er &p) override;  // NOLINT(runtime/references)
   void identify();
-  explicit VaccinationIntervention(const AttributeTable &t);
+  VaccinationIntervention(
+      const loimos::proto::InterventionModel::Intervention &interventionDef,
+      const AttributeTable &t);
   PUPable_decl(VaccinationIntervention);
   VaccinationIntervention();
   explicit VaccinationIntervention(CkMigrateMessage *m) : BaseIntervention(m) {}

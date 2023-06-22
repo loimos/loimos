@@ -55,59 +55,51 @@ int AttributeTable::getAttribute(std::string name) const {
   return -1;
 }
 
-void AttributeTable::populateTable(std::string fname) {
-  std::ifstream infile(fname);
-  std::string value;
-  std::string dataType;
-  std::string attributeType;
-  std::string name;
-  DataTypes::DataType dataEnum = DataTypes::int_b10;
-  while (infile >> dataType >> name >> value >> attributeType) {
-    // CkPrintf("Heads: %s, %s, %s, %s, %d\n", value.c_str(),
-    //     dataType.c_str(), attributeType, name, test);
-    if (dataType != "type" && ((attributeType == "p" && this->isPersonTable)
-        || (attributeType == "l" && !this->isPersonTable))) {
-      Data d;
-      if (dataType == "double") {
-        dataEnum = DataTypes::probability;
-        d.probability = {std::stod(value)};
-      } else if (dataType == "int" || dataType == "uint16_t") {
-        dataEnum = DataTypes::int_b10;
-        d.int_b10 = {std::stoi(value)};
-      } else if (dataType == "bool") {
-        dataEnum = DataTypes::boolean;
-        d.boolean = {value == "1" || value == "t"};
-      } else if (dataType == "uint32_t") {
-        dataEnum = DataTypes::uint_32;
-        d.uint_32 = {std::stoul(value)};
-      }
+void AttributeTable::readAttributes(const AttributeList &attributes) {
+  for (int i = 0; i < attributes.size(); i++) {
+    loimos::proto::DataField const &field = attributes[i];
+    if (!field.has_ignore() && !field.has_unique_id()) {
+      DataTypes::DataType type;
+      Data defaultValue;
+      if (field.has_b10int() || field.has_int32() || field.has_foreign_id()) {
+        type = DataTypes::int_b10;
+        if (field.default_value_case()
+            == loimos::proto::DataField::DefaultValueCase::kDefaultInt) {
+          defaultValue.int_b10 = field.default_int();
+        } else {
+          defaultValue.int_b10 = 0;
+        }
 
-      // CkPrintf("Att: %s\n", dataType);
-      list.emplace_back(d, dataEnum, name);
-    }
-  }
-}
+      } else if (field.has_b10double() || field.has_double_()) {
+        type = DataTypes::double_b10;
+        if (field.default_value_case()
+            == loimos::proto::DataField::DefaultValueCase::kDefaultDouble) {
+          defaultValue.double_b10 = field.default_double();
+        } else {
+          defaultValue.double_b10 = 0;
+        }
 
-void AttributeTable::readData(loimos::proto::CSVDefinition *dataFormat) {
-  // this->reserve(DataReader<Person>::getNonZeroAttributes(dataFormat));
-  for (int c = 0; c < dataFormat->fields_size(); c++) {
-    loimos::proto::DataField const &field = dataFormat->fields(c);
-    if (!field.has_ignore() && !field.has_unique_id()
-        && !field.has_foreign_id()) {
-      DataTypes::DataType dataEnum;
-      Data d;
-      if (field.has_b10int()) {
-        d.int_b10 = 1;
-        dataEnum = DataTypes::int_b10;
       } else if (field.has_label()) {
-        d.str = new std::string("default");
-        dataEnum = DataTypes::string;
+        type = DataTypes::string;
+        if (field.default_value_case()
+            == loimos::proto::DataField::DefaultValueCase::kDefaultString) {
+          defaultValue.str = new std::string(field.default_string());
+        } else {
+          defaultValue.str = new std::string("");
+        }
+
       } else if (field.has_bool_()) {
-        d.boolean = false;
-        dataEnum = DataTypes::boolean;
+        type = DataTypes::boolean;
+        defaultValue.boolean = false;
+        if (field.default_value_case()
+            == loimos::proto::DataField::DefaultValueCase::kDefaultBool) {
+          defaultValue.boolean = field.default_bool();
+        } else {
+          defaultValue.boolean = false;
+        }
       }
 
-      list.emplace_back(d, dataEnum, field.field_name());
+      list.emplace_back(defaultValue, type, field.field_name());
     }
   }
 }

@@ -13,6 +13,9 @@
 #include <string>
 #include <vector>
 
+using AttributeList = google::protobuf::RepeatedPtrField<
+  loimos::proto::DataField>;
+
 struct Attribute {
   union Data defaultValue;
   DataTypes::DataType dataType;
@@ -35,12 +38,11 @@ class AttributeTable {
   DataTypes::DataType getDataType(int i);
   bool getTableType();
   bool isPersonTable;
-  void populateTable(std::string fname);
   int getAttribute(std::string name) const;
   int size() const;
   void updateIndex(int i, int newIndex);
   void resize(int size);
-  void readData(loimos::proto::CSVDefinition *dataFormat);
+  void readAttributes(const AttributeList &dataFormat);
 };
 
 #endif  // ATTRIBUTETABLE_H_
