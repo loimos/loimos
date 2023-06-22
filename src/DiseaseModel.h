@@ -22,6 +22,7 @@
 #include <tuple>
 #include <string>
 #include <vector>
+#include <memory>
 
 using NameIndexLookupType = std::unordered_map<std::string, int>;
 using InterventionTestType = std::function<

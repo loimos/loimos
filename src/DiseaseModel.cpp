@@ -452,8 +452,7 @@ bool DiseaseModel::isLocationOpen(std::vector<Data> *locAttr) const {
       && locAttr->at(
         interventionDef->interventions(interIdx)
           .school_closures()
-          .csv_location_of_school()
-      ).int_b10 > 0);
+          .csv_location_of_school()).int_b10 > 0);
 }
 
 bool DiseaseModel::complyingWithLockdown(std::default_random_engine *generator) const {
