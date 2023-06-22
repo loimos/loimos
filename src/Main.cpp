@@ -421,15 +421,6 @@ void Main::CharesCreated() {
   }
 }
 
-void Main::InitializeIntervention() {
-  this->interventions.push_back(
-    std::make_shared<VaccinationIntervention>(diseaseModel->personTable));
-}
-
-std::vector<std::shared_ptr<BaseIntervention>> Main::GetInterventions() {
-  return this->interventions;
-}
-
 void Main::SeedInfections() {
   std::default_random_engine generator(seed);
 

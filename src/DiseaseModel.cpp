@@ -135,10 +135,6 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     locationTable.readAttributes(locationDef->fields());
   }
 
-  // Read in other info besides size -- data type and dummy default value
-  personTable.populateTable("att");
-  locationTable.populateTable("att");
-
   if (interventionStategy) {
     interventionDef = new loimos::proto::InterventionModel();
     std::ifstream interventionActivityStream(pathToIntervention);
