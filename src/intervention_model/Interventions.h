@@ -4,8 +4,8 @@
   * SPDX-License-Identifier: MIT
   */
 
-#ifndef INTERVENTIONS_H_
-#define INTERVENTIONS_H_
+#ifndef INTERVENTION_MODEL_INTERVENTIONS_H_
+#define INTERVENTION_MODEL_INTERVENTIONS_H_
 
 #include "AttributeTable.h"
 #include "../protobuf/interventions.pb.h"
@@ -45,4 +45,4 @@ class VaccinationIntervention : public Intervention {
   VaccinationIntervention();
   explicit VaccinationIntervention(CkMigrateMessage *m) : Intervention(m) {}
 };
-#endif  // INTERVENTIONS_H_
+#endif  // INTERVENTION_MODEL_INTERVENTIONS_H_
