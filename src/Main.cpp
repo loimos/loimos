@@ -12,7 +12,6 @@
 #include "DiseaseModel.h"
 #include "contact_model/ContactModel.h"
 #include "readers/Preprocess.h"
-#include "AttributeTable.h"
 
 #include <string>
 #include <tuple>
