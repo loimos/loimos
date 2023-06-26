@@ -8,7 +8,7 @@
 #define INTERVENTIONS_H_
 
 #include "AttributeTable.h"
-#include "../readers/interventions.pb.h"
+#include "../protobuf/interventions.pb.h"
 #include "../readers/DataInterface.h"
 
 #include "charm++.h"
