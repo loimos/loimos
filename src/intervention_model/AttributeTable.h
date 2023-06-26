@@ -4,8 +4,8 @@
   * SPDX-License-Identifier: MIT
   */
 
-#ifndef ATTRIBUTETABLE_H_
-#define ATTRIBUTETABLE_H_
+#ifndef INTERVENTION_MODEL_ATTRIBUTETABLE_H_
+#define INTERVENTION_MODEL_ATTRIBUTETABLE_H_
 
 #include "../readers/DataInterface.h"
 #include "../readers/DataReader.h"
@@ -45,4 +45,4 @@ class AttributeTable {
   void readAttributes(const AttributeList &dataFormat);
 };
 
-#endif  // ATTRIBUTETABLE_H_
+#endif  // INTERVENTION_MODEL_ATTRIBUTETABLE_H_
