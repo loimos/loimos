@@ -34,6 +34,7 @@ class AttributeTable {
   explicit AttributeTable(bool isPersonTable);
   Attribute getAttribute(int i);
   union Data getDefaultValue(int i) const;
+  double getDefaultValueAsDouble(int i) const;
   std::string getName(int i) const;
   DataTypes::DataType getDataType(int i);
   bool getTableType();
