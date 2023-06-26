@@ -8,11 +8,11 @@ include Makefile.include
 OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o  \
          Defs.o Event.o Interaction.o readers/Preprocess.o \
 				 readers/DataInterface.o \
-         disease_model/disease.pb.o disease_model/distribution.pb.o \
-		     readers/data.pb.o readers/interventions.pb.o \
 				 contact_model/MinMaxAlphaModel.o contact_model/ContactModel.o \
 				 intervention_model/Interventions.o \
-				 intervention_model/AttributeTable.o
+				 intervention_model/AttributeTable.o \
+         protobuf/disease.pb.o protobuf/distribution.pb.o \
+		     protobuf/data.pb.o protobuf/interventions.pb.o
 DEFS   = loimos.def.h Defs.h readers/DataReader.h
 DECLS  = loimos.decl.h
 
@@ -49,7 +49,7 @@ else
 PROJECTION_FLAGS =
 endif
 
-SUBDIRS = disease_model contact_model intervention_model readers tests
+SUBDIRS = protobuf tests
 
 .PHONY:all
 all: all-sub $(BIN)

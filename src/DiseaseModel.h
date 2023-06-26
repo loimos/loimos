@@ -8,14 +8,13 @@
 
 #include "Event.h"
 
-#include "disease_model/disease.pb.h"
-#include "disease_model/distribution.pb.h"
+#include "protobuf/disease.pb.h"
+#include "protobuf/distribution.pb.h"
+#include "protobuf/data.pb.h"
+#include "protobuf/interventions.pb.h"
 #include "readers/DataReader.h"
-#include "readers/interventions.pb.h"
 #include "intervention_model/AttributeTable.h"
-
 #include "Event.h"
-#include "readers/data.pb.h"
 
 #include <unordered_map>
 #include <random>

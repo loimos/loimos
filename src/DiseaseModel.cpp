@@ -20,10 +20,10 @@
 #include "Event.h"
 #include "Person.h"
 #include "readers/DataReader.h"
-#include "readers/interventions.pb.h"
-#include "disease_model/disease.pb.h"
-#include "disease_model/distribution.pb.h"
 #include "intervention_model/AttributeTable.h"
+#include "protobuf/interventions.pb.h"
+#include "protobuf/disease.pb.h"
+#include "protobuf/distribution.pb.h"
 
 #include <cmath>
 #include <cstdio>

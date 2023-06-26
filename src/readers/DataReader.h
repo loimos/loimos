@@ -7,9 +7,9 @@
 #ifndef READERS_DATAREADER_H_
 #define READERS_DATAREADER_H_
 
-#include "../Defs.h"
-#include "data.pb.h"
 #include "DataInterface.h"
+#include "../protobuf/data.pb.h"
+#include "../Defs.h"
 
 #include <vector>
 #include <stdio.h>

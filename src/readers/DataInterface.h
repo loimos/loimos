@@ -13,7 +13,7 @@
 
 #include "charm++.h"
 #include "pup_stl.h"
-#include "data.pb.h"
+#include "../protobuf/data.pb.h"
 
 namespace DataTypes {
   enum DataType {int_b10, uint_32, string, double_b10, category, boolean};

@@ -6,10 +6,10 @@
 
 #include "loimos.decl.h"
 
+#include "protobuf/data.pb.h"
 #include "Person.h"
 #include "DiseaseModel.h"
 #include "Message.h"
-#include "readers/data.pb.h"
 
 #include <vector>
 
