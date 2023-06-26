@@ -6,9 +6,9 @@
 
 #include "AttributeTable.h"
 #include "../loimos.decl.h"
+#include "../protobuf/data.pb.h"
 #include "../Person.h"
 #include "../Location.h"
-#include "../readers/data.pb.h"
 #include "../readers/DataReader.h"
 
 #include <string>

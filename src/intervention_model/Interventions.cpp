@@ -6,8 +6,8 @@
 
 #include "Interventions.h"
 #include "AttributeTable.h"
+#include "../protobuf/interventions.pb.h"
 #include "../readers/DataInterface.h"
-#include "../readers/interventions.pb.h"
 
 #include <vector>
 
