@@ -18,12 +18,12 @@
 #include "Defs.h"
 #include "Extern.h"
 #include "Event.h"
+#include "Person.h"
 #include "readers/DataReader.h"
+#include "readers/interventions.pb.h"
 #include "disease_model/disease.pb.h"
 #include "disease_model/distribution.pb.h"
-#include "readers/interventions.pb.h"
-#include "AttributeTable.h"
-#include "Person.h"
+#include "intervention_model/AttributeTable.h"
 
 #include <cmath>
 #include <cstdio>

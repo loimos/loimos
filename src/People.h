@@ -11,7 +11,7 @@
 #include "Interaction.h"
 #include "Person.h"
 #include "Message.h"
-#include "Interventions.h"
+#include "intervention_model/Interventions.h"
 
 #include <functional>
 #include <random>

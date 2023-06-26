@@ -12,7 +12,7 @@
 #include "disease_model/distribution.pb.h"
 #include "readers/DataReader.h"
 #include "readers/interventions.pb.h"
-#include "AttributeTable.h"
+#include "intervention_model/AttributeTable.h"
 
 #include "Event.h"
 #include "readers/data.pb.h"

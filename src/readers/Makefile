@@ -6,9 +6,9 @@
 include ../Makefile.include
 
 PROTOS      = data.proto interventions.proto
-TMP_SRCS    = $(subst .proto,.pb.cc,$(PROTOS)) 
-SRCS        = $(subst .proto,.pb.cpp,$(PROTOS)) 
-OBJS        = $(subst .proto,.pb.o,$(PROTOS)) 
+TMP_SRCS    = $(subst .proto,.pb.cc,$(PROTOS))
+SRCS        = $(subst .proto,.pb.cpp,$(PROTOS))
+OBJS        = $(subst .proto,.pb.o,$(PROTOS))
 
 .PHONY:all
 all: $(OBJS)

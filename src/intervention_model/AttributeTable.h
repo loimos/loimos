@@ -7,8 +7,8 @@
 #ifndef ATTRIBUTETABLE_H_
 #define ATTRIBUTETABLE_H_
 
-#include "readers/DataInterface.h"
-#include "readers/DataReader.h"
+#include "../readers/DataInterface.h"
+#include "../readers/DataReader.h"
 
 #include <string>
 #include <vector>

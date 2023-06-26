@@ -6,7 +6,7 @@
 mainmodule loimos {
   include "Interaction.h";
   include "Message.h";
-  include "Interventions.h";
+  include "intervention_model/Interventions.h";
 
   #ifdef USE_HYPERCOMM
   include "AggregatorParam.h";

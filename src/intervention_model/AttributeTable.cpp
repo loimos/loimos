@@ -4,12 +4,12 @@
   * SPDX-License-Identifier: MIT
   */
 
-#include "loimos.decl.h"
 #include "AttributeTable.h"
-#include "readers/data.pb.h"
-#include "readers/DataReader.h"
-#include "Person.h"
-#include "Location.h"
+#include "../loimos.decl.h"
+#include "../Person.h"
+#include "../Location.h"
+#include "../readers/data.pb.h"
+#include "../readers/DataReader.h"
 
 #include <string>
 #include <vector>
