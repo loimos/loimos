@@ -11,14 +11,14 @@
 
 #include <vector>
 
-bool BaseIntervention::test(const DataInterface &p,
+bool Intervention::test(const DataInterface &p,
     std::default_random_engine *generator) const {
   return false;
 }
 
-void BaseIntervention::apply(DataInterface *p) const {}
+void Intervention::apply(DataInterface *p) const {}
 
-void BaseIntervention::pup(PUP::er &p) {}
+void Intervention::pup(PUP::er &p) {}
 
 VaccinationIntervention::VaccinationIntervention(
     const loimos::proto::InterventionModel::Intervention &interventionDef,

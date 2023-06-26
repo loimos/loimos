@@ -27,7 +27,6 @@ class Main : public CBase_Main {
   explicit Main(CkArgMsg* msg);
   void CharesCreated();
   void SeedInfections();
-  std::vector<std::shared_ptr<BaseIntervention>> GetInterventions();
   void SaveStats(int *data);
 };
 

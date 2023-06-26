@@ -12,7 +12,6 @@
 #include "contact_model/ContactModel.h"
 #include "readers/Preprocess.h"
 #include "AttributeTable.h"
-#include "Interventions.h"
 
 #include <string>
 #include <tuple>
