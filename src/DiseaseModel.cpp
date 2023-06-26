@@ -134,12 +134,12 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     for (int i = 0; i < numTriggers; ++i) {
       const auto &inter = interventionDef->interventions(i);
       if (inter.has_vaccination()) {
-        interventions.emplace_back(std::shared_ptr<BaseIntervention>(
+        interventions.emplace_back(std::shared_ptr<Intervention>(
               new VaccinationIntervention(inter, personTable)));
 
       } else {
-        interventions.emplace_back(std::shared_ptr<BaseIntervention>(
-              new BaseIntervention()));
+        interventions.emplace_back(std::shared_ptr<Intervention>(
+              new Intervention()));
       }
     }
   }

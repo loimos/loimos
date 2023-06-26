@@ -49,7 +49,7 @@ class People : public CBase_People {
   void ReceiveInteractions(InteractionMessage interMsg);
   void EndOfDayStateUpdate();
   void SendStats();
-  void ReceiveIntervention(std::shared_ptr<BaseIntervention> v);
+  void ReceiveIntervention(std::shared_ptr<Intervention> v);
   #ifdef ENABLE_LB
   void ResumeFromSync();
   #endif  // ENABLE_LB

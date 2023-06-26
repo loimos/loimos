@@ -460,7 +460,7 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
     interMsg.interactions.cbegin(), interMsg.interactions.cend());
 }
 
-void People::ReceiveIntervention(std::shared_ptr<BaseIntervention> intervention) {
+void People::ReceiveIntervention(std::shared_ptr<Intervention> intervention) {
   for (Person &person : people) {
     if (intervention->test(person, &generator)) {
       intervention->apply(&person);

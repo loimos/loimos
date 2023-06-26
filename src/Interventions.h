@@ -13,20 +13,20 @@
 
 #include "charm++.h"
 
-class BaseIntervention : public PUP::able {
+class Intervention : public PUP::able {
  public:
   virtual bool test(const DataInterface &p,
       std::default_random_engine *generator) const;
   virtual void apply(DataInterface *p) const;
   virtual void pup(PUP::er &p);  // NOLINT(runtime/references)
 
-  PUPable_decl(BaseIntervention);
-  BaseIntervention() {}
-  explicit BaseIntervention(CkMigrateMessage *m) :
+  PUPable_decl(Intervention);
+  Intervention() {}
+  explicit Intervention(CkMigrateMessage *m) :
     PUP::able(m) {}  // NOLINT(runtime/references)
 };
 
-class VaccinationIntervention : public BaseIntervention {
+class VaccinationIntervention : public Intervention {
  public:
   double vaccinationProbability;
   double vaccinatedSusceptibility;
@@ -43,6 +43,6 @@ class VaccinationIntervention : public BaseIntervention {
       const AttributeTable &t);
   PUPable_decl(VaccinationIntervention);
   VaccinationIntervention();
-  explicit VaccinationIntervention(CkMigrateMessage *m) : BaseIntervention(m) {}
+  explicit VaccinationIntervention(CkMigrateMessage *m) : Intervention(m) {}
 };
 #endif  // INTERVENTIONS_H_

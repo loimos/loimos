@@ -44,7 +44,7 @@ class DiseaseModel : public CBase_DiseaseModel {
 
   // Intervention related.
   std::vector<bool> triggerFlags;
-  std::vector<std::shared_ptr<BaseIntervention>> interventions;
+  std::vector<std::shared_ptr<Intervention>> interventions;
 
  public:
   // move back to private later
@@ -77,7 +77,7 @@ class DiseaseModel : public CBase_DiseaseModel {
   // Intervention methods
   void applyInterventions(int day, int newDailyInfections);
   void toggleInterventions(int day, int newDailyInfections);
-  const std::vector<const BaseIntervention> getInterventions();
+  const std::vector<const Intervention> getInterventions();
   int getInterventionIndex(InterventionTestType test) const;
   double getCompliance(int interventionIndex) const;
   int getTriggerIndex(int interventionIndex) const;
