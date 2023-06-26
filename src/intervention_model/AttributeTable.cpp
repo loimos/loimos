@@ -30,6 +30,25 @@ Attribute AttributeTable::getAttribute(int i) {
 union Data AttributeTable::getDefaultValue(int i) const {
   return list[i].defaultValue;
 }
+double AttributeTable::getDefaultValueAsDouble(int i) const {
+  const union Data &defaultValue = list[i].defaultValue;
+  switch (list[i].dataType) {
+    case DataTypes::int_b10:
+      return static_cast<double>(defaultValue.int_b10);
+
+    case DataTypes::uint_32:
+      return static_cast<double>(defaultValue.uint_32);
+
+    case DataTypes::double_b10:
+      return static_cast<double>(defaultValue.double_b10);
+
+    case DataTypes::category:
+      return static_cast<double>(defaultValue.category);
+
+    case DataTypes::boolean:
+      return static_cast<double>(defaultValue.boolean);
+  }
+}
 std::string AttributeTable::getName(int i) const {
   return list[i].name;
 }
@@ -76,7 +95,7 @@ void AttributeTable::readAttributes(const AttributeList &attributes) {
             == loimos::proto::DataField::DefaultValueCase::kDefaultDouble) {
           defaultValue.double_b10 = field.default_double();
         } else {
-          defaultValue.double_b10 = 0;
+          defaultValue.double_b10 = 0.0;
         }
 
       } else if (field.has_label()) {
@@ -97,6 +116,10 @@ void AttributeTable::readAttributes(const AttributeList &attributes) {
         } else {
           defaultValue.boolean = false;
         }
+
+      } else {
+        CkAbort("Error: attribute \"%s\" has invalid type\n",
+            field.field_name().c_str());
       }
 
       list.emplace_back(defaultValue, type, field.field_name());
