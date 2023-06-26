@@ -11,19 +11,19 @@ import "data.proto";
 
 message InterventionModel {
   message Trigger {
-    message TriggerType_NewDailyCases {
+    message TriggerTypeNewDailyCases {
       double trigger_on = 1;
       double trigger_off = 2;
     }
 
-    message TriggerType_Day {
+    message TriggerTypeDay {
       int32 trigger_on  = 1;
       int32 trigger_off = 2;
     }
 
     oneof trigger_type {
-      TriggerType_NewDailyCases new_daily_cases = 1;
-      TriggerType_Day           day             = 2;
+      TriggerTypeNewDailyCases new_daily_cases = 1;
+      TriggerTypeDay           day             = 2;
     }
   }
 
@@ -31,21 +31,22 @@ message InterventionModel {
     double compliance = 1;
     int32  trigger_index = 2;
 
-    message InterventionType_SelfIsolation {}
+    message InterventionTypeSelfIsolation {
+    }
 
-    message InterventionType_SchoolClosures {
+    message InterventionTypeSchoolClosures {
       int32 csv_location_of_school = 1;
     }
 
-    message InterventionType_Vaccination {
+    message InterventionTypeVaccination {
       double probability = 1;
       double vaccinated_susceptibility = 2;
     }
 
     oneof intervention_type {
-      InterventionType_SelfIsolation  self_isolation  = 3;
-      InterventionType_SchoolClosures school_closures = 4;
-      InterventionType_Vaccination    vaccination     = 5;
+      InterventionTypeSelfIsolation  self_isolation  = 3;
+      InterventionTypeSchoolClosures school_closures = 4;
+      InterventionTypeVaccination    vaccination     = 5;
     }
   }
 
