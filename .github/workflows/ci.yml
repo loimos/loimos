@@ -40,7 +40,7 @@ jobs:
         run: |
           git clone https://github.com/UIUC-PPL/charm.git charm-smp
           cd charm-smp
-          git checkout v6.10.2
+          git checkout v7.0.0
           ./build charm++ netlrts-linux-x86_64 smp -g -j4 --with-production \
           --enable-error-checking
 
