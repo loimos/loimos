@@ -77,18 +77,14 @@ $(UNIT_TEST_OBJS): %.o: %.cpp $(DECLS) $(DEFS)
 .PHONY: all-sub
 all-sub:
 	@for d in $(SUBDIRS); do \
-		cd $$d; \
-		$(MAKE) all; \
-		cd ..; \
+		$(MAKE) -C $$d all; \
 	done
 
 .PHONY:clean
 clean:
-	rm -f *.o charmrun $(BIN) *.decl.h *.def.h
+	rm -f *.o charmrun $(BIN) $(OBJS) *.decl.h *.def.h
 	@for d in $(SUBDIRS); do \
-		cd $$d; \
-		$(MAKE) clean; \
-		cd ..; \
+		$(MAKE) -C $$d clean; \
 	done
 
 # All test names start with "test-"
