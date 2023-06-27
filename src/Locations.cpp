@@ -68,6 +68,13 @@ Locations::Locations(int seed, std::string scenarioPath) {
     loadLocationData(scenarioPath);
   }
 
+#if ENABLE_DEBUG == DEBUG_PER_INTERACTION
+  interactionsFile = new std::ofstream(scenarioPath + "interactions_chare_"
+      + std::to_string(thisIndex) + ".csv");
+#else
+  interactionsFile = NULL;
+#endif
+
   // Notify Main
   #ifdef USE_HYPERCOMM
   contribute(CkCallback(CkReductionTarget(Main, CharesCreated), mainProxy));
@@ -160,7 +167,7 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 #ifdef ENABLE_DEBUG
   int trueIdx = locations[localLocIdx].getUniqueId();
   if (visitMsg.locationIdx != trueIdx) {
-    CkAbort("Error on chare %d: Visit by person %d to loc %d recieved by "
+    CkPrintf("Error on chare %d: Visit by person %d to loc %d recieved by "
         "loc %d (local %d)\n",
         thisIndex, visitMsg.personIdx, visitMsg.locationIdx, trueIdx,
         localLocIdx);
@@ -195,7 +202,8 @@ void Locations::ComputeInteractions() {
     Counter locVisits = loc.events.size() / 2;
     numVisits += locVisits;
 
-    Counter locInters = loc.processEvents(diseaseModel, contactModel);
+    Counter locInters = loc.processEvents(diseaseModel, contactModel,
+        interactionsFile);
     numInteractions += locInters;
 
     // if (0 < locInters) {

@@ -46,7 +46,7 @@ class Location : public DataInterface {
 
   // Prints all interactions which would result from a depature e given
   // the present occupancy of the location
-  void printInteractions(const Event &e) const;
+  Counter printInteractions(const Event &e, std::ofstream *out) const;
 
   // Helper functions to handle when a person leaves this location
   // onDeparture branches to one of the two other functions
@@ -112,7 +112,7 @@ class Location : public DataInterface {
   // Runs through all of the current events and return the indices of
   // any people who have been infected
   Counter processEvents(const DiseaseModel *diseaseModel,
-    ContactModel *contactModel);
+    ContactModel *contactModel, std::ofstream *out);
 };
 
 #endif  // LOCATION_H_

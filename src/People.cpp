@@ -432,8 +432,8 @@ void People::RealDataSendVisitMessages() {
   int dayIdx = day % numDaysWithRealData;
   for (const Person &person : people) {
     #if ENABLE_DEBUG >= DEBUG_PER_CHARE
-    minId = std::min(minId, person.uniqueId);
-    maxId = std::max(maxId, person.uniqueId);
+    minId = std::min(minId, person.getUniqueId());
+    maxId = std::max(maxId, person.getUniqueId());
     #endif
     for (VisitMessage visitMessage : person.visitsByDay[dayIdx]) {
       visitMessage.personState = person.state;

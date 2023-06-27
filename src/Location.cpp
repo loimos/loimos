@@ -63,12 +63,14 @@ void Location::addEvent(Event e) {
 
 Counter Location::processEvents(
   const DiseaseModel *diseaseModel,
-  ContactModel *contactModel
+  ContactModel *contactModel,
+  std::ofstream *out
 ) {
   Counter numInteractions = 0;
   std::vector<Event> *arrivals;
   #if ENABLE_DEBUG >= DEBUG_VERBOSE
   Counter numPresent = 0;
+  Counter numVerifiedInteractions = 0;
   Counter numVisits = events.size() / 2;
   #endif
 
@@ -91,7 +93,7 @@ Counter Location::processEvents(
         } else {
           numPresent--;
           numInteractions += numPresent;
-          // printInteractions(event);
+          numVerifiedInteractions += printInteractions(event, out);
         }
         #endif
         continue;
@@ -103,6 +105,7 @@ Counter Location::processEvents(
         #if ENABLE_DEBUG >= DEBUG_VERBOSE
         numPresent++;
         #endif
+
       } else if (DEPARTURE == event.type) {
         // Remove the arrival event corresponding to this departure
         std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
@@ -110,7 +113,7 @@ Counter Location::processEvents(
         #if ENABLE_DEBUG >= DEBUG_VERBOSE
         numPresent--;
         numInteractions += numPresent;
-        // printInteractions(event);
+        numVerifiedInteractions += printInteractions(event, out);
         #endif
 
         onDeparture(diseaseModel, contactModel, event);
@@ -122,26 +125,62 @@ Counter Location::processEvents(
   day++;
 
   #if ENABLE_DEBUG >= DEBUG_VERBOSE
-  Counter total = contactModel->getContactProbability(*this) * numInteractions;
+  double p = contactModel->getContactProbability(*this);
+  Counter total = static_cast<Counter>(p * numInteractions);
+
+  //if (0 != numInteractions) {
+  //  CkPrintf("      Loc %d: processed %lu interactions (n=%lu,p=%f,m=%d)\n",
+  //        uniqueId, total, numInteractions, p, data[maxSimVisitsIdx].int_b10);
+  //}
+  if (numVerifiedInteractions != numInteractions) {
+    CkPrintf("      Loc %d: found %lu interactions but only %lu verified\n",
+        numInteractions, numVerifiedInteractions);
+  }
   return total;
   #else
   return 0;
   #endif
 }
 
-void Location::printInteractions(const Event &event) const {
-  for (const Event &e : susceptibleArrivals) {
-    CkPrintf("      Loc %d: person %d (%d-%d) met person %d (%d-%d)\n",
-        uniqueId, event.personIdx, event.partnerTime,
-        event.scheduledTime, e.personIdx, e.scheduledTime,
-        e.partnerTime);
+Counter Location::printInteractions(const Event &departure,
+    std::ofstream *out) const {
+  Counter count = 0;
+  for (const Event &a : susceptibleArrivals) {
+    if (NULL != out) {
+      *out << uniqueId << "," << departure.personIdx << ","
+      << departure.partnerTime << ","  << departure.scheduledTime << ","
+      << a.personIdx << "," << a.scheduledTime << "," << a.partnerTime
+      << std::endl;
+    }
+    if (Event::overlap(a, departure)) {
+      count++;
+    }
+    //else {
+    //  CkPrintf("      Loc %d: person %d (%d-%d) met person %d (%d-%d)\n",
+    //    uniqueId, departure.personIdx, departure.partnerTime,
+    //    departure.scheduledTime, a.personIdx, a.scheduledTime,
+    //    a.partnerTime);
+    //}
   }
-  for (const Event &e : infectiousArrivals) {
-    CkPrintf("      Loc %d: person %d (%d-%d) met person %d (%d-%d)\n",
-        uniqueId, event.personIdx, event.partnerTime,
-        event.scheduledTime, e.personIdx, e.scheduledTime,
-        e.partnerTime);
+  for (const Event &a : infectiousArrivals) {
+    if (NULL != out) {
+      *out << uniqueId << "," << departure.personIdx << ","
+      << departure.partnerTime << ","  << departure.scheduledTime << ","
+      << a.personIdx << "," << a.scheduledTime << "," << a.partnerTime
+      << std::endl;
+    }
+    if (Event::overlap(a, departure)) {
+      count++;
+    }
+    // else {
+    //  CkPrintf("      Loc %d: person %d (%d-%d) met person %d (%d-%d)\n",
+    //  CkPrintf("      %d,%d,%d,%d,%d,%d,%d\n",
+    //    uniqueId, departure.personIdx, departure.partnerTime,
+    //    departure.scheduledTime, a.personIdx, a.scheduledTime,
+    //    a.partnerTime);
+    //}
   }
+  return count;
 }
 
 // Simple dispatch to the susceptible/infectious depature handlers

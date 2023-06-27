@@ -182,7 +182,8 @@ class DataReader {
 
       // Only need to keep track of location among attributes stored in
       // data vector
-      if (field->has_ignore() || field->has_unique_id()) {
+      if (field->has_ignore() || field->has_unique_id()
+          || field->has_foreign_id()) {
         continue;
       }
 

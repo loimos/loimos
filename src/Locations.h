@@ -24,6 +24,7 @@ class Locations : public CBase_Locations {
   std::default_random_engine generator;
   DiseaseModel *diseaseModel;
   ContactModel *contactModel;
+  std::ofstream *interactionsFile;
   int day;
 
  public:
