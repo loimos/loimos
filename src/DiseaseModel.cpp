@@ -107,8 +107,8 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     }
     activityInputStream.close();
 
-    personTable.readAttributes(personDef->fields());
-    locationTable.readAttributes(locationDef->fields());
+    personAttributes.readAttributes(personDef->fields());
+    locationAttributes.readAttributes(locationDef->fields());
   }
 
   if (interventionStategy) {
@@ -125,22 +125,52 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     }
     interventionActivityStream.close();
 
-    personTable.readAttributes(interventionDef->person_attributes());
-    locationTable.readAttributes(interventionDef->location_attributes());
+    triggerFlags.resize(interventionDef->triggers_size(), false);
 
-    int numTriggers = interventionDef->triggers_size();
-    triggerFlags.resize(numTriggers, false);
-    interventions.reserve(numTriggers);
-    for (int i = 0; i < numTriggers; ++i) {
-      const auto &inter = interventionDef->interventions(i);
-      if (inter.has_vaccination()) {
-        interventions.emplace_back(std::shared_ptr<Intervention>(
-              new VaccinationIntervention(inter, personTable)));
+    personAttributes.readAttributes(interventionDef->person_attributes());
+    locationAttributes.readAttributes(interventionDef->location_attributes());
 
-      } else {
-        interventions.emplace_back(std::shared_ptr<Intervention>(
-              new Intervention()));
-      }
+    intitialiseInterventions(interventionDef->person_interventions(),
+        personAttributes, &personInterventions);
+    intitialiseInterventions(interventionDef->location_interventions(),
+        locationAttributes, &locationInterventions);
+
+#if ENABLE_DEBUG >= DEBUG_BASIC
+    CkPrintf("Person Attributes:\n");
+    for (int i = 0; i < diseaseModel->personAttributes.size(); i++) {
+      CkPrintf("  %s (%d): default: %lf, type: %d\n",
+          personAttributes.getName(i).c_str(), i,
+          personAttributes.getDefaultValueAsDouble(i),
+          personAttributes.getDataType(i));
+    }
+
+    CkPrintf("Locations Attributes:\n");
+    for (int i = 0; i < locationAttributes.size(); i++) {
+      CkPrintf("  %s (%d): default: %lf, type: %d\n",
+          locationAttributes.getName(i).c_str(), i,
+          locationAttributes.getDefaultValueAsDouble(i),
+          locationAttributes.getDataType(i));
+    }
+#endif
+  }
+}
+
+void DiseaseModel::intitialiseInterventions(
+    const InterventionList &interventionSpecs,
+    const AttributeTable &attributes,
+    std::vector<std::shared_ptr<Intervention> > *interventions) {
+  for (int i = 0; i < interventionSpecs.size(); ++i) {
+    const loimos::proto::InterventionModel::Intervention &spec =
+      interventionSpecs[i];
+
+    if (spec.has_self_isolation()) {
+      interventions->emplace_back(new Intervention(spec, attributes));
+
+    } else if (spec.has_school_closures()) {
+      interventions->emplace_back(new Intervention(spec, attributes));
+
+    } else if (spec.has_vaccination()) {
+      interventions->emplace_back(new VaccinationIntervention(spec, attributes));
     }
   }
 }
@@ -374,11 +404,16 @@ double DiseaseModel::getPropensity(int susceptibleState, int infectiousState,
 void DiseaseModel::applyInterventions(int day, int newDailyInfections) {
   toggleInterventions(day, newDailyInfections);
 
-  for (int i = 0; i < interventions.size(); ++i) {
+  for (int i = 0; i < personInterventions.size(); ++i) {
     if (triggerFlags[getTriggerIndex(i)]) {
-      peopleArray.ReceiveIntervention(interventions[i]);
+      peopleArray.ReceiveIntervention(personInterventions[i]);
     }
   }
+  //for (int i = 0; i < locationInterventions.size(); ++i) {
+  //  if (triggerFlags[getTriggerIndex(i)]) {
+  //    locationsArray.ReceiveIntervention(locationInterventions[i]);
+  //  }
+  //}
 }
 
 void DiseaseModel::toggleInterventions(int day, int newDailyInfections) {
@@ -409,8 +444,8 @@ int DiseaseModel::getInterventionIndex(InterventionTestType test) const {
     return -1;
   }
 
-  for (int i = 0; i < interventionDef->interventions_size(); ++i) {
-    if (test(interventionDef->interventions(i))) {
+  for (int i = 0; i < interventionDef->person_interventions_size(); ++i) {
+    if (test(interventionDef->person_interventions(i))) {
       return i;
     }
   }
@@ -433,11 +468,11 @@ int DiseaseModel::getInterventionIndex(InterventionTestType test) const {
 }
 
 double DiseaseModel::getCompliance(int interventionIndex) const {
-  return interventionDef->interventions(interventionIndex).compliance();
+  return interventionDef->person_interventions(interventionIndex).compliance();
 }
 
 int DiseaseModel::getTriggerIndex(int interventionIndex) const {
-  return interventionDef->interventions(interventionIndex).trigger_index();
+  return interventionDef->person_interventions(interventionIndex).trigger_index();
 }
 
 /**
@@ -445,36 +480,39 @@ int DiseaseModel::getTriggerIndex(int interventionIndex) const {
  * triggered, that intervention imposes stay at home, and person is symptomatic.
  */
 bool DiseaseModel::shouldPersonIsolate(int healthState) const {
-  int interIdx = getInterventionIndex(
-      [] (const loimos::proto::InterventionModel::Intervention inter) {
-        return inter.has_self_isolation();
-      });
+  //int interIdx = getInterventionIndex(
+  //    [] (const loimos::proto::InterventionModel::Intervention inter) {
+  //      return inter.has_self_isolation();
+  //    });
 
-  return -1 != interIdx && triggerFlags[getTriggerIndex(interIdx)]
-    && model->disease_states(healthState).symptomatic();
+  //return -1 != interIdx && triggerFlags[getTriggerIndex(interIdx)]
+  //  && model->disease_states(healthState).symptomatic();
+  return false;
 }
 
 /**
  * Location closed if it is a school and intervention is triggered.
  */
 bool DiseaseModel::isLocationOpen(std::vector<Data> *locAttr) const {
-  int interIdx = getInterventionIndex(
-      [] (const loimos::proto::InterventionModel::Intervention inter) {
-        return inter.has_school_closures();
-      });
-  return !(-1 != interIdx && triggerFlags[getTriggerIndex(interIdx)]
-      && locAttr->at(
-        interventionDef->interventions(interIdx)
-          .school_closures()
-          .csv_location_of_school()).int_b10 > 0);
+  //int interIdx = getInterventionIndex(
+  //    [] (const loimos::proto::InterventionModel::Intervention inter) {
+  //      return inter.has_school_closures();
+  //    });
+  //return !(-1 != interIdx && triggerFlags[getTriggerIndex(interIdx)]
+  //    && locAttr->at(
+  //      interventionDef->interventions(interIdx)
+  //        .school_closures()
+  //        .csv_location_of_school()).int_b10 > 0);
+  return true;
 }
 
 bool DiseaseModel::complyingWithLockdown(std::default_random_engine *generator) const {
-  int interIdx = getInterventionIndex(
-      [] (const loimos::proto::InterventionModel::Intervention inter) {
-        return inter.has_self_isolation();
-      });
-  std::uniform_real_distribution<double> uniform_dist(0, 1);
-  return -1 != interIdx && triggerFlags[getTriggerIndex(interIdx)]
-    && uniform_dist(*generator) < getCompliance(interIdx);
+  //int interIdx = getInterventionIndex(
+  //    [] (const loimos::proto::InterventionModel::Intervention inter) {
+  //      return inter.has_self_isolation();
+  //    });
+  //std::uniform_real_distribution<double> uniform_dist(0, 1);
+  //return -1 != interIdx && triggerFlags[getTriggerIndex(interIdx)]
+  //  && uniform_dist(*generator) < getCompliance(interIdx);
+  return false;
 }

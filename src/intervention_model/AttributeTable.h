@@ -30,16 +30,15 @@ struct Attribute {
 class AttributeTable {
  public:
   std::vector<Attribute> list;
-  AttributeTable(int size, bool isPersonTable);
-  explicit AttributeTable(bool isPersonTable);
+
+  AttributeTable() {}
+  explicit AttributeTable(int size);
   Attribute getAttribute(int i);
   union Data getDefaultValue(int i) const;
   double getDefaultValueAsDouble(int i) const;
   std::string getName(int i) const;
   DataTypes::DataType getDataType(int i);
-  bool getTableType();
-  bool isPersonTable;
-  int getAttribute(std::string name) const;
+  int getAttributeIndex(std::string name) const;
   int size() const;
   void updateIndex(int i, int newIndex);
   void resize(int size);

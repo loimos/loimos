@@ -5,7 +5,7 @@ triggers: {
   }
 }  
 
-interventions: {
+person_interventions: {
   compliance: 0.95;
   trigger_index: 0;
   vaccination: {

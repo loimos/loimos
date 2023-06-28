@@ -30,11 +30,11 @@ Person::Person(int numAttributes, int startingState, int timeLeftInState) {
   DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
 
   // Treat file-read and realdata attributes same, no need to make distinction
-  int tableSize = diseaseModel->personTable.size();
+  int tableSize = diseaseModel->personAttributes.size();
   if (tableSize != 0) {
     this->data.resize(tableSize);
     for (int i = numAttributes; i < tableSize; i++) {
-      this->data[i] = diseaseModel->personTable.getDefaultValue(i);
+      this->data[i] = diseaseModel->personAttributes.getDefaultValue(i);
     }
   }
 

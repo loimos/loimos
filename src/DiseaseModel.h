@@ -43,7 +43,8 @@ class DiseaseModel : public CBase_DiseaseModel {
 
   // Intervention related.
   std::vector<bool> triggerFlags;
-  std::vector<std::shared_ptr<Intervention>> interventions;
+  std::vector<std::shared_ptr<Intervention>> personInterventions;
+  std::vector<std::shared_ptr<Intervention>> locationInterventions;
 
  public:
   // move back to private later
@@ -74,6 +75,12 @@ class DiseaseModel : public CBase_DiseaseModel {
   loimos::proto::InterventionModel *interventionDef;
 
   // Intervention methods
+  AttributeTable personAttributes;
+  AttributeTable locationAttributes;
+
+  void intitialiseInterventions(const InterventionList &interventionSpecs,
+      const AttributeTable &attributes,
+      std::vector<std::shared_ptr<Intervention> > *interventions);
   void applyInterventions(int day, int newDailyInfections);
   void toggleInterventions(int day, int newDailyInfections);
   const std::vector<const Intervention> getInterventions();
@@ -83,11 +90,6 @@ class DiseaseModel : public CBase_DiseaseModel {
   bool shouldPersonIsolate(int healthState) const;
   bool isLocationOpen(std::vector<Data> *locAttr) const;
   bool complyingWithLockdown(std::default_random_engine *generator) const;
-
-  // Tables containing lookup information for attributes
-  AttributeTable personTable{1};
-  AttributeTable locationTable{0};
-  // Populate in diseaseModel constructor, don't define here
 };
 
 #endif  // DISEASEMODEL_H_

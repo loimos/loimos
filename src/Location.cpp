@@ -29,11 +29,11 @@ Location::Location(int numAttributes, int uniqueIdx,
   /*if (numAttributes != 0) {
     this->locationData.resize(numAttributes);
     }*/
-  int tableSize = diseaseModel->locationTable.size();
+  int tableSize = diseaseModel->locationAttributes.size();
   if (tableSize != 0) {
     this->data.resize(tableSize);
     for (int i = numAttributes; i < tableSize; i++) {
-      data[i] = diseaseModel->locationTable.getDefaultValue(i);
+      data[i] = diseaseModel->locationAttributes.getDefaultValue(i);
     }
   }
   day = 0;
