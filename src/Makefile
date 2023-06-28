@@ -9,7 +9,8 @@ OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o  \
          Defs.o Event.o Interaction.o readers/Preprocess.o \
 				 readers/DataInterface.o \
 				 contact_model/MinMaxAlphaModel.o contact_model/ContactModel.o \
-				 intervention_model/Interventions.o \
+				 intervention_model/Intervention.o \
+				 intervention_model/VaccinationIntervention.o \
 				 intervention_model/AttributeTable.o \
          protobuf/disease.pb.o protobuf/distribution.pb.o \
 		     protobuf/data.pb.o protobuf/interventions.pb.o

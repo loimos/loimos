@@ -4,21 +4,13 @@
   * SPDX-License-Identifier: MIT
   */
 
-#include "Interventions.h"
+#include "Intervention.h"
+#include "VaccinationIntervention.h"
 #include "AttributeTable.h"
 #include "../protobuf/interventions.pb.h"
 #include "../readers/DataInterface.h"
 
 #include <vector>
-
-bool Intervention::test(const DataInterface &p,
-    std::default_random_engine *generator) const {
-  return false;
-}
-
-void Intervention::apply(DataInterface *p) const {}
-
-void Intervention::pup(PUP::er &p) {}
 
 VaccinationIntervention::VaccinationIntervention(
     const loimos::proto::InterventionModel::Intervention &interventionDef,

@@ -12,7 +12,7 @@
 #include "Interaction.h"
 #include "Person.h"
 #include "Message.h"
-#include "intervention_model/Interventions.h"
+#include "intervention_model/Intervention.h"
 
 #include <functional>
 #include <random>
