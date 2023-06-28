@@ -33,10 +33,9 @@ void VaccinationIntervention::pup(PUP::er &p) {
 
 bool VaccinationIntervention::test(const DataInterface &p,
     std::default_random_engine *generator) const {
-  std::uniform_real_distribution<double> distribution(0.0, 1.0);
 
   return !p.getValue(vaccinatedIndex).boolean
-    && distribution(*generator) < vaccinationProbability;
+    && unitDistrib(*generator) < vaccinationProbability;
 }
 
 void VaccinationIntervention::apply(DataInterface *p) const {
