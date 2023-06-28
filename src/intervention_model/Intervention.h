@@ -13,6 +13,9 @@
 
 #include "charm++.h"
 
+using InterventionList = google::protobuf::RepeatedPtrField<
+  loimos::proto::InterventionModel::Intervention>;
+
 class Intervention : public PUP::able {
  protected:
   static std::uniform_real_distribution<double> unitDistrib;

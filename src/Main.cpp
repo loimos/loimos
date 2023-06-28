@@ -314,25 +314,6 @@ Main::Main(CkArgMsg* msg) {
   CkPrintf("\nFinished loading shared/global data in %lf seconds.\n",
       CkWallTimer() - dataLoadingStartTime);
 
-  // Populating people and location tables with attributes from file
-#if ENABLE_DEBUG >= DEBUG_BASIC
-  CkPrintf("Person Attributes:\n");
-  for (int i = 0; i < diseaseModel->personTable.size(); i++) {
-    CkPrintf("  %s (%d): default: %lf, type: %d\n",
-        diseaseModel->personTable.getName(i).c_str(), i,
-        diseaseModel->personTable.getDefaultValueAsDouble(i),
-        diseaseModel->personTable.getDataType(i));
-  }
-
-  CkPrintf("Locations Attributes:\n");
-  for (int i = 0; i < diseaseModel->locationTable.size(); i++) {
-    CkPrintf("  %s (%d): default: %lf, type: %d\n",
-        diseaseModel->locationTable.getName(i).c_str(), i,
-        diseaseModel->locationTable.getDefaultValueAsDouble(i),
-        diseaseModel->locationTable.getDataType(i));
-  }
-#endif
-
   // creating chare arrays
   if (!syntheticRun) {
 #if ENABLE_DEBUG >= DEBUG_BASIC

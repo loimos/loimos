@@ -5,13 +5,13 @@ triggers: {
   }
 }  
 
-interventions: {
+person_interventions: {
   compliance: 0.95;
   trigger_index: 0;
   self_isolation: {}
 }
 
-interventions: {
+location_interventions: {
   compliance: 0.95;
   trigger_index: 0;
   school_closures: {

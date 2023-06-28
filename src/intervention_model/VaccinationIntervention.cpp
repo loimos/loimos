@@ -20,8 +20,8 @@ VaccinationIntervention::VaccinationIntervention(
     .vaccinated_susceptibility();
   CkPrintf("Vaccination: prob: %f, susceptibility: %f\n",
       vaccinationProbability, vaccinatedSusceptibility);
-  this->vaccinatedIndex = t.getAttribute("vaccinated");
-  this->susceptibilityIndex = t.getAttribute("susceptibility");
+  this->vaccinatedIndex = t.getAttributeIndex("vaccinated");
+  this->susceptibilityIndex = t.getAttributeIndex("susceptibility");
 }
 
 void VaccinationIntervention::pup(PUP::er &p) {
