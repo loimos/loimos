@@ -13,7 +13,7 @@
 #include "Person.h"
 #include "readers/Preprocess.h"
 #include "readers/DataReader.h"
-#include "intervention_model/Interventions.h"
+#include "intervention_model/Intervention.h"
 
 #ifdef USE_HYPERCOMM
   #include "Aggregator.h"
