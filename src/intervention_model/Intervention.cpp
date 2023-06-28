@@ -10,6 +10,20 @@
 
 #include <vector>
 
+
+std::uniform_real_distribution<double> Intervention::unitDistrib(0.0, 1.0);
+
+Intervention::Intervention(
+    const loimos::proto::InterventionModel::Intervention &interventionDef,
+    const AttributeTable &t) {
+  compliance = interventionDef.compliance();
+}
+
+bool Intervention::willComply(const DataInterface &p,
+    std::default_random_engine *generator) const {
+  return unitDistrib(*generator) < compliance;
+}
+
 bool Intervention::test(const DataInterface &p,
     std::default_random_engine *generator) const {
   return false;

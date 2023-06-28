@@ -14,7 +14,12 @@
 #include "charm++.h"
 
 class Intervention : public PUP::able {
+ protected:
+  static std::uniform_real_distribution<double> unitDistrib;
+  double compliance;
  public:
+  bool willComply(const DataInterface &p,
+    std::default_random_engine *generator) const;
   virtual bool test(const DataInterface &p,
       std::default_random_engine *generator) const;
   virtual void apply(DataInterface *p) const;
@@ -22,6 +27,9 @@ class Intervention : public PUP::able {
 
   PUPable_decl(Intervention);
   Intervention() {}
+  Intervention(
+    const loimos::proto::InterventionModel::Intervention &interventionDef,
+    const AttributeTable &t);
   explicit Intervention(CkMigrateMessage *m) :
     PUP::able(m) {}  // NOLINT(runtime/references)
 };
