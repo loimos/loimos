@@ -33,6 +33,7 @@ class Locations : public CBase_Locations {
   void pup(PUP::er &p);  // NOLINT(runtime/references)
   void ReceiveVisitMessages(VisitMessage visitMsg);
   void ComputeInteractions();  // calls ReceiveInfections
+  void ReceiveIntervention(std::shared_ptr<Intervention> intervention);
   // Load location data from CSV.
   void loadLocationData(std::string scenarioPath);
   #ifdef ENABLE_LB

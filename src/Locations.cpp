@@ -10,14 +10,15 @@
 #include "Location.h"
 #include "Event.h"
 #include "DiseaseModel.h"
-#include "contact_model/ContactModel.h"
 #include "Location.h"
 #include "Person.h"
 #include "Event.h"
 #include "Extern.h"
 #include "Defs.h"
+#include "contact_model/ContactModel.h"
 #include "readers/Preprocess.h"
 #include "readers/DataReader.h"
+#include "intervention_model/Intervention.h"
 #include "pup_stl.h"
 
 #include <algorithm>
@@ -226,6 +227,14 @@ void Locations::ComputeInteractions() {
 #endif
 
   day++;
+}
+
+void Locations::ReceiveIntervention(std::shared_ptr<Intervention> intervention) {
+  for (Location &location : locations) {
+    if (intervention->test(location, &generator)) {
+      intervention->apply(&location);
+    }
+  }
 }
 
 #ifdef ENABLE_LB

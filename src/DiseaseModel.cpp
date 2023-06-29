@@ -433,11 +433,11 @@ void DiseaseModel::applyInterventions(int day, int newDailyInfections) {
       peopleArray.ReceiveIntervention(personInterventions[i]);
     }
   }
-  //for (int i = 0; i < locationInterventions.size(); ++i) {
-  //  if (triggerFlags[getTriggerIndex(i)]) {
-  //    locationsArray.ReceiveIntervention(locationInterventions[i]);
-  //  }
-  //}
+  for (int i = 0; i < locationInterventions.size(); ++i) {
+    if (triggerFlags[getTriggerIndex(i)]) {
+      locationsArray.ReceiveIntervention(locationInterventions[i]);
+    }
+  }
 }
 
 void DiseaseModel::toggleInterventions(int day, int newDailyInfections) {
