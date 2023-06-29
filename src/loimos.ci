@@ -288,6 +288,7 @@ mainmodule loimos {
     entry Locations(std::string scenarioPath);
     entry void ReceiveVisitMessages(VisitMessage);
     entry void ComputeInteractions(); // calls ReceiveInteractions
+    entry void ReceiveIntervention(std::shared_ptr<Intervention>);
     entry void AtSync();
   };
 
