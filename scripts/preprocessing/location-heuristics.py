@@ -27,6 +27,7 @@ START_COL = "start_time"
 def find_max_simultaneous_visits(lid, visits):
     max_in_visit = 0
     end_times = []
+    visits.sort_values("start_time", inplace=True)
     if lid % 1000000 == 0:
         print("location {} has {} visits".format(lid, len(visits)))
         # print(visits.memory_usage())
