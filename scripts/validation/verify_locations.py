@@ -48,18 +48,37 @@ def parse_args():
 COMPARISION_COLUMNS = ["max_occupancy", "conn_prob", "max_possible_edges",
     "num_expected_edges"]
 BASELINE_SUFFIX = "_baseline"
-def compare_column(metrics, baseline, col, merge_on="old_lid"):
-    tmp = pd.merge(metrics[[merge_on, col]], baseline[[merge_on, col]],
+def compare_column(metrics, baseline, col, merge_on="old_lid", epsilon=1e-6):
+    df = pd.merge(metrics[[merge_on, col]], baseline[[merge_on, col]],
             on=merge_on, suffixes=["", BASELINE_SUFFIX])
-    mask = tmp[col] == tmp[col + BASELINE_SUFFIX]
 
+    mask = df[col] == df[col + BASELINE_SUFFIX]
+    err = None
+    std_err = None
+    if not mask.all():
+        err = (df[col] - df[col + BASELINE_SUFFIX]).abs()
+        mask = err < epsilon
+
+    matches = mask.sum()
+    total = df.shape[0]
     if mask.all():
         print(f"all {col} values match")
     else:
-        matches = mask.sum()
-        total = tmp.shape[0]
-        print(f"{matches}/{total} ({matches/total:.2%}) "
-                + f"{col} values match")
+        print(f"{matches}/{total} ({matches/total:.2%}) of {col} values match")
+
+        out = "  "
+        std_err = (err ** 2).mean()
+        if isinstance(std_err, float):
+            out += f"std err: {std_err:0.3}, "
+        else:
+            out += f"std err: {std_err}, "
+
+        total_err = err.sum()
+        if isinstance(total_err, float):
+            out += f"total err: {total_err:0.3}"
+        else:
+            out += f"total err: {total_err}"
+        print(out)
 
 
 def main():
