@@ -7,9 +7,11 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
+#include "charm++.h"
+
 #include <vector>
 #include <string>
-#include "charm++.h"
+#include <memory>
 
 class Main : public CBase_Main {
   Main_SDAG_CODE

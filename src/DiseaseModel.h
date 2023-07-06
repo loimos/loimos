@@ -8,21 +8,24 @@
 
 #include "Event.h"
 
-#include "disease_model/disease.pb.h"
-#include "disease_model/distribution.pb.h"
+#include "protobuf/disease.pb.h"
+#include "protobuf/distribution.pb.h"
+#include "protobuf/data.pb.h"
+#include "protobuf/interventions.pb.h"
 #include "readers/DataReader.h"
-#include "readers/interventions.pb.h"
-
+#include "intervention_model/AttributeTable.h"
 #include "Event.h"
-#include "readers/data.pb.h"
 
 #include <unordered_map>
 #include <random>
 #include <tuple>
 #include <string>
 #include <vector>
+#include <memory>
 
-using Time = int32_t;
+using NameIndexLookupType = std::unordered_map<std::string, int>;
+using InterventionTestType = std::function<
+  bool(const loimos::proto::InterventionModel::Intervention)>;
 
 class DiseaseModel : public CBase_DiseaseModel {
  private:
@@ -39,9 +42,11 @@ class DiseaseModel : public CBase_DiseaseModel {
   Time timeDefToSeconds(TimeDef time) const;
 
   // Intervention related.
-  bool interventionToggled;
+  std::vector<bool> triggerFlags;
+  std::vector<std::shared_ptr<Intervention>> interventions;
 
  public:
+  // move back to private later
   DiseaseModel(std::string pathToModel, std::string scenarioPath,
       std::string pathToIntervention);
   int getIndexOfState(std::string stateLabel) const;
@@ -66,14 +71,23 @@ class DiseaseModel : public CBase_DiseaseModel {
   loimos::proto::CSVDefinition *personDef;
   loimos::proto::CSVDefinition *locationDef;
   loimos::proto::CSVDefinition *activityDef;
-  loimos::proto::Intervention *interventionDef;
+  loimos::proto::InterventionModel *interventionDef;
 
   // Intervention methods
-  void toggleIntervention(int newDailyInfections);
-  double getCompilance() const;
-  bool shouldPersonIsolate(int healthState);
+  void applyInterventions(int day, int newDailyInfections);
+  void toggleInterventions(int day, int newDailyInfections);
+  const std::vector<const Intervention> getInterventions();
+  int getInterventionIndex(InterventionTestType test) const;
+  double getCompliance(int interventionIndex) const;
+  int getTriggerIndex(int interventionIndex) const;
+  bool shouldPersonIsolate(int healthState) const;
   bool isLocationOpen(std::vector<Data> *locAttr) const;
   bool complyingWithLockdown(std::default_random_engine *generator) const;
+
+  // Tables containing lookup information for attributes
+  AttributeTable personTable{1};
+  AttributeTable locationTable{0};
+  // Populate in diseaseModel constructor, don't define here
 };
 
 #endif  // DISEASEMODEL_H_

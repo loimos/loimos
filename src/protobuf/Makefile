@@ -5,10 +5,11 @@
 
 include ../Makefile.include
 
-PROTOS      = 
-TMP_SRCS    = $(subst .proto,.pb.cc,$(PROTOS)) 
-SRCS        = $(subst .proto,.pb.cpp,$(PROTOS)) 
-OBJS        = $(subst .proto,.pb.o,$(PROTOS)) 
+PROTOS      = disease.proto distribution.proto data.proto interventions.proto
+TMP_SRCS    = $(subst .proto,.pb.cc,$(PROTOS))
+SRCS        = $(subst .proto,.pb.cpp,$(PROTOS))
+OBJS        = $(subst .proto,.pb.o,$(PROTOS))
+HEADERS     = $(subst .proto,.pb.h,$(PROTOS))
 
 .PHONY:all
 all: $(OBJS)
@@ -24,4 +25,4 @@ $(OBJS): %.pb.o: %.pb.cpp %.pb.h
 
 .PHONY:clean
 clean:
-	rm -f $(TMP_SRCS) $(SRCS) $(OBJS)
+	rm -f $(TMP_SRCS) $(SRCS) $(OBJS) $(HEADERS)

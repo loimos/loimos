@@ -1,0 +1,57 @@
+/* Copyright 2020-2023 The Loimos Project Developers.
+ * See the top-level LICENSE file for details.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+syntax = "proto3";
+package loimos.proto;
+
+import "data.proto";
+
+message InterventionModel {
+  message Trigger {
+    message TriggerTypeNewDailyCases {
+      double trigger_on = 1;
+      double trigger_off = 2;
+    }
+
+    message TriggerTypeDay {
+      int32 trigger_on  = 1;
+      int32 trigger_off = 2;
+    }
+
+    oneof trigger_type {
+      TriggerTypeNewDailyCases new_daily_cases = 1;
+      TriggerTypeDay           day             = 2;
+    }
+  }
+
+  message Intervention {
+    double compliance = 1;
+    int32  trigger_index = 2;
+
+    message InterventionTypeSelfIsolation {
+    }
+
+    message InterventionTypeSchoolClosures {
+      int32 csv_location_of_school = 1;
+    }
+
+    message InterventionTypeVaccination {
+      double probability = 1;
+      double vaccinated_susceptibility = 2;
+    }
+
+    oneof intervention_type {
+      InterventionTypeSelfIsolation  self_isolation  = 3;
+      InterventionTypeSchoolClosures school_closures = 4;
+      InterventionTypeVaccination    vaccination     = 5;
+    }
+  }
+
+  repeated Trigger triggers = 1;
+  repeated Intervention interventions = 2;
+  repeated DataField person_attributes = 3;
+  repeated DataField location_attributes = 4;
+}

@@ -6,10 +6,10 @@
 
 #include "loimos.decl.h"
 
+#include "protobuf/data.pb.h"
 #include "Person.h"
 #include "DiseaseModel.h"
 #include "Message.h"
-#include "readers/data.pb.h"
 
 #include <vector>
 
@@ -27,6 +27,16 @@ Person::Person(int numAttributes, int startingState, int timeLeftInState) {
   this->willComply = false;
   this->secondsLeftInState = timeLeftInState;
   this->visitOffsetByDay = std::vector<uint64_t>();
+  DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
+
+  // Treat file-read and realdata attributes same, no need to make distinction
+  int tableSize = diseaseModel->personTable.size();
+  if (tableSize != 0) {
+    this->data.resize(tableSize);
+    for (int i = numAttributes; i < tableSize; i++) {
+      this->data[i] = diseaseModel->personTable.getDefaultValue(i);
+    }
+  }
 
   // Create an entry for each day we have data for
   this->visitsByDay.resize(numDaysWithRealData);

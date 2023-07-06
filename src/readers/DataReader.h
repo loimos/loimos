@@ -7,9 +7,9 @@
 #ifndef READERS_DATAREADER_H_
 #define READERS_DATAREADER_H_
 
-#include "../Defs.h"
-#include "data.pb.h"
 #include "DataInterface.h"
+#include "../protobuf/data.pb.h"
+#include "../Defs.h"
 
 #include <vector>
 #include <stdio.h>
@@ -18,6 +18,7 @@
 #include <tuple>
 
 #define MAX_INPUT_lineLength (std::streamsize) 262144  // 2^18
+#define CSV_DELIM ','
 
 /**
  * Defines a generic data reader for any child class of DataInterface.
@@ -82,8 +83,11 @@ class DataReader {
       obj->setUniqueId(std::stoi(rawData));
       return 0;
     } else {
-      if (field->has_b10int() || field->has_foreign_id()) {
+      if (field->has_b10int() || field->has_foreign_id() || field->has_int32()) {
         data->at(fieldIdx).int_b10 = std::stoi(rawData);
+
+      } else if (field->has_b10double() || field->has_double_()) {
+        data->at(fieldIdx).double_b10 = std::stod(rawData);
 
       } else if (field->has_label()) {
         data->at(fieldIdx).str = new std::string(rawData);

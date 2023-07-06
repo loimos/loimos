@@ -7,11 +7,13 @@
 #include "loimos.decl.h"
 #include "People.h"
 #include "Defs.h"
+#include "Extern.h"
 #include "Interaction.h"
 #include "DiseaseModel.h"
 #include "Person.h"
 #include "readers/Preprocess.h"
 #include "readers/DataReader.h"
+#include "intervention_model/Interventions.h"
 
 #ifdef USE_HYPERCOMM
   #include "Aggregator.h"
@@ -26,8 +28,11 @@
 #include <fstream>
 #include <functional>
 #include <algorithm>
+#include <memory>
 
 std::uniform_real_distribution<> unitDistrib(0, 1);
+#define ONE_ATTR 1
+#define DEFAULT_
 
 People::People(std::string scenarioPath) {
   // Must be set to true to make AtSync work
@@ -56,22 +61,25 @@ People::People(std::string scenarioPath) {
 
   // Create real or fake people
   if (syntheticRun) {
-    // Make a default person and populate people with copies
-    Person tmp {0, 0, std::numeric_limits<Time>::max() };
+    Person tmp { 0, 0, std::numeric_limits<Time>::max() };
     people.resize(numLocalPeople, tmp);
 
     // Init peoples ids and randomly init ages.
     std::uniform_int_distribution<int> age_dist(0, 100);
-    for (int p = 0; p < numLocalPeople; p++) {
+    int i = 0;
+    for (Person &p : people) {
       Data age;
       age.int_b10 = age_dist(generator);
       std::vector<Data> dataField = { age };
 
-      people[p].setUniqueId(firstPersonIdx + p);
-      people[p].state = diseaseModel->getHealthyState(dataField);
+      p.setUniqueId(firstPersonIdx + i);
+      p.state = diseaseModel->getHealthyState(dataField);
+
       // We set persons next state to equal current state to signify
       // that they are not in a disease model progression.
-      people[p].next_state = people[p].state;
+      p.next_state = p.state;
+
+      i++;
     }
   } else {
       int numAttributesPerPerson =
@@ -80,7 +88,6 @@ People::People(std::string scenarioPath) {
         people.emplace_back(Person(numAttributesPerPerson,
           0, std::numeric_limits<Time>::max()));
       }
-
       // Load in people data from file.
       loadPeopleData(scenarioPath);
   }
@@ -147,7 +154,15 @@ void People::loadPeopleData(std::string scenarioPath) {
   free(buf);
 
   // Initialize intial states. (This will move in the DataLoaderPR)
-  double isolationCompliance = diseaseModel->getCompilance();
+  int index = diseaseModel->getInterventionIndex(
+      [] (const loimos::proto::InterventionModel::Intervention inter) {
+        return inter.has_self_isolation();
+      });
+  double isolationCompliance = 0;
+  if (-1 != index) {
+    isolationCompliance = diseaseModel->getCompliance(index);
+  }
+
   for (Person &person : people) {
     person.state = diseaseModel->getHealthyState(person.getData());
     person.willComply = unitDistrib(generator) < isolationCompliance;
@@ -443,6 +458,14 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
   Person &person = people[localIdx];
   person.interactions.insert(person.interactions.end(),
     interMsg.interactions.cbegin(), interMsg.interactions.cend());
+}
+
+void People::ReceiveIntervention(std::shared_ptr<Intervention> intervention) {
+  for (Person &person : people) {
+    if (intervention->test(person, &generator)) {
+      intervention->apply(&person);
+    }
+  }
 }
 
 void People::EndOfDayStateUpdate() {

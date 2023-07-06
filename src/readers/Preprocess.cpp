@@ -15,6 +15,7 @@
 #include "Preprocess.h"
 #include "DataReader.h"
 #include "../Defs.h"
+#include "../Extern.h"
 
 #include <string>
 #include <iostream>

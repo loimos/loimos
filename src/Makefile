@@ -5,12 +5,14 @@
 
 include Makefile.include
 
-OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o \
+OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o  \
          Defs.o Event.o Interaction.o readers/Preprocess.o \
 				 readers/DataInterface.o \
-         disease_model/disease.pb.o disease_model/distribution.pb.o \
-		     readers/data.pb.o contact_model/ContactModel.o \
-				 contact_model/MinMaxAlphaModel.o readers/interventions.pb.o
+				 contact_model/MinMaxAlphaModel.o contact_model/ContactModel.o \
+				 intervention_model/Interventions.o \
+				 intervention_model/AttributeTable.o \
+         protobuf/disease.pb.o protobuf/distribution.pb.o \
+		     protobuf/data.pb.o protobuf/interventions.pb.o
 DEFS   = loimos.def.h Defs.h readers/DataReader.h
 DECLS  = loimos.decl.h
 
@@ -44,10 +46,10 @@ endif
 ifdef ENABLE_TRACING
 PROJECTION_FLAGS = -tracemode projections
 else
-PROJECTION_FLAGS = 
+PROJECTION_FLAGS =
 endif
 
-SUBDIRS = disease_model contact_model readers tests
+SUBDIRS = protobuf tests
 
 .PHONY:all
 all: all-sub $(BIN)
@@ -66,7 +68,7 @@ $(DECLS): %.decl.h: %.ci
 $(OBJS): %.o: %.cpp %.h $(DECLS) $(DEFS)
 	$(CHARMC) $(CXXFLAGS) -c -o $@ $<
 
-# Build .o files from just the .cpp files for unit tests 
+# Build .o files from just the .cpp files for unit tests
 # (they don't have .h files)
 $(UNIT_TEST_OBJS): %.o: %.cpp $(DECLS) $(DEFS)
 	$(CHARMC) $(CXXFLAGS) -c -o $@ $<
@@ -75,18 +77,14 @@ $(UNIT_TEST_OBJS): %.o: %.cpp $(DECLS) $(DEFS)
 .PHONY: all-sub
 all-sub:
 	@for d in $(SUBDIRS); do \
-		cd $$d; \
-		$(MAKE) all; \
-		cd ..; \
+		$(MAKE) -C $$d all; \
 	done
 
 .PHONY:clean
 clean:
-	rm -f *.o charmrun $(BIN) *.decl.h *.def.h 
+	rm -f *.o charmrun $(BIN) $(OBJS) *.decl.h *.def.h
 	@for d in $(SUBDIRS); do \
-		cd $$d; \
-		$(MAKE) clean; \
-		cd ..; \
+		$(MAKE) -C $$d clean; \
 	done
 
 # All test names start with "test-"
@@ -120,7 +118,7 @@ test-intervention: all
 	./charmrun +p4 ./loimos 0 41119 19203 60 40 180 7 test-intervention.csv ../data/disease_models/covid19_onepath.textproto ../data/populations/coc/ -i ../data/interventions/isolation_and_school_closures.textproto ++local
 
 test-intervention-syn: all
-	./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 test-intervention-syn.csv ../data/disease_models/covid19_onepath.textproto -i ../data/interventions/only_isolation.textproto ++local
+	./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 test-intervention-syn.csv ../data/disease_models/covid19_onepath.textproto -i ../data/interventions/vaccination.textproto ++local
 
 clean-cache:
 	rm ../data/populations/coc/*.cache ../data/populations/synthetic_small_city/*.cache

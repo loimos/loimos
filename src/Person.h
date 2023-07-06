@@ -8,6 +8,7 @@
 #define PERSON_H_
 
 #include "Defs.h"
+#include "Extern.h"
 #include "Message.h"
 #include "readers/DataInterface.h"
 #include "readers/DataReader.h"

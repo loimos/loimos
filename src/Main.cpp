@@ -21,6 +21,7 @@
 #include <limits>
 #include <vector>
 #include <random>
+#include <memory>
 #include <unordered_set>
 #include <unordered_map>
 #include <sys/time.h>
@@ -59,6 +60,7 @@
 /* readonly */ double stepStartTime;
 double dataLoadingStartTime;
 /* readonly */ std::vector<double> totalTime;
+
 
 // For synthetic run.
 /* readonly */ int synPeopleGridWidth;
@@ -141,6 +143,7 @@ Main::Main(CkArgMsg* msg) {
   int argNum = 0;
   syntheticRun = atoi(msg->argv[++argNum]) == 1;
   int baseRunInfo = 0;
+
   if (syntheticRun) {
     // Get number of people.
     synPeopleGridWidth = atoi(msg->argv[++argNum]);
@@ -283,7 +286,26 @@ Main::Main(CkArgMsg* msg) {
   delete msg;
 
   CkPrintf("\nFinished loading shared/global data in %lf seconds.\n",
-        CkWallTimer() - dataLoadingStartTime);
+      CkWallTimer() - dataLoadingStartTime);
+
+  // Populating people and location tables with attributes from file
+#if ENABLE_DEBUG >= DEBUG_BASIC
+  CkPrintf("Person Attributes:\n");
+  for (int i = 0; i < diseaseModel->personTable.size(); i++) {
+    CkPrintf("  %s (%d): default: %lf, type: %d\n",
+        diseaseModel->personTable.getName(i).c_str(), i,
+        diseaseModel->personTable.getDefaultValueAsDouble(i),
+        diseaseModel->personTable.getDataType(i));
+  }
+
+  CkPrintf("Locations Attributes:\n");
+  for (int i = 0; i < diseaseModel->locationTable.size(); i++) {
+    CkPrintf("  %s (%d): default: %lf, type: %d\n",
+        diseaseModel->locationTable.getName(i).c_str(), i,
+        diseaseModel->locationTable.getDefaultValueAsDouble(i),
+        diseaseModel->locationTable.getDataType(i));
+  }
+#endif
 
   // creating chare arrays
   if (!syntheticRun) {

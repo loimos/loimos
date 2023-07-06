@@ -1,9 +1,12 @@
-new_daily_cases_trigger_on: 0.004
-new_daily_cases_trigger_off: 0.001;
-school_closures: false
-stay_at_home: true
-isolation_compliance: 0.95
-school_closure_compliance: 1
-csv_location_of_school: 1
-csv_location_of_seeder_bool: 0
-seeding_admin_code: 600
+triggers: {
+  new_daily_cases: {
+    trigger_on: 0.004;
+    trigger_off: 0.001;
+  }
+}  
+
+interventions: {
+  compliance: 0.95;
+  trigger_index: 0;
+  self_isolation: {}
+}

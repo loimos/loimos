@@ -31,6 +31,13 @@ message DataField {
     Empty label = 12;
     Category category = 13;
   }
+
+  oneof default_value {
+    bool default_bool = 14;
+    int32 default_int = 15;
+    double default_double = 16;
+    string default_string = 17;
+  }
 }
 
 message CSVDefinition {
