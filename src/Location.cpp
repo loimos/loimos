@@ -88,12 +88,13 @@ Counter Location::processEvents(
       // we can just ignore their comings and goings
       } else {
         #if ENABLE_DEBUG >= DEBUG_VERBOSE
+        arrivals = &susceptibleArrivals;
         if (ARRIVAL == event.type) {
           numPresent++;
         } else {
           numPresent--;
           numInteractions += numPresent;
-          numVerifiedInteractions += printInteractions(event, out);
+          saveInteractions(event, out);
         }
         #endif
         continue;
@@ -113,7 +114,7 @@ Counter Location::processEvents(
         #if ENABLE_DEBUG >= DEBUG_VERBOSE
         numPresent--;
         numInteractions += numPresent;
-        numVerifiedInteractions += printInteractions(event, out);
+        saveInteractions(event, out);
         #endif
 
         onDeparture(diseaseModel, contactModel, event);
@@ -128,21 +129,19 @@ Counter Location::processEvents(
   double p = contactModel->getContactProbability(*this);
   Counter total = static_cast<Counter>(p * numInteractions);
 
-  //if (0 != numInteractions) {
-  //  CkPrintf("      Loc %d: processed %lu interactions (n=%lu,p=%f,m=%d)\n",
-  //        uniqueId, total, numInteractions, p, data[maxSimVisitsIdx].int_b10);
-  //}
-  if (numVerifiedInteractions != numInteractions) {
-    CkPrintf("      Loc %d: found %lu interactions but only %lu verified\n",
-        numInteractions, numVerifiedInteractions);
+  #if ENABLE_DEBUG == DEBUG_LOCATION_SUMMARY
+  if (0 != numInteractions) {
+    CkPrintf("      %d,%d,%f,%lu,%lu\n",
+          uniqueId, data[maxSimVisitsIdx].int_b10, p, numInteractions, total);
   }
+  #endif  // DEBUG_LOCATION_SUMMARY
   return total;
   #else
   return 0;
-  #endif
+  #endif  // DEBUG_VERBOSE
 }
 
-Counter Location::printInteractions(const Event &departure,
+Counter Location::saveInteractions(const Event &departure,
     std::ofstream *out) const {
   Counter count = 0;
   for (const Event &a : susceptibleArrivals) {
@@ -155,12 +154,6 @@ Counter Location::printInteractions(const Event &departure,
     if (Event::overlap(a, departure)) {
       count++;
     }
-    //else {
-    //  CkPrintf("      Loc %d: person %d (%d-%d) met person %d (%d-%d)\n",
-    //    uniqueId, departure.personIdx, departure.partnerTime,
-    //    departure.scheduledTime, a.personIdx, a.scheduledTime,
-    //    a.partnerTime);
-    //}
   }
   for (const Event &a : infectiousArrivals) {
     if (NULL != out) {
@@ -172,13 +165,6 @@ Counter Location::printInteractions(const Event &departure,
     if (Event::overlap(a, departure)) {
       count++;
     }
-    // else {
-    //  CkPrintf("      Loc %d: person %d (%d-%d) met person %d (%d-%d)\n",
-    //  CkPrintf("      %d,%d,%d,%d,%d,%d,%d\n",
-    //    uniqueId, departure.personIdx, departure.partnerTime,
-    //    departure.scheduledTime, a.personIdx, a.scheduledTime,
-    //    a.partnerTime);
-    //}
   }
   return count;
 }

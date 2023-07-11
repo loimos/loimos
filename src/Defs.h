@@ -23,9 +23,10 @@
 // Debug levels
 #define DEBUG_BASIC 1
 #define DEBUG_VERBOSE 2
-#define DEBUG_PER_INTERACTION 3
-#define DEBUG_PER_CHARE 4
-#define DEBUG_PER_OBJECT 5
+#define DEBUG_LOCATION_SUMMARY 3  // Sumary of interaction counts per location
+#define DEBUG_PER_INTERACTION 4  // Saves all interactions to a file
+#define DEBUG_PER_CHARE 5
+#define DEBUG_PER_OBJECT 6
 
 // Disease states
 #define SUSCEPTIBLE 0
@@ -56,7 +57,11 @@ const Time MINUTE_LENGTH = 60;
 #define CSV_DELIM ','
 
 #define DAYS_TO_SEED_INFECTION 7
-#define INITIAL_INFECTIONS_PER_DAY 0
+#if ENABLE_DEBUG == DEBUG_PER_INTERACTION
+  #define INITIAL_INFECTIONS_PER_DAY 0
+#else
+  #define INITIAL_INFECTIONS_PER_DAY 10
+#endif
 #define INITIAL_INFECTIONS (INITIAL_INFECTIONS_PER_DAY * DAYS_TO_SEED_INFECTION)
 
 int getNumElementsPerPartition(int numElements, int numPartitions);

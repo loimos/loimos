@@ -46,7 +46,7 @@ class Location : public DataInterface {
 
   // Prints all interactions which would result from a depature e given
   // the present occupancy of the location
-  Counter printInteractions(const Event &e, std::ofstream *out) const;
+  Counter saveInteractions(const Event &e, std::ofstream *out) const;
 
   // Helper functions to handle when a person leaves this location
   // onDeparture branches to one of the two other functions
