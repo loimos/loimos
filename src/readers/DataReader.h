@@ -35,6 +35,7 @@ class DataReader {
     // Rows to read.
     for (T &obj : *dataObjs) {
       // Get next line.
+      uint64_t pos = input->tellg();
       input->getline(buf, MAX_INPUT_lineLength);
 
       // Read over people data format.
@@ -62,8 +63,13 @@ class DataReader {
             dataLen += 1;
           }
           std::string rawData(start, dataLen);
-          numDataFields +=
-            DataReader<T>::parseObjectData(rawData, field, numDataFields, &obj);
+          try {
+            numDataFields +=
+              DataReader<T>::parseObjectData(rawData, field, numDataFields, &obj);
+          } catch (const std::exception &e) {
+            CkPrintf("Error at byte %lu: '%s' (%s)\n", pos, buf, rawData.c_str());
+            CkAbort(e.what());
+          }
         }
 
         leftCommaLocation = c + 1;
