@@ -49,7 +49,7 @@ COMPARISION_COLUMNS = ["max_occupancy", "conn_prob", "max_possible_edges",
     "num_expected_edges"]
 BASELINE_SUFFIX = "_baseline"
 def compare_column(metrics, baseline, col, merge_on="old_lid", epsilon=1e-6):
-    df = pd.merge(metrics[[merge_on, col]], baseline[[merge_on, col]],
+    df = pd.merge(metrics, baseline,
             on=merge_on, suffixes=["", BASELINE_SUFFIX])
 
     mask = df[col] == df[col + BASELINE_SUFFIX]
@@ -75,16 +75,26 @@ def compare_column(metrics, baseline, col, merge_on="old_lid", epsilon=1e-6):
 
         total_err = err.sum()
         if isinstance(total_err, float):
-            out += f"total err: {total_err:0.3}"
+            out += f"total err: {total_err:0.3}, "
         else:
-            out += f"total err: {total_err}"
+            out += f"total err: {total_err}, "
+
+        rel_err = total_err / df[col + BASELINE_SUFFIX].sum()
+        if isinstance(rel_err, float):
+            out += f"rel err: {rel_err:0.3}"
+        else:
+            out += f"rel err: {rel_err}"
         print(out)
+
+        if col == "max_possible_edges":
+            df[~mask].to_csv("diff_locs.csv", index=False)
 
 
 def main():
     args = parse_args()
 
     pop_dir = args.pop_dir
+    print(f"Verifying location stats in {pop_dir}")
 
     locations = pd.read_csv(os.path.join(pop_dir, args.locations_file))
     loimos_metrics = pd.read_csv(os.path.join(pop_dir, args.loimos_metrics),
