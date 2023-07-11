@@ -70,8 +70,6 @@ Counter Location::processEvents(
   std::vector<Event> *arrivals;
   #if ENABLE_DEBUG >= DEBUG_VERBOSE
   Counter numPresent = 0;
-  Counter numVerifiedInteractions = 0;
-  Counter numVisits = events.size() / 2;
   #endif
 
   if (!interventionStategy || !complysWithShutdown
