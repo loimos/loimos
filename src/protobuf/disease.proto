@@ -58,20 +58,20 @@ message DiseaseModel {
     message TimedTransitionSet {
       // Defines a transition. For example (latent_1 -> symptom_1).
       message StateTransition {
-        int32 next_state = 2;
-        double with_prob = 3;
+        int32 next_state = 1;
+        double with_prob = 2;
 
         // Defines the time transition model for the node.
         oneof dwell_time_distribution {
-          DistUniform   uniform  =  9;
-          DistNormal    normal   = 10;
-          DistFixed     fixed    = 11;
-          DistForever   forever  = 12;
-          DistDiscrete  discrete = 13;
+          DistUniform   uniform  = 3;
+          DistNormal    normal   = 4;
+          DistFixed     fixed    = 5;
+          DistForever   forever  = 6;
+          DistDiscrete  discrete = 7;
         }
       }
       // A transition state has one vertex and multiple edges.
-      repeated StateTransition transitions = 6;
+      repeated StateTransition transitions = 1;
     }
 
     message ExposureTransitionSet {
