@@ -55,8 +55,10 @@ When multiple such options are used, these suffixes will be added in the order i
 | `ENABLE_UNIT_TESTING` | 1     |                   | Builds Loimos with unit tests enabled                                         |
 | `ENABLE_DEBUG`        | 1     |                   | Basic debug information                                                       |
 |                       | 2     |                   | Verbose debug information                                                     |
-|                       | 3     |                   | Chare-level debug information                                                 |
-|                       | 4     |                   | People- and location-level debug information                                  |
+|                       | 3     |                   | Prints out counts of person-person edges for each location on each day        |
+|                       | 4     |                   | Saves list of all person-person edges to output file                          |
+|                       | 5     |                   | Chare-level debug information                                                 |
+|                       | 6     |                   | People- and location-level debug information                                  |
 
 ## Running the Code
 
