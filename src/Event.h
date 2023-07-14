@@ -20,6 +20,8 @@ struct Event {
   int personIdx;
   // the person's curent state in the disease model
   int personState;
+  // Susceptibility or infectivity, depending on disease state
+  double transmissionModifier;
   // the time when this event is scheduled to occur, in seconds from the
   // start of the day
   int scheduledTime;

@@ -203,7 +203,7 @@ void People::loadVisitData(std::ifstream *activityData) {
       while (personId == person.getUniqueId() && visitStart < nextDaySecs) {
         // Save visit info
         person.visitsByDay[day].emplace_back(locationId, personId, -1,
-            visitStart, visitStart + visitDuration);
+            visitStart, visitStart + visitDuration, 1.0);
         #ifdef ENABLE_DEBUG
           numVisits++;
         #endif
@@ -379,7 +379,10 @@ void People::SyntheticSendVisitMessages() {
         numLocationPartitions, firstLocationIdx);
 
       // Send off visit message
-      VisitMessage visitMsg(destinationIdx, personIdx, p.state, visitStart, visitEnd);
+      VisitMessage visitMsg(destinationIdx, personIdx, p.state, visitStart,
+          visitEnd, getTransmissionModifier(p));
+      //CkPrintf("  %d has trans %f\n", p.getUniqueId(),
+      //    visitMsg.transmissionModifier);
       #ifdef USE_HYPERCOMM
       Aggregator* agg = aggregatorProxy.ckLocalBranch();
       if (agg->visit_aggregator) {
@@ -405,6 +408,10 @@ void People::RealDataSendVisitMessages() {
     for (VisitMessage visitMessage:
         person.visitsByDay[day % numDaysWithRealData]) {
       visitMessage.personState = person.state;
+      visitMessage.transmissionModifier = getTransmissionModifier(person);
+
+      //CkPrintf("  %d has trans %f\n", person.getUniqueId(),
+      //    visitMessage.transmissionModifier);
       numVisits++;
 
       // Find process that owns that location
@@ -431,6 +438,17 @@ void People::RealDataSendVisitMessages() {
         minId, maxId);
   }
 #endif
+}
+
+double People::getTransmissionModifier(const Person &person) {
+  if (-1 != diseaseModel->susceptibilityIndex
+      && diseaseModel->isSusceptible(person.state)) {
+    return person.getValue(diseaseModel->susceptibilityIndex).double_b10;
+  } else if (-1 != diseaseModel->infectivityIndex
+      && diseaseModel->isInfectious(person.state)) {
+    return person.getValue(diseaseModel->infectivityIndex).double_b10;
+  }
+  return 1.0;
 }
 
 void People::ReceiveInteractions(InteractionMessage interMsg) {

@@ -152,9 +152,9 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 
   // Wrap visit info...
   Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.personState,
-    visitMsg.visitStart };
+    visitMsg.transmissionModifier, visitMsg.visitStart };
   Event departure { DEPARTURE, visitMsg.personIdx, visitMsg.personState,
-    visitMsg.visitEnd };
+    visitMsg.transmissionModifier, visitMsg.visitEnd };
   Event::pair(&arrival, &departure);
 
   // ...and queue it up at the appropriate location
@@ -259,7 +259,9 @@ inline void Locations::registerInteraction(Location *loc,
   }
 
   double propensity = diseaseModel->getPropensity(susceptibleEvent.personState,
-    infectiousEvent.personState, startTime, endTime);
+    infectiousEvent.personState, startTime, endTime,
+    susceptibleEvent.transmissionModifier,
+    infectiousEvent.transmissionModifier);
 
   // Note that this will create a new vector if this is the first potential
   // infection for the susceptible person in question

@@ -75,7 +75,9 @@ void intitialiseLocationInterventions(
       int susceptibleState,
       int infectiousState,
       int startTime,
-      int endTime) const;
+      int endTime,
+      double susceptibility,
+      double infectivity) const;
 
   // These objects are not related to the disease model but are
   // per PE definitions so it makes sense to share them.
@@ -85,6 +87,8 @@ void intitialiseLocationInterventions(
   loimos::proto::InterventionModel *interventionDef;
 
   // Intervention methods
+  int susceptibilityIndex;
+  int infectivityIndex;
   AttributeTable personAttributes;
   AttributeTable locationAttributes;
 

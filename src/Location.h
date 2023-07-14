@@ -50,7 +50,7 @@ class Location : public DataInterface {
 
   // Adds an event represnting a person either arriving or departing
   // from this location
-  void addEvent(Event e);
+  void addEvent(const Event &e);
 };
 
 #endif  // LOCATION_H_
