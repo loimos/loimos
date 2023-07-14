@@ -142,7 +142,6 @@ Main::Main(CkArgMsg* msg) {
 
   int argNum = 0;
   syntheticRun = atoi(msg->argv[++argNum]) == 1;
-  int baseRunInfo = 0;
 
   if (syntheticRun) {
     // Get number of people.

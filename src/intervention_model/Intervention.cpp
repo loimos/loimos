@@ -31,4 +31,3 @@ bool Intervention::test(const DataInterface &p,
 
 void Intervention::apply(DataInterface *p) const {}
 
-void Intervention::pup(PUP::er &p) {}

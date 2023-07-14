@@ -9,8 +9,6 @@
 
 #include "Interaction.h"
 #include "pup_stl.h"
-#include <functional>
-typedef int (*func)(int);
 
 #include <vector>
 
@@ -46,23 +44,6 @@ struct InteractionMessage {
     p | locationIdx;
     p | personIdx;
     p | interactions;
-  }
-};
-
-struct InterventionMessage {
-  int personIdx;
-  int attrIndex;
-  double newValue;
-
-  InterventionMessage() {}
-  explicit InterventionMessage(CkMigrateMessage *msg) {}
-  InterventionMessage(int personIdx_, int attrIndex_, double newValue_)
-    : personIdx(personIdx_), attrIndex(attrIndex_), newValue(newValue_) {}
-
-  void pup(PUP::er& p) {
-    p | personIdx;
-    p | attrIndex;
-    p | newValue;
   }
 };
 

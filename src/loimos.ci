@@ -6,8 +6,6 @@
 mainmodule loimos {
   include "Interaction.h";
   include "Message.h";
-  include "intervention_model/Intervention.h";
-  include "intervention_model/VaccinationIntervention.h";
 
   #ifdef USE_HYPERCOMM
   include "AggregatorParam.h";
@@ -75,9 +73,6 @@ mainmodule loimos {
   readonly int averageDegreeOfVisit;
 
   readonly bool interventionStategy;
-
-  PUPable Intervention;
-  PUPable VaccinationIntervention;
 
   mainchare Main {
     entry Main(CkArgMsg*);
@@ -279,7 +274,7 @@ mainmodule loimos {
     entry void ReceiveInteractions(InteractionMessage);
     entry void EndOfDayStateUpdate(); // contribute call to ReceiveInfectiousCount
     entry void SendStats(); // contribute call to ReceiveStats
-    entry void ReceiveIntervention(std::shared_ptr<Intervention>);
+    entry void ReceiveIntervention(int interventionIdx);
     //entry void TestCall(std::function<int(int)> func);
     entry void AtSync();
   };
@@ -288,7 +283,7 @@ mainmodule loimos {
     entry Locations(std::string scenarioPath);
     entry void ReceiveVisitMessages(VisitMessage);
     entry void ComputeInteractions(); // calls ReceiveInteractions
-    entry void ReceiveIntervention(std::shared_ptr<Intervention>);
+    entry void ReceiveIntervention(int interventionIdx);
     entry void AtSync();
   };
 

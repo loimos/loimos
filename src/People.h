@@ -36,6 +36,7 @@ class People : public CBase_People {
   std::vector<int> stateSummaries;
 
   void ProcessInteractions(Person *person);
+  void UpdateDiseaseState(Person *person);
   void loadPeopleData(std::string scenarioPath);
   void loadVisitData(std::ifstream *activityData);
 
@@ -49,7 +50,7 @@ class People : public CBase_People {
   void ReceiveInteractions(InteractionMessage interMsg);
   void EndOfDayStateUpdate();
   void SendStats();
-  void ReceiveIntervention(std::shared_ptr<Intervention> v);
+  void ReceiveIntervention(int interventionIdx);
   #ifdef ENABLE_LB
   void ResumeFromSync();
   #endif  // ENABLE_LB

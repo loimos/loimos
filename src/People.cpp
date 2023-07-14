@@ -59,35 +59,32 @@ People::People(std::string scenarioPath) {
   double startTime = CkWallTimer();
 #endif
 
-  // Create real or fake people
-  if (syntheticRun) {
-    Person tmp { 0, 0, std::numeric_limits<Time>::max() };
-    people.resize(numLocalPeople, tmp);
+  people.reserve(numLocalPeople);
+  for (int i = 0; i < numLocalPeople; i++) {
+    people.emplace_back(0, std::numeric_limits<Time>::max(),
+        numDaysWithRealData, diseaseModel->personAttributes);
+  }
 
+  if (syntheticRun) {
     // Init peoples ids and randomly init ages.
     std::uniform_int_distribution<int> age_dist(0, 100);
-    int i = 0;
-    for (Person &p : people) {
-      Data age;
-      age.int_b10 = age_dist(generator);
-      std::vector<Data> dataField = { age };
+    int ageIndex = diseaseModel->personAttributes.getAttributeIndex("age");
+    for (int i = 0; i < numLocalPeople; i++) {
+      Person &p = people[i];
+
+      std::vector<union Data> data = p.getData();
+      if (-1 != ageIndex) {
+        data[ageIndex].int_b10 = age_dist(generator);
+      }
 
       p.setUniqueId(firstPersonIdx + i);
-      p.state = diseaseModel->getHealthyState(dataField);
+      p.state = diseaseModel->getHealthyState(data);
 
       // We set persons next state to equal current state to signify
       // that they are not in a disease model progression.
       p.next_state = p.state;
-
-      i++;
     }
   } else {
-      int numAttributesPerPerson =
-        DataReader<Person>::getNonZeroAttributes(diseaseModel->personDef);
-      for (int p = 0; p < numLocalPeople; p++) {
-        people.emplace_back(Person(numAttributesPerPerson,
-          0, std::numeric_limits<Time>::max()));
-      }
       // Load in people data from file.
       loadPeopleData(scenarioPath);
   }
@@ -153,19 +150,9 @@ void People::loadPeopleData(std::string scenarioPath) {
   }
   free(buf);
 
-  // Initialize intial states. (This will move in the DataLoaderPR)
-  int index = diseaseModel->getInterventionIndex(
-      [] (const loimos::proto::InterventionModel::Intervention inter) {
-        return inter.has_self_isolation();
-      });
-  double isolationCompliance = 0;
-  if (-1 != index) {
-    isolationCompliance = diseaseModel->getCompliance(index);
-  }
-
   for (Person &person : people) {
     person.state = diseaseModel->getHealthyState(person.getData());
-    person.willComply = unitDistrib(generator) < isolationCompliance;
+    // TODO(jkitson): set compliance levels based on personInterventions
   }
 
   loadVisitData(&activityData);
@@ -298,9 +285,6 @@ void People::SyntheticSendVisitMessages() {
   for (Person &p : people) {
     // Check if person is self isolating.
     int personIdx = p.getUniqueId();
-    if (p.isIsolating && diseaseModel->isInfectious(p.state)) {
-      continue;
-    }
 
     // Calculate home location
     int localPersonIdx = (personIdx - firstLocationIdx) % homePartitionNumLocations;
@@ -460,10 +444,12 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
     interMsg.interactions.cbegin(), interMsg.interactions.cend());
 }
 
-void People::ReceiveIntervention(std::shared_ptr<Intervention> intervention) {
+void People::ReceiveIntervention(int interactionIdx) {
+  const Intervention<Person> &inter =
+    diseaseModel->getPersonIntervention(interactionIdx);
   for (Person &person : people) {
-    if (intervention->test(person, &generator)) {
-      intervention->apply(&person);
+    if (inter.test(person, &generator)) {
+      inter.apply(&person);
     }
   }
 }
@@ -478,8 +464,7 @@ void People::EndOfDayStateUpdate() {
   int infectiousCount = 0;
   for (Person &person : people) {
     ProcessInteractions(&person);
-
-    person.EndOfDayStateUpdate(diseaseModel, &generator);
+    UpdateDiseaseState(&person);
 
     int resultantState = person.state;
     stateSummaries[resultantState + offset + 1]++;
@@ -537,6 +522,32 @@ void People::ProcessInteractions(Person *person) {
   }
 
   person->interactions.clear();
+}
+
+void People::UpdateDiseaseState(Person *person) {
+  // Transition to next state or mark the passage of time
+  person->secondsLeftInState -= DAY_LENGTH;
+  if (person->secondsLeftInState <= 0) {
+    // If they have already been infected
+    if (person->next_state != -1) {
+      person->state = person->next_state;
+      std::tie(person->next_state, person->secondsLeftInState) =
+        diseaseModel->transitionFromState(person->state, &generator);
+
+      // Check if person will begin isolating.
+      //if (person->willComply) {
+      //  isIsolating = diseaseModel->shouldPersonIsolate(state);
+      //}
+
+    } else {
+      // Get which exposed state they should transition to.
+      std::tie(person->state, std::ignore) =
+        diseaseModel->transitionFromState(person->state, &generator);
+      // See where they will transition next.
+      std::tie(person->next_state, person->secondsLeftInState) =
+        diseaseModel->transitionFromState(person->state, &generator);
+    }
+  }
 }
 
 #ifdef ENABLE_LB

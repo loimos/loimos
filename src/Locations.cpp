@@ -27,6 +27,8 @@
 #include <fstream>
 #include <string>
 
+std::uniform_real_distribution<> Locations::unitDistrib(0.0,1.0);
+
 Locations::Locations(std::string scenarioPath) {
   day = 0;
 
@@ -56,7 +58,7 @@ Locations::Locations(std::string scenarioPath) {
     int firstIdx = thisIndex * getNumLocalElements(numLocations,
       numLocationPartitions, 0);
     for (int p = 0; p < numLocalLocations; p++) {
-      locations.emplace_back(0, firstIdx + p, &generator, diseaseModel);
+      locations.emplace_back(firstIdx + p, diseaseModel->locationAttributes);
     }
   } else {
     loadLocationData(scenarioPath);
@@ -80,8 +82,7 @@ void Locations::loadLocationData(std::string scenarioPath) {
   int firstIdx = thisIndex * getNumElementsPerPartition(numLocations,
       numLocationPartitions);
   for (int p = 0; p < numLocalLocations; p++) {
-    locations.emplace_back(numAttributesPerLocation, firstIdx + p,
-      &generator, diseaseModel);
+    locations.emplace_back(firstIdx + p, diseaseModel->locationAttributes);
   }
 
   // Load in location information.
@@ -138,10 +139,6 @@ void Locations::pup(PUP::er &p) {
     diseaseModel = globDiseaseModel.ckLocalBranch();
     contactModel = createContactModel();
     contactModel->setGenerator(&generator);
-
-    for (Location &loc : locations) {
-      loc.setGenerator(&generator);
-    }
   }
 }
 
@@ -170,7 +167,7 @@ void Locations::ComputeInteractions() {
   int numVisits = 0;
   for (Location &loc : locations) {
     numVisits += loc.events.size() / 2;
-    loc.processEvents(diseaseModel, contactModel);
+    processEvents(&loc);
   }
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
@@ -183,10 +180,138 @@ void Locations::ComputeInteractions() {
   day++;
 }
 
-void Locations::ReceiveIntervention(std::shared_ptr<Intervention> intervention) {
+void Locations::processEvents(Location *loc) {
+  std::vector<Event> *arrivals;
+
+  std::sort(loc->events.begin(), loc->events.end());
+  for (const Event &event : loc->events) {
+    if (diseaseModel->isSusceptible(event.personState)) {
+      arrivals = &susceptibleArrivals;
+
+    } else if (diseaseModel->isInfectious(event.personState)) {
+      arrivals = &infectiousArrivals;
+
+    // If a person can niether infect other people nor be infected themself,
+    // we can just ignore their comings and goings
+    } else {
+      continue;
+    }
+
+    if (ARRIVAL == event.type) {
+      arrivals->push_back(event);
+      std::push_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
+
+    } else if (DEPARTURE == event.type) {
+      // Remove the arrival event corresponding to this departure
+      std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
+      arrivals->pop_back();
+
+      onDeparture(loc, event);
+    }
+  }
+  loc->events.clear();
+  interactions.clear();
+}
+
+// Simple dispatch to the susceptible/infectious depature handlers
+inline void Locations::onDeparture(Location *loc, const Event& departure) {
+  if (diseaseModel->isSusceptible(departure.personState)) {
+    onSusceptibleDeparture(loc, departure);
+
+  } else if (diseaseModel->isInfectious(departure.personState)) {
+    onInfectiousDeparture(loc, departure);
+  }
+}
+
+void Locations::onSusceptibleDeparture(Location *loc,
+    const Event& susceptibleDeparture) {
+  // Each infectious person at this location might have infected this
+  // susceptible person
+  for (const Event &infectiousArrival : infectiousArrivals) {
+    registerInteraction(loc, susceptibleDeparture, infectiousArrival,
+      // The start time is whichever arrival happened later
+      std::max(infectiousArrival.scheduledTime,
+        susceptibleDeparture.partnerTime),
+      susceptibleDeparture.scheduledTime);
+  }
+
+  sendInteractions(loc, susceptibleDeparture.personIdx);
+}
+
+void Locations::onInfectiousDeparture(Location *loc,
+    const Event& infectiousDeparture) {
+  // Each susceptible person at this location might have been infected by this
+  // infectious person
+  for (const Event &susceptibleArrival : susceptibleArrivals) {
+    registerInteraction(loc, susceptibleArrival, infectiousDeparture,
+      // The start time is whichever arrival happened later
+      std::max(susceptibleArrival.scheduledTime,
+        infectiousDeparture.partnerTime),
+      infectiousDeparture.scheduledTime);
+  }
+}
+
+inline void Locations::registerInteraction(Location *loc,
+    const Event &susceptibleEvent, const Event &infectiousEvent,
+    int startTime, int endTime) {
+  if (!contactModel->madeContact(susceptibleEvent, infectiousEvent, *loc)) {
+    return;
+  }
+
+  double propensity = diseaseModel->getPropensity(susceptibleEvent.personState,
+    infectiousEvent.personState, startTime, endTime);
+
+  // Note that this will create a new vector if this is the first potential
+  // infection for the susceptible person in question
+  Interaction inter { propensity, infectiousEvent.personIdx,
+    infectiousEvent.personState, startTime, endTime };
+  interactions[susceptibleEvent.personIdx].emplace_back(inter);
+}
+
+// Simple helper function which send the list of interactions with the
+// specified person to the appropriate People chare
+inline void Locations::sendInteractions(Location *loc,
+    int personIdx) {
+  int peoplePartitionIdx = getPartitionIndex(
+    personIdx,
+    numPeople,
+    numPeoplePartitions,
+    firstPersonIdx);
+
+  InteractionMessage interMsg(loc->getUniqueId(), personIdx,
+      interactions[personIdx]);
+  #ifdef USE_HYPERCOMM
+  Aggregator* agg = aggregatorProxy.ckLocalBranch();
+  if (agg->interact_aggregator) {
+    agg->interact_aggregator->send(peopleArray[peoplePartitionIdx], interMsg);
+  } else {
+  #endif  // USE_HYPERCOMM
+    peopleArray[peoplePartitionIdx].ReceiveInteractions(interMsg);
+  #ifdef USE_HYPERCOMM
+  }
+  #endif  // USE_HYPERCOMM
+
+  /*
+  CkPrintf(
+    "sending %d interactions to person %d in partition %d\r\n",
+    (int) interactions[personIdx].size(),
+    personIdx,
+    peoplePartitionIdx
+  );
+  */
+
+  // Free up space where we were storing interactions data. This also prevents
+  // interactions from being sent multiple times if this person has multiple
+  // visits to this location
+  interactions.erase(personIdx);
+}
+
+void Locations::ReceiveIntervention(int interventionIdx) {
   for (Location &location : locations) {
-    if (intervention->test(location, &generator)) {
-      intervention->apply(&location);
+    const Intervention<Location> &inter =
+      diseaseModel->getLocationIntervention(interventionIdx);
+    if (inter.test(location, &generator)) {
+      inter.apply(&location);
     }
   }
 }

@@ -21,6 +21,8 @@
 #include "Person.h"
 #include "readers/DataReader.h"
 #include "intervention_model/AttributeTable.h"
+#include "intervention_model/Intervention.h"
+#include "intervention_model/VaccinationIntervention.h"
 #include "protobuf/interventions.pb.h"
 #include "protobuf/disease.pb.h"
 #include "protobuf/distribution.pb.h"
@@ -130,10 +132,11 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     personAttributes.readAttributes(interventionDef->person_attributes());
     locationAttributes.readAttributes(interventionDef->location_attributes());
 
-    intitialiseInterventions(interventionDef->person_interventions(),
-        personAttributes, &personInterventions);
-    intitialiseInterventions(interventionDef->location_interventions(),
-        locationAttributes, &locationInterventions);
+    intitialisePersonInterventions(interventionDef->person_interventions(),
+        personAttributes);
+    intitialiseLocationInterventions(
+        interventionDef->location_interventions(),
+        locationAttributes);
 
 #if ENABLE_DEBUG >= DEBUG_BASIC
     CkPrintf("Person Attributes:\n");
@@ -155,22 +158,34 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
   }
 }
 
-void DiseaseModel::intitialiseInterventions(
+void DiseaseModel::intitialisePersonInterventions(
     const InterventionList &interventionSpecs,
-    const AttributeTable &attributes,
-    std::vector<std::shared_ptr<Intervention> > *interventions) {
+    const AttributeTable &attributes) {
   for (int i = 0; i < interventionSpecs.size(); ++i) {
     const loimos::proto::InterventionModel::Intervention &spec =
       interventionSpecs[i];
 
     if (spec.has_self_isolation()) {
-      interventions->emplace_back(new Intervention(spec, attributes));
-
-    } else if (spec.has_school_closures()) {
-      interventions->emplace_back(new Intervention(spec, attributes));
+      //personInterventions.emplace_back(new Intervention<Person>(spec,
+      //      attributes));
 
     } else if (spec.has_vaccination()) {
-      interventions->emplace_back(new VaccinationIntervention(spec, attributes));
+      personInterventions.emplace_back(new VaccinationIntervention(spec,
+            attributes));
+    }
+  }
+}
+
+void DiseaseModel::intitialiseLocationInterventions(
+    const InterventionList &interventionSpecs,
+    const AttributeTable &attributes) {
+  for (int i = 0; i < interventionSpecs.size(); ++i) {
+    const loimos::proto::InterventionModel::Intervention &spec =
+      interventionSpecs[i];
+
+    if (spec.has_school_closures()) {
+      //locationInterventions.emplace_back(new Intervention<Location>(spec,
+      //      attributes));
     }
   }
 }
@@ -401,17 +416,29 @@ double DiseaseModel::getPropensity(int susceptibleState, int infectiousState,
  * Intervention Methods
  * TODO: Move to own chare as these become more complex.
  */
+
+
+const Intervention<Person> & DiseaseModel::getPersonIntervention(int index)
+  const {
+  return *personInterventions[index];
+}
+
+const Intervention<Location> & DiseaseModel::getLocationIntervention(int index)
+  const {
+  return *locationInterventions[index];
+}
+
 void DiseaseModel::applyInterventions(int day, int newDailyInfections) {
   toggleInterventions(day, newDailyInfections);
 
   for (int i = 0; i < personInterventions.size(); ++i) {
-    if (triggerFlags[getTriggerIndex(i)]) {
-      peopleArray.ReceiveIntervention(personInterventions[i]);
+    if (triggerFlags[personInterventions[i]->getTriggerIndex()]) {
+      peopleArray.ReceiveIntervention(i);
     }
   }
   for (int i = 0; i < locationInterventions.size(); ++i) {
-    if (triggerFlags[getTriggerIndex(i)]) {
-      locationsArray.ReceiveIntervention(locationInterventions[i]);
+    if (triggerFlags[locationInterventions[i]->getTriggerIndex()]) {
+      locationsArray.ReceiveIntervention(i);
     }
   }
 }
