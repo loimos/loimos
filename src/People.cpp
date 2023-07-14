@@ -208,7 +208,7 @@ void People::loadVisitData(std::ifstream *activityData) {
       while (personId == person.getUniqueId() && visitStart < nextDaySecs) {
         // Save visit info
         person.visitsByDay[day].emplace_back(locationId, personId, -1,
-            visitStart, visitStart + visitDuration);
+            visitStart, visitStart + visitDuration, 1.0);
         #ifdef ENABLE_DEBUG
           numVisits++;
         #endif
@@ -392,7 +392,7 @@ void People::SyntheticSendVisitMessages() {
 
       // Send off visit message
       VisitMessage visitMsg(destinationIdx, personIdx, p.state, visitStart,
-          visitEnd);
+          visitEnd, getTransmissionModifier(p));
       #ifdef USE_HYPERCOMM
       Aggregator* agg = aggregatorProxy.ckLocalBranch();
       if (agg->visit_aggregator) {
@@ -421,6 +421,7 @@ void People::RealDataSendVisitMessages() {
     #endif
     for (VisitMessage visitMessage : person.visitsByDay[dayIdx]) {
       visitMessage.personState = person.state;
+      visitMessage.transmissionModifier = getTransmissionModifier(person);
       #if ENABLE_DEBUG >= DEBUG_VERBOSE
       totalVisitsForDay++;
       #endif
@@ -449,6 +450,17 @@ void People::RealDataSendVisitMessages() {
         minId, maxId);
   }
 #endif
+}
+
+double People::getTransmissionModifier(const Person &person) {
+  if (-1 != diseaseModel->susceptibilityIndex
+      && diseaseModel->isSusceptible(person.state)) {
+    return person.getValue(diseaseModel->susceptibilityIndex).double_b10;
+  } else if (-1 != diseaseModel->infectivityIndex
+      && diseaseModel->isInfectious(person.state)) {
+    return person.getValue(diseaseModel->infectivityIndex).double_b10;
+  }
+  return 1.0;
 }
 
 void People::ReceiveInteractions(InteractionMessage interMsg) {

@@ -162,9 +162,14 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
         interventionDef->location_interventions(),
         locationAttributes);
 
+  }
+
+  susceptibilityIndex = personAttributes.getAttributeIndex("susceptibility");
+  infectivityIndex = personAttributes.getAttributeIndex("infectivity");
+
 #if ENABLE_DEBUG >= DEBUG_BASIC
     CkPrintf("Person Attributes:\n");
-    for (int i = 0; i < diseaseModel->personAttributes.size(); i++) {
+    for (int i = 0; i < personAttributes.size(); i++) {
       CkPrintf("  %s (%d): default: %lf, type: %d\n",
           personAttributes.getName(i).c_str(), i,
           personAttributes.getDefaultValueAsDouble(i),
@@ -179,7 +184,6 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
           locationAttributes.getDataType(i));
     }
 #endif
-  }
 }
 
 void DiseaseModel::intitialisePersonInterventions(
@@ -425,13 +429,14 @@ double DiseaseModel::getLogProbNotInfected(Event susceptibleEvent,
  * to endTime
  */
 double DiseaseModel::getPropensity(int susceptibleState, int infectiousState,
-    int startTime, int endTime) const {
+    int startTime, int endTime, double susceptibility, double infectivity)
+    const {
   int dt = endTime - startTime;
 
   // EpiHiper had a number of weights/scaling constants that we may add in
   // later, but for now we ommit most of them (which is equivalent to setting
   // them all to one)
-  return model->transmissibility() * dt
+  return model->transmissibility() * dt * susceptibility * infectivity
     * model->disease_states(susceptibleState).susceptibility()
     * model->disease_states(infectiousState).infectivity();
 }

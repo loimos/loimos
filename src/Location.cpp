@@ -42,6 +42,6 @@ void Location::pup(PUP::er &p) {
 }
 
 // Event processing.
-void Location::addEvent(Event e) {
+void Location::addEvent(const Event &e) {
   events.push_back(e);
 }

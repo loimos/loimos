@@ -18,13 +18,16 @@ struct VisitMessage {
   int personState;
   int visitStart;
   int visitEnd;
+  // Susceptibility or infectivity, depending on disease state
+  double transmissionModifier;
 
   VisitMessage() {}
   explicit VisitMessage(CkMigrateMessage *msg) {}
   VisitMessage(int locationIdx_, int personIdx_, int personState_,
-      int visitStart_, int visitEnd_) : locationIdx(locationIdx_),
-      personIdx(personIdx_), personState(personState_),
-      visitStart(visitStart_), visitEnd(visitEnd_) {}
+      int visitStart_, int visitEnd_, double transmissionModifier_) :
+    locationIdx(locationIdx_), personIdx(personIdx_),
+    personState(personState_), visitStart(visitStart_), visitEnd(visitEnd_),
+      transmissionModifier(transmissionModifier_) {}
 };
 PUPbytes(VisitMessage);
 

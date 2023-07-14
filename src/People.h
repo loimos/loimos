@@ -47,6 +47,7 @@ class People : public CBase_People {
   void SendVisitMessages();
   void SyntheticSendVisitMessages();
   void RealDataSendVisitMessages();
+  double getTransmissionModifier(const Person &person);
   void ReceiveInteractions(InteractionMessage interMsg);
   void EndOfDayStateUpdate();
   void SendStats();
