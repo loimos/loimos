@@ -4,42 +4,36 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "loimos.decl.h"
-
-#include "protobuf/data.pb.h"
 #include "Person.h"
-#include "DiseaseModel.h"
 #include "Message.h"
+#include "protobuf/data.pb.h"
+#include "intervention_model/AttributeTable.h"
 
+#include "charm++.h"
 #include <vector>
 
 /**
  * Defines attributes of a single person.
  */
 
-Person::Person(int numAttributes, int startingState, int timeLeftInState) {
-  if (numAttributes != 0) {
-    this->data.resize(numAttributes);
-  }
+Person::Person(int startingState, int timeLeftInState, int numDays,
+    const AttributeTable &attributes) {
   this->state = startingState;
   this->next_state = -1;
-  this->isIsolating = false;
-  this->willComply = false;
   this->secondsLeftInState = timeLeftInState;
   this->visitOffsetByDay = std::vector<uint64_t>();
-  DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
 
   // Treat file-read and realdata attributes same, no need to make distinction
-  int tableSize = diseaseModel->personAttributes.size();
+  int tableSize = attributes.size();
   if (tableSize != 0) {
     this->data.resize(tableSize);
-    for (int i = numAttributes; i < tableSize; i++) {
-      this->data[i] = diseaseModel->personAttributes.getDefaultValue(i);
+    for (int i = 0; i < tableSize; i++) {
+      this->data[i] = attributes.getDefaultValue(i);
     }
   }
 
   // Create an entry for each day we have data for
-  this->visitsByDay.resize(numDaysWithRealData);
+  this->visitsByDay.resize(numDays);
 }
 
 void Person::pup(PUP::er &p) {
@@ -51,34 +45,6 @@ void Person::pup(PUP::er &p) {
   p | visitOffsetByDay;
   p | visitsByDay;
   p | data;
-  p | isIsolating;
-}
-
-void Person::EndOfDayStateUpdate(DiseaseModel *diseaseModel,
-    std::default_random_engine *generator) {
-  // Transition to next state or mark the passage of time
-  secondsLeftInState -= DAY_LENGTH;
-  if (secondsLeftInState <= 0) {
-    // If they have already been infected
-    if (next_state != -1) {
-      state = next_state;
-      std::tie(next_state, secondsLeftInState) =
-        diseaseModel->transitionFromState(state, generator);
-
-      // Check if person will begin isolating.
-      if (willComply) {
-        isIsolating = diseaseModel->shouldPersonIsolate(state);
-      }
-
-    } else {
-      // Get which exposed state they should transition to.
-      std::tie(state, std::ignore) =
-        diseaseModel->transitionFromState(state, generator);
-      // See where they will transition next.
-      std::tie(next_state, secondsLeftInState) =
-        diseaseModel->transitionFromState(state, generator);
-    }
-  }
 }
 
 void Person::_print_information(loimos::proto::CSVDefinition *personDef) {

@@ -24,21 +24,13 @@ VaccinationIntervention::VaccinationIntervention(
   this->susceptibilityIndex = t.getAttributeIndex("susceptibility");
 }
 
-void VaccinationIntervention::pup(PUP::er &p) {
-  p | vaccinationProbability;
-  p | vaccinatedSusceptibility;
-  p | vaccinatedIndex;
-  p | susceptibilityIndex;
-}
-
-bool VaccinationIntervention::test(const DataInterface &p,
+bool VaccinationIntervention::test(const Person &p,
     std::default_random_engine *generator) const {
-
   return !p.getValue(vaccinatedIndex).boolean
     && unitDistrib(*generator) < vaccinationProbability;
 }
 
-void VaccinationIntervention::apply(DataInterface *p) const {
+void VaccinationIntervention::apply(Person *p) const {
   std::vector<union Data> &objData = p->getData();
   objData[vaccinatedIndex].boolean = true;
   objData[susceptibilityIndex].double_b10 = vaccinatedSusceptibility;

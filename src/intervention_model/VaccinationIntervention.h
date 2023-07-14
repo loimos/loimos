@@ -9,29 +9,28 @@
 
 #include "Intervention.h"
 #include "AttributeTable.h"
+#include "../Person.h"
 #include "../protobuf/interventions.pb.h"
 #include "../readers/DataInterface.h"
 
 #include "charm++.h"
 
-class VaccinationIntervention : public Intervention {
- public:
+class VaccinationIntervention : public Intervention<Person> {
+ private:
   double vaccinationProbability;
   double vaccinatedSusceptibility;
   int vaccinatedIndex;
   int susceptibilityIndex;
 
-  bool test(const DataInterface &p, std::default_random_engine *generator)
-    const override;
-  void apply(DataInterface *p) const override;
-  void pup(PUP::er &p) override;  // NOLINT(runtime/references)
-  void identify();
+ public:
   VaccinationIntervention(
       const loimos::proto::InterventionModel::Intervention &interventionDef,
       const AttributeTable &t);
-  PUPable_decl(VaccinationIntervention);
-  VaccinationIntervention();
-  explicit VaccinationIntervention(CkMigrateMessage *m) : Intervention(m) {}
+  VaccinationIntervention() {};
+
+  bool test(const Person &p, std::default_random_engine *generator)
+      const override;
+  void apply(Person *p) const override;
 };
 
 #endif  // INTERVENTION_MODEL_VACCINATIONINTERVENTION_H_

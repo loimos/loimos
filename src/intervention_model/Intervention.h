@@ -16,25 +16,35 @@
 using InterventionList = google::protobuf::RepeatedPtrField<
   loimos::proto::InterventionModel::Intervention>;
 
-class Intervention : public PUP::able {
+template <class T = DataInterface>
+class Intervention {
  protected:
   static std::uniform_real_distribution<double> unitDistrib;
   double compliance;
+  int triggerIndex;
  public:
-  bool willComply(const DataInterface &p,
-    std::default_random_engine *generator) const;
-  virtual bool test(const DataInterface &p,
-      std::default_random_engine *generator) const;
-  virtual void apply(DataInterface *p) const;
-  virtual void pup(PUP::er &p);  // NOLINT(runtime/references)
+  int getTriggerIndex() const {
+    return triggerIndex;
+  }
+  bool willComply(const T &p, std::default_random_engine *generator) const {
+    return unitDistrib(*generator) < compliance;
+  }
+  virtual bool test(const T &p, std::default_random_engine *generator) const {
+    return false;
+  }
+  virtual void apply(T *p) const {}
 
-  PUPable_decl(Intervention);
   Intervention() {}
   Intervention(
-    const loimos::proto::InterventionModel::Intervention &interventionDef,
-    const AttributeTable &t);
-  explicit Intervention(CkMigrateMessage *m) :
-    PUP::able(m) {}  // NOLINT(runtime/references)
+      const loimos::proto::InterventionModel::Intervention &interventionDef,
+      const AttributeTable &t) {
+    compliance = interventionDef.compliance();
+    triggerIndex = interventionDef.trigger_index();
+  }
 };
+
+template <class T>
+std::uniform_real_distribution<double> Intervention<T>::unitDistrib(
+    0.0, 1.0);
 
 #endif  // INTERVENTION_MODEL_INTERVENTION_H_

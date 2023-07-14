@@ -7,6 +7,7 @@
 #ifndef EVENT_H_
 #define EVENT_H_
 
+#include "charm++.h"
 #include "Defs.h"
 
 // This is just a bundle of information that we don't need to

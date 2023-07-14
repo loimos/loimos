@@ -8,12 +8,16 @@
 
 #include "Event.h"
 
+#include "Person.h"
+#include "Location.h"
 #include "protobuf/disease.pb.h"
 #include "protobuf/distribution.pb.h"
 #include "protobuf/data.pb.h"
 #include "protobuf/interventions.pb.h"
 #include "readers/DataReader.h"
+#include "readers/DataInterface.h"
 #include "intervention_model/AttributeTable.h"
+#include "intervention_model/Intervention.h"
 #include "Event.h"
 
 #include <unordered_map>
@@ -24,8 +28,6 @@
 #include <memory>
 
 using NameIndexLookupType = std::unordered_map<std::string, int>;
-using InterventionTestType = std::function<
-  bool(const loimos::proto::InterventionModel::Intervention)>;
 
 class DiseaseModel : public CBase_DiseaseModel {
  private:
@@ -43,8 +45,16 @@ class DiseaseModel : public CBase_DiseaseModel {
 
   // Intervention related.
   std::vector<bool> triggerFlags;
-  std::vector<std::shared_ptr<Intervention>> personInterventions;
-  std::vector<std::shared_ptr<Intervention>> locationInterventions;
+  std::vector<std::shared_ptr<Intervention<Person>>> personInterventions;
+  std::vector<std::shared_ptr<Intervention<Location>>> locationInterventions;
+
+
+void intitialisePersonInterventions(
+    const InterventionList &interventionSpecs,
+    const AttributeTable &attributes);
+void intitialiseLocationInterventions(
+    const InterventionList &interventionSpecs,
+    const AttributeTable &attributes);
 
  public:
   // move back to private later
@@ -78,18 +88,10 @@ class DiseaseModel : public CBase_DiseaseModel {
   AttributeTable personAttributes;
   AttributeTable locationAttributes;
 
-  void intitialiseInterventions(const InterventionList &interventionSpecs,
-      const AttributeTable &attributes,
-      std::vector<std::shared_ptr<Intervention> > *interventions);
+  const Intervention<Person> &getPersonIntervention(int index) const;
+  const Intervention<Location> &getLocationIntervention(int index) const;
   void applyInterventions(int day, int newDailyInfections);
   void toggleInterventions(int day, int newDailyInfections);
-  const std::vector<const Intervention> getInterventions();
-  int getInterventionIndex(InterventionTestType test) const;
-  double getCompliance(int interventionIndex) const;
-  int getTriggerIndex(int interventionIndex) const;
-  bool shouldPersonIsolate(int healthState) const;
-  bool isLocationOpen(std::vector<Data> *locAttr) const;
-  bool complyingWithLockdown(std::default_random_engine *generator) const;
 };
 
 #endif  // DISEASEMODEL_H_

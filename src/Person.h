@@ -8,11 +8,11 @@
 #define PERSON_H_
 
 #include "Defs.h"
-#include "Extern.h"
 #include "Message.h"
 #include "readers/DataInterface.h"
-#include "readers/DataReader.h"
+#include "intervention_model/AttributeTable.h"
 
+#include "charm++.h"
 #include <vector>
 
 class Person : public DataInterface {
@@ -21,8 +21,6 @@ class Person : public DataInterface {
   int state;
   int next_state;
   int secondsLeftInState;
-  bool willComply;
-  bool isIsolating;
   // If this is a susceptible person, this is a list of all of their
   // interactions with infectious people in the past day
   std::vector<Interaction> interactions;
@@ -34,7 +32,8 @@ class Person : public DataInterface {
   std::vector<std::vector<VisitMessage> > visitsByDay;
   // Constructors and assignment operators
   Person() = default;
-  Person(int numAttributes, int startingState, int timeLeftInState);
+  Person(int startingState, int timeLeftInState, int numDays,
+      const AttributeTable &attributes);
   Person(const Person&) = default;
   Person(Person&&) = default;
   Person& operator=(const Person&) = default;
@@ -42,9 +41,6 @@ class Person : public DataInterface {
   ~Person() = default;
   // Lets charm++ migrate objects
   void pup(PUP::er &p);  // NOLINT(runtime/references)
-  // Disease model functions.
-  void EndOfDayStateUpdate(DiseaseModel *diseaseModel,
-      std::default_random_engine *generator);
   // Debugging.
   void _print_information(loimos::proto::CSVDefinition *personDef);
 };
