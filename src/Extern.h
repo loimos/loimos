@@ -25,7 +25,7 @@ extern /* readonly */ int numLocationPartitions;
 extern /* readonly */ int numPeoplePerPartition;
 extern /* readonly */ int numLocationsPerPartition;
 extern /* readonly */ int numDays;
-extern /* readonly */ int numDaysWithRealData;
+extern /* readonly */ int numDaysWithDistinctVisits;
 extern /* readonly */ int contactModelType;
 extern /* readonly */ bool syntheticRun;
 

@@ -47,7 +47,7 @@ mainmodule loimos {
   readonly int numPeoplePartitions;
   readonly int numLocationPartitions;
   readonly int numDays;
-  readonly int numDaysWithRealData;
+  readonly int numDaysWithDistinctVisits;
 
   readonly bool syntheticRun;
   readonly int contactModelType;
