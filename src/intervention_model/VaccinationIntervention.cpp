@@ -14,12 +14,14 @@
 
 VaccinationIntervention::VaccinationIntervention(
     const loimos::proto::InterventionModel::Intervention &interventionDef,
-    const AttributeTable &t) {
+    const loimos::proto::DiseaseModel &diseaseDef,
+    const AttributeTable &t) :
+  Intervention(interventionDef, diseaseDef, t) {
   vaccinationProbability = interventionDef.vaccination().probability();
   vaccinatedSusceptibility = interventionDef.vaccination()
     .vaccinated_susceptibility();
-  CkPrintf("Vaccination: prob: %f, susceptibility: %f\n",
-      vaccinationProbability, vaccinatedSusceptibility);
+  // CkPrintf("Vaccination: prob: %f, susceptibility: %f\n",
+  //     vaccinationProbability, vaccinatedSusceptibility);
   this->vaccinatedIndex = t.getAttributeIndex("vaccinated");
   this->susceptibilityIndex = t.getAttributeIndex("susceptibility");
 }

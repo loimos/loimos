@@ -164,6 +164,11 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
     numLocations,
     numLocationPartitions,
     firstLocationIdx);
+  
+  // Interventions might cause us to reject some visits
+  if(!locations[localLocIdx].acceptsVisit(visitMsg)) {
+    return;
+  }
 
 #ifdef ENABLE_DEBUG
   int trueIdx = locations[localLocIdx].getUniqueId();

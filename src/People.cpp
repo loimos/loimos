@@ -422,6 +422,11 @@ void People::RealDataSendVisitMessages() {
     for (VisitMessage visitMessage : person.visitsByDay[dayIdx]) {
       visitMessage.personState = person.state;
       visitMessage.transmissionModifier = getTransmissionModifier(person);
+      
+      // Interventions may cancel some visits
+      if (NULL != visitMessage.deactivatedBy) {
+        continue;
+      }
       #if ENABLE_DEBUG >= DEBUG_VERBOSE
       totalVisitsForDay++;
       #endif

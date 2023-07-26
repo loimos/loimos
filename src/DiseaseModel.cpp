@@ -25,6 +25,8 @@
 #include "contact_model/ContactModel.h"
 #include "intervention_model/Intervention.h"
 #include "intervention_model/VaccinationIntervention.h"
+#include "intervention_model/SelfIsolationIntervention.h"
+#include "intervention_model/SchoolClosureIntervention.h"
 #include "protobuf/interventions.pb.h"
 #include "protobuf/disease.pb.h"
 #include "protobuf/distribution.pb.h"
@@ -194,12 +196,12 @@ void DiseaseModel::intitialisePersonInterventions(
       interventionSpecs[i];
 
     if (spec.has_self_isolation()) {
-      //personInterventions.emplace_back(new Intervention<Person>(spec,
-      //      attributes));
+      personInterventions.emplace_back(new SelfIsolationIntervention(
+        spec, *model, attributes));
 
     } else if (spec.has_vaccination()) {
-      personInterventions.emplace_back(new VaccinationIntervention(spec,
-            attributes));
+      personInterventions.emplace_back(new VaccinationIntervention(
+        spec, *model, attributes));
     }
   }
 }
@@ -212,8 +214,8 @@ void DiseaseModel::intitialiseLocationInterventions(
       interventionSpecs[i];
 
     if (spec.has_school_closures()) {
-      //locationInterventions.emplace_back(new Intervention<Location>(spec,
-      //      attributes));
+      locationInterventions.emplace_back(new SchoolClosureIntervention(
+        spec, *model, attributes));
     }
   }
 }
@@ -424,7 +426,7 @@ double DiseaseModel::getLogProbNotInfected(Event susceptibleEvent,
 }
 
 /**
- * Returns the propesity of a person in susceptibleState becoming infected
+ * Returns the propensity of a person in susceptibleState becoming infected
  * after exposure to a person in infectiousState for the period from startTime
  * to endTime
  */
@@ -434,7 +436,7 @@ double DiseaseModel::getPropensity(int susceptibleState, int infectiousState,
   int dt = endTime - startTime;
 
   // EpiHiper had a number of weights/scaling constants that we may add in
-  // later, but for now we ommit most of them (which is equivalent to setting
+  // later, but for now we omit most of them (which is equivalent to setting
   // them all to one)
   return model->transmissibility() * dt * susceptibility * infectivity
     * model->disease_states(susceptibleState).susceptibility()
