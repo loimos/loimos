@@ -49,7 +49,7 @@
 /* readonly */ int numPeoplePartitions;
 /* readonly */ int numLocationPartitions;
 /* readonly */ int numDays;
-/* readonly */ int numDaysWithRealData;
+/* readonly */ int numDaysWithDistinctVisits;
 /* readonly */ bool syntheticRun;
 /* readonly */ int contactModelType;
 /* readonly */ int firstPersonIdx;
@@ -187,6 +187,7 @@ Main::Main(CkArgMsg* msg) {
     }
 
     numDays = atoi(msg->argv[++argNum]);
+    numDaysWithDistinctVisits = 7;
 
   } else {
     numPeople = atoi(msg->argv[++argNum]);
@@ -194,7 +195,7 @@ Main::Main(CkArgMsg* msg) {
     numPeoplePartitions = atoi(msg->argv[++argNum]);
     numLocationPartitions = atoi(msg->argv[++argNum]);
     numDays = atoi(msg->argv[++argNum]);
-    numDaysWithRealData = atoi(msg->argv[++argNum]);
+    numDaysWithDistinctVisits = atoi(msg->argv[++argNum]);
   }
 
   pathToOutput = std::string(msg->argv[++argNum]);
@@ -217,7 +218,7 @@ Main::Main(CkArgMsg* msg) {
     scenarioPath = std::string(msg->argv[++argNum]);
     std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(
         scenarioPath, numPeople, numPeoplePartitions, numLocations,
-        numLocationPartitions, numDaysWithRealData);
+        numLocationPartitions, numDaysWithDistinctVisits);
   }
 
   // Detemine which contact modle to use

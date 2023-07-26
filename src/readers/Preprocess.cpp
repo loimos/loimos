@@ -193,7 +193,7 @@ void buildActivityCache(std::string inputPath, std::string outputPath,
     lastTime = nextTime;
     numVisits = 0;
 
-    elements[numDaysWithRealData * (lastPerson - firstPersonIdx) + lastTime] =
+    elements[numDaysWithDistinctVisits * (lastPerson - firstPersonIdx) + lastTime] =
       current_position;
     // if (0 == lastPerson % 10000) {
     //   CkPrintf("  Setting person %d to read from %u on day %d\n",

@@ -44,9 +44,9 @@ class People : public CBase_People {
   explicit People(std::string scenarioPath);
   explicit People(CkMigrateMessage *msg);
   void pup(PUP::er &p);  // NOLINT(runtime/references)
+  void generatePeopleData();
+  void generateVisitData();
   void SendVisitMessages();
-  void SyntheticSendVisitMessages();
-  void RealDataSendVisitMessages();
   double getTransmissionModifier(const Person &person);
   void ReceiveInteractions(InteractionMessage interMsg);
   void EndOfDayStateUpdate();
