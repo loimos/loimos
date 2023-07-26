@@ -9,6 +9,7 @@
 
 #include "AttributeTable.h"
 #include "../protobuf/interventions.pb.h"
+#include "../protobuf/disease.pb.h"
 #include "../readers/DataInterface.h"
 
 #include "charm++.h"
@@ -32,11 +33,16 @@ class Intervention {
   virtual bool test(const T &p, std::default_random_engine *generator) const {
     return false;
   }
+  // Applies intervention to object
   virtual void apply(T *p) const {}
+  // Undoes any previous intervention application on this object.
+  // For any intervention that cannot be undone, this should have no effect.
+  virtual void remove(T *p) const {}
 
   Intervention() {}
   Intervention(
       const loimos::proto::InterventionModel::Intervention &interventionDef,
+      const loimos::proto::DiseaseModel &diseaseDef,
       const AttributeTable &t) {
     compliance = interventionDef.compliance();
     triggerIndex = interventionDef.trigger_index();

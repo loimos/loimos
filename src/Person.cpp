@@ -36,6 +36,26 @@ Person::Person(int startingState, int timeLeftInState, int numDays,
   this->visitsByDay.resize(numDays);
 }
 
+void Person::filterVisits(const void *cause, VisitTest keepVisit) {
+  for (std::vector<VisitMessage> &visits : visitsByDay) {
+    for (int i = 0; i < visits.size(); ++i) {
+      if (!keepVisit(visits[i])) {
+        visits[i].deactivatedBy = cause;
+      }
+    }
+  }
+}
+
+void Person::restoreVisits(const void *cause) {
+  for (std::vector<VisitMessage> &visits : visitsByDay) {
+    for (int i = 0; i < visits.size(); ++i) {
+      if (cause == visits[i].deactivatedBy) {
+        visits[i].deactivatedBy = NULL;
+      }
+    }
+  }
+}
+
 void Person::pup(PUP::er &p) {
   p | uniqueId;
   p | state;

@@ -28,6 +28,7 @@ class Location : public DataInterface {
   // Represents all of the arrivals and departures of people
   // from this location on a given day
   std::vector<Event> events;
+  std::unordered_map<const void *, VisitTest> visitFilters;
 
   // This distribution should always be the same - not sure how well
   // static variables work with Charm++, so this may need to be put
@@ -48,9 +49,12 @@ class Location : public DataInterface {
   // Lets us migrate these objects
   void pup(PUP::er &p);  // NOLINT(runtime/references)
 
-  // Adds an event represnting a person either arriving or departing
+  // Adds an event representing a person either arriving or departing
   // from this location
   void addEvent(const Event &e);
+  void filterVisits(const void *cause, VisitTest keepVisit) override;
+  void restoreVisits(const void *cause) override;
+  bool acceptsVisit(const VisitMessage &visit);
 };
 
 #endif  // LOCATION_H_

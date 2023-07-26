@@ -11,6 +11,7 @@
 #include "AttributeTable.h"
 #include "../Person.h"
 #include "../protobuf/interventions.pb.h"
+#include "../protobuf/disease.pb.h"
 #include "../readers/DataInterface.h"
 
 #include "charm++.h"
@@ -25,6 +26,7 @@ class VaccinationIntervention : public Intervention<Person> {
  public:
   VaccinationIntervention(
       const loimos::proto::InterventionModel::Intervention &interventionDef,
+      const loimos::proto::DiseaseModel &diseaseDef,
       const AttributeTable &t);
   VaccinationIntervention() {};
 

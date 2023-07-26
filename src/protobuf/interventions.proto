@@ -35,7 +35,6 @@ message InterventionModel {
     }
 
     message InterventionTypeSchoolClosures {
-      int32 csv_location_of_school = 1;
     }
 
     message InterventionTypeVaccination {

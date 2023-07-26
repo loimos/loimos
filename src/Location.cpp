@@ -43,3 +43,20 @@ void Location::pup(PUP::er &p) {
 void Location::addEvent(const Event &e) {
   events.push_back(e);
 }
+
+void Location::filterVisits(const void *cause, VisitTest keepVisit) {
+  visitFilters[cause] = keepVisit;
+}
+
+void Location::restoreVisits(const void *cause) {
+  visitFilters.erase(cause);
+}
+
+bool Location::acceptsVisit(const VisitMessage &visit) {
+  for (const std::pair<const void *, VisitTest> &pair : visitFilters) {
+    if (!pair.second(visit)) {
+      return false;
+    }
+  }
+  return true;
+}

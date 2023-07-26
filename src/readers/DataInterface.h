@@ -9,10 +9,12 @@
 
 #include <vector>
 #include <string>
+#include <functional>
 #include <google/protobuf/repeated_field.h>
 
 #include "charm++.h"
 #include "pup_stl.h"
+#include "../Message.h"
 #include "../protobuf/data.pb.h"
 
 namespace DataTypes {
@@ -29,6 +31,8 @@ union Data {
 };
 PUPbytes(union Data);
 
+using VisitTest = std::function<bool(const VisitMessage &)>;
+
 class DataInterface {
  protected:
   // Unique global identifier
@@ -36,11 +40,13 @@ class DataInterface {
   // Various dynamic attributes
   std::vector<union Data> data;
  public:
-  DataInterface() {}
-  ~DataInterface() {}
+  DataInterface() = default;
+  virtual ~DataInterface() = default;
   void setUniqueId(int idx);
   int getUniqueId() const;
   union Data getValue(int idx) const;
   std::vector<union Data> &getData();
+  virtual void filterVisits(const void *cause, VisitTest keepVisit) = 0;
+  virtual void restoreVisits(const void *cause) = 0;
 };
 #endif  // READERS_DATAINTERFACE_H_

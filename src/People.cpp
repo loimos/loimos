@@ -409,6 +409,11 @@ void People::RealDataSendVisitMessages() {
         person.visitsByDay[day % numDaysWithRealData]) {
       visitMessage.personState = person.state;
       visitMessage.transmissionModifier = getTransmissionModifier(person);
+      
+      // Interventions may cancel some visits
+      if (NULL != visitMessage.deactivatedBy) {
+        continue;
+      }
 
       //CkPrintf("  %d has trans %f\n", person.getUniqueId(),
       //    visitMessage.transmissionModifier);

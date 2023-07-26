@@ -149,6 +149,11 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
     numLocations,
     numLocationPartitions,
     firstLocationIdx);
+  
+  // Interventions might cause us to reject some visits
+  if(!locations[localLocIdx].acceptsVisit(visitMsg)) {
+    return;
+  }
 
   // Wrap visit info...
   Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.personState,

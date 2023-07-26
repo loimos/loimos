@@ -8,7 +8,5 @@ triggers: {
 location_interventions: {
   compliance: 0.95;
   trigger_index: 0;
-  school_closures: {
-    csv_location_of_school: 1;
-  }
+  school_closures: {}
 }
