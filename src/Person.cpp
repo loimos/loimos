@@ -7,7 +7,7 @@
 #include "Person.h"
 #include "Message.h"
 #include "protobuf/data.pb.h"
-#include "intervention_model/AttributeTable.h"
+#include "readers/AttributeTable.h"
 
 #include "charm++.h"
 #include <vector>
@@ -16,22 +16,11 @@
  * Defines attributes of a single person.
  */
 
-Person::Person(int startingState, int timeLeftInState, int numDays,
-    const AttributeTable &attributes) {
-  this->state = startingState;
-  this->next_state = -1;
-  this->secondsLeftInState = timeLeftInState;
-  this->visitOffsetByDay = std::vector<uint64_t>();
-
-  // Treat file-read and realdata attributes same, no need to make distinction
-  int tableSize = attributes.size();
-  if (tableSize != 0) {
-    this->data.resize(tableSize);
-    for (int i = 0; i < tableSize; i++) {
-      this->data[i] = attributes.getDefaultValue(i);
-    }
-  }
-
+Person::Person(const AttributeTable &attributes, int numInterventions,
+    int startingState, int secondsLeftInState_, int numDays) :
+    DataInterface(attributes, numInterventions),
+    state(startingState), next_state(-1),
+    secondsLeftInState(secondsLeftInState_) {
   // Create an entry for each day we have data for
   this->visitsByDay.resize(numDays);
 }

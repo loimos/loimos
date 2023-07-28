@@ -7,9 +7,8 @@ include Makefile.include
 
 OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o  \
          Defs.o Event.o readers/Preprocess.o \
-				 readers/DataInterface.o \
+				 readers/DataInterface.o readers/AttributeTable.o \
 				 contact_model/MinMaxAlphaModel.o contact_model/ContactModel.o \
-				 intervention_model/AttributeTable.o \
 				 intervention_model/VaccinationIntervention.o \
          protobuf/disease.pb.o protobuf/distribution.pb.o \
 		     protobuf/data.pb.o protobuf/interventions.pb.o

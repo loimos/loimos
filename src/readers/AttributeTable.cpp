@@ -5,11 +5,12 @@
   */
 
 #include "AttributeTable.h"
+#include "DataReader.h"
+#include "Data.h"
 #include "../loimos.decl.h"
 #include "../protobuf/data.pb.h"
 #include "../Person.h"
 #include "../Location.h"
-#include "../readers/DataReader.h"
 
 #include <string>
 #include <vector>

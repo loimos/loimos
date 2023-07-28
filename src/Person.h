@@ -10,7 +10,7 @@
 #include "Defs.h"
 #include "Message.h"
 #include "readers/DataInterface.h"
-#include "intervention_model/AttributeTable.h"
+#include "readers/AttributeTable.h"
 
 #include "charm++.h"
 #include <vector>
@@ -21,19 +21,23 @@ class Person : public DataInterface {
   int state;
   int next_state;
   int secondsLeftInState;
+
   // If this is a susceptible person, this is a list of all of their
   // interactions with infectious people in the past day
   std::vector<Interaction> interactions;
+
   // Integer byte offsets in visits file by day.
   // For example, fseek(visitOffsetByDay[2]) would seek to the start
   // of this person's visits on day 3.
   std::vector<uint64_t> visitOffsetByDay;
+
   // Holds visit messages for each day
   std::vector<std::vector<VisitMessage> > visitsByDay;
+
   // Constructors and assignment operators
   Person() = default;
-  Person(int startingState, int timeLeftInState, int numDays,
-      const AttributeTable &attributes);
+  Person(const AttributeTable &attributes, int numInterventions,
+    int startingState, int timeLeftInState, int numDays);
   Person(const Person&) = default;
   Person(Person&&) = default;
   Person& operator=(const Person&) = default;

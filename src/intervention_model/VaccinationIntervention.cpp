@@ -6,9 +6,9 @@
 
 #include "Intervention.h"
 #include "VaccinationIntervention.h"
-#include "AttributeTable.h"
 #include "../protobuf/interventions.pb.h"
 #include "../readers/DataInterface.h"
+#include "../readers/AttributeTable.h"
 
 #include <vector>
 

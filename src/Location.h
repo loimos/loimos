@@ -12,7 +12,7 @@ class Location;
 
 #include "Types.h"
 #include "Event.h"
-#include "intervention_model/AttributeTable.h"
+#include "readers/AttributeTable.h"
 #include "readers/DataInterface.h"
 
 #include <vector>
@@ -23,7 +23,7 @@ class Location;
 
 // Represents a single location where people can interact
 // Not to be confused with Locations, which represents a group of
-// intances of this class
+// instances of this class
 class Location : public DataInterface {
  public:
   // Represents all of the arrivals and departures of people
@@ -39,7 +39,8 @@ class Location : public DataInterface {
   // Provide default constructor operations.
   Location() = default;
   explicit Location(CkMigrateMessage *msg);
-  Location(int uniqueIdx, const AttributeTable &attributes);
+  Location(const AttributeTable &attributes, int numInterventions,
+    int uniqueId);
   Location(const Location&) = default;
   Location(Location&&) = default;
   ~Location() = default;

@@ -7,10 +7,10 @@
 #ifndef INTERVENTION_MODEL_INTERVENTION_H_
 #define INTERVENTION_MODEL_INTERVENTION_H_
 
-#include "AttributeTable.h"
 #include "../protobuf/interventions.pb.h"
 #include "../protobuf/disease.pb.h"
 #include "../readers/DataInterface.h"
+#include "../readers/AttributeTable.h"
 
 #include "charm++.h"
 

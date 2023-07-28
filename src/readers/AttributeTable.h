@@ -7,8 +7,8 @@
 #ifndef INTERVENTION_MODEL_ATTRIBUTETABLE_H_
 #define INTERVENTION_MODEL_ATTRIBUTETABLE_H_
 
-#include "../readers/DataInterface.h"
-#include "../readers/DataReader.h"
+#include "Data.h"
+#include "../protobuf/data.pb.h"
 
 #include <string>
 #include <vector>
