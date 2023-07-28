@@ -16,7 +16,7 @@
 #include "protobuf/interventions.pb.h"
 #include "readers/DataReader.h"
 #include "readers/DataInterface.h"
-#include "intervention_model/AttributeTable.h"
+#include "readers/AttributeTable.h"
 #include "intervention_model/Intervention.h"
 #include "Event.h"
 
@@ -94,6 +94,8 @@ void intitialiseLocationInterventions(
 
   const Intervention<Person> &getPersonIntervention(int index) const;
   const Intervention<Location> &getLocationIntervention(int index) const;
+  int getNumPersonInterventions() const;
+  int getNumLocationInterventions() const;
   void applyInterventions(int day, int newDailyInfections);
   void toggleInterventions(int day, int newDailyInfections);
 };

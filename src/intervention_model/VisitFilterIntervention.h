@@ -7,9 +7,9 @@
 #ifndef INTERVENTION_MODEL_VISITFILTERINTERVENTION_H_
 #define INTERVENTION_MODEL_VISITFILTERINTERVENTION_H_
 
-#include "AttributeTable.h"
 #include "../protobuf/interventions.pb.h"
 #include "../readers/DataInterface.h"
+#include "../readers/AttributeTable.h"
 
 #include "charm++.h"
 #include <functional>

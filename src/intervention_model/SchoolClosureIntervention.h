@@ -7,13 +7,13 @@
 #ifndef INTERVENTION_MODEL_SCHOOLCLOSUREINTERVENTION_H_
 #define INTERVENTION_MODEL_SCHOOLCLOSUREINTERVENTION_H_
 
-#include "AttributeTable.h"
 #include "Intervention.h"
 #include "VisitFilterIntervention.h"
 #include "../Location.h"
 #include "../protobuf/interventions.pb.h"
 #include "../protobuf/disease.pb.h"
 #include "../readers/DataInterface.h"
+#include "../readers/AttributeTable.h"
 
 class SchoolClosureIntervention : public VisitFilterIntervention<Location> {
  protected:

@@ -27,7 +27,7 @@
 #include <fstream>
 #include <string>
 
-std::uniform_real_distribution<> Locations::unitDistrib(0.0,1.0);
+std::uniform_real_distribution<> Locations::unitDistrib(0.0, 1.0);
 
 Locations::Locations(std::string scenarioPath) {
   day = 0;
@@ -52,16 +52,25 @@ Locations::Locations(std::string scenarioPath) {
   contactModel = createContactModel();
   contactModel->setGenerator(&generator);
 
+  int numInterventions = diseaseModel->getNumLocationInterventions();
+  locations.reserve(numLocalLocations);
+  int firstIdx = thisIndex * getNumElementsPerPartition(numLocations,
+      numLocationPartitions);
+  for (int p = 0; p < numLocalLocations; p++) {
+    locations.emplace_back(diseaseModel->locationAttributes,
+      numInterventions, firstIdx + p);
+  }
+
   // Load application data
-  if (syntheticRun) {
-    locations.reserve(numLocalLocations);
-    int firstIdx = thisIndex * getNumLocalElements(numLocations,
-      numLocationPartitions, 0);
-    for (int p = 0; p < numLocalLocations; p++) {
-      locations.emplace_back(firstIdx + p, diseaseModel->locationAttributes);
-    }
-  } else {
+  if (!syntheticRun) {
     loadLocationData(scenarioPath);
+  }
+
+  for (Location &l : locations) {
+    for (int i = 0; i < numInterventions; ++i) {
+      const Intervention<Location> &inter = diseaseModel->getLocationIntervention(i);
+      l.toggleCompliance(i, inter.willComply(l, &generator));
+    }
   }
 
   // Notify Main
@@ -78,12 +87,6 @@ void Locations::loadLocationData(std::string scenarioPath) {
   // Init local.
   int numAttributesPerLocation =
     DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
-  locations.reserve(numLocalLocations);
-  int firstIdx = thisIndex * getNumElementsPerPartition(numLocations,
-      numLocationPartitions);
-  for (int p = 0; p < numLocalLocations; p++) {
-    locations.emplace_back(firstIdx + p, diseaseModel->locationAttributes);
-  }
 
   // Load in location information.
   int startingLineIndex = getGlobalIndex(
@@ -149,9 +152,9 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
     numLocations,
     numLocationPartitions,
     firstLocationIdx);
-  
+
   // Interventions might cause us to reject some visits
-  if(!locations[localLocIdx].acceptsVisit(visitMsg)) {
+  if (!locations[localLocIdx].acceptsVisit(visitMsg)) {
     return;
   }
 
@@ -317,7 +320,8 @@ void Locations::ReceiveIntervention(int interventionIdx) {
   for (Location &location : locations) {
     const Intervention<Location> &inter =
       diseaseModel->getLocationIntervention(interventionIdx);
-    if (inter.test(location, &generator)) {
+    if (location.willComply(interventionIdx)
+        && inter.test(location, &generator)) {
       inter.apply(&location);
     }
   }

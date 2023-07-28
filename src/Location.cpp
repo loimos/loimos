@@ -7,10 +7,7 @@
 #include "Location.h"
 #include "Event.h"
 #include "Defs.h"
-#include "Extern.h"
-#include "Extern.h"
-#include "DiseaseModel.h"
-#include "contact_model/ContactModel.h"
+#include "intervention_model/AttributeTable.h"
 
 #ifdef USE_HYPERCOMM
   #include "Aggregator.h"
@@ -19,16 +16,13 @@
 #include <random>
 #include <vector>
 #include <cmath>
+#include <utility>
 #include <algorithm>
 
-Location::Location(int uniqueIdx, const AttributeTable &attributes) {
-  int tableSize = attributes.size();
-  if (tableSize != 0) {
-    this->data.resize(tableSize);
-    for (int i = 0; i < tableSize; i++) {
-      data[i] = attributes.getDefaultValue(i);
-    }
-  }
+Location::Location(const AttributeTable &attributes,
+    int numInterventions, int uniqueId_) :
+    DataInterface(attributes, numInterventions) {
+  setUniqueId(uniqueId_);
 }
 
 Location::Location(CkMigrateMessage *msg) {}

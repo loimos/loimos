@@ -59,10 +59,12 @@ People::People(std::string scenarioPath) {
   double startTime = CkWallTimer();
 #endif
 
+  int numInterventions = diseaseModel->getNumPersonInterventions();
   people.reserve(numLocalPeople);
   for (int i = 0; i < numLocalPeople; i++) {
-    people.emplace_back(0, std::numeric_limits<Time>::max(),
-        numDaysWithDistinctVisits, diseaseModel->personAttributes);
+    people.emplace_back(diseaseModel->personAttributes,
+        numInterventions, 0, std::numeric_limits<Time>::max(),
+        numDaysWithDistinctVisits);
   }
 
   if (syntheticRun) {
@@ -72,6 +74,13 @@ People::People(std::string scenarioPath) {
     // Load in people data from file.
     loadPeopleData(scenarioPath);
   }
+
+for (Person &p : people) {
+  for (int i = 0; i < numInterventions; ++i) {
+    const Intervention<Person> &inter = diseaseModel->getPersonIntervention(i);
+    p.toggleCompliance(i, inter.willComply(p, &generator));
+  }
+}
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
   CkPrintf("  Chare %d took %f s to load people\n", thisIndex,
@@ -102,7 +111,7 @@ void People::generatePeopleData() {
     // We set persons next state to equal current state to signify
     // that they are not in a disease model progression.
     p.next_state = p.state;
-  }    
+  }
 }
 
 /**
@@ -122,7 +131,7 @@ void People::generateVisitData() {
   std::uniform_int_distribution<int> time_dist(0, DAY_LENGTH);  // in seconds
   std::priority_queue<int, std::vector<int>, std::greater<int> > times;
 
-  // Flip a coin to decide directions in each dimension          
+  // Flip a coin to decide directions in each dimension
   std::uniform_int_distribution<int> dir_gen(0, 1);
 
   // Calculate minigrid sizes.
@@ -233,7 +242,7 @@ void People::generateVisitData() {
 
         visits.emplace_back(destinationIdx, personIdx, 0, visitStart,
             visitEnd, 0);
-  
+
   #if ENABLE_DEBUG >= DEBUG_PER_OBJECT
         CkPrintf(
             "person %d will visit location (%d, %d) with offset (%d,%d)\r\n",
@@ -392,14 +401,14 @@ void People::SendVisitMessages() {
         person.visitsByDay[day % numDaysWithDistinctVisits]) {
       visitMessage.personState = person.state;
       visitMessage.transmissionModifier = getTransmissionModifier(person);
-      
+
       // Interventions may cancel some visits
       if (NULL != visitMessage.deactivatedBy) {
         continue;
       }
 
-      //CkPrintf("  %d has trans %f\n", person.getUniqueId(),
-      //    visitMessage.transmissionModifier);
+      // CkPrintf("  %d has trans %f\n", person.getUniqueId(),
+      //     visitMessage.transmissionModifier);
       numVisits++;
 
       // Find process that owns that location
@@ -450,11 +459,12 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
     interMsg.interactions.cbegin(), interMsg.interactions.cend());
 }
 
-void People::ReceiveIntervention(int interactionIdx) {
+void People::ReceiveIntervention(int interventionIdx) {
   const Intervention<Person> &inter =
-    diseaseModel->getPersonIntervention(interactionIdx);
+    diseaseModel->getPersonIntervention(interventionIdx);
   for (Person &person : people) {
-    if (inter.test(person, &generator)) {
+    if (person.willComply(interventionIdx)
+        && inter.test(person, &generator)) {
       inter.apply(&person);
     }
   }
@@ -539,11 +549,6 @@ void People::UpdateDiseaseState(Person *person) {
       person->state = person->next_state;
       std::tie(person->next_state, person->secondsLeftInState) =
         diseaseModel->transitionFromState(person->state, &generator);
-
-      // Check if person will begin isolating.
-      //if (person->willComply) {
-      //  isIsolating = diseaseModel->shouldPersonIsolate(state);
-      //}
 
     } else {
       // Get which exposed state they should transition to.

@@ -11,6 +11,7 @@
 #include "pup_stl.h"
 
 #include <vector>
+#include <functional>
 
 struct VisitMessage {
   int locationIdx;
@@ -32,6 +33,8 @@ struct VisitMessage {
     deactivatedBy(NULL) {}
 };
 PUPbytes(VisitMessage);
+
+using VisitTest = std::function<bool(const VisitMessage &)>;
 
 struct InteractionMessage {
   int locationIdx;

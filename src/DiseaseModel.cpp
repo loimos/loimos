@@ -20,7 +20,7 @@
 #include "Event.h"
 #include "Person.h"
 #include "readers/DataReader.h"
-#include "intervention_model/AttributeTable.h"
+#include "readers/AttributeTable.h"
 #include "intervention_model/Intervention.h"
 #include "intervention_model/VaccinationIntervention.h"
 #include "intervention_model/SelfIsolationIntervention.h"
@@ -139,7 +139,6 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     intitialiseLocationInterventions(
         interventionDef->location_interventions(),
         locationAttributes);
-
   }
 
   susceptibilityIndex = personAttributes.getAttributeIndex("susceptibility");
@@ -433,6 +432,14 @@ const Intervention<Person> & DiseaseModel::getPersonIntervention(int index)
 const Intervention<Location> & DiseaseModel::getLocationIntervention(int index)
   const {
   return *locationInterventions[index];
+}
+
+int DiseaseModel::getNumPersonInterventions() const {
+  return static_cast<int>(personInterventions.size());
+}
+
+int DiseaseModel::getNumLocationInterventions() const {
+  return static_cast<int>(locationInterventions.size());
 }
 
 void DiseaseModel::applyInterventions(int day, int newDailyInfections) {

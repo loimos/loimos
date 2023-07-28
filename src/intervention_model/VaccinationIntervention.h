@@ -8,11 +8,11 @@
 #define INTERVENTION_MODEL_VACCINATIONINTERVENTION_H_
 
 #include "Intervention.h"
-#include "AttributeTable.h"
 #include "../Person.h"
 #include "../protobuf/interventions.pb.h"
 #include "../protobuf/disease.pb.h"
 #include "../readers/DataInterface.h"
+#include "../readers/AttributeTable.h"
 
 #include "charm++.h"
 
