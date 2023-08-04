@@ -163,8 +163,7 @@ void buildActivityCache(std::string inputPath, std::string outputPath,
   csvConfigDefStream.close();
 
   // Create position vector for each person.
-  std::size_t totalDataSize = numPeople * numDaysWithRealData
-    * sizeof(uint64_t);
+  std::size_t totalDataSize = numPeople * numDaysWithDistinctVisits * sizeof(uint64_t);
   uint64_t *elements = reinterpret_cast<uint64_t *>(malloc(totalDataSize));
   if (NULL == elements) {
     CkAbort("Failed to malloc enoough memory for preprocessing.\n");
@@ -201,8 +200,12 @@ void buildActivityCache(std::string inputPath, std::string outputPath,
     lastTime = nextTime;
     numVisits = 0;
 
-    elements[numDaysWithDistinctVisits * (lastPerson - firstPersonIdx) + lastTime] =
-      current_position;
+    long int index = numDaysWithDistinctVisits * (lastPerson - firstPersonIdx) + lastTime;
+    if (numPeople * numDaysWithDistinctVisits > index) {
+      elements[index] = current_position;
+    } else {
+      CkAbort("    Failed to write %lu bytes at %d\n", current_position, index);
+    }
     // if (0 == lastPerson % 10000) {
     //   CkPrintf("  Setting person %d to read from %u on day %d\n",
     //       lastPerson, current_position, lastTime);
