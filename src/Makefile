@@ -111,7 +111,7 @@ test-large: all
 	fi
 
 test-validation: all
-	./charmrun +p4 ./loimos 0 25000 5001 60 40 30 7 test-validation.csv ../data/disease_models/validation_model.textproto ../data/populations/validation_set/ ++local
+	./charmrun +p4 ./loimos 0 25000 5001 60 40 30 30 test-validation.csv ../data/disease_models/validation_model.textproto ../data/populations/validation_set/ ++local
 
 test-intervention: all
 	if [ -f ../data/populations/coc/visits.csv ]; then \
