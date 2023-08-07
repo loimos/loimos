@@ -112,7 +112,7 @@ class TraceSwitcher : public CBase_TraceSwitcher {
     contribute(sizeof(int32_t), &self_usage.ru_maxrss, CkReduction::sum_long, cb);
     #if ENABLE_DEBUG >= DEBUG_BY_CHARE
       CkPrintf("  Process %ld is using %ld kb\n",
-          static_cst<int>(pid), self_usage.ru_maxrss);
+          static_cast<int>(pid), self_usage.ru_maxrss);
     #endif
   }
   #endif  // ENABLE_TRACING
