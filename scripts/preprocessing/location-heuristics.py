@@ -110,6 +110,7 @@ if __name__ == "__main__":
         output_file = path_to_locations
 
     # Load dataset.
+    print(f"Loading visits from {path_to_visits}")
     visits = pd.read_csv(path_to_visits)
 
     # Calculate total visits to a location.
@@ -211,4 +212,5 @@ if __name__ == "__main__":
     output_df = output_df.astype(output_dtypes)
 
     # Output with index column which is the lids.
+    print(f"Saving heuristics to {output_file}")
     output_df.to_csv(output_file, index=False)
