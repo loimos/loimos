@@ -23,6 +23,7 @@ class Intervention {
   static std::uniform_real_distribution<double> unitDistrib;
   double compliance;
   int triggerIndex;
+
  public:
   int getTriggerIndex() const {
     return triggerIndex;

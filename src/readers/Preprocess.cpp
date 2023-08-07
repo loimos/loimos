@@ -200,7 +200,8 @@ void buildActivityCache(std::string inputPath, std::string outputPath,
     lastTime = nextTime;
     numVisits = 0;
 
-    long int index = numDaysWithDistinctVisits * (lastPerson - firstPersonIdx) + lastTime;
+    uint64_t int index =
+      numDaysWithDistinctVisits * (lastPerson - firstPersonIdx) + lastTime;
     if (numPeople * numDaysWithDistinctVisits > index) {
       elements[index] = current_position;
     } else {

@@ -15,6 +15,7 @@
 #include <vector>
 #include <set>
 #include <string>
+#include <unordered_map>
 
 class Locations : public CBase_Locations {
  private:

@@ -4,10 +4,12 @@
  * SPDX-License-Identifier: MIT
  */
 
-#ifndef DATA_H_
-#define DATA_H_
+#ifndef READERS_DATA_H_
+#define READERS_DATA_H_
 
 #include "charm++.h"
+
+#include <string>
 
 namespace DataTypes {
   enum DataType {int_b10, uint_32, string, double_b10, category, boolean};
@@ -23,4 +25,4 @@ union Data {
 };
 PUPbytes(union Data);
 
-#endif  // DATA_H_
+#endif  // READERS_DATA_H_
