@@ -7,7 +7,7 @@
 #include "Location.h"
 #include "Event.h"
 #include "Defs.h"
-#include "intervention_model/AttributeTable.h"
+#include "readers/AttributeTable.h"
 
 #ifdef USE_HYPERCOMM
   #include "Aggregator.h"
