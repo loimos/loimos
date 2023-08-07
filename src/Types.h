@@ -7,13 +7,15 @@
 #ifndef TYPES_H_
 #define TYPES_H_
 
+#include <cstdint>
+
 // Event types
 using EventType = char;
 using Time = int32_t;
 
 // For counting events (interactions, visits, exposures...)
-using Counter = uint64_t;
-#define COUNTER_PRINT_TYPE "%lu"
-#define COUNTER_REDUCTION_TYPE ulong
+using Counter = double;
+#define COUNTER_PRINT_TYPE "%f"
+#define COUNTER_REDUCTION_TYPE double
 
 #endif  // TYPES_H_

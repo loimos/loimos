@@ -225,7 +225,9 @@ mainmodule loimos {
       serial {
         CkPrintf("Finished simulating %d days in %lf seconds.\n", numDays, (CkWallTimer() - simulationStartTime));
         #if ENABLE_DEBUG >= 2
-        CkPrintf("  Processed %lu visits, %lu interactions, and %lu exposures\n",
+        CkPrintf("  Processed "COUNTER_PRINT_TYPE" visits, "
+          COUNTER_PRINT_TYPE" interactions, and "
+          COUNTER_PRINT_TYPE" exposures\n",
           totalVisits, totalInteractions, totalExposures);
         #endif
         CkPrintf("  Visit messages took %lf seconds\n",

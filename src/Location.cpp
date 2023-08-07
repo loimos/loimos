@@ -129,7 +129,7 @@ Counter Location::processEvents(
 
   #if ENABLE_DEBUG == DEBUG_LOCATION_SUMMARY
   if (0 != numInteractions) {
-    CkPrintf("      %d,%d,%f,%lu,%lu\n",
+    CkPrintf("      %d,%d,%f,"COUNTER_PRINT_TYPE","COUNTER_PRINT_TYPE"\n",
           uniqueId, data[maxSimVisitsIdx].int_b10, p, numInteractions, total);
   }
   #endif  // DEBUG_LOCATION_SUMMARY
