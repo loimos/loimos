@@ -26,7 +26,7 @@ class SchoolClosureIntervention : public VisitFilterIntervention<Location> {
     VisitFilterIntervention<Location>(interventionDef, diseaseDef, t) {
     schoolIndex = t.getAttributeIndex("school");
   }
-  
+
   bool test(const Location &p, std::default_random_engine *generator) const override {
     return p.getValue(schoolIndex).boolean;
   }

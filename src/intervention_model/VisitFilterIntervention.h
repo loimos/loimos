@@ -34,7 +34,7 @@ class VisitFilterIntervention : public Intervention<T> {
   }
   void remove(T *p) const override {
     p->restoreVisits(this);
-  }  
+  }
 };
 
 #endif  // INTERVENTION_MODEL_VISITFILTERINTERVENTION_H_

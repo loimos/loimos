@@ -24,7 +24,6 @@ struct Interaction {
   int startTime;
   int endTime;
 
-  //PUPable_decl(Interaction);
   Interaction() {}
   Interaction(double propensity_, int infectiousIdx_,
       int infectiousState_, int startTime_, int endTime_) :
