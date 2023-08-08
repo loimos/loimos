@@ -4,13 +4,13 @@ transmissibility: 6e-13
 starting_states: {
 	lower: 0
 	upper: 50
-	starting_state: 3
+	starting_state: 0
 }
 
 starting_states: {
 	lower: 50
 	upper: 100
-	starting_state: 0
+	starting_state: 3
 }
 
 disease_states: {
@@ -26,7 +26,7 @@ disease_states: {
 disease_states: {
 	state_label: "infectious_safe"
 	infectivity: 1
-	susceptibility: 0
+	susceptibility: 100000
 	timed_transition: {
 		transitions: {
 			next_state: 2
@@ -59,7 +59,7 @@ disease_states: {
 disease_states: {
 	state_label: "infectious_risky"
 	infectivity: 1
-	susceptibility: 0
+	susceptibility: 100000
 	timed_transition: {
 		transitions: {
 			next_state: 5

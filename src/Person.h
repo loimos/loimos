@@ -8,11 +8,11 @@
 #define PERSON_H_
 
 #include "Defs.h"
+#include "Extern.h"
 #include "Message.h"
 #include "readers/DataInterface.h"
-#include "readers/AttributeTable.h"
+#include "readers/DataReader.h"
 
-#include "charm++.h"
 #include <vector>
 
 class Person : public DataInterface {
@@ -21,32 +21,30 @@ class Person : public DataInterface {
   int state;
   int next_state;
   int secondsLeftInState;
-
+  bool willComply;
+  bool isIsolating;
   // If this is a susceptible person, this is a list of all of their
   // interactions with infectious people in the past day
   std::vector<Interaction> interactions;
-
   // Integer byte offsets in visits file by day.
   // For example, fseek(visitOffsetByDay[2]) would seek to the start
   // of this person's visits on day 3.
   std::vector<uint64_t> visitOffsetByDay;
-
   // Holds visit messages for each day
   std::vector<std::vector<VisitMessage> > visitsByDay;
-
   // Constructors and assignment operators
   Person() = default;
-  Person(const AttributeTable &attributes, int numInterventions,
-    int startingState, int timeLeftInState, int numDays);
+  Person(int numAttributes, int startingState, int timeLeftInState);
   Person(const Person&) = default;
   Person(Person&&) = default;
   Person& operator=(const Person&) = default;
   Person& operator=(Person&&) = default;
   ~Person() = default;
-  void filterVisits(const void *cause, VisitTest keepVisit) override;
-  void restoreVisits(const void *cause) override;
   // Lets charm++ migrate objects
   void pup(PUP::er &p);  // NOLINT(runtime/references)
+  // Disease model functions.
+  void EndOfDayStateUpdate(DiseaseModel *diseaseModel,
+      std::default_random_engine *generator);
   // Debugging.
   void _print_information(loimos::proto::CSVDefinition *personDef);
 };

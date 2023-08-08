@@ -7,8 +7,6 @@
 #ifndef EXTERN_H_
 #define EXTERN_H_
 
-#include "loimos.decl.h"
-
 #include <string>
 
 extern /* readonly */ CProxy_Main mainProxy;
@@ -23,7 +21,7 @@ extern /* readonly */ int numLocations;
 extern /* readonly */ int numPeoplePartitions;
 extern /* readonly */ int numLocationPartitions;
 extern /* readonly */ int numDays;
-extern /* readonly */ int numDaysWithDistinctVisits;
+extern /* readonly */ int numDaysWithRealData;
 extern /* readonly */ bool syntheticRun;
 
 extern /* readonly */ uint64_t totalVisits;

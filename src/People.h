@@ -11,7 +11,7 @@
 #include "Interaction.h"
 #include "Person.h"
 #include "Message.h"
-#include "intervention_model/Intervention.h"
+#include "intervention_model/Interventions.h"
 
 #include <functional>
 #include <random>
@@ -36,7 +36,6 @@ class People : public CBase_People {
   std::vector<int> stateSummaries;
 
   void ProcessInteractions(Person *person);
-  void UpdateDiseaseState(Person *person);
   void loadPeopleData(std::string scenarioPath);
   void loadVisitData(std::ifstream *activityData);
 
@@ -44,14 +43,13 @@ class People : public CBase_People {
   explicit People(std::string scenarioPath);
   explicit People(CkMigrateMessage *msg);
   void pup(PUP::er &p);  // NOLINT(runtime/references)
-  void generatePeopleData();
-  void generateVisitData();
   void SendVisitMessages();
-  double getTransmissionModifier(const Person &person);
+  void SyntheticSendVisitMessages();
+  void RealDataSendVisitMessages();
   void ReceiveInteractions(InteractionMessage interMsg);
   void EndOfDayStateUpdate();
   void SendStats();
-  void ReceiveIntervention(int interventionIdx);
+  void ReceiveIntervention(std::shared_ptr<Intervention> v);
   #ifdef ENABLE_LB
   void ResumeFromSync();
   #endif  // ENABLE_LB

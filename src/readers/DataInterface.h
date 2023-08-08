@@ -13,32 +13,34 @@
 
 #include "charm++.h"
 #include "pup_stl.h"
-#include "Data.h"
-#include "AttributeTable.h"
-#include "../Message.h"
 #include "../protobuf/data.pb.h"
+
+namespace DataTypes {
+  enum DataType {int_b10, uint_32, string, double_b10, category, boolean};
+}
+
+union Data {
+  int int_b10;
+  bool boolean;
+  uint32_t uint_32;
+  double double_b10;
+  uint16_t category;
+  std::string *str;
+};
+PUPbytes(union Data);
 
 class DataInterface {
  protected:
   // Unique global identifier
   int uniqueId;
-
   // Various dynamic attributes
   std::vector<union Data> data;
-
-  // Indicates whether or not this entity will comply with a given intervention
-  std::vector<bool> willComplyWithIntervention;
  public:
-  DataInterface() = default;
-  DataInterface(const AttributeTable &attributes, int numInterventions);
-  virtual ~DataInterface() = default;
+  DataInterface() {}
+  ~DataInterface() {}
   void setUniqueId(int idx);
   int getUniqueId() const;
   union Data getValue(int idx) const;
   std::vector<union Data> &getData();
-  void toggleCompliance(int interventionIndex, bool value);
-  bool willComply(int interventionIndex);
-  virtual void filterVisits(const void *cause, VisitTest keepVisit) = 0;
-  virtual void restoreVisits(const void *cause) = 0;
 };
 #endif  // READERS_DATAINTERFACE_H_
