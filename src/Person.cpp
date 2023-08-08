@@ -4,42 +4,45 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "loimos.decl.h"
-
-#include "protobuf/data.pb.h"
 #include "Person.h"
-#include "DiseaseModel.h"
 #include "Message.h"
+#include "protobuf/data.pb.h"
+#include "readers/AttributeTable.h"
 
+#include "charm++.h"
 #include <vector>
 
 /**
  * Defines attributes of a single person.
  */
 
-Person::Person(int numAttributes, int startingState, int timeLeftInState) {
-  if (numAttributes != 0) {
-    this->data.resize(numAttributes);
-  }
-  this->state = startingState;
-  this->next_state = -1;
-  this->isIsolating = false;
-  this->willComply = false;
-  this->secondsLeftInState = timeLeftInState;
-  this->visitOffsetByDay = std::vector<uint64_t>();
-  DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
+Person::Person(const AttributeTable &attributes, int numInterventions,
+    int startingState, int secondsLeftInState_, int numDays) :
+    DataInterface(attributes, numInterventions),
+    state(startingState), next_state(-1),
+    secondsLeftInState(secondsLeftInState_) {
+  // Create an entry for each day we have data for
+  this->visitsByDay.resize(numDays);
+}
 
-  // Treat file-read and realdata attributes same, no need to make distinction
-  int tableSize = diseaseModel->personTable.size();
-  if (tableSize != 0) {
-    this->data.resize(tableSize);
-    for (int i = numAttributes; i < tableSize; i++) {
-      this->data[i] = diseaseModel->personTable.getDefaultValue(i);
+void Person::filterVisits(const void *cause, VisitTest keepVisit) {
+  for (std::vector<VisitMessage> &visits : visitsByDay) {
+    for (int i = 0; i < visits.size(); ++i) {
+      if (!keepVisit(visits[i])) {
+        visits[i].deactivatedBy = cause;
+      }
     }
   }
+}
 
-  // Create an entry for each day we have data for
-  this->visitsByDay.resize(numDaysWithRealData);
+void Person::restoreVisits(const void *cause) {
+  for (std::vector<VisitMessage> &visits : visitsByDay) {
+    for (int i = 0; i < visits.size(); ++i) {
+      if (cause == visits[i].deactivatedBy) {
+        visits[i].deactivatedBy = NULL;
+      }
+    }
+  }
 }
 
 void Person::pup(PUP::er &p) {
@@ -51,34 +54,6 @@ void Person::pup(PUP::er &p) {
   p | visitOffsetByDay;
   p | visitsByDay;
   p | data;
-  p | isIsolating;
-}
-
-void Person::EndOfDayStateUpdate(DiseaseModel *diseaseModel,
-    std::default_random_engine *generator) {
-  // Transition to next state or mark the passage of time
-  secondsLeftInState -= DAY_LENGTH;
-  if (secondsLeftInState <= 0) {
-    // If they have already been infected
-    if (next_state != -1) {
-      state = next_state;
-      std::tie(next_state, secondsLeftInState) =
-        diseaseModel->transitionFromState(state, generator);
-
-      // Check if person will begin isolating.
-      if (willComply) {
-        isIsolating = diseaseModel->shouldPersonIsolate(state);
-      }
-
-    } else {
-      // Get which exposed state they should transition to.
-      std::tie(state, std::ignore) =
-        diseaseModel->transitionFromState(state, generator);
-      // See where they will transition next.
-      std::tie(next_state, secondsLeftInState) =
-        diseaseModel->transitionFromState(state, generator);
-    }
-  }
 }
 
 void Person::_print_information(loimos::proto::CSVDefinition *personDef) {

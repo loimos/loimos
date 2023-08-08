@@ -49,7 +49,7 @@
 /* readonly */ int numPeoplePartitions;
 /* readonly */ int numLocationPartitions;
 /* readonly */ int numDays;
-/* readonly */ int numDaysWithRealData;
+/* readonly */ int numDaysWithDistinctVisits;
 /* readonly */ bool syntheticRun;
 /* readonly */ int contactModelType;
 /* readonly */ int firstPersonIdx;
@@ -142,7 +142,6 @@ Main::Main(CkArgMsg* msg) {
 
   int argNum = 0;
   syntheticRun = atoi(msg->argv[++argNum]) == 1;
-  int baseRunInfo = 0;
 
   if (syntheticRun) {
     // Get number of people.
@@ -188,6 +187,7 @@ Main::Main(CkArgMsg* msg) {
     }
 
     numDays = atoi(msg->argv[++argNum]);
+    numDaysWithDistinctVisits = 7;
 
   } else {
     numPeople = atoi(msg->argv[++argNum]);
@@ -195,7 +195,7 @@ Main::Main(CkArgMsg* msg) {
     numPeoplePartitions = atoi(msg->argv[++argNum]);
     numLocationPartitions = atoi(msg->argv[++argNum]);
     numDays = atoi(msg->argv[++argNum]);
-    numDaysWithRealData = atoi(msg->argv[++argNum]);
+    numDaysWithDistinctVisits = atoi(msg->argv[++argNum]);
   }
 
   pathToOutput = std::string(msg->argv[++argNum]);
@@ -218,7 +218,7 @@ Main::Main(CkArgMsg* msg) {
     scenarioPath = std::string(msg->argv[++argNum]);
     std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(
         scenarioPath, numPeople, numPeoplePartitions, numLocations,
-        numLocationPartitions, numDaysWithRealData);
+        numLocationPartitions, numDaysWithDistinctVisits);
   }
 
   // Detemine which contact modle to use
@@ -287,25 +287,6 @@ Main::Main(CkArgMsg* msg) {
 
   CkPrintf("\nFinished loading shared/global data in %lf seconds.\n",
       CkWallTimer() - dataLoadingStartTime);
-
-  // Populating people and location tables with attributes from file
-#if ENABLE_DEBUG >= DEBUG_BASIC
-  CkPrintf("Person Attributes:\n");
-  for (int i = 0; i < diseaseModel->personTable.size(); i++) {
-    CkPrintf("  %s (%d): default: %lf, type: %d\n",
-        diseaseModel->personTable.getName(i).c_str(), i,
-        diseaseModel->personTable.getDefaultValueAsDouble(i),
-        diseaseModel->personTable.getDataType(i));
-  }
-
-  CkPrintf("Locations Attributes:\n");
-  for (int i = 0; i < diseaseModel->locationTable.size(); i++) {
-    CkPrintf("  %s (%d): default: %lf, type: %d\n",
-        diseaseModel->locationTable.getName(i).c_str(), i,
-        diseaseModel->locationTable.getDefaultValueAsDouble(i),
-        diseaseModel->locationTable.getDataType(i));
-  }
-#endif
 
   // creating chare arrays
   if (!syntheticRun) {

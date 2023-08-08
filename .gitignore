@@ -13,6 +13,10 @@ loimos-*
 *.out
 *core.*
 
+# No generated images
+*.png
+*.pdf
+
 # No temporary versions of files
 *.old.*
 *.new.*
