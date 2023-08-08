@@ -7,8 +7,6 @@
 #ifndef INTERACTION_H_
 #define INTERACTION_H_
 
-#include "charm++.h"
-
 // Simple struct to hold data on an interfaction between with a susceptible
 // person which could lead to an infection
 struct Interaction {
@@ -24,22 +22,22 @@ struct Interaction {
   int startTime;
   int endTime;
 
-  Interaction() {}
-  Interaction(double propensity_, int infectiousIdx_,
-      int infectiousState_, int startTime_, int endTime_) :
-    propensity(propensity_), infectiousIdx(infectiousIdx_),
-    infectiousState(infectiousState_), startTime(startTime_),
-    endTime(endTime_) {}
-  explicit Interaction(CkMigrateMessage *msg) {}
+  // Lets us send potential infections via charm++
+  void pup(PUP::er &p);  // NOLINT(runtime/references)
 
-  void pup(PUP::er& p) {  // NOLINT(runtime/references)
-    p | propensity;
-    p | infectiousIdx;
-    p | infectiousState;
-    p | startTime;
-    p | endTime;
-  }
+  // We need this in order to emplace Interactions...
+  Interaction(
+    double propensity,
+    int infectiousIdx,
+    int infectiousState,
+    int startTime,
+    int endTime);
+  // ...and we need to define these explicitly since we added a constructor
+  Interaction() = default;
+  Interaction(const Interaction&) = default;
+  Interaction(Interaction&&) = default;
+  Interaction &operator = (const Interaction&) = default;
+  Interaction &operator = (Interaction&&) = default;
 };
-PUPbytes(Interaction);
 
 #endif  // INTERACTION_H_

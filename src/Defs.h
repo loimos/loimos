@@ -9,7 +9,6 @@
 
 #include <vector>
 #include <string>
-#include "pup.h"
 
 // Debug levels
 #define DEBUG_BASIC 1

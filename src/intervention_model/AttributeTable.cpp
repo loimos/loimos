@@ -5,30 +5,31 @@
   */
 
 #include "AttributeTable.h"
-#include "DataReader.h"
-#include "Data.h"
 #include "../loimos.decl.h"
 #include "../protobuf/data.pb.h"
 #include "../Person.h"
 #include "../Location.h"
+#include "../readers/DataReader.h"
 
 #include <string>
 #include <vector>
 
-AttributeTable::AttributeTable(int size) {
+AttributeTable::AttributeTable(int size, bool isPersonTable) {
   if (size != 0) {
     this->list.reserve(size);
   }
+  this->isPersonTable = isPersonTable;
 }
 
+AttributeTable::AttributeTable(bool isPersonTable) {
+  this->isPersonTable = isPersonTable;
+}
 Attribute AttributeTable::getAttribute(int i) {
   return list[i];
 }
-
 union Data AttributeTable::getDefaultValue(int i) const {
   return list[i].defaultValue;
 }
-
 double AttributeTable::getDefaultValueAsDouble(int i) const {
   const union Data &defaultValue = list[i].defaultValue;
   switch (list[i].dataType) {
@@ -54,6 +55,9 @@ std::string AttributeTable::getName(int i) const {
 DataTypes::DataType AttributeTable::getDataType(int i) {
   return list[i].dataType;
 }
+bool AttributeTable::getTableType() {
+  return this->isPersonTable;
+}
 int AttributeTable::size() const {
   return this->list.size();
 }
@@ -61,7 +65,7 @@ void AttributeTable::resize(int size) {
   this->list.resize(size);
 }
 
-int AttributeTable::getAttributeIndex(std::string name) const {
+int AttributeTable::getAttribute(std::string name) const {
   for (int i = 0; i < this->size(); i++) {
     if (this->getName(i).c_str() == name) {
       return i;
