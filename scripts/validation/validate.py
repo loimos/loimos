@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 import numpy as np
 import pandas as pd
 import argparse
 
-from utils.ids import partitioned_merge, init_multiprocessing
+# Python modules need to either be in/below this dir or in the path
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.append(parentdir)
+from utils.ids import partitioned_merge, init_multiprocessing  # noqa
 
 
 def parse_args():

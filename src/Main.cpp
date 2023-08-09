@@ -6,6 +6,7 @@
 
 #include "loimos.decl.h"
 #include "Main.h"
+#include "Types.h"
 #include "People.h"
 #include "Locations.h"
 #include "DiseaseModel.h"
@@ -48,17 +49,23 @@
 /* readonly */ int numLocations;
 /* readonly */ int numPeoplePartitions;
 /* readonly */ int numLocationPartitions;
+/* readonly */ int numPeoplePerPartition;
+/* readonly */ int numLocationsPerPartition;
 /* readonly */ int numDays;
 /* readonly */ int numDaysWithRealData;
 /* readonly */ bool syntheticRun;
 /* readonly */ int contactModelType;
+/* readonly */ int maxSimVisitsIdx;
+/* readonly */ int ageIdx;
 /* readonly */ int firstPersonIdx;
 /* readonly */ int firstLocationIdx;
-/* readonly */ uint64_t totalVisits;
+/* readonly */ Counter totalVisits;
+/* readonly */ Counter totalInteractions;
+/* readonly */ Counter totalExposures;
 /* readonly */ double simulationStartTime;
 /* readonly */ double iterationStartTime;
 /* readonly */ double stepStartTime;
-double dataLoadingStartTime;
+/* readonly */ double dataLoadingStartTime;
 /* readonly */ std::vector<double> totalTime;
 
 
@@ -105,7 +112,7 @@ class TraceSwitcher : public CBase_TraceSwitcher {
     contribute(sizeof(int32_t), &self_usage.ru_maxrss, CkReduction::sum_long, cb);
     #if ENABLE_DEBUG >= DEBUG_BY_CHARE
       CkPrintf("  Process %ld is using %ld kb\n",
-          static_cst<int>(pid), self_usage.ru_maxrss);
+          static_cast<int>(pid), self_usage.ru_maxrss);
     #endif
   }
   #endif  // ENABLE_TRACING
@@ -198,6 +205,20 @@ Main::Main(CkArgMsg* msg) {
     numDaysWithRealData = atoi(msg->argv[++argNum]);
   }
 
+  if (numPeople < numPeoplePartitions) {
+    CkAbort("Error: running on more people chares (%d) than people (%d)",
+        numPeoplePartitions, numPeople);
+  }
+  if (numLocations < numLocationPartitions) {
+    CkAbort("Error: running on more location chares (%d) than locations (%d)",
+        numLocationPartitions, numLocations);
+  }
+
+  numPeoplePerPartition = getNumElementsPerPartition(numPeople,
+      numPeoplePartitions);
+  numLocationsPerPartition = getNumElementsPerPartition(numLocations,
+      numLocationPartitions);
+
   pathToOutput = std::string(msg->argv[++argNum]);
 #if ENABLE_DEBUG >= DEBUG_BASIC
   CkPrintf("Saving simulation output to %s\n", msg->argv[argNum]);
@@ -216,6 +237,11 @@ Main::Main(CkArgMsg* msg) {
   } else {
     // Create data caches.
     scenarioPath = std::string(msg->argv[++argNum]);
+    // This allows users to omit the trailing "/" from the scenario path
+    // while still allowing us to find the files properly
+    if (scenarioPath.back() != '/') {
+      scenarioPath.push_back('/');
+    }
     std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(
         scenarioPath, numPeople, numPeoplePartitions, numLocations,
         numLocationPartitions, numDaysWithRealData);
@@ -319,8 +345,15 @@ Main::Main(CkArgMsg* msg) {
 
   dataLoadingStartTime = CkWallTimer();
 
-  peopleArray = CProxy_People::ckNew(scenarioPath, numPeoplePartitions);
-  locationsArray = CProxy_Locations::ckNew(scenarioPath, numLocationPartitions);
+#ifdef ENABLE_RANDOM_SEED
+  seed = time(NULL);
+#else
+  seed = 0;
+#endif
+
+  peopleArray = CProxy_People::ckNew(seed, scenarioPath, numPeoplePartitions);
+  locationsArray = CProxy_Locations::ckNew(seed, scenarioPath,
+      numLocationPartitions);
 
 #ifdef ENABLE_TRACING
   traceArray = CProxy_TraceSwitcher::ckNew();
@@ -387,19 +420,23 @@ void Main::CharesCreated() {
 }
 
 void Main::SeedInfections() {
-  std::default_random_engine generator(time(NULL));
+  std::default_random_engine generator(seed);
 
   // Determine all of the intitial infections on the first day so we can
   // guarentee they are unique (not checking this quickly runs into birthday
   // problem issues, even for sizable datasets)
   if (0 == day) {
-    std::uniform_int_distribution<> personDistrib(0, numPeople - 1);
+    std::uniform_int_distribution<> personDistrib(firstPersonIdx,
+        firstPersonIdx + numPeople - 1);
     std::unordered_set<int> initialInfectionsSet;
     initialInfections.reserve(INITIAL_INFECTIONS);
     // Use set to check membership becuase it's faster and we can spare the
     // memory; INITIAL_INFECTIONS should be fairly small
     initialInfectionsSet.reserve(INITIAL_INFECTIONS);
-    while (initialInfectionsSet.size() < INITIAL_INFECTIONS) {
+    while (initialInfectionsSet.size() < INITIAL_INFECTIONS
+        // This loop will go forever on small test populations without
+        // this check
+        && initialInfectionsSet.size() < numPeople) {
       int personIdx = personDistrib(generator);
       if (initialInfectionsSet.count(personIdx) == 0) {
         initialInfections.emplace_back(personIdx);
@@ -408,7 +445,9 @@ void Main::SeedInfections() {
     }
   }
 
-  for (int i = 0; i < INITIAL_INFECTIONS_PER_DAY; ++i) {
+  // Check for empty is to avoid issues with small test populations
+  for (int i = 0; i < INITIAL_INFECTIONS_PER_DAY && !initialInfections.empty();
+      ++i) {
     int personIdx = initialInfections.back();
     initialInfections.pop_back();
 
@@ -450,26 +489,32 @@ void Main::SaveStats(int *data) {
   // Write header row
   outFile << "day,state,total_in_state,change_in_state" << std::endl;
 
+  uint64_t numVisits = 0;
+  uint64_t numInteractions = 0;
   for (day = 0; day < numDays; ++day, data += numDiseaseStates + 1) {
-    // Get total visits for the day.
-    totalVisits += data[0];
+    // Not relaible counter; unclear why
+    // Get num visits for the day.
+    numVisits += (uint64_t) data[0];
+    numInteractions += (uint64_t) data[1];
 
     // Get number of disease state changes.
     for (int i = 0; i < numDiseaseStates; i++) {
-      int total_in_state = data[i + 1];
-      int change_in_state = total_in_state - accumulated[i];
-      if (total_in_state != 0 || change_in_state != 0) {
+      int num_in_state = data[i + 2];
+      int change_in_state = num_in_state - accumulated[i];
+      if (num_in_state != 0 || change_in_state != 0) {
         // Write out data for state on that day
         outFile << day << ","
           << diseaseModel->lookupStateName(i) << ","
-          << total_in_state << ","
+          << num_in_state << ","
           << change_in_state << std::endl;
       }
-      accumulated[i] = total_in_state;
+      accumulated[i] = num_in_state;
     }
   }
 
   outFile.close();
+  // CkPrintf("  Found %lu visits and %lu interactions in summaries\n",
+  //     numVisits, numInteractions);
 }
 
 #include "loimos.def.h"

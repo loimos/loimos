@@ -8,6 +8,7 @@
 #include "../Location.h"
 #include "../Event.h"
 #include "../Defs.h"
+#include "../Extern.h"
 #include "../readers/DataReader.h"
 #include "ContactModel.h"
 #include "MinMaxAlphaModel.h"
@@ -38,7 +39,7 @@ void MinMaxAlphaModel::computeLocationValues(Location *location) {
   // varies by location
   union Data contactProbability;
   double max_visits =
-    static_cast<double>(data[SIMULTANEOUS_MAX_VISITS_CSV_INDEX].uint_32);
+    static_cast<double>(data[maxSimVisitsIdx].int_b10);
   contactProbability.double_b10 = fmin(1,
     (MIN + (MAX - MIN) * (1.0 - exp(-max_visits / ALPHA))) / (max_visits - 1));
 
@@ -47,11 +48,17 @@ void MinMaxAlphaModel::computeLocationValues(Location *location) {
 
 // Use this location's contact probability
 bool MinMaxAlphaModel::madeContact(
-  const Event& susceptibleEvent,
-  const Event& infectiousEvent,
-  const Location& location
+  const Event &susceptibleEvent,
+  const Event &infectiousEvent,
+  const Location &location
 ) {
   union Data contactProbability =
     location.getValue(contactProbabilityIndex);
   return unitDistrib(*generator) < contactProbability.double_b10;
+}
+
+double MinMaxAlphaModel::getContactProbability(const Location &location) const {
+  union Data contactProbability =
+    location.getValue(contactProbabilityIndex);
+  return contactProbability.double_b10;
 }

@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH -q normal
 #SBATCH -p largemem
-#SBATCH -t 20
+#SBATCH -t 60
 #SBATCH -N 1
 #SBATCH --ntasks-per-node 16
 #SBATCH --exclusive
-#SBATCH --account=biocomplexity
+#SBATCH --account=nssac_students
 
 STATE=${1}
 NUM_PARTITIONS=${2}
@@ -19,7 +19,7 @@ if [ -z ${ARGS} ]; then
 fi
 
 RAW_DIR=../../data/populations/${STATE}
-PARTITIONED_DIR=../../data/populations/${STATE}_partitioned
+PARTITIONED_DIR=../../data/populations/${STATE}_partitioned_new
 
 if [ ! -d ${PARTITIONED_DIR} ]; then
  mkdir ${PARTITIONED_DIR}
@@ -38,7 +38,7 @@ for file in ${RAW_DIR}/*; do
 done
 
 module load gcc/9.2.0 cuda/11.0.228 openmpi/3.1.6 \
-  openmpi/3.1.6 python/3.8.8 # mvapich2/2.3.3 
+  openmpi/3.1.6 python # mvapich2/2.3.3 
 
 echo ../partitioning/folding_partition.py  ${RAW_DIR} -o ${PARTITIONED_DIR} -n ${NUM_PARTITIONS} ${ARGS}
 time ../partitioning/folding_partition.py  ${RAW_DIR} -o ${PARTITIONED_DIR} -n ${NUM_PARTITIONS} ${ARGS} -nt 16

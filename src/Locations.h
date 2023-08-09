@@ -19,14 +19,16 @@
 class Locations : public CBase_Locations {
  private:
   int numLocalLocations;
+  int firstLocalLocationIdx;
   std::vector<Location> locations;
   std::default_random_engine generator;
   DiseaseModel *diseaseModel;
   ContactModel *contactModel;
+  std::ofstream *interactionsFile;
   int day;
 
  public:
-  explicit Locations(std::string scenarioPath);
+  explicit Locations(int seed, std::string scenarioPath);
   explicit Locations(CkMigrateMessage *msg);
   void pup(PUP::er &p);  // NOLINT(runtime/references)
   void ReceiveVisitMessages(VisitMessage visitMsg);

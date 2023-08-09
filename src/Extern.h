@@ -20,11 +20,16 @@ extern /* readonly */ int numPeople;
 extern /* readonly */ int numLocations;
 extern /* readonly */ int numPeoplePartitions;
 extern /* readonly */ int numLocationPartitions;
+extern /* readonly */ int numPeoplePerPartition;
+extern /* readonly */ int numLocationsPerPartition;
 extern /* readonly */ int numDays;
 extern /* readonly */ int numDaysWithRealData;
+extern /* readonly */ int contactModelType;
 extern /* readonly */ bool syntheticRun;
 
-extern /* readonly */ uint64_t totalVisits;
+extern /* readonly */ Counter totalVisits;
+extern /* readonly */ Counter totalInteractions;
+extern /* readonly */ Counter totalExposures;
 extern /* readonly */ double simulationStartTime;
 extern /* readonly */ double iterationStartTime;
 
@@ -33,7 +38,8 @@ extern /* readonly */ std::string scenarioPath;
 extern /* readonly */ std::string scenarioId;
 extern /* readonly */ int firstPersonIdx;
 extern /* readonly */ int firstLocationIdx;
-
+extern /* readonly */ int maxSimVisitsIdx;
+extern /* readonly */ int ageIdx;
 
 // For synthetic run.
 extern /* readonly */ int synPeopleGridWidth;

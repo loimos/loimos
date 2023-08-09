@@ -5,6 +5,7 @@
  */
 
 #include "loimos.decl.h"
+#include "Types.h"
 #include "Location.h"
 #include "People.h"
 #include "Event.h"
@@ -22,19 +23,13 @@
 #include <cmath>
 #include <algorithm>
 
-Location::Location(int numAttributes, int uniqueIdx,
-    std::default_random_engine *generator, const DiseaseModel *diseaseModel) :
-  unitDistrib(0, 1) {
-  /*if (numAttributes != 0) {
-    this->locationData.resize(numAttributes);
-    }*/
-  int tableSize = diseaseModel->locationTable.size();
-  if (tableSize != 0) {
-    this->data.resize(tableSize);
-    for (int i = numAttributes; i < tableSize; i++) {
-      data[i] = diseaseModel->locationTable.getDefaultValue(i);
-    }
+Location::Location(int numAttributes, int uniqueId,
+    std::default_random_engine *generator,
+    const DiseaseModel *diseaseModel) : unitDistrib(0, 1) {
+  if (numAttributes != 0) {
+    this->data.resize(numAttributes);
   }
+  this->uniqueId = uniqueId;
   day = 0;
   this->generator = generator;
 
@@ -66,11 +61,16 @@ void Location::addEvent(Event e) {
   events.push_back(e);
 }
 
-void Location::processEvents(
+Counter Location::processEvents(
   const DiseaseModel *diseaseModel,
-  ContactModel *contactModel
+  ContactModel *contactModel,
+  std::ofstream *out
 ) {
+  Counter numInteractions = 0;
   std::vector<Event> *arrivals;
+  #if ENABLE_DEBUG >= DEBUG_VERBOSE
+  Counter numPresent = 0;
+  #endif
 
   if (!interventionStategy || !complysWithShutdown
       || diseaseModel->isLocationOpen(&data)) {
@@ -85,17 +85,35 @@ void Location::processEvents(
       // If a person can niether infect other people nor be infected themself,
       // we can just ignore their comings and goings
       } else {
+        #if ENABLE_DEBUG >= DEBUG_VERBOSE
+        arrivals = &susceptibleArrivals;
+        if (ARRIVAL == event.type) {
+          numPresent++;
+        } else {
+          numPresent--;
+          numInteractions += numPresent;
+          saveInteractions(event, out);
+        }
+        #endif
         continue;
       }
 
       if (ARRIVAL == event.type) {
         arrivals->push_back(event);
         std::push_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
+        #if ENABLE_DEBUG >= DEBUG_VERBOSE
+        numPresent++;
+        #endif
 
       } else if (DEPARTURE == event.type) {
         // Remove the arrival event corresponding to this departure
         std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
         arrivals->pop_back();
+        #if ENABLE_DEBUG >= DEBUG_VERBOSE
+        numPresent--;
+        numInteractions += numPresent;
+        saveInteractions(event, out);
+        #endif
 
         onDeparture(diseaseModel, contactModel, event);
       }
@@ -104,6 +122,49 @@ void Location::processEvents(
   events.clear();
   interactions.clear();
   day++;
+
+  #if ENABLE_DEBUG >= DEBUG_VERBOSE
+  double p = contactModel->getContactProbability(*this);
+  Counter total = static_cast<Counter>(p * numInteractions);
+
+  #if ENABLE_DEBUG == DEBUG_LOCATION_SUMMARY
+  if (0 != numInteractions) {
+    CkPrintf("      %d,%d,%f,"COUNTER_PRINT_TYPE","COUNTER_PRINT_TYPE"\n",
+          uniqueId, data[maxSimVisitsIdx].int_b10, p, numInteractions, total);
+  }
+  #endif  // DEBUG_LOCATION_SUMMARY
+  return total;
+  #else
+  return 0;
+  #endif  // DEBUG_VERBOSE
+}
+
+Counter Location::saveInteractions(const Event &departure,
+    std::ofstream *out) const {
+  Counter count = 0;
+  for (const Event &a : susceptibleArrivals) {
+    if (NULL != out) {
+      *out << uniqueId << "," << departure.personIdx << ","
+      << departure.partnerTime << ","  << departure.scheduledTime << ","
+      << a.personIdx << "," << a.scheduledTime << "," << a.partnerTime
+      << std::endl;
+    }
+    if (Event::overlap(a, departure)) {
+      count++;
+    }
+  }
+  for (const Event &a : infectiousArrivals) {
+    if (NULL != out) {
+      *out << uniqueId << "," << departure.personIdx << ","
+      << departure.partnerTime << ","  << departure.scheduledTime << ","
+      << a.personIdx << "," << a.scheduledTime << "," << a.partnerTime
+      << std::endl;
+    }
+    if (Event::overlap(a, departure)) {
+      count++;
+    }
+  }
+  return count;
 }
 
 // Simple dispatch to the susceptible/infectious depature handlers
@@ -184,12 +245,12 @@ inline void Location::registerInteraction(
 
   // Note that this will create a new vector if this is the first potential
   // infection for the susceptible person in question
-  interactions[susceptibleEvent.personIdx].emplace_back(
-    propensity,
-    infectiousEvent.personIdx,
-    infectiousEvent.personState,
-    startTime,
-    endTime);
+  interactions[susceptibleEvent.personIdx].emplace_back(propensity,
+    infectiousEvent.personIdx, infectiousEvent.personState,
+    startTime, endTime);
+  // CkPrintf("  Person %d interacted with %d from %d to %d\n",
+  //     susceptibleEvent.personIdx, infectiousEvent.personIdx, startTime,
+  //     endTime);
 }
 
 // Simple helper function which send the list of interactions with the
@@ -212,6 +273,10 @@ inline void Location::sendInteractions(int personIdx) {
   #ifdef USE_HYPERCOMM
   }
   #endif  // USE_HYPERCOMM
+
+  if (0 > personIdx) {
+    CkAbort("   Trying to send message to person %d\n", personIdx);
+  }
 
   /*
   CkPrintf(

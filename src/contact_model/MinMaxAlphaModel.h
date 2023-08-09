@@ -20,15 +20,16 @@ class MinMaxAlphaModel : public ContactModel {
  private:
   // Specifies where to look for the attribute we create to store each
   // location's contact probability
-  int contactProbabilityIndex;
+  int contactProbabilityIdx;
 
  public:
   // We need to re-declare all of these methods from ContactModel so
   // we can override them
   MinMaxAlphaModel();
   void computeLocationValues(Location *location) override;
-  bool madeContact(const Event& susceptibleEvent,
-    const Event& infectiousEvent, const Location& location) override;
+  bool madeContact(const Event &susceptibleEvent,
+    const Event& infectiousEvent, const Location &location) override;
+  double getContactProbability(const Location &location) const override;
 };
 
 #endif  // CONTACT_MODEL_MINMAXALPHAMODEL_H_

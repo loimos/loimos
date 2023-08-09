@@ -6,8 +6,9 @@
 #SBATCH --account=nssac_students
 #SBATCH --exclusive
 
-IN_DIR=../../data/populations/md_partitioned
+DATASET=md_partitioned
+IN_DIR=../../data/populations/${DATASET}
 
 module load python
 
-../analysis/analyze_visit_distribution.py ${IN_DIR} .
+../analysis/analyze_visit_distribution.py ${IN_DIR} ${DATASET}

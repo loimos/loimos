@@ -5,6 +5,7 @@
  */
 
 #include "loimos.decl.h"
+#include "Types.h"
 #include "Locations.h"
 #include "Location.h"
 #include "Event.h"
@@ -26,7 +27,7 @@
 #include <fstream>
 #include <string>
 
-Locations::Locations(std::string scenarioPath) {
+Locations::Locations(int seed, std::string scenarioPath) {
   day = 0;
 
   // Must be set to true to make AtSync work
@@ -38,28 +39,41 @@ Locations::Locations(std::string scenarioPath) {
     numLocationPartitions,
     thisIndex);
 
+  firstLocalLocationIdx = getFirstIndex(thisIndex, numLocations,
+      numLocationPartitions, firstLocationIdx);
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
+  CkPrintf("  Chare %d has %d locs (%d-%d)\n",
+      thisIndex, numLocalLocations, firstLocalLocationIdx,
+      firstLocalLocationIdx + numLocalLocations - 1);
+#endif
+
   // Init disease states
   diseaseModel = globDiseaseModel.ckLocalBranch();
 
   // Seed random number generator via branch ID for reproducibility
-  generator.seed(time(NULL));
-  // generator.seed(thisIndex);
+  generator.seed(seed + thisIndex);
 
   // Init contact model
   contactModel = createContactModel();
   contactModel->setGenerator(&generator);
 
   // Load application data
+  locations.reserve(numLocalLocations);
   if (syntheticRun) {
-    locations.reserve(numLocalLocations);
-    int firstIdx = thisIndex * getNumLocalElements(numLocations,
-      numLocationPartitions, 0);
-    for (int p = 0; p < numLocalLocations; p++) {
-      locations.emplace_back(0, firstIdx + p, &generator, diseaseModel);
+    for (int i = 0; i < numLocalLocations; i++) {
+      locations.emplace_back(0, firstLocalLocationIdx + i, &generator,
+          diseaseModel);
     }
   } else {
     loadLocationData(scenarioPath);
   }
+
+#if ENABLE_DEBUG == DEBUG_PER_INTERACTION
+  interactionsFile = new std::ofstream(scenarioPath + "interactions_chare_"
+      + std::to_string(thisIndex) + ".csv");
+#else
+  interactionsFile = NULL;
+#endif
 
   // Notify Main
   #ifdef USE_HYPERCOMM
@@ -75,12 +89,9 @@ void Locations::loadLocationData(std::string scenarioPath) {
   // Init local.
   int numAttributesPerLocation =
     DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
-  locations.reserve(numLocalLocations);
-  int firstIdx = thisIndex * getNumElementsPerPartition(numLocations,
-      numLocationPartitions);
   for (int p = 0; p < numLocalLocations; p++) {
-    locations.emplace_back(numAttributesPerLocation, firstIdx + p,
-      &generator, diseaseModel);
+    locations.emplace_back(numAttributesPerLocation, firstLocalLocationIdx + p,
+        &generator, diseaseModel);
   }
 
   // Load in location information.
@@ -148,9 +159,25 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   // adding person to location visit list
   int localLocIdx = getLocalIndex(
     visitMsg.locationIdx,
+    thisIndex,
     numLocations,
     numLocationPartitions,
     firstLocationIdx);
+
+#ifdef ENABLE_DEBUG
+  int trueIdx = locations[localLocIdx].getUniqueId();
+  if (visitMsg.locationIdx != trueIdx) {
+    CkPrintf("Error on chare %d: Visit by person %d to loc %d recieved by "
+        "loc %d (local %d)\n",
+        thisIndex, visitMsg.personIdx, visitMsg.locationIdx, trueIdx,
+        localLocIdx);
+  }
+#endif
+
+  // CkPrintf("    Chare %d: Person %d visiting loc %d from %d to %d\n",
+  //   thisIndex, visitMsg.personIdx, visitMsg.locationIdx,
+  //   //localLocIdx, numLocalLocations,
+  //   visitMsg.visitStart, visitMsg.visitEnd);
 
   // Wrap visit info...
   Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.personState,
@@ -165,17 +192,36 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 }
 
 void Locations::ComputeInteractions() {
+  int firstLocalIndex = getFirstIndex(thisIndex, numLocations,
+    numLocationPartitions, firstLocationIdx);
+
   // traverses list of locations
-  int numVisits = 0;
+  Counter numVisits = 0;
+  Counter numInteractions = 0;
   for (Location &loc : locations) {
-    numVisits += loc.events.size() / 2;
-    loc.processEvents(diseaseModel, contactModel);
+    Counter locVisits = loc.events.size() / 2;
+    numVisits += locVisits;
+
+    Counter locInters = loc.processEvents(diseaseModel, contactModel,
+        interactionsFile);
+    numInteractions += locInters;
+
+    // if (0 < locInters) {
+    //   CkPrintf("    Chare %d: loc %d found %d interactions from %d visits\n",
+    //       thisIndex, loc.getUniqueId(), locInters, locVisits);
+    // }
   }
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
+  CkCallback cb(CkReductionTarget(Main, ReceiveInteractionsCount), mainProxy);
+  contribute(sizeof(Counter), &numInteractions,
+      CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), cb);
+#endif
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
   if (0 == day) {
-    CkPrintf("    Process %d, thread %d: %d visits, %d locations\n",
-      CkMyNode(), CkMyPe(), numVisits, static_cast<int>(locations.size()));
+    CkPrintf("    Process %d, thread %d: "COUNTER_PRINT_TYPE" visits, "
+        COUNTER_PRINT_TYPE" interactions, %lu locations\n",
+        CkMyNode(), CkMyPe(), numVisits, numInteractions, locations.size());
   }
 #endif
 

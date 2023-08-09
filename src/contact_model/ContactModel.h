@@ -40,8 +40,9 @@ class ContactModel {
   // Returns whether or not two people at the same location make contact
   // (will probably need to mess with the arguments once we start
   // implementing more complex models)
-  virtual bool madeContact(const Event& susceptibleEvent,
-    const Event& infectiousEvent, const Location& location);
+  virtual bool madeContact(const Event &susceptibleEvent,
+    const Event &infectiousEvent, const Location &location);
+  virtual double getContactProbability(const Location &location) const;
 };
 
 // This enum provides an easy way of specifying which contact model to use.

@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: MIT
 
 mainmodule loimos {
+  include "Types.h";
   include "Interaction.h";
   include "Message.h";
   include "intervention_model/Interventions.h";
@@ -24,7 +25,10 @@ mainmodule loimos {
   #define SHOULD_LB(day) (day >= LB_START_DAY &&\
     (day - LB_START_DAY) % LB_INTERVAL == 0)
 
-  include "functional";
+  #ifdef USE_HYPERCOMM
+  include "AggregatorParam.h";
+  #endif // USE_HYPERCOMM
+
   include "string";
   include "vector";
   include "memory";
@@ -48,10 +52,14 @@ mainmodule loimos {
 
   readonly bool syntheticRun;
   readonly int contactModelType;
+  readonly int maxSimVisitsIdx;
+  readonly int ageIdx;
   readonly int firstPersonIdx;
   readonly int firstLocationIdx;
 
-  readonly uint64_t totalVisits;
+  readonly Counter totalVisits;
+  readonly Counter totalInteractions;
+  readonly Counter totalExposures;
   readonly double simulationStartTime;
   readonly double iterationStartTime;
   readonly double stepStartTime;
@@ -89,6 +97,9 @@ mainmodule loimos {
       #endif // ENABLE_LB
 
       serial{
+        totalVisits = 0;
+        totalInteractions = 0;
+        totalExposures = 0;
         totalTime.resize(TOTAL_TIME_SIZE, 0);
         CkPrintf("Running ...\n\n");
         simulationStartTime = CkWallTimer();
@@ -128,6 +139,7 @@ mainmodule loimos {
             stepStartTime = CkWallTimer();
             locationsArray.ComputeInteractions();
             if (DAYS_TO_SEED_INFECTION > day) {
+              //CkPrintf("  Seeding Infections\n");
               SeedInfections();
             }
 
@@ -166,6 +178,11 @@ mainmodule loimos {
               "Iteration %d Execution Time: %lf seconds. Infectious Count: %d.\n",
               day, CkWallTimer() - iterationStartTime, infectiousCount
             );
+
+            // Trigger intervention updates.
+            if (interventionStategy) {
+              globDiseaseModel.applyInterventions(day, infectiousCount);
+            }
           }
         }
 
@@ -188,7 +205,6 @@ mainmodule loimos {
           }
         #endif // ENABLE_LB
 
-
         #ifdef ENABLE_TRACING
           if (SHOULD_PROFILE(day)) {
             serial{traceArray.traceOff();}
@@ -209,6 +225,12 @@ mainmodule loimos {
       }
       serial {
         CkPrintf("Finished simulating %d days in %lf seconds.\n", numDays, (CkWallTimer() - simulationStartTime));
+        #if ENABLE_DEBUG >= 2
+        CkPrintf("  Processed "COUNTER_PRINT_TYPE" visits, "
+          COUNTER_PRINT_TYPE" interactions, and "
+          COUNTER_PRINT_TYPE" exposures\n",
+          totalVisits, totalInteractions, totalExposures);
+        #endif
         CkPrintf("  Visit messages took %lf seconds\n",
           totalTime[TOTAL_VISITS_TIME_INDEX]);
         CkPrintf("  Interaction calculations and messages took %lf seconds\n",
@@ -232,9 +254,21 @@ mainmodule loimos {
     entry void SeedInfections();
     entry void StartComputingInteractions();
     entry void ComputedInteractions();
-    #ifdef ENABLE_DEBUG
-    entry [reductiontarget] void ReceiveVisitsCount(int visitsCount) {
-        serial{CkPrintf("  Loaded a total of %d visits\n", visitsCount);}
+    #if ENABLE_DEBUG >= 2
+    entry [reductiontarget] void ReceiveVisitsLoadedCount(int visitsCount) {
+      serial{CkPrintf("  Loaded a total of %d visits\n", visitsCount);}
+    };
+    entry [reductiontarget] void ReceiveVisitsSentCount(Counter count) {
+      serial{totalVisits += count;}
+      serial{CkPrintf("  Processed "COUNTER_PRINT_TYPE" sent visits\n", count);}
+    };
+    entry [reductiontarget] void ReceiveInteractionsCount(Counter count) {
+      serial{totalInteractions += count;}
+      serial{CkPrintf("  Processed "COUNTER_PRINT_TYPE" interactions\n", count);}
+    };
+    entry [reductiontarget] void ReceiveExposuresCount(Counter count) {
+      serial{totalExposures += count;}
+      serial{CkPrintf("  Processed "COUNTER_PRINT_TYPE" exposures\n", count);}
     };
     #endif // ENABLE_DEBUG
     entry [reductiontarget] void ReceiveInfectiousCount(int infectiousCount);
@@ -273,7 +307,7 @@ mainmodule loimos {
   #endif // USE_HYPERCOMM
 
   array [1D] People {
-    entry People(std::string scenarioPath);
+    entry People(int seed, std::string scenarioPath);
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
     entry void ReceiveInteractions(InteractionMessage);
     entry void EndOfDayStateUpdate(); // contribute call to ReceiveInfectiousCount
@@ -284,7 +318,7 @@ mainmodule loimos {
   };
 
   array [1D] Locations {
-    entry Locations(std::string scenarioPath);
+    entry Locations(int seed, std::string scenarioPath);
     entry void ReceiveVisitMessages(VisitMessage);
     entry void ComputeInteractions(); // calls ReceiveInteractions
     entry void AtSync();

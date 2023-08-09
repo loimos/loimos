@@ -31,7 +31,9 @@ struct Event {
 
   // Compares events based on their partners, returning whether or not e0's
   // partner is greater than e1's. Assumes both partnes are non-null
-  static bool greaterPartner(const Event& e0, const Event& e1);
+  static bool greaterPartner(const Event &e0, const Event &e1);
+
+  static bool overlap(const Event &e0, const Event &e1);
 
   // Makes two events each others' partners
   static void pair(Event *e0, Event *e1);
