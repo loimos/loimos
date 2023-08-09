@@ -35,7 +35,6 @@ message InterventionModel {
     }
 
     message InterventionTypeSchoolClosures {
-      int32 csv_location_of_school = 1;
     }
 
     message InterventionTypeVaccination {
@@ -51,7 +50,8 @@ message InterventionModel {
   }
 
   repeated Trigger triggers = 1;
-  repeated Intervention interventions = 2;
-  repeated DataField person_attributes = 3;
-  repeated DataField location_attributes = 4;
+  repeated Intervention person_interventions = 2;
+  repeated Intervention location_interventions = 3;
+  repeated DataField person_attributes = 4;
+  repeated DataField location_attributes = 5;
 }

@@ -6,11 +6,10 @@
 include Makefile.include
 
 OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o  \
-         Defs.o Event.o Interaction.o readers/Preprocess.o \
-				 readers/DataInterface.o \
+         Defs.o Event.o readers/Preprocess.o \
+				 readers/DataInterface.o readers/AttributeTable.o \
 				 contact_model/MinMaxAlphaModel.o contact_model/ContactModel.o \
-				 intervention_model/Interventions.o \
-				 intervention_model/AttributeTable.o \
+				 intervention_model/VaccinationIntervention.o \
          protobuf/disease.pb.o protobuf/distribution.pb.o \
 		     protobuf/data.pb.o protobuf/interventions.pb.o
 DEFS   = loimos.def.h Defs.h Types.h readers/DataReader.h
@@ -115,10 +114,14 @@ test-large: all
 	fi
 
 test-validation: all
-	./charmrun +p4 ./loimos 0 25000 5001 60 40 30 7 test-validation.csv ../data/disease_models/validation_model.textproto ../data/populations/validation_set/ ++local
+	./charmrun +p4 ./loimos 0 25000 5001 60 40 30 30 test-validation.csv ../data/disease_models/validation_model.textproto ../data/populations/validation_set/ ++local
 
 test-intervention: all
-	./charmrun +p4 ./loimos 0 41119 19203 60 40 180 7 test-intervention.csv ../data/disease_models/covid19_onepath.textproto ../data/populations/coc/ -i ../data/interventions/isolation_and_school_closures.textproto ++local
+	if [ -f ../data/populations/coc/visits.csv ]; then \
+		./charmrun +p4 ./loimos 0 41119 19203 60 40 180 7 test-intervention.csv ../data/disease_models/covid19_onepath.textproto ../data/populations/coc/ -i ../data/interventions/isolation_and_school_closures.textproto ++local\
+	else\
+		echo CoC data not available;\
+	fi
 
 test-intervention-syn: all
 	./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 test-intervention-syn.csv ../data/disease_models/covid19_onepath.textproto -i ../data/interventions/vaccination.textproto ++local

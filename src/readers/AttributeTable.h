@@ -4,11 +4,11 @@
   * SPDX-License-Identifier: MIT
   */
 
-#ifndef INTERVENTION_MODEL_ATTRIBUTETABLE_H_
-#define INTERVENTION_MODEL_ATTRIBUTETABLE_H_
+#ifndef READERS_ATTRIBUTETABLE_H_
+#define READERS_ATTRIBUTETABLE_H_
 
-#include "../readers/DataInterface.h"
-#include "../readers/DataReader.h"
+#include "Data.h"
+#include "../protobuf/data.pb.h"
 
 #include <string>
 #include <vector>
@@ -30,20 +30,19 @@ struct Attribute {
 class AttributeTable {
  public:
   std::vector<Attribute> list;
-  AttributeTable(int size, bool isPersonTable);
-  explicit AttributeTable(bool isPersonTable);
+
+  AttributeTable() {}
+  explicit AttributeTable(int size);
   Attribute getAttribute(int i);
   union Data getDefaultValue(int i) const;
   double getDefaultValueAsDouble(int i) const;
   std::string getName(int i) const;
   DataTypes::DataType getDataType(int i);
-  bool getTableType();
-  bool isPersonTable;
-  int getAttribute(std::string name) const;
+  int getAttributeIndex(std::string name) const;
   int size() const;
   void updateIndex(int i, int newIndex);
   void resize(int size);
   void readAttributes(const AttributeList &dataFormat);
 };
 
-#endif  // INTERVENTION_MODEL_ATTRIBUTETABLE_H_
+#endif  // READERS_ATTRIBUTETABLE_H_

@@ -5,13 +5,29 @@
  */
 
 #include "DataInterface.h"
+#include "AttributeTable.h"
+
+DataInterface::DataInterface(const AttributeTable &attributes, int numInterventions) {
+  if (0 != numInterventions) {
+    willComplyWithIntervention.resize(numInterventions);
+  }
+
+  // Treat all attributes same, no need to make distinction
+  int tableSize = attributes.size();
+  if (tableSize != 0) {
+    data.resize(tableSize);
+    for (int i = 0; i < tableSize; i++) {
+      data[i] = attributes.getDefaultValue(i);
+    }
+  }
+}
 
 void DataInterface::setUniqueId(int idx) {
-  this->uniqueId = idx;
+  uniqueId = idx;
 }
 
 int DataInterface::getUniqueId() const {
-  return this->uniqueId;
+  return uniqueId;
 }
 
 union Data DataInterface::getValue(int idx) const {
@@ -19,5 +35,13 @@ union Data DataInterface::getValue(int idx) const {
 }
 
 std::vector<union Data> &DataInterface::getData() {
-  return this->data;
+  return data;
+}
+
+void DataInterface::toggleCompliance(int interventionIndex, bool value) {
+  willComplyWithIntervention[interventionIndex] = value;
+}
+
+bool DataInterface::willComply(int interventionIndex) {
+  return willComplyWithIntervention[interventionIndex];
 }
