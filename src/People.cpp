@@ -71,7 +71,7 @@ People::People(int seed, std::string scenarioPath) {
   }
 
   if (syntheticRun) {
-    generatePeopleData();
+    generatePeopleData(firstLocalPersonIdx);
     generateVisitData();
   } else {
     // Load in people data from file.
@@ -96,7 +96,7 @@ for (Person &p : people) {
 
 People::People(CkMigrateMessage *msg) {}
 
-void People::generatePeopleData() {
+void People::generatePeopleData(int firstLocalPersonIdx) {
   // Init peoples ids and randomly init ages.
   std::uniform_int_distribution<int> age_dist(0, 100);
   int ageIndex = diseaseModel->personAttributes.getAttributeIndex("age");
@@ -404,7 +404,7 @@ void People::SendVisitMessages() {
   int minId = numPeople;
   int maxId = 0;
   #endif
-  int dayIdx = day % numDaysWithRealData;
+  int dayIdx = day % numDaysWithDistinctVisits;
   for (const Person &person : people) {
     #if ENABLE_DEBUG >= DEBUG_PER_CHARE
     minId = std::min(minId, person.getUniqueId());

@@ -212,7 +212,7 @@ void Locations::ComputeInteractions() {
     Counter locVisits = loc.events.size() / 2;
     numVisits += locVisits;
 
-    Counter locInters = processEvents(&loc, interactionsFile);
+    Counter locInters = processEvents(&loc);
     numInteractions += locInters;
 
     // if (0 < locInters) {
@@ -237,11 +237,25 @@ void Locations::ComputeInteractions() {
   day++;
 }
 
-void Locations::processEvents(Location *loc) {
+Counter Locations::processEvents(Location *loc) {
   std::vector<Event> *arrivals;
+  #if ENABLE_DEBUG >= DEBUG_VERBOSE
+  Counter numInteractions = 0;
+  Counter numPresent = 0;
+  #endif
 
   std::sort(loc->events.begin(), loc->events.end());
   for (const Event &event : loc->events) {
+    #if ENABLE_DEBUG >= DEBUG_VERBOSE
+    if (ARRIVAL == event.type) {
+      numPresent++;
+    } else {
+      numPresent--;
+      numInteractions += numPresent;
+      saveInteractions(event, interactionsFile);
+    }
+    #endif
+
     if (diseaseModel->isSusceptible(event.personState)) {
       arrivals = &susceptibleArrivals;
 
@@ -268,7 +282,52 @@ void Locations::processEvents(Location *loc) {
   }
   loc->events.clear();
   interactions.clear();
+
+  #if ENABLE_DEBUG >= DEBUG_VERBOSE
+  double p = contactModel->getContactProbability(*loc);
+  Counter total = static_cast<Counter>(p * numInteractions);
+
+  #if ENABLE_DEBUG == DEBUG_LOCATION_SUMMARY
+  if (0 != numInteractions) {
+    CkPrintf("      %d,%d,%f,"COUNTER_PRINT_TYPE","COUNTER_PRINT_TYPE"\n",
+          uniqueId, data[maxSimVisitsIdx].int_b10, p, numInteractions, total);
+  }
+  #endif  // DEBUG_LOCATION_SUMMARY
+  return total;
+  #else
+  return 0;
+  #endif  // DEBUG_VERBOSE
 }
+
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
+Counter Location::saveInteractions(const Event &departure,
+    std::ofstream *out) const {
+  Counter count = 0;
+  for (const Event &a : susceptibleArrivals) {
+    if (NULL != out) {
+      *out << uniqueId << "," << departure.personIdx << ","
+      << departure.partnerTime << ","  << departure.scheduledTime << ","
+      << a.personIdx << "," << a.scheduledTime << "," << a.partnerTime
+      << std::endl;
+    }
+    if (Event::overlap(a, departure)) {
+      count++;
+    }
+  }
+  for (const Event &a : infectiousArrivals) {
+    if (NULL != out) {
+      *out << uniqueId << "," << departure.personIdx << ","
+      << departure.partnerTime << ","  << departure.scheduledTime << ","
+      << a.personIdx << "," << a.scheduledTime << "," << a.partnerTime
+      << std::endl;
+    }
+    if (Event::overlap(a, departure)) {
+      count++;
+    }
+  }
+  return count;
+}
+#endif  // DEBUG_VERBOSE
 
 // Simple dispatch to the susceptible/infectious depature handlers
 inline void Locations::onDeparture(Location *loc, const Event& departure) {
