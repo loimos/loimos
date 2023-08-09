@@ -20,7 +20,7 @@ class MinMaxAlphaModel : public ContactModel {
  private:
   // Specifies where to look for the attribute we create to store each
   // location's contact probability
-  int contactProbabilityIndex;
+  int contactProbabilityIdx;
 
  public:
   // We need to re-declare all of these methods from ContactModel so

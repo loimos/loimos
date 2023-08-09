@@ -78,4 +78,4 @@ ifdef ENABLE_RANDOM_SEED
 OPTS      = -DENABLE_RANDOM_SEED
 endif
 
-CXXFLAGS  = $(OPTS) -std=c++11 -Wall $(INCLUDES)
+CXXFLAGS  = $(OPTS) -std=c++11 $(INCLUDES)
