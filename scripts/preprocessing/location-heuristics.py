@@ -204,9 +204,7 @@ if __name__ == "__main__":
         "total_visits": int,
     }
     if "daynum" in visits:
-        output_dtypes.update(
-            {"median_daily_total": int, "max_daily_total": int}
-        )
+        output_dtypes.update({"median_daily_total": int, "max_daily_total": int})
     output_dtypes.update({c: int for c in output_df.columns if "pub" in c})
     output_dtypes.update({c: int for c in renaming})
     output_df = output_df.astype(output_dtypes)

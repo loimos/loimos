@@ -2,11 +2,9 @@
 
 import argparse
 import os
-import sys
-import glob
-import functools
 
 import pandas as pd
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -45,21 +43,40 @@ def parse_args():
     return parser.parse_args()
 
 
-COMPARISION_COLUMNS = ["max_occupancy", "conn_prob", "max_possible_edges",
-    "num_expected_edges"]
+COMPARISION_COLUMNS = [
+    "max_occupancy",
+    "conn_prob",
+    "max_possible_edges",
+    "num_expected_edges",
+]
 BASELINE_SUFFIX = "_baseline"
-def compare_column(metrics, baseline, col, merge_on="old_lid", epsilon=1e-6):
-    df = pd.merge(metrics, baseline, validate="one_to_one", indicator=True,
-            on=merge_on, suffixes=["", BASELINE_SUFFIX], how="outer")
 
-    compare_shared_locations(df["both" == df["_merge"]], left_col=col,
-                             right_col=col + BASELINE_SUFFIX,
-                             epsilon=epsilon)
+
+def compare_column(metrics, baseline, col, merge_on="old_lid", epsilon=1e-6):
+    df = pd.merge(
+        metrics,
+        baseline,
+        validate="one_to_one",
+        indicator=True,
+        on=merge_on,
+        suffixes=["", BASELINE_SUFFIX],
+        how="outer",
+    )
+
+    compare_shared_locations(
+        df["both" == df["_merge"]],
+        left_col=col,
+        right_col=col + BASELINE_SUFFIX,
+        epsilon=epsilon,
+    )
     if not (df["_merge"] == "both").all():
-        compare_distict_locations(df, col, "computed", merge_side="left",
-                epsilon=epsilon)
-        compare_distict_locations(df, col + BASELINE_SUFFIX, "baseline",
-                merge_side="right", epsilon=epsilon)
+        compare_distict_locations(
+            df, col, "computed", merge_side="left", epsilon=epsilon
+        )
+        compare_distict_locations(
+            df, col + BASELINE_SUFFIX, "baseline", merge_side="right", epsilon=epsilon
+        )
+
 
 def compare_shared_locations(df, left_col, right_col, epsilon):
     mask = df[left_col] == df[right_col]
@@ -74,8 +91,10 @@ def compare_shared_locations(df, left_col, right_col, epsilon):
     if mask.all():
         print(f"all {left_col} values match for shared locs")
     else:
-        print(f"{matches}/{total} ({matches/total:.2%}) of {left_col} values match "
-            + "at shared locs")
+        print(
+            f"{matches}/{total} ({matches/total:.2%}) of {left_col} values match "
+            + "at shared locs"
+        )
 
         out = "  "
         std_err = (err ** 2).mean()
@@ -98,13 +117,10 @@ def compare_shared_locations(df, left_col, right_col, epsilon):
         print(out)
 
 
-def compare_distict_locations(df, col, data_source, merge_side="left",
-        epsilon=1e-6):
-    total = df.shape[0]
+def compare_distict_locations(df, col, data_source, merge_side="left", epsilon=1e-6):
     mask = f"{merge_side}_only" == df["_merge"]
     mask_sum = mask.sum()
     total_err = df[mask][col].sum()
-    # std_err = total_err ** 2
 
     if 0 < mask_sum and epsilon < abs(total_err):
         out = "  "
@@ -117,7 +133,9 @@ def compare_distict_locations(df, col, data_source, merge_side="left",
         out += f"from {mask_sum} {data_source} locations"
         print(out)
     elif 0 < mask_sum:
-        print(f"  No error contributed by {mask_sum} locs present only in {data_source}")
+        print(
+            f"  No error contributed by {mask_sum} locs present only in {data_source}"
+        )
 
 
 def main():
@@ -127,8 +145,9 @@ def main():
     print(f"Verifying location stats in {pop_dir}")
 
     locations = pd.read_csv(os.path.join(pop_dir, args.locations_file))
-    loimos_metrics = pd.read_csv(os.path.join(pop_dir, args.loimos_metrics),
-            names=["lid"] + COMPARISION_COLUMNS)
+    loimos_metrics = pd.read_csv(
+        os.path.join(pop_dir, args.loimos_metrics), names=["lid"] + COMPARISION_COLUMNS
+    )
     baseline_metrics = pd.read_csv(args.baseline_file)
 
     tmp = locations[["lid", "old_lid"]]

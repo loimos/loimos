@@ -63,12 +63,21 @@ def parse_args():
     return parser.parse_args()
 
 
-INTERACTION_COLUMNS = ["lid", "dep_pid", "dep_start", "dep_end",
-        "arr_pid", "arr_start", "arr_end"]
+INTERACTION_COLUMNS = [
+    "lid",
+    "dep_pid",
+    "dep_start",
+    "dep_end",
+    "arr_pid",
+    "arr_start",
+    "arr_end",
+]
+
+
 def read_interactions(pop_dir, in_files):
     interactions_in_files = functools.reduce(
-            lambda l, f: l + glob.glob(os.path.join(pop_dir, f)),
-            in_files, [])
+        lambda l, f: l + glob.glob(os.path.join(pop_dir, f)), in_files, []
+    )
 
     interactions = None
     total_interactions = 0

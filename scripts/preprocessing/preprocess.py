@@ -36,12 +36,13 @@ def parse_args():
 
     # Named/optional arguments:
     parser.add_argument(
-        "-o", "--out-dir",
+        "-o",
+        "--out-dir",
         default=None,
         help="The name of the directory where the sampled population "
-             + "should be saved. If this argument is not specified, "
-             + "the same path will be used for the input and output "
-             + "directories"
+        + "should be saved. If this argument is not specified, "
+        + "the same path will be used for the input and output "
+        + "directories",
     )
     parser.add_argument(
         "-pi",
@@ -159,7 +160,7 @@ def make_contiguous(df, id_col="lid", offset=0, name="df", suplimental_cols=list
         offset -= int(df[id_col].iloc[0])
         df[id_col] += offset
 
-        assert(is_contiguous(df, col=id_col))
+        assert is_contiguous(df, col=id_col)
         return offset
 
     else:
@@ -174,7 +175,7 @@ def make_contiguous(df, id_col="lid", offset=0, name="df", suplimental_cols=list
         df[old_col] = df[id_col]
         df[id_col] = df.index + offset
 
-        assert(is_contiguous(df, col=id_col))
+        assert is_contiguous(df, col=id_col)
         return update_record
 
 
@@ -192,38 +193,40 @@ def update_ids(df, update, id_col="lid", name="df", suplimental_cols=[]):
         new_col = update.columns[0]
         old_col = f"old_{id_col}"
         merge_cols = [id_col] + suplimental_cols
-        new_df = pd.merge(df, update, how="left",
-                          on=merge_cols)
-        assert(num_rows == new_df.shape[0])
-        #if num_rows != new_df.shape[0]:
+        new_df = pd.merge(df, update, how="left", on=merge_cols)
+        assert num_rows == new_df.shape[0]
+        # if num_rows != new_df.shape[0]:
         #    print(f"Had {num_rows} before, but now have {new_df.shape[0]}")
 
         # Make sure the transformation is inverible
         tmp = new_df.drop(columns=id_col)
         inverted_cols = [new_col] + suplimental_cols
-        inverted_df = pd.merge(tmp, update, how="left",
-                               on=inverted_cols)
-        assert((inverted_df[df.columns] == df).all(axis=None))
+        inverted_df = pd.merge(tmp, update, how="left", on=inverted_cols)
+        assert (inverted_df[df.columns] == df).all(axis=None)
 
         # Make sure the number of visits per location is unchanged by this
         # transformation
-        new_counts = new_df[merge_cols + [new_col]]\
-                .groupby(merge_cols)\
-                .count()\
-                .rename(columns={new_col: "count"})\
-                .reset_index()\
-                .merge(update, on=merge_cols)\
-                .sort_values(merge_cols + [new_col])\
-                .reset_index(drop=True)
-        old_counts = new_df[inverted_cols + [id_col]]\
-                .groupby(inverted_cols)\
-                .count()\
-                .rename(columns={id_col: "count"})\
-                .reset_index()\
-                .merge(update, on=inverted_cols)\
-                .sort_values(merge_cols + [new_col])[new_counts.columns]\
-                .reset_index(drop=True)
-        assert((new_counts == old_counts).all(axis=None))
+        new_counts = (
+            new_df[merge_cols + [new_col]]
+            .groupby(merge_cols)
+            .count()
+            .rename(columns={new_col: "count"})
+            .reset_index()
+            .merge(update, on=merge_cols)
+            .sort_values(merge_cols + [new_col])
+            .reset_index(drop=True)
+        )
+        old_counts = (
+            new_df[inverted_cols + [id_col]]
+            .groupby(inverted_cols)
+            .count()
+            .rename(columns={id_col: "count"})
+            .reset_index()
+            .merge(update, on=inverted_cols)
+            .sort_values(merge_cols + [new_col])[new_counts.columns]
+            .reset_index(drop=True)
+        )
+        assert (new_counts == old_counts).all(axis=None)
 
         new_df.rename(columns={id_col: old_col, new_col: id_col}, inplace=True)
 
@@ -231,6 +234,8 @@ def update_ids(df, update, id_col="lid", name="df", suplimental_cols=[]):
 
 
 LOC_SUPLIMENTAL_COLS = ["longitude", "latitude"]
+
+
 def merge_locations(args):
     in_dir = args.in_dir
 
@@ -244,13 +249,14 @@ def merge_locations(args):
     activity_locs.rename(columns={"alid": "lid"}, inplace=True)
     home_locs.rename(columns={"rlid": "lid"}, inplace=True)
 
-    activity_update = make_contiguous(activity_locs,
-                                      name="activity locations",
-                                      suplimental_cols=LOC_SUPLIMENTAL_COLS)
+    activity_update = make_contiguous(
+        activity_locs, name="activity locations", suplimental_cols=LOC_SUPLIMENTAL_COLS
+    )
     home_update = make_contiguous(
-        home_locs, offset=activity_locs["lid"].max() + 1,
+        home_locs,
+        offset=activity_locs["lid"].max() + 1,
         name="home locations",
-        suplimental_cols=LOC_SUPLIMENTAL_COLS
+        suplimental_cols=LOC_SUPLIMENTAL_COLS,
     )
 
     # Make sure all columns are shared.
@@ -298,13 +304,13 @@ def merge_visits(args, activity_update, home_update, people_update):
 
     loc_update = activity_update
     if isinstance(activity_update, pd.DataFrame):
-        loc_update = pd.concat([activity_update, home_update],
-                ignore_index=True)
+        loc_update = pd.concat([activity_update, home_update], ignore_index=True)
         write_csv(args.out_dir, "activity_update.csv", activity_update)
         write_csv(args.out_dir, "home_update.csv", home_update)
 
-    visits = update_ids(visits, loc_update, name="visit lids",
-                        suplimental_cols=LOC_SUPLIMENTAL_COLS)
+    visits = update_ids(
+        visits, loc_update, name="visit lids", suplimental_cols=LOC_SUPLIMENTAL_COLS
+    )
     visits = update_ids(visits, people_update, id_col="pid", name="visit pids")
     visits.sort_values(["pid", "start_time"], inplace=True)
 
