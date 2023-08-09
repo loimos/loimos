@@ -76,7 +76,10 @@ INTERACTION_COLUMNS = [
 
 def read_interactions(pop_dir, in_files):
     interactions_in_files = functools.reduce(
-        lambda l, f: l + glob.glob(os.path.join(pop_dir, f)), in_files, []
+        lambda file_list, in_file: file_list
+        + glob.glob(os.path.join(pop_dir, in_file)),
+        in_files,
+        [],
     )
 
     interactions = None
