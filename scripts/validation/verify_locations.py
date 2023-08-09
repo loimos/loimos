@@ -97,7 +97,7 @@ def compare_shared_locations(df, left_col, right_col, epsilon):
         )
 
         out = "  "
-        std_err = (err**2).mean()
+        std_err = (err ** 2).mean()
         if isinstance(std_err, float):
             out += f"std err: {std_err:0.3}, "
         else:

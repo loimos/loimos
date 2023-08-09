@@ -3,8 +3,6 @@
 import argparse
 import os
 import sys
-import glob
-import shutil
 
 import pandas as pd
 
@@ -47,8 +45,8 @@ def parse_args():
         "--times",
         type=int,
         nargs=2,
-        default=[2*86400, 3*86400],
-        help="The range of start times to sample"
+        default=[2 * 86400, 3 * 86400],
+        help="The range of start times to sample",
     )
 
     return parser.parse_args()
@@ -69,6 +67,7 @@ def main():
     mask = (start <= visits["start_time"]) & (visits["start_time"] < end)
     print(f"Saving sampled visits to {visits_out_file}")
     visits[mask].to_csv(visits_out_file)
+
 
 if __name__ == "__main__":
     main()
