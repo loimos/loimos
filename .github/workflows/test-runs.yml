@@ -1,5 +1,5 @@
 ---
-name: CI
+name: Loimos Test Runs
 
 # Controls when the action will run. Triggers the workflow on push or pull
 # request events but only for the develop branch
@@ -78,7 +78,9 @@ jobs:
           export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
           export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
           export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
-          # Test non-SMP
+      # Test non-SMP
+      - name: run-non-smp
+        run: |
           export CHARM_HOME=$GITHUB_WORKSPACE/charm-nonsmp
           export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
           make
@@ -87,7 +89,9 @@ jobs:
           ../data/disease_models/covid19_onepath.textproto +setcpuaffinity \
           ++local
           make clean
-          # Test SMP
+      # Test SMP
+      - name: run-smp
+        run: |
           export CHARM_HOME=$GITHUB_WORKSPACE/charm-smp
           export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
           make
