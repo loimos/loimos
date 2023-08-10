@@ -78,7 +78,7 @@ jobs:
           export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
           export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
           export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
-      # Test non-SMP
+      # Make sure non-SMP version runs
       - name: run-non-smp
         run: |
           export CHARM_HOME=$GITHUB_WORKSPACE/charm-nonsmp
@@ -89,13 +89,23 @@ jobs:
           ../data/disease_models/covid19_onepath.textproto +setcpuaffinity \
           ++local
           make clean
-      # Test SMP
+      # Make sure SMP version runs
       - name: run-smp
         run: |
           export CHARM_HOME=$GITHUB_WORKSPACE/charm-smp
           export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
           make
           ./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 \
-          ci-test-smp.csv ../data/disease_models/covid19_onepath.textproto \
-          +setcpuaffinity ++local
+            ci-test-smp.csv ../data/disease_models/covid19_onepath.textproto \
+            +setcpuaffinity ++local
           make clean
+      # Make sure small Utopia dataset has 100 interactions
+      - name: test-utopia
+        run: |
+          export CHARM_HOME=$GITHUB_WORKSPACE/charm-nonsmp
+          export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
+          ENABLE_DEBUG=2 make
+          ./charmrun +p4 ./loimos 0 19 12 2 2 1 1 test-utopia.csv \
+            ../data/disease_models/covid19.textproto \
+            ../data/populations/utopia/ --min-max-alpha ++local > utopia.out
+          grep -r ""
