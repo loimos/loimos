@@ -311,6 +311,24 @@ Main::Main(CkArgMsg* msg) {
   accumulated.resize(diseaseModel->getNumberOfStates(), 0);
   delete msg;
 
+#if ENABLE_DEBUG >= DEBUG_BASIC
+  CkPrintf("Person Attributes:\n");
+  for (int i = 0; i < diseaseModel->personAttributes.size(); i++) {
+    CkPrintf("(%d) %s: default: %lf, type: %d\n",
+        i, diseaseModel->personAttributes.getName(i).c_str(),
+        diseaseModel->personAttributes.getDefaultValueAsDouble(i),
+        diseaseModel->personAttributes.getDataType(i));
+  }
+
+  CkPrintf("Locations Attributes:\n");
+  for (int i = 0; i < diseaseModel->locationAttributes.size(); i++) {
+    CkPrintf("(%d) %s: default: %lf, type: %d\n",
+        i, diseaseModel->locationAttributes.getName(i).c_str(),
+        diseaseModel->locationAttributes.getDefaultValueAsDouble(i),
+        diseaseModel->locationAttributes.getDataType(i));
+  }
+#endif
+
   CkPrintf("\nFinished loading shared/global data in %lf seconds.\n",
       CkWallTimer() - dataLoadingStartTime);
 
