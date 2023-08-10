@@ -110,9 +110,6 @@ mainmodule loimos {
           }
         #endif
         serial {
-          //auto cbfunction = [] (int i) -> int { return i ** 2; };
-          //FunctionMessage funcMessage(cbfunction);
-          //peopleArray[0].TestCall(cbfunction);
           iterationStartTime = CkWallTimer();
 
           //CkPrintf("  Sending Visit Messages\n");
