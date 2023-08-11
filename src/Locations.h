@@ -16,6 +16,7 @@
 #include <set>
 #include <string>
 #include <unordered_map>
+#include <iostream>
 
 class Locations : public CBase_Locations {
  private:
@@ -59,6 +60,11 @@ class Locations : public CBase_Locations {
   // Simple helper function which send the list of interactions with the
   // specified person to the appropriate People chare
   inline void sendInteractions(Location *loc, int personIdx);
+
+  #if ENABLE_DEBUG >= DEBUG_VERBOSE
+  Counter saveInteractions(const Location &loc, const Event &departure,
+    std::ofstream *out) const;
+  #endif
 
  public:
   explicit Locations(int seed, std::string scenarioPath);

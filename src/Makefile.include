@@ -42,9 +42,9 @@ LIBS      = -lpthread -lprotobuf
 # Protobuf is installed under lib64 on Rivanna
 HOSTNAME = $(shell hostname -a)
 ifneq (,$(findstring .hpc.virginia.edu,$(HOSTNAME)))
-LIBS += -L$(PROTOBUF_HOME)/lib64
+LIBS     += -L$(PROTOBUF_HOME)/lib64
 else
-LIBS += -L$(PROTOBUF_HOME)/lib
+LIBS     += -L$(PROTOBUF_HOME)/lib
 endif
 
 # Set the ENABLE_DEBUG environment varibale to a positive integer to set a

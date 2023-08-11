@@ -252,7 +252,7 @@ Counter Locations::processEvents(Location *loc) {
     } else {
       numPresent--;
       numInteractions += numPresent;
-      saveInteractions(event, interactionsFile);
+      saveInteractions(*loc, event, interactionsFile);
     }
     #endif
 
@@ -290,7 +290,7 @@ Counter Locations::processEvents(Location *loc) {
   #if ENABLE_DEBUG == DEBUG_LOCATION_SUMMARY
   if (0 != numInteractions) {
     CkPrintf("      %d,%d,%f,"COUNTER_PRINT_TYPE","COUNTER_PRINT_TYPE"\n",
-          uniqueId, data[maxSimVisitsIdx].int_b10, p, numInteractions, total);
+        uniqueId, data[maxSimVisitsIdx].int_b10, p, numInteractions, total);
   }
   #endif  // DEBUG_LOCATION_SUMMARY
   return total;
@@ -300,12 +300,12 @@ Counter Locations::processEvents(Location *loc) {
 }
 
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
-Counter Location::saveInteractions(const Event &departure,
-    std::ofstream *out) const {
+Counter Locations::saveInteractions(const Location &loc,
+    const Event &departure, std::ofstream *out) const {
   Counter count = 0;
   for (const Event &a : susceptibleArrivals) {
     if (NULL != out) {
-      *out << uniqueId << "," << departure.personIdx << ","
+      *out << loc.getUniqueId() << "," << departure.personIdx << ","
       << departure.partnerTime << ","  << departure.scheduledTime << ","
       << a.personIdx << "," << a.scheduledTime << "," << a.partnerTime
       << std::endl;
@@ -316,7 +316,7 @@ Counter Location::saveInteractions(const Event &departure,
   }
   for (const Event &a : infectiousArrivals) {
     if (NULL != out) {
-      *out << uniqueId << "," << departure.personIdx << ","
+      *out << loc.getUniqueId() << "," << departure.personIdx << ","
       << departure.partnerTime << ","  << departure.scheduledTime << ","
       << a.personIdx << "," << a.scheduledTime << "," << a.partnerTime
       << std::endl;
@@ -409,14 +409,12 @@ inline void Locations::sendInteractions(Location *loc,
   }
   #endif  // USE_HYPERCOMM
 
-  /*
-  CkPrintf(
-    "sending %d interactions to person %d in partition %d\r\n",
-    (int) interactions[personIdx].size(),
-    personIdx,
-    peoplePartitionIdx
-  );
-  */
+  // CkPrintf(
+  //   "    Sending %d interactions to person %d in partition %d\r\n",
+  //   (int) interactions[personIdx].size(),
+  //   personIdx,
+  //   peoplePartitionIdx
+  // );
 
   // Free up space where we were storing interactions data. This also prevents
   // interactions from being sent multiple times if this person has multiple

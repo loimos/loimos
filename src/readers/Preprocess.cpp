@@ -205,7 +205,7 @@ void buildActivityCache(std::string inputPath, std::string outputPath,
     if (numPeople * numDaysWithDistinctVisits > index) {
       elements[index] = current_position;
     } else {
-      CkAbort("    Failed to write %lu bytes at %d\n", current_position, index);
+      CkAbort("    Failed to write %lu bytes at %lu\n", current_position, index);
     }
     // if (0 == lastPerson % 10000) {
     //   CkPrintf("  Setting person %d to read from %u on day %d\n",

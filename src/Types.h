@@ -15,7 +15,7 @@ using Time = int32_t;
 
 // For counting events (interactions, visits, exposures...)
 using Counter = double;
-#define COUNTER_PRINT_TYPE "%f"
+#define COUNTER_PRINT_TYPE "%0.0f"
 #define COUNTER_REDUCTION_TYPE double
 
 #endif  // TYPES_H_

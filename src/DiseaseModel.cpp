@@ -167,24 +167,6 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
 
   susceptibilityIndex = personAttributes.getAttributeIndex("susceptibility");
   infectivityIndex = personAttributes.getAttributeIndex("infectivity");
-
-#if ENABLE_DEBUG >= DEBUG_BASIC
-    CkPrintf("Person Attributes:\n");
-    for (int i = 0; i < personAttributes.size(); i++) {
-      CkPrintf("  %s (%d): default: %lf, type: %d\n",
-          personAttributes.getName(i).c_str(), i,
-          personAttributes.getDefaultValueAsDouble(i),
-          personAttributes.getDataType(i));
-    }
-
-    CkPrintf("Locations Attributes:\n");
-    for (int i = 0; i < locationAttributes.size(); i++) {
-      CkPrintf("  %s (%d): default: %lf, type: %d\n",
-          locationAttributes.getName(i).c_str(), i,
-          locationAttributes.getDefaultValueAsDouble(i),
-          locationAttributes.getDataType(i));
-    }
-#endif
 }
 
 void DiseaseModel::intitialisePersonInterventions(

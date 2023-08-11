@@ -52,6 +52,8 @@ When multiple such options are used, these suffixes will be added in the order i
 | `ENABLE_SMP`          | 1     | `-smp`            | Builds Loimos with Shared Memory Parallelism.                                 |
 | `ENABLE_TRACING`      | 1     | `-prj`            | Enables collecting performance profiles using the built-in Charm++ profiler   |
 | `ENABLE_LB`           | 1     | `-lb`             | Enables Charm++ dynamic load balancing                                        |
+| `ENABLE_RANDOM_SEED`  | 1     |                   | If not passed, will use a the same seed for all psuedo-random number          |
+|                       |       |                   | generators in each run                                                        |
 | `ENABLE_UNIT_TESTING` | 1     |                   | Builds Loimos with unit tests enabled                                         |
 | `ENABLE_DEBUG`        | 1     |                   | Basic debug information                                                       |
 |                       | 2     |                   | Verbose debug information                                                     |
