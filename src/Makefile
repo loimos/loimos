@@ -5,28 +5,27 @@
 
 include Makefile.include
 
-OBJS  = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o  \
-        Defs.o Event.o readers/Preprocess.o \
-			  readers/DataInterface.o readers/AttributeTable.o \
-			  contact_model/MinMaxAlphaModel.o contact_model/ContactModel.o \
-			  intervention_model/VaccinationIntervention.o
-DEFS  = loimos.def.h Defs.h Types.h readers/DataReader.h
-DECLS = loimos.decl.h
+OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o  \
+         Defs.o Event.o readers/Preprocess.o \
+				 readers/DataInterface.o readers/AttributeTable.o \
+				 contact_model/MinMaxAlphaModel.o contact_model/ContactModel.o \
+				 intervention_model/VaccinationIntervention.o \
+         protobuf/disease.pb.o protobuf/distribution.pb.o \
+		     protobuf/data.pb.o protobuf/interventions.pb.o
+DEFS   = loimos.def.h Defs.h Types.h readers/DataReader.h
+DECLS  = loimos.decl.h
 
-BIN := loimos
+BIN   := loimos
 
 ifdef ENABLE_SMP
-BIN :=$(BIN)-smp
+BIN   :=$(BIN)-smp
 endif
 ifdef ENABLE_TRACING
-BIN :=$(BIN)-prj
+BIN   :=$(BIN)-prj
 endif
 ifdef ENABLE_LB
-BIN :=$(BIN)-lb
+BIN   :=$(BIN)-lb
 endif
-
-PROTO_OBJS = protobuf/disease.pb.o protobuf/distribution.pb.o \
-		         protobuf/data.pb.o protobuf/interventions.pb.o
 
 # Set the ENABLE_UNIT_TESTING environment variable to compile for unit testing
 ifdef ENABLE_UNIT_TESTING
@@ -55,7 +54,7 @@ SUBDIRS = protobuf tests
 all: all-sub $(BIN)
 
 # Build the executable (and implicitly charmrun) from the object files
-$(BIN): $(OBJS) $(PROTOBUF_OBJS) $(UNIT_TEST_OBJS) $(DECLS)
+$(BIN): $(OBJS) $(UNIT_TEST_OBJS) $(DECLS)
 	$(CHARMC) -o $@ $(OBJS) $(UNIT_TEST_OBJS) $(PROJECTION_FLAGS) \
 		-language charm++ -module CkMulticast $(LIBS)
 
