@@ -108,4 +108,4 @@ jobs:
           ./charmrun +p4 ./loimos 0 19 12 2 2 1 1 test-utopia.csv \
             ../data/disease_models/covid19.textproto \
             ../data/populations/utopia/ --min-max-alpha ++local > utopia.out
-          grep -r ""
+          grep -r "97 interactions"
