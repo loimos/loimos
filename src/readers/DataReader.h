@@ -68,7 +68,7 @@ class DataReader {
               DataReader<T>::parseObjectData(rawData, field, numDataFields, &obj);
           } catch (const std::exception &e) {
             CkPrintf("Error at byte %lu: '%s' (%s)\n", pos, buf, rawData.c_str());
-            CkAbort(e.what());
+            CkAbort("%\n", e.what());
           }
         }
 

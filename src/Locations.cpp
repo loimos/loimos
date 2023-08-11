@@ -409,14 +409,12 @@ inline void Locations::sendInteractions(Location *loc,
   }
   #endif  // USE_HYPERCOMM
 
-  /*
-  CkPrintf(
-    "sending %d interactions to person %d in partition %d\r\n",
-    (int) interactions[personIdx].size(),
-    personIdx,
-    peoplePartitionIdx
-  );
-  */
+  // CkPrintf(
+  //   "    Sending %d interactions to person %d in partition %d\r\n",
+  //   (int) interactions[personIdx].size(),
+  //   personIdx,
+  //   peoplePartitionIdx
+  // );
 
   // Free up space where we were storing interactions data. This also prevents
   // interactions from being sent multiple times if this person has multiple
