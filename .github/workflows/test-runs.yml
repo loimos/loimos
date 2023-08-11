@@ -25,9 +25,17 @@ jobs:
       # access it
       - name: Build code
         uses: actions/checkout@v3
+      
+      - name: cache-charm-non-smp
+        uses: actions/cache@v3
+        with:
+          path: ./charm-nonsmp
+          key: ${{ runner.os }}-charm-nonsmp-${{ hashFiles('**') }}
+          restore-keys: ${{ runner.os }}-charm-nonsmp
 
       # Build Charm++ Non-SMP
       - name: build-charm-nonsmp
+        if: steps.cache-charm-nonsmp.outputs.cache-hit != 'true'
         run: |
           git clone https://github.com/UIUC-PPL/charm.git charm-nonsmp
           cd charm-nonsmp
