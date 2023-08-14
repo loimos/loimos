@@ -25,13 +25,13 @@ jobs:
       # access it
       - name: Build code
         uses: actions/checkout@v3
-      
-      - name: cache-charm-non-smp
-        uses: actions/cache@v3
-        with:
-          path: ./charm-non-smp
-          key: ${{ runner.os }}-charm-non-smp
-          restore-keys: ${{ runner.os }}-charm-non-smp
+
+      # - name: cache-charm-non-smp
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ./charm-non-smp
+      #     key: ${{ runner.os }}-charm-non-smp
+      #     restore-keys: ${{ runner.os }}-charm-non-smp
 
       # Build Charm++ Non-SMP
       - name: build-charm-non-smp
@@ -42,13 +42,13 @@ jobs:
           git checkout v7.0.0
           ./build charm++ netlrts-linux-x86_64 -g -j4 --with-production \
           --enable-error-checking
-      
-      - name: cache-charm-smp
-        uses: actions/cache@v3
-        with:
-          path: ./charm-smp
-          key: ${{ runner.os }}-charm-smp
-          restore-keys: ${{ runner.os }}-charm-smp
+
+      # - name: cache-charm-smp
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ./charm-smp
+      #     key: ${{ runner.os }}-charm-smp
+      #     restore-keys: ${{ runner.os }}-charm-smp
 
       # Build Charm++ SMP
       - name: build-charm-smp
