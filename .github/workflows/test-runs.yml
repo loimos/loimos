@@ -98,7 +98,7 @@ jobs:
       # Make sure SMP version runs
       - name: run-smp
         run: |
-          cd src
+          ls
           export CHARM_HOME=$GITHUB_WORKSPACE/charm-smp
           export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
           make
@@ -109,7 +109,7 @@ jobs:
       # Make sure non-SMP version runs
       - name: run-non-smp
         run: |
-          cd src
+          ls
           export CHARM_HOME=$GITHUB_WORKSPACE/charm-non-smp
           export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
           make
@@ -121,7 +121,7 @@ jobs:
       # Make sure small Utopia dataset has 100 interactions
       - name: test-utopia
         run: |
-          cd src
+          ls
           export CHARM_HOME=$GITHUB_WORKSPACE/charm-non-smp
           export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
           ENABLE_DEBUG=2 make
