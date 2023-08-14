@@ -26,37 +26,21 @@ jobs:
       - name: Build code
         uses: actions/checkout@v3
 
-      # - name: cache-charm-non-smp
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: ./charm-non-smp
-      #     key: ${{ runner.os }}-charm-non-smp
-      #     restore-keys: ${{ runner.os }}-charm-non-smp
+      - name: cache-charm
+        uses: actions/cache@v2
+        with:
+          path: ./charm
+          key: ${{ runner.os }}-charm
+          restore-keys: ${{ runner.os }}-charm
 
-      # Build Charm++ Non-SMP
-      - name: build-charm-non-smp
-        # if: steps.cache-charm-non-smp.outputs.cache-hit != 'true'
+      - name: build-charm
+        if: steps.cache-charm.outputs.cache-hit != 'true'
         run: |
-          git clone https://github.com/UIUC-PPL/charm.git charm-non-smp
-          cd charm-non-smp
+          git clone https://github.com/UIUC-PPL/charm.git charm
+          cd charm
           git checkout v7.0.0
           ./build charm++ netlrts-linux-x86_64 -g -j4 --with-production \
           --enable-error-checking
-
-      # - name: cache-charm-smp
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: ./charm-smp
-      #     key: ${{ runner.os }}-charm-smp
-      #     restore-keys: ${{ runner.os }}-charm-smp
-
-      # Build Charm++ SMP
-      - name: build-charm-smp
-        # if: steps.cache-charm-smp.outputs.cache-hit != 'true'
-        run: |
-          git clone https://github.com/UIUC-PPL/charm.git charm-smp
-          cd charm-smp
-          git checkout v7.0.0
           ./build charm++ netlrts-linux-x86_64 smp -g -j4 --with-production \
           --enable-error-checking
 
@@ -87,7 +71,6 @@ jobs:
       # Build and test Loimos
       - name: build-loimos
         run: |
-          ls
           git submodule init
           git submodule update
           cd src
@@ -95,43 +78,25 @@ jobs:
           export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
           export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
           export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
-      # Make sure SMP version runs
-      - name: run-smp
-        run: |
-          ls
-          cd src
-          ls
-          export CHARM_HOME=$GITHUB_WORKSPACE/charm-smp
+          export CHARM_HOME=$GITHUB_WORKSPACE/charm/netlrts-linux-x86_64
           export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
+          # Build and test non-smp version
           make
           ./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 \
+            ci-test-non-smp.csv \
+            ../data/disease_models/covid19_onepath.textproto \
+            +setcpuaffinity ++local
+          # Build and test smp version
+          ENABLE_SMP=1 make
+          ./charmrun +p4 ./loimos-smp 1 100 100 50 50 5 5 5 32 30 \
             ci-test-smp.csv ../data/disease_models/covid19_onepath.textproto \
             +setcpuaffinity ++local
-          make clean
-      # Make sure non-SMP version runs
-      - name: run-non-smp
-        run: |
-          ls
-          cd src
-          ls
-          export CHARM_HOME=$GITHUB_WORKSPACE/charm-non-smp
-          export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
-          make
-          ./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 \
-          ci-test-non-smp.csv \
-          ../data/disease_models/covid19_onepath.textproto +setcpuaffinity \
-          ++local
-          make clean
       # Make sure small Utopia dataset has 100 interactions
       - name: test-utopia
         run: |
-          ls
           cd src
-          ls
-          export CHARM_HOME=$GITHUB_WORKSPACE/charm-non-smp
-          export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
           ENABLE_DEBUG=2 make
           ./charmrun +p4 ./loimos 0 19 12 2 2 1 1 test-utopia.csv \
             ../data/disease_models/covid19.textproto \
             ../data/populations/utopia/ --min-max-alpha ++local > utopia.out
-          grep -r "97 interactions"
+          grep -r "97 interactions" utopia.out
