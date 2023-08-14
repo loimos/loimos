@@ -35,7 +35,7 @@ jobs:
 
       # Build Charm++ Non-SMP
       - name: build-charm-non-smp
-        if: steps.cache-charm-non-smp.outputs.cache-hit != 'true'
+        # if: steps.cache-charm-non-smp.outputs.cache-hit != 'true'
         run: |
           git clone https://github.com/UIUC-PPL/charm.git charm-non-smp
           cd charm-non-smp
@@ -52,7 +52,7 @@ jobs:
 
       # Build Charm++ SMP
       - name: build-charm-smp
-        if: steps.cache-charm-smp.outputs.cache-hit != 'true'
+        # if: steps.cache-charm-smp.outputs.cache-hit != 'true'
         run: |
           git clone https://github.com/UIUC-PPL/charm.git charm-smp
           cd charm-smp
