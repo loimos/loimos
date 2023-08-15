@@ -80,6 +80,10 @@ jobs:
           export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
           export CHARM_HOME=$GITHUB_WORKSPACE/charm/netlrts-linux-x86_64
           export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
+          # Make debug version of Loimos
+          ENABLE_DEBUG=2 make
+          mv loimos loimos-debug
+          make clean
           # Build and test non-smp version
           make
           ./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 \
@@ -87,6 +91,7 @@ jobs:
             ../data/disease_models/covid19_onepath.textproto \
             +setcpuaffinity ++local
           # Build and test smp version
+          ENABLE_SMP=1 make clean
           ENABLE_SMP=1 make
           ./charmrun +p4 ./loimos-smp 1 100 100 50 50 5 5 5 32 30 \
             ci-test-smp.csv ../data/disease_models/covid19_onepath.textproto \
@@ -101,9 +106,7 @@ jobs:
           export CHARM_HOME=$GITHUB_WORKSPACE/charm/netlrts-linux-x86_64
           export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
           cd src
-          make clean
-          ENABLE_DEBUG=2 make
-          ./charmrun +p4 ./loimos 0 19 12 2 2 1 1 test-utopia.csv \
+          ./charmrun +p4 ./loimos-debug 0 19 12 2 2 1 1 test-utopia.csv \
             ../data/disease_models/covid19.textproto \
             ../data/populations/utopia/ --min-max-alpha ++local > utopia.out
           grep -r "97 interactions" utopia.out
