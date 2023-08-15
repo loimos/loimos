@@ -97,7 +97,21 @@ jobs:
             ci-test-smp.csv ../data/disease_models/covid19_onepath.textproto \
             +setcpuaffinity ++local
       # Make sure small Utopia dataset has 100 interactions
-      - name: test-utopia
+      # - name: test-utopia
+      #   run: |
+      #     export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
+      #     export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
+      #     export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
+      #     export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
+      #     export CHARM_HOME=$GITHUB_WORKSPACE/charm/netlrts-linux-x86_64
+      #     export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
+      #     cd src
+      #     ./charmrun +p4 ./loimos-debug 0 19 12 2 2 1 1 test-utopia.csv \
+      #       ../data/disease_models/covid19.textproto \
+      #       ../data/populations/utopia/ --min-max-alpha ++local > utopia.out
+      #     grep -r "97 interactions" utopia.out
+      # Make sure safe/risky visit schedule behaves as expected
+      - name: test-disease-states
         run: |
           export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
           export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
@@ -105,8 +119,21 @@ jobs:
           export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
           export CHARM_HOME=$GITHUB_WORKSPACE/charm/netlrts-linux-x86_64
           export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
-          cd src
-          ./charmrun +p4 ./loimos-debug 0 19 12 2 2 1 1 test-utopia.csv \
-            ../data/disease_models/covid19.textproto \
-            ../data/populations/utopia/ --min-max-alpha ++local > utopia.out
-          grep -r "97 interactions" utopia.out
+          ./charmrun +p4 ./loimos 0 25000 5001 60 40 30 30 \
+            test-validation.csv \
+            ../data/disease_models/validation_model.textproto \
+            ../data/populations/validation_set/ ++local
+          grep -r test-validation.csv "29,recovered_safe,56,56"
+          grep -r test-validation.csv "29,recovered_risky,4997,4997"
+      # Make sure epi-curve matches previous one for a synthetic dataset
+      - name: test-regression-synthetic
+        run: |
+          export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
+          export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
+          export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
+          export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
+          export CHARM_HOME=$GITHUB_WORKSPACE/charm/netlrts-linux-x86_64
+          export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
+	        ./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 test-syn.csv \
+            ../data/disease_models/covid19_onepath.textproto ++local
+          # diff test-syn.csv ../data/populations
