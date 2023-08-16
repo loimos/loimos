@@ -124,8 +124,8 @@ jobs:
             test-validation.csv \
             ../data/disease_models/validation_model.textproto \
             ../data/populations/validation_set/ ++local
-          grep -r test-validation.csv "29,recovered_safe,56,56"
-          grep -r test-validation.csv "29,recovered_risky,4997,4997"
+          grep -r "29,recovered_safe,56,56" test-validation.csv
+          grep -r "29,recovered_risky,4997,4997" test-validation.csv
       # Make sure epi-curve matches previous one for a synthetic dataset
       - name: test-regression-synthetic
         run: |
@@ -138,4 +138,4 @@ jobs:
           cd src
           ./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 test-syn.csv \
             ../data/disease_models/covid19_onepath.textproto ++local
-          # diff test-syn.csv ../data/populations
+          diff test-syn.csv ../data/validation/test-syn.csv
