@@ -119,6 +119,7 @@ jobs:
           export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
           export CHARM_HOME=$GITHUB_WORKSPACE/charm/netlrts-linux-x86_64
           export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
+          cd src
           ./charmrun +p4 ./loimos 0 25000 5001 60 40 30 30 \
             test-validation.csv \
             ../data/disease_models/validation_model.textproto \
@@ -134,6 +135,7 @@ jobs:
           export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
           export CHARM_HOME=$GITHUB_WORKSPACE/charm/netlrts-linux-x86_64
           export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
+          cd src
           ./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 test-syn.csv \
             ../data/disease_models/covid19_onepath.textproto ++local
           # diff test-syn.csv ../data/populations
