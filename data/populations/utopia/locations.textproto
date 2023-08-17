@@ -1,0 +1,12 @@
+fields {
+    field_name: "lid"
+    unique_id: {}
+}
+fields {
+    field_name: "total_visits"
+    ignore: {}
+}
+fields {
+    field_name: "max_simultaneous_visits"
+    b10int: {}
+}
