@@ -14,7 +14,7 @@ And the healthy people to not get infected besides random initial infections.
 num_risky = 20000
 num_safe = 5000
 total_people = num_safe + num_risky
-total_days = 30
+total_days = 1
 num_locations = num_safe + 1
 
 # Single column csv for locations with no attributes.

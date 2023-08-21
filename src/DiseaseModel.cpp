@@ -279,6 +279,7 @@ DiseaseModel::transitionFromState(int fromState,
     }
     */
   } else {
+    // CkPrintf("  State %s is forever\n", currState->state_label().c_str());
     return std::make_tuple(fromState, std::numeric_limits<Time>::max());
   }
 }

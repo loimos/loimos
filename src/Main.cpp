@@ -488,17 +488,10 @@ void Main::SaveStats(int *data) {
   // Write header row
   outFile << "day,state,total_in_state,change_in_state" << std::endl;
 
-  uint64_t numVisits = 0;
-  uint64_t numInteractions = 0;
-  for (day = 0; day < numDays; ++day, data += numDiseaseStates + 1) {
-    // Not relaible counter; unclear why
-    // Get num visits for the day.
-    numVisits += (uint64_t) data[0];
-    numInteractions += (uint64_t) data[1];
-
+  for (day = 0; day < numDays; ++day, data += numDiseaseStates) {
     // Get number of disease state changes.
     for (int i = 0; i < numDiseaseStates; i++) {
-      int num_in_state = data[i + 2];
+      int num_in_state = data[i];
       int change_in_state = num_in_state - accumulated[i];
       if (num_in_state != 0 || change_in_state != 0) {
         // Write out data for state on that day
