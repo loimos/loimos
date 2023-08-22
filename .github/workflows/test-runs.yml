@@ -36,6 +36,7 @@ jobs:
       - name: build-charm
         if: steps.cache-charm.outputs.cache-hit != 'true'
         run: |
+          echo steps.cache-charm.outputs.cache-hit
           git clone https://github.com/UIUC-PPL/charm.git charm
           cd charm
           git checkout v7.0.0
@@ -53,6 +54,7 @@ jobs:
           restore-keys: ${{ runner.os }}-protobuf
 
       - name: build-protobuf
+        if: steps.cache-protobuf.outputs.cache-hit != 'true'
         run: |
           git clone https://github.com/protocolbuffers/protobuf.git
           cd protobuf
