@@ -26,17 +26,16 @@ jobs:
       - name: Build code
         uses: actions/checkout@v3
 
-      - name: cache-charm
-        uses: actions/cache@v2
+      - name: Cache Charm
+        id: cache-charm
+        uses: actions/cache@v3
         with:
           path: ./charm
           key: ${{ runner.os }}-charm
-          restore-keys: ${{ runner.os }}-charm
 
       - name: build-charm
-        if: steps.cache-charm.outputs.cache-hit != 'true'
+        if: steps.cache-charm.outputs.cache-hit
         run: |
-          echo ${{ steps.cache-charm.outputs.cache-hit }}
           git clone https://github.com/UIUC-PPL/charm.git charm
           cd charm
           git checkout v7.0.0
@@ -46,15 +45,15 @@ jobs:
           --enable-error-checking
 
       # Build protobuf
-      - name: cache-protobuf
-        uses: actions/cache@v2
+      - name: Cache Protobuf
+        id: cache-protobuf
+        uses: actions/cache@v3
         with:
           path: ./protobuf
           key: ${{ runner.os }}-protobuf
-          restore-keys: ${{ runner.os }}-protobuf
 
       - name: build-protobuf
-        if: steps.cache-protobuf.outputs.cache-hit != 'true'
+        if: steps.cache-protobuf.outputs.cache-hit
         run: |
           echo ${{ steps.cache-protobuf.outputs.cache-hit }}
           git clone https://github.com/protocolbuffers/protobuf.git
