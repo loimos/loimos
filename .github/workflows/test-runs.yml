@@ -45,6 +45,13 @@ jobs:
           --enable-error-checking
 
       # Build protobuf
+      - name: cache-protobuf
+        uses: actions/cache@v2
+        with:
+          path: ./protobuf
+          key: ${{ runner.os }}-protobuf
+          restore-keys: ${{ runner.os }}-protobuf
+
       - name: build-protobuf
         run: |
           git clone https://github.com/protocolbuffers/protobuf.git
