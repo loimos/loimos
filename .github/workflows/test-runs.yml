@@ -26,15 +26,17 @@ jobs:
       - name: Build code
         uses: actions/checkout@v3
 
-      - name: Cache Charm
-        id: cache-charm
-        uses: actions/cache@v3
+      - name: Restore dependencies
+        id: cache-dependencies-restore
+        uses: actions/cache/restore@v3
         with:
-          path: ./charm
-          key: ${{ runner.os }}-charm
+          path: |
+            charm
+            protobuf
+          key: ${{ runner.os }}-dependencies
 
       - name: build-charm
-        if: steps.cache-charm.outputs.cache-hit
+        if: steps.cache-dependencies-restore.outputs.cache-primary-key
         run: |
           git clone https://github.com/UIUC-PPL/charm.git charm
           cd charm
@@ -44,16 +46,8 @@ jobs:
           ./build charm++ netlrts-linux-x86_64 smp -g -j4 --with-production \
           --enable-error-checking
 
-      # Build protobuf
-      - name: Cache Protobuf
-        id: cache-protobuf
-        uses: actions/cache@v3
-        with:
-          path: ./protobuf
-          key: ${{ runner.os }}-protobuf
-
       - name: build-protobuf
-        if: steps.cache-protobuf.outputs.cache-hit
+        if: steps.cache-dependencies-restore.outputs.cache-primary-key
         run: |
           echo ${{ steps.cache-protobuf.outputs.cache-hit }}
           git clone https://github.com/protocolbuffers/protobuf.git
@@ -64,6 +58,16 @@ jobs:
           cd build
           ../configure --prefix="$GITHUB_WORKSPACE/protobuf/install"
           make -j4 && make install
+
+      # Build protobuf
+      - name: Save Dependencies
+        id: cache-dependencies-save
+        uses: actions/cache@v3
+        with:
+          path: |
+            charm
+            protobuf
+          key: ${{ steps.cache-dependencies-restore.outputs.cache-primary-key }}
 
 #    # Build googletest
 #    - name: build-gtest
