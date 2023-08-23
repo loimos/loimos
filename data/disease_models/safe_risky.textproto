@@ -1,0 +1,82 @@
+label: "Highly contagious test model"
+transmissibility: 6e-13
+
+starting_states: {
+	lower: 0
+	upper: 50
+	starting_state: 3
+}
+
+starting_states: {
+	lower: 50
+	upper: 100
+	starting_state: 0
+}
+
+disease_states: {
+	state_label: "healthy_safe"
+	infectivity: 0
+	susceptibility: 100000
+	exposure_transition: {
+		transitions: {
+			next_state: 1
+		}
+	}
+}
+
+disease_states: {
+	state_label: "infectious_safe"
+	infectivity: 1
+	susceptibility: 0
+	timed_transition: {
+		transitions: {
+			next_state: 2
+			with_prob: 1
+			fixed: {
+				time_in_state: {
+					days: 3
+				}
+			}
+		}
+	}
+}
+
+disease_states: {
+	state_label: "recovered_safe"
+	infectivity: 0
+	susceptibility: 0
+}
+
+disease_states: {
+	state_label: "healthy_risky"
+	infectivity: 0
+	susceptibility: 100000
+	exposure_transition: {
+		transitions: {
+			next_state: 4
+		}
+	}
+}
+
+disease_states: {
+	state_label: "infectious_risky"
+	infectivity: 1
+	susceptibility: 0
+	timed_transition: {
+		transitions: {
+			next_state: 5
+			with_prob: 1
+			fixed: {
+				time_in_state: {
+					days: 3
+				}
+			}
+		}
+	}
+}
+
+disease_states: {
+	state_label: "recovered_risky"
+	infectivity: 0
+	susceptibility: 0
+}

@@ -1,0 +1,44 @@
+fields {
+    field_name: "hid"
+    ignore: {}
+}
+fields {
+    field_name: "pid"
+    unique_id: {}
+}
+fields {
+    field_name: "activity_number"
+    ignore: {}
+}
+fields {
+    field_name: "activity_type"
+    ignore: {}
+}
+fields {
+    field_name: "start_time"
+    start_time: {}
+}
+fields {
+    field_name: "duration"
+    duration: {}
+}
+fields {
+    field_name: "end_time"
+    ignore: {}
+}
+fields {
+    field_name: "lid"
+    foreign_id: {}
+}
+fields {
+    field_name: "longitude"
+    ignore: {}
+}
+fields {
+    field_name: "latitude"
+    ignore: {}
+}
+fields {
+    field_name: "travel_mode"
+    ignore: {}
+}

@@ -1,0 +1,164 @@
+---
+name: Loimos Test Runs
+
+# Controls when the action will run. Triggers the workflow on push or pull
+# request events but only for the develop branch
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in
+# parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the
+    # job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can
+      # access it
+      - name: Build code
+        uses: actions/checkout@v3
+
+      - name: Restore dependencies
+        id: cache-dependencies-restore
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            charm
+            protobuf
+          key: ${{ runner.os }}-dependencies
+
+      - name: build-charm
+        if: ${{ ! steps.cache-dependencies-restore.outputs.cache-primary-key }}
+        run: |
+          git clone https://github.com/UIUC-PPL/charm.git charm
+          cd charm
+          git checkout v7.0.0
+          ./build charm++ netlrts-linux-x86_64 -g -j4 --with-production \
+          --enable-error-checking
+          ./build charm++ netlrts-linux-x86_64 smp -g -j4 --with-production \
+          --enable-error-checking
+
+      - name: build-protobuf
+        if: ${{ ! steps.cache-dependencies-restore.outputs.cache-primary-key }}
+        run: |
+          git clone https://github.com/protocolbuffers/protobuf.git
+          cd protobuf
+          git checkout v3.15.0
+          ./autogen.sh
+          mkdir build install
+          cd build
+          ../configure --prefix="$GITHUB_WORKSPACE/protobuf/install"
+          make -j4 && make install
+
+      # Build protobuf
+      - name: Save Dependencies
+        id: cache-dependencies-save
+        uses: actions/cache@v3
+        with:
+          path: |
+            charm
+            protobuf
+          key: ${{ steps.cache-dependencies-restore.outputs.cache-primary-key }}
+
+#    # Build googletest
+#    - name: build-gtest
+#      run: |
+#        git clone https://github.com/google/googletest.git
+#        cd googletest
+#        mkdir build install
+#        cd build
+#        export CMAKE_INSTALL_LIBDIR=$GITHUB_WORKSPACE/googletest/install
+#        cmake ..
+#        make -j4
+#        make install
+
+      # Build and test Loimos
+      - name: Build Loimos
+        id: build-loimos
+        run: |
+          git submodule init
+          git submodule update
+          cd src
+          export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
+          export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
+          export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
+          export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
+          export CHARM_HOME=$GITHUB_WORKSPACE/charm/netlrts-linux-x86_64
+          export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
+          # Make debug version of Loimos
+          ENABLE_DEBUG=2 make
+          mv loimos loimos-debug
+          make clean
+          # Build and test non-smp version
+          make
+          ./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 \
+            ci-test-non-smp.csv \
+            ../data/disease_models/covid19_onepath.textproto \
+            +setcpuaffinity ++local
+          # Build and test smp version
+          ENABLE_SMP=1 make clean
+          ENABLE_SMP=1 make
+          ./charmrun +p4 ./loimos-smp 1 100 100 50 50 5 5 5 32 30 \
+            ci-test-smp.csv ../data/disease_models/covid19_onepath.textproto \
+            +setcpuaffinity ++local
+
+      # Make sure small Utopia dataset has the right number of interactions
+      - name: Test Interaction Counting (on Utopia Dataset)
+        id: test-utopia
+        run: |
+          export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
+          export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
+          export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
+          export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
+          export CHARM_HOME=$GITHUB_WORKSPACE/charm/netlrts-linux-x86_64
+          export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
+          cd src
+          ./charmrun +p4 ./loimos-debug 0 19 12 2 2 1 1 test-utopia.csv \
+            ../data/disease_models/covid19.textproto \
+            ../data/populations/utopia/ --min-max-alpha ++local > utopia.out
+          grep -r "97 interactions" utopia.out
+
+      # Make sure safe/risky visit schedule behaves as expected, with all the
+      # risky people getting infected and only those intially seeded amongst
+      # the safe people
+      - name: Test Safe-Risky Population
+        id: test-safe-risky
+        run: |
+          export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
+          export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
+          export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
+          export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
+          export CHARM_HOME=$GITHUB_WORKSPACE/charm/netlrts-linux-x86_64
+          export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
+          cd src
+          ./charmrun +p4 ./loimos 0 25000 5001 60 40 30 1 \
+            test-safe-risky.csv \
+            ../data/disease_models/safe_risky.textproto \
+            ../data/populations/safe_risky_population/ ++local
+          cat test-safe-risky.csv
+          grep -r "29,recovered_safe,14,0" test-safe-risky.csv
+          grep -r "29,recovered_risky,20000,0" test-safe-risky.csv
+
+      # Make sure epi-curve matches previous one for a synthetic dataset
+      - name: Test Epicurve on Synthetic Population
+        id: test-regression-synthetic
+        run: |
+          export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
+          export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
+          export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
+          export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
+          export CHARM_HOME=$GITHUB_WORKSPACE/charm/netlrts-linux-x86_64
+          export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
+          cd src
+          ./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 test-syn.csv \
+            ../data/disease_models/covid19_onepath.textproto ++local
+          cat test-syn.csv
+          diff test-syn.csv ../data/validation/test-syn.csv

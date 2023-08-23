@@ -47,7 +47,7 @@ People::People(int seed, std::string scenarioPath) {
 
   // Allocate space to summarize the state summaries for every day
   int totalStates = diseaseModel->getNumberOfStates();
-  stateSummaries.resize((totalStates + 2) * numDays, 0);
+  stateSummaries.resize(totalStates * numDays, 0);
 
   // Get the number of people assigned to this chare
   numLocalPeople = getNumLocalElements(numPeople,
@@ -499,12 +499,13 @@ void People::ReceiveIntervention(int interventionIdx) {
 void People::EndOfDayStateUpdate() {
   // Get ready to count today's states
   int totalStates = diseaseModel->getNumberOfStates();
-  int offset = (totalStates + 2) * day;
-  stateSummaries[offset] = totalVisitsForDay;
+  int offset = totalStates * day;
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
+  Counter totalExposuresPerDay = 0;
+#endif
 
   // Handle state transitions at the end of the day.
-  int infectiousCount = 0;
-  Counter totalExposuresPerDay = 0;
+  Counter infectiousCount = 0;
   for (Person &person : people) {
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
     totalExposuresPerDay += person.interactions.size();
@@ -513,16 +514,16 @@ void People::EndOfDayStateUpdate() {
     UpdateDiseaseState(&person);
 
     int resultantState = person.state;
-    stateSummaries[resultantState + offset + 2]++;
+    stateSummaries[resultantState + offset]++;
     if (diseaseModel->isInfectious(resultantState)) {
       infectiousCount++;
     }
   }
-  stateSummaries[offset + 1] = totalExposuresPerDay;
 
   // contributing to reduction
   CkCallback cb(CkReductionTarget(Main, ReceiveInfectiousCount), mainProxy);
-  contribute(sizeof(int), &infectiousCount, CkReduction::sum_int, cb);
+  contribute(sizeof(Counter), &infectiousCount,
+      CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), cb);
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   CkCallback expCb(CkReductionTarget(Main, ReceiveExposuresCount), mainProxy);
   contribute(sizeof(Counter), &totalExposuresPerDay,

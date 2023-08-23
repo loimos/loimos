@@ -1,0 +1,8 @@
+fields {
+    field_name: "person_id"
+    unique_id {}
+}
+fields {
+    field_name: "age"
+    b10int {}
+}
