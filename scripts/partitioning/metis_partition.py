@@ -68,7 +68,8 @@ def parse_args():
     return parser.parse_args()
 
 
-def set_load_est(args, locations, locations_mask, graph, load_col="loc_load"):
+def set_load_est(args, people, locations, locations_mask, graph,
+        load_col="loc_load", person_load_col = "person_load", num_people=0):
     train_metrics_path = os.path.join(args.train_dir, args.metrics_file)
     test_metrics_path = os.path.join(args.population_dir, args.metrics_file)
     train_metrics = pd.read_csv(train_metrics_path)
@@ -84,19 +85,24 @@ def set_load_est(args, locations, locations_mask, graph, load_col="loc_load"):
     locations[load_col] = 0.0
     locations.loc[locations_mask, load_col] = np.exp(time_model.predict(
         np.log(locations[locations_mask][["num_visits"]])))
-    # locations = locations.astype(dtype={load_col: int})
 
     # METIS requires integer weights
     unit_size = np.floor(np.log10(locations[locations_mask][load_col].min())) \
             - 1
     # print(unit_size)
-    locations[load_col] *= 10**unit_size
+    locations[load_col] *= 10**-unit_size
     locations[load_col] = locations[load_col].round()
 
-    load_dict = {lid: int(locations.iloc[lid][load_col])
+    load_dict = {lid + num_people: int(locations.iloc[lid][load_col])
             for lid in locations["lid"]}
     nx.set_node_attributes(graph, load_dict, load_col)
-    graph.graph["node_weight_attr"] = [load_col, "person_col"]
+
+    load_dict = {pid: int(people.iloc[pid][person_load_col])
+            for pid in people["pid"]}
+    nx.set_node_attributes(graph, load_dict, person_load_col)
+    graph.graph["node_weight_attr"] = [load_col, person_load_col]
+
+    return locations, graph
 
 
 def get_vars(df, x_cols, y_cols, use_log=True):
@@ -139,24 +145,32 @@ def main():
 
     people["person_load"] = \
             visits[["pid", "start_time"]].groupby(by="pid").count()
+    #print(people["person_load"])
 
     visits["lid"] += num_people
     graph = nx.from_pandas_edgelist(visits, source="lid", target="pid")
     print(graph)
 
+    tolerances = None
     if args.train_dir is not None:
-        set_load_est(args, locations, locations_mask, graph)
+        locations, graph = set_load_est(args, people, locations,
+                locations_mask, graph, num_people=num_people)
+        tolerances = [1.5, 1.5]
 
-    _, partitioned = metis.part_graph(graph, nparts=args.num_partitions)
+    _, partitioned = metis.part_graph(graph, nparts=args.num_partitions,
+            ubvec=tolerances)
     people["partition"] = partitioned[0:num_people]
     locations["partition"] = -1
     locations.loc[locations_mask, "partition"] = partitioned[num_people:]
 
-    pid_bins = people[["pid", "partition"]].groupby("partition").count()
-    lid_bins = locations[["lid", "partition"]].groupby("partition").count()
-    print(pid_bins)
-    print(lid_bins)
-    print(pid_bins["pid"] + lid_bins["lid"])
+    pid_bins = people[["person_load", "partition"]].groupby("partition")
+    lid_bins = locations[["loc_load", "partition"]].groupby("partition")
+    print(pid_bins.count())
+    print(lid_bins.count())
+    print(pid_bins.count()["person_load"] + lid_bins.count()["loc_load"])
+
+    print(pid_bins.sum())
+    print(lid_bins.sum())
 
     people.to_csv("people.csv", index=False)
     locations.to_csv("locations.csv", index=False)

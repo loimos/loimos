@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
+#include "Types.h"
 #include "Person.h"
 #include "Message.h"
 #include "protobuf/data.pb.h"
@@ -17,7 +18,7 @@
  */
 
 Person::Person(const AttributeTable &attributes, int numInterventions,
-    int startingState, int secondsLeftInState_, int numDays) :
+    DiseaseState startingState, Time secondsLeftInState_, int numDays) :
     DataInterface(attributes, numInterventions),
     state(startingState), next_state(-1),
     secondsLeftInState(secondsLeftInState_) {
@@ -27,7 +28,7 @@ Person::Person(const AttributeTable &attributes, int numInterventions,
 
 void Person::filterVisits(const void *cause, VisitTest keepVisit) {
   for (std::vector<VisitMessage> &visits : visitsByDay) {
-    for (int i = 0; i < visits.size(); ++i) {
+    for (uint i = 0; i < visits.size(); ++i) {
       if (!keepVisit(visits[i])) {
         visits[i].deactivatedBy = cause;
       }
@@ -37,7 +38,7 @@ void Person::filterVisits(const void *cause, VisitTest keepVisit) {
 
 void Person::restoreVisits(const void *cause) {
   for (std::vector<VisitMessage> &visits : visitsByDay) {
-    for (int i = 0; i < visits.size(); ++i) {
+    for (uint i = 0; i < visits.size(); ++i) {
       if (cause == visits[i].deactivatedBy) {
         visits[i].deactivatedBy = NULL;
       }
@@ -59,7 +60,7 @@ void Person::pup(PUP::er &p) {
 void Person::_print_information(loimos::proto::CSVDefinition *personDef) {
   printf("My ID is %d.\n", this->uniqueId);
   int attr = 0;
-  for (int c = 0; c < personDef->fields_size(); c++) {
+  for (uint c = 0; c < personDef->fields_size(); c++) {
     loimos::proto::DataField const *field = &personDef->fields(c);
     if (field->has_ignore()) {
       // Skip

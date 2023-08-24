@@ -8,6 +8,7 @@
 #define PERSON_H_
 
 #include "Defs.h"
+#include "Types.h"
 #include "Message.h"
 #include "readers/DataInterface.h"
 #include "readers/AttributeTable.h"
@@ -18,9 +19,9 @@
 class Person : public DataInterface {
  public:
   // Numeric disease state of the person.
-  int state;
-  int next_state;
-  int secondsLeftInState;
+  Id state;
+  DiseaseState next_state;
+  Time secondsLeftInState;
 
   // If this is a susceptible person, this is a list of all of their
   // interactions with infectious people in the past day
@@ -29,7 +30,7 @@ class Person : public DataInterface {
   // Integer byte offsets in visits file by day.
   // For example, fseek(visitOffsetByDay[2]) would seek to the start
   // of this person's visits on day 3.
-  std::vector<uint64_t> visitOffsetByDay;
+  std::vector<CacheOffset> visitOffsetByDay;
 
   // Holds visit messages for each day
   std::vector<std::vector<VisitMessage> > visitsByDay;
@@ -37,7 +38,7 @@ class Person : public DataInterface {
   // Constructors and assignment operators
   Person() = default;
   Person(const AttributeTable &attributes, int numInterventions,
-    int startingState, int timeLeftInState, int numDays);
+    DiseaseState startingState, Time timeLeftInState, int numDays);
   Person(const Person&) = default;
   Person(Person&&) = default;
   Person& operator=(const Person&) = default;

@@ -22,7 +22,7 @@
 #include <algorithm>
 
 Location::Location(const AttributeTable &attributes,
-    int numInterventions, int uniqueId_) :
+    int numInterventions, Id uniqueId_) :
     DataInterface(attributes, numInterventions) {
   setUniqueId(uniqueId_);
 }

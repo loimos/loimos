@@ -9,6 +9,14 @@
 
 #include <cstdint>
 
+// For locating people or locations
+using CacheOffset = uint64_t;
+using Id = int32_t;
+#define ID_PRINT_TYPE "%d"
+
+// Disease states
+using DiseaseState = int16_t;
+
 // Event types
 using EventType = char;
 using Time = int32_t;

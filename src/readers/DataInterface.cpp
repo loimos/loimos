@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
+#include "Types.h"
 #include "DataInterface.h"
 #include "AttributeTable.h"
 
@@ -13,16 +14,16 @@ DataInterface::DataInterface(const AttributeTable &attributes, int numInterventi
   }
 
   // Treat all attributes same, no need to make distinction
-  int tableSize = attributes.size();
+  uint tableSize = attributes.size();
   if (tableSize != 0) {
     data.resize(tableSize);
-    for (int i = 0; i < tableSize; i++) {
+    for (uint i = 0; i < tableSize; i++) {
       data[i] = attributes.getDefaultValue(i);
     }
   }
 }
 
-void DataInterface::setUniqueId(int idx) {
+void DataInterface::setUniqueId(Id idx) {
   uniqueId = idx;
 }
 
