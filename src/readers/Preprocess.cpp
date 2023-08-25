@@ -33,15 +33,15 @@
  */
 // TODO(IanCostello): Replace getline with function that doesn't need to copy to
 //                    string object in subfunctions.
-std::tuple<int, int, std::string> buildCache(std::string scenarioPath, int numPeople,
-    int numPeopleChares, int numLocations, int numLocationChares, int numDays) {
+std::tuple<Id, Id, std::string> buildCache(std::string scenarioPath, Id numPeople,
+    int numPeopleChares, Id numLocations, int numLocationChares, int numDays) {
   std::string uniqueScenario = getScenarioId(numPeople, numPeopleChares,
       numLocations, numLocationChares);
   // Build person and location cache.
-  int firstPersonIdx = buildObjectLookupCache(scenarioPath + "people.csv",
+  Id firstPersonIdx = buildObjectLookupCache(scenarioPath + "people.csv",
     scenarioPath + uniqueScenario + "_people.cache", numPeople, numPeopleChares,
     scenarioPath + "people.textproto");
-  int firstLocationIdx = buildObjectLookupCache(scenarioPath + "locations.csv",
+  Id firstLocationIdx = buildObjectLookupCache(scenarioPath + "locations.csv",
     scenarioPath + uniqueScenario + "_locations.cache", numLocations,
     numLocationChares, scenarioPath + "locations.textproto");
   buildActivityCache(scenarioPath + "visits.csv",
@@ -50,8 +50,8 @@ std::tuple<int, int, std::string> buildCache(std::string scenarioPath, int numPe
   return std::make_tuple(firstPersonIdx, firstLocationIdx, uniqueScenario);
 }
 
-int buildObjectLookupCache(std::string inputPath, std::string outputPath,
-    int numObjs, int numChares, std::string pathToCsvDefinition) {
+Id buildObjectLookupCache(std::string inputPath, std::string outputPath,
+    Id numObjs, int numChares, std::string pathToCsvDefinition) {
   /**
    * Assumptions: (about person file)
    * -- Contigious block of IDs that are sorted.
@@ -64,7 +64,7 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath,
    */
   // Open activity stream..
   std::ifstream activityStream(inputPath, std::ios_base::binary);
-  int objPerChare = getNumElementsPerPartition(numObjs, numChares);
+  Id objPerChare = getNumElementsPerPartition(numObjs, numChares);
 
   // Read config file.
   loimos::proto::CSVDefinition csvDefinition;
@@ -88,7 +88,7 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath,
   std::string line;
   // Clear header.
   std::getline(activityStream, line);
-  uint64_t currentPosition = activityStream.tellg();
+  CacheOffset currentPosition = activityStream.tellg();
 
   // Special case to get lowest person ID first.
   std::getline(activityStream, line);
@@ -98,7 +98,7 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath,
   for (int i = 0; i < csvLocationOfPid; i++) {
     tok = strtok_r(tmp, ",", &tmp);
   }
-  int firstIdx = std::atoi(tok);
+  Id firstIdx = std::atoi(tok);
   free(str);
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   CkPrintf("  Found first id as %d\n", firstIdx);
@@ -117,12 +117,12 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath,
     for (int chareNum = 0; chareNum < numChares; chareNum++) {
       // Write current offset.
       outputStream.write(reinterpret_cast<char *>(&currentPosition),
-        sizeof(uint64_t));
+        sizeof(CacheOffset));
 
       // Skip next n lines.
       // We already read the first location on the first chare to get
       // its id, so don't double count that line
-      int numObjs = objPerChare - (0 == chareNum);
+      Id numObjs = objPerChare - (0 == chareNum);
       for (int i = 0; i < numObjs; i++) {
         std::getline(activityStream, line);
       }
@@ -135,7 +135,7 @@ int buildObjectLookupCache(std::string inputPath, std::string outputPath,
 
 
 void buildActivityCache(std::string inputPath, std::string outputPath,
-    int numPeople, int numDays, int firstPersonIdx, std::string pathToCsvDefinition) {
+    Id numPeople, int numDays, Id firstPersonIdx, std::string pathToCsvDefinition) {
   /**
    * Assumptions.
    * Stream is sorted by start time per person.
@@ -163,8 +163,8 @@ void buildActivityCache(std::string inputPath, std::string outputPath,
   csvConfigDefStream.close();
 
   // Create position vector for each person.
-  std::size_t totalDataSize = numPeople * numDaysWithDistinctVisits * sizeof(uint64_t);
-  uint64_t *elements = reinterpret_cast<uint64_t *>(malloc(totalDataSize));
+  std::size_t totalDataSize = numPeople * numDaysWithDistinctVisits * sizeof(CacheOffset);
+  CacheOffset *elements = reinterpret_cast<CacheOffset *>(malloc(totalDataSize));
   if (NULL == elements) {
     CkAbort("Failed to malloc enoough memory for preprocessing.\n");
   }
@@ -174,15 +174,15 @@ void buildActivityCache(std::string inputPath, std::string outputPath,
   std::string line;
   // Clear header.
   std::getline(activityStream, line);
-  uint64_t current_position = activityStream.tellg();
-  int lastPerson = -1;
-  int lastTime = -1;
-  int nextPerson = 0;
-  int nextTime = 0;
-  int nextTimeSec = 0;
-  int locationId = -1;
-  int duration = -1;
-  int totalVisits = 0;
+  CacheOffset current_position = activityStream.tellg();
+  Id lastPerson = -1;
+  Time lastTime = -1;
+  Id nextPerson = 0;
+  Time nextTime = 0;
+  Time nextTimeSec = 0;
+  Id locationId = -1;
+  Time duration = -1;
+  Id totalVisits = 0;
   // For better looping efficiency simulate one break of inner loop to start.
   std::tie(nextPerson, locationId, nextTime, duration) =
     DataReader<>::parseActivityStream(&activityStream, &csvDefinition, NULL);
@@ -190,7 +190,7 @@ void buildActivityCache(std::string inputPath, std::string outputPath,
   nextTime = getDay(nextTime);
 
   // Loop over the entire activity file and note boundaries on people and days
-  int numVisits = 0;
+  Id numVisits = 0;
   while (!activityStream.eof()) {
     // CkPrintf("Person %d has %d visits on day %d (next byte is %u)\n",
     //   lastPerson, numVisits, lastTime, current_position);
@@ -200,7 +200,7 @@ void buildActivityCache(std::string inputPath, std::string outputPath,
     lastTime = nextTime;
     numVisits = 0;
 
-    uint64_t index =
+    CacheOffset index =
       numDaysWithDistinctVisits * (lastPerson - firstPersonIdx) + lastTime;
     if (numPeople * numDaysWithDistinctVisits > index) {
       elements[index] = current_position;
@@ -237,11 +237,11 @@ void buildActivityCache(std::string inputPath, std::string outputPath,
   outputStream.close();
 }
 
-int getDay(int timeInSeconds) {
+int getDay(Time timeInSeconds) {
   return timeInSeconds / DAY_LENGTH;
 }
 
-std::string getScenarioId(int numPeople, int numPeopleChares, int numLocations,
+std::string getScenarioId(Id numPeople, int numPeopleChares, Id numLocations,
     int numLocationChares) {
   std::ostringstream oss;
   oss << numPeople << "-" << numPeopleChares << "_" << numLocations

@@ -6,6 +6,7 @@
 
 #include "DataInterface.h"
 #include "AttributeTable.h"
+#include "../Types.h"
 
 DataInterface::DataInterface(const AttributeTable &attributes, int numInterventions) {
   if (0 != numInterventions) {
@@ -26,7 +27,7 @@ void DataInterface::setUniqueId(int idx) {
   uniqueId = idx;
 }
 
-int DataInterface::getUniqueId() const {
+Id DataInterface::getUniqueId() const {
   return uniqueId;
 }
 

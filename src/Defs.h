@@ -53,7 +53,7 @@ const Time MINUTE_LENGTH = 60;
 #define AGE_CSV_INDEX 0
 
 // Data loading
-#define EMPTY_VISIT_SCHEDULE std::numeric_limits<uint64_t>::max()
+#define EMPTY_VISIT_SCHEDULE std::numeric_limits<CacheOffset>::max()
 #define CSV_DELIM ','
 
 #define DAYS_TO_SEED_INFECTION 7
@@ -64,16 +64,16 @@ const Time MINUTE_LENGTH = 60;
 #endif
 #define INITIAL_INFECTIONS (INITIAL_INFECTIONS_PER_DAY * DAYS_TO_SEED_INFECTION)
 
-int getNumElementsPerPartition(int numElements, int numPartitions);
-int getPartitionIndex(int globalIndex, int numElements,
-    int numPartitions, int offset);
-int getFirstIndex(int partitionIndex, int numElements,
-    int numPartitions, int offset);
-int getNumLocalElements(int numElements, int numPartitions,
-    int partitionIndex);
-int getGlobalIndex(int localIndex, int partitionIndex, int numElements,
-    int numPartitions, int offset);
-int getLocalIndex(int globalIndex, int partitionIndex, int numElements,
-    int numPartitions, int offset);
+Id getNumElementsPerPartition(Id numElements, Id numPartitions);
+Id getPartitionIndex(Id globalIndex, Id numElements,
+    Id numPartitions, Id offset);
+Id getFirstIndex(Id partitionIndex, Id numElements,
+    Id numPartitions, Id offset);
+Id getNumLocalElements(Id numElements, Id numPartitions,
+    Id partitionIndex);
+Id getGlobalIndex(Id localIndex, Id partitionIndex, Id numElements,
+    Id numPartitions, Id offset);
+Id getLocalIndex(Id globalIndex, Id partitionIndex, Id numElements,
+    Id numPartitions, Id offset);
 
 #endif  // DEFS_H_

@@ -7,6 +7,7 @@
 #ifndef LOCATIONS_H_
 #define LOCATIONS_H_
 
+#include "Types.h"
 #include "Location.h"
 #include "DiseaseModel.h"
 #include "Location.h"
@@ -21,7 +22,7 @@
 class Locations : public CBase_Locations {
  private:
   int numLocalLocations;
-  int firstLocalLocationIdx;
+  Id firstLocalLocationIdx;
   std::vector<Location> locations;
   DiseaseModel *diseaseModel;
   ContactModel *contactModel;
@@ -39,7 +40,7 @@ class Locations : public CBase_Locations {
 
   // Maps each susceptible person's id to a list of interactions with people
   // who could have infected them
-  std::unordered_map<int, std::vector<Interaction> > interactions;
+  std::unordered_map<Id, std::vector<Interaction> > interactions;
 
   // Runs through all of the current events and return the indices of
   // any people who have been infected
@@ -55,7 +56,7 @@ class Locations : public CBase_Locations {
   // an interaction between a susceptible person and an infectious person
   // and add it to the approriate list for the susceptible person
   inline void registerInteraction(Location *loc, const Event &susceptibleEvent,
-    const Event &infectiousEvent, int startTime, int endTime);
+    const Event &infectiousEvent, Time startTime, Time endTime);
 
   // Simple helper function which send the list of interactions with the
   // specified person to the appropriate People chare

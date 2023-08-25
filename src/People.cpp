@@ -52,7 +52,7 @@ People::People(int seed, std::string scenarioPath) {
   // Get the number of people assigned to this chare
   numLocalPeople = getNumLocalElements(numPeople,
       numPeoplePartitions, thisIndex);
-  int firstLocalPersonIdx = getFirstIndex(thisIndex, numPeople,
+  Id firstLocalPersonIdx = getFirstIndex(thisIndex, numPeople,
       numPeoplePartitions, firstPersonIdx);
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
   CkPrintf("  Chare %d has %d people (%d-%d)\n",
@@ -96,7 +96,7 @@ for (Person &p : people) {
 
 People::People(CkMigrateMessage *msg) {}
 
-void People::generatePeopleData(int firstLocalPersonIdx) {
+void People::generatePeopleData(Id firstLocalPersonIdx) {
   // Init peoples ids and randomly init ages.
   std::uniform_int_distribution<int> age_dist(0, 100);
   int ageIndex = diseaseModel->personAttributes.getAttributeIndex("age");
@@ -132,14 +132,14 @@ void People::generateVisitData() {
   std::poisson_distribution<int> visit_distance_generator(LOCATION_LAMBDA);
 
   // Model visit times as uniform.
-  std::uniform_int_distribution<int> time_dist(0, DAY_LENGTH);  // in seconds
-  std::priority_queue<int, std::vector<int>, std::greater<int> > times;
+  std::uniform_int_distribution<Time> time_dist(0, DAY_LENGTH);  // in seconds
+  std::priority_queue<Time, std::vector<Time>, std::greater<Time> > times;
 
   // Flip a coin to decide directions in each dimension
   std::uniform_int_distribution<int> dir_gen(0, 1);
 
   // Calculate minigrid sizes.
-  int numLocationsPerPartition = getNumElementsPerPartition(
+  Id numLocationsPerPartition = getNumElementsPerPartition(
     numLocations, numLocationPartitions);
   int locationPartitionWidth = synLocalLocationGridWidth;
   int locationPartitionHeight = synLocalLocationGridHeight;
@@ -162,11 +162,10 @@ void People::generateVisitData() {
 
   // Calculate schedule for each person.
   for (Person &p : people) {
-    // Check if person is self isolating.
-    int personIdx = p.getUniqueId();
+    Id personIdx = p.getUniqueId();
 
     // Calculate home location
-    int localPersonIdx = (personIdx - firstLocationIdx) % homePartitionNumLocations;
+    Id localPersonIdx = (personIdx - firstLocationIdx) % homePartitionNumLocations;
     int homeX = homePartitionStartX + localPersonIdx % locationPartitionWidth;
     int homeY = homePartitionStartY + localPersonIdx / locationPartitionWidth;
 
@@ -274,9 +273,9 @@ void People::loadPeopleData(std::string scenarioPath) {
   }
 
   // Find starting line for our data through people cache.
-  peopleCache.seekg(thisIndex * sizeof(uint64_t));
-  uint64_t peopleOffset;
-  peopleCache.read(reinterpret_cast<char *>(&peopleOffset), sizeof(uint64_t));
+  peopleCache.seekg(thisIndex * sizeof(CacheOffset));
+  CacheOffset peopleOffset;
+  peopleCache.read(reinterpret_cast<char *>(&peopleOffset), sizeof(CacheOffset));
   peopleData.seekg(peopleOffset);
 
   // Read in from remote file.
@@ -293,17 +292,17 @@ void People::loadPeopleData(std::string scenarioPath) {
   }
 
   // Load preprocessing meta data.
-  uint64_t *buf =
-    reinterpret_cast<uint64_t *>(malloc(sizeof(uint64_t) * numDaysWithDistinctVisits));
+  CacheOffset *buf =
+    reinterpret_cast<CacheOffset *>(malloc(sizeof(CacheOffset) * numDaysWithDistinctVisits));
   for (int c = 0; c < numLocalPeople; c++) {
-    std::vector<uint64_t> *data_pos = &people[c].visitOffsetByDay;
+    std::vector<CacheOffset> *data_pos = &people[c].visitOffsetByDay;
     int curr_id = people[c].getUniqueId();
 
     // Read in their activity data offsets.
-    activityCache.seekg(sizeof(uint64_t) * numDaysWithDistinctVisits
+    activityCache.seekg(sizeof(CacheOffset) * numDaysWithDistinctVisits
        * (curr_id - firstPersonIdx));
     activityCache.read(reinterpret_cast<char *>(buf),
-      sizeof(uint64_t) * numDaysWithDistinctVisits);
+      sizeof(CacheOffset) * numDaysWithDistinctVisits);
     for (int day = 0; day < numDaysWithDistinctVisits; day++) {
       data_pos->push_back(buf[day]);
     }
@@ -329,7 +328,7 @@ void People::loadVisitData(std::ifstream *activityData) {
       int nextDaySecs = (day + 1) * DAY_LENGTH;
 
       // Seek to correct position in file.
-      uint64_t seekPos = person
+      CacheOffset seekPos = person
         .visitOffsetByDay[day % numDaysWithDistinctVisits];
       if (seekPos == EMPTY_VISIT_SCHEDULE) {
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
@@ -342,10 +341,10 @@ void People::loadVisitData(std::ifstream *activityData) {
       activityData->seekg(seekPos, std::ios_base::beg);
 
       // Start reading
-      int personId = -1;
-      int locationId = -1;
-      int visitStart = -1;
-      int visitDuration = -1;
+      Id personId = -1;
+      Id locationId = -1;
+      Time visitStart = -1;
+      Time visitDuration = -1;
       std::tie(personId, locationId, visitStart, visitDuration) =
         DataReader<Person>::parseActivityStream(activityData,
             diseaseModel->activityDef, NULL);
@@ -401,8 +400,8 @@ void People::pup(PUP::er &p) {
 void People::SendVisitMessages() {
   // Send activities for each person.
   #if ENABLE_DEBUG >= DEBUG_PER_CHARE
-  int minId = numPeople;
-  int maxId = 0;
+  Id minId = numPeople;
+  Id maxId = 0;
   #endif
   int dayIdx = day % numDaysWithDistinctVisits;
   for (const Person &person : people) {
@@ -460,11 +459,11 @@ double People::getTransmissionModifier(const Person &person) {
 }
 
 void People::ReceiveInteractions(InteractionMessage interMsg) {
-  int localIdx = getLocalIndex(interMsg.personIdx, thisIndex, numPeople,
+  Id localIdx = getLocalIndex(interMsg.personIdx, thisIndex, numPeople,
     numPeoplePartitions, firstPersonIdx);
 
 #ifdef ENABLE_DEBUG
-  int trueIdx = people[localIdx].getUniqueId();
+  Id trueIdx = people[localIdx].getUniqueId();
   if (interMsg.personIdx != trueIdx) {
     CkAbort("Error on chare %d: Person %d's exposure at loc %d recieved by "
         "person %d (local %d)\n",
@@ -506,6 +505,7 @@ void People::EndOfDayStateUpdate() {
 
   // Handle state transitions at the end of the day.
   Counter infectiousCount = 0;
+  Counter totalExposuresPerDay = 0;
   for (Person &person : people) {
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
     totalExposuresPerDay += person.interactions.size();
@@ -513,7 +513,7 @@ void People::EndOfDayStateUpdate() {
     ProcessInteractions(&person);
     UpdateDiseaseState(&person);
 
-    int resultantState = person.state;
+    DiseaseState resultantState = person.state;
     stateSummaries[resultantState + offset]++;
     if (diseaseModel->isInfectious(resultantState)) {
       infectiousCount++;
@@ -541,8 +541,8 @@ void People::SendStats() {
 
 void People::ProcessInteractions(Person *person) {
   double totalPropensity = 0.0;
-  int numInteractions = static_cast<int>(person->interactions.size());
-  for (int i = 0; i < numInteractions; ++i) {
+  uint numInteractions = static_cast<uint>(person->interactions.size());
+  for (uint i = 0; i < numInteractions; ++i) {
     totalPropensity += person->interactions[i].propensity;
   }
 

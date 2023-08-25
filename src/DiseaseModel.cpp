@@ -172,7 +172,7 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
 void DiseaseModel::intitialisePersonInterventions(
     const InterventionList &interventionSpecs,
     const AttributeTable &attributes) {
-  for (int i = 0; i < interventionSpecs.size(); ++i) {
+  for (uint i = 0; i < interventionSpecs.size(); ++i) {
     const loimos::proto::InterventionModel::Intervention &spec =
       interventionSpecs[i];
 
@@ -190,7 +190,7 @@ void DiseaseModel::intitialisePersonInterventions(
 void DiseaseModel::intitialiseLocationInterventions(
     const InterventionList &interventionSpecs,
     const AttributeTable &attributes) {
-  for (int i = 0; i < interventionSpecs.size(); ++i) {
+  for (uint i = 0; i < interventionSpecs.size(); ++i) {
     const loimos::proto::InterventionModel::Intervention &spec =
       interventionSpecs[i];
 
@@ -204,7 +204,7 @@ void DiseaseModel::intitialiseLocationInterventions(
 /**
  * Returns the name of the state at a given index
  */
-std::string DiseaseModel::lookupStateName(int state) const {
+std::string DiseaseModel::lookupStateName(DiseaseState state) const {
   return model->disease_states(state).state_label();
 }
 
@@ -223,8 +223,8 @@ std::string DiseaseModel::lookupStateName(int state) const {
  *  What state they will transition out of fromState into and how much time
  * they will spend there.
  */
-std::tuple<int, int>
-DiseaseModel::transitionFromState(int fromState,
+std::tuple<DiseaseState, Time>
+DiseaseModel::transitionFromState(DiseaseState fromState,
     std::default_random_engine *generator) const {
   // Get current state and next transition set to use.
   const loimos::proto::DiseaseModel_DiseaseState *currState =
@@ -238,7 +238,7 @@ DiseaseModel::transitionFromState(int fromState,
       *transition_set = &(currState->timed_transition());
 
     // Check if any transitions to be made.
-    int transitionSetSize = transition_set->transitions_size();
+    uint transitionSetSize = transition_set->transitions_size();
     if (transitionSetSize == 0) {
       return std::make_tuple(fromState, std::numeric_limits<Time>::max());
     }
@@ -248,7 +248,7 @@ DiseaseModel::transitionFromState(int fromState,
     float cdfSoFar = 0;
     std::uniform_real_distribution<float> uniform_dist(0, 1);
     float randomCutoff = uniform_dist(*generator);
-    for (int i = 0; i < transitionSetSize; i++) {
+    for (uint i = 0; i < transitionSetSize; i++) {
       const loimos::proto::
         DiseaseModel_DiseaseState_TimedTransitionSet_StateTransition
         *transition = &transition_set->transitions(i);
@@ -256,8 +256,8 @@ DiseaseModel::transitionFromState(int fromState,
       // TODO(IanCostello): Create a CDF vector in initialization.
       cdfSoFar += transition->with_prob();
       if (randomCutoff <= cdfSoFar) {
-        int nextState = transition->next_state();
-        int timeInNextState = getTimeInNextState(transition, generator);
+        DiseaseState nextState = transition->next_state();
+        Time timeInNextState = getTimeInNextState(transition, generator);
         return std::make_tuple(nextState, timeInNextState);
       }
     }
@@ -317,7 +317,7 @@ Time DiseaseModel::getTimeInNextState(
     float randomCutoff = uniform_dist(*generator);
     float cdfSoFar = 0;
 
-    for (int i = 0; i < transitionSet->discrete().bins_size(); i++) {
+    for (uint i = 0; i < transitionSet->discrete().bins_size(); i++) {
       cdfSoFar += transitionSet->discrete().bins(i).with_prob();
 
       if (randomCutoff < cdfSoFar) {
@@ -341,8 +341,8 @@ int DiseaseModel::getNumberOfStates() const {
 }
 
 /** Returns the initial starting healthy and exposed state */
-int DiseaseModel::getHealthyState(const std::vector<Data> &dataField) const {
-  int numStartingStates = model->starting_states_size();
+DiseaseState DiseaseModel::getHealthyState(const std::vector<Data> &dataField) const {
+  uint numStartingStates = model->starting_states_size();
 
   // Shouldn't need to check age if there's only one starting state
   if (1 == numStartingStates) {
@@ -356,7 +356,7 @@ int DiseaseModel::getHealthyState(const std::vector<Data> &dataField) const {
 
   // Age based transition.
   int personAge = dataField[ageIdx].int_b10;
-  for (int stateNum = 0; stateNum < numStartingStates; stateNum++) {
+  for (uint stateNum = 0; stateNum < numStartingStates; stateNum++) {
     const loimos::proto::DiseaseModel_StartingCondition state =
       model->starting_states(stateNum);
 
@@ -369,17 +369,17 @@ int DiseaseModel::getHealthyState(const std::vector<Data> &dataField) const {
 }
 
 /** Returns if someone is infectious */
-bool DiseaseModel::isInfectious(int personState) const {
+bool DiseaseModel::isInfectious(DiseaseState personState) const {
   return model->disease_states(personState).infectivity() != 0.0;
 }
 
 /** Returns if someone is susceptible */
-bool DiseaseModel::isSusceptible(int personState) const {
+bool DiseaseModel::isSusceptible(DiseaseState personState) const {
   return model->disease_states(personState).susceptibility() != 0.0;
 }
 
 /** Returns the name of the person's state, as a C-style string */
-const char *DiseaseModel::getStateLabel(int personState) const {
+const char *DiseaseModel::getStateLabel(DiseaseState personState) const {
   return model->disease_states(personState).state_label().c_str();
 }
 
@@ -403,7 +403,7 @@ double DiseaseModel::getLogProbNotInfected(Event susceptibleEvent,
   // The probability of not being infected in a period of time is decided based
   // on a geometric probability distribution, with the lenght of time the two
   // people are in the same location serving as the number of trials
-  int dt = abs(susceptibleEvent.scheduledTime - infectiousEvent.scheduledTime);
+  Time dt = abs(susceptibleEvent.scheduledTime - infectiousEvent.scheduledTime);
   return log(baseProb) * dt;
 }
 
@@ -412,10 +412,11 @@ double DiseaseModel::getLogProbNotInfected(Event susceptibleEvent,
  * after exposure to a person in infectiousState for the period from startTime
  * to endTime
  */
-double DiseaseModel::getPropensity(int susceptibleState, int infectiousState,
-    int startTime, int endTime, double susceptibility, double infectivity)
+double DiseaseModel::getPropensity(DiseaseState susceptibleState,
+    DiseaseState infectiousState, Time startTime, Time endTime,
+    double susceptibility, double infectivity)
     const {
-  int dt = endTime - startTime;
+  Time dt = endTime - startTime;
 
   // EpiHiper had a number of weights/scaling constants that we may add in
   // later, but for now we omit most of them (which is equivalent to setting
@@ -452,12 +453,12 @@ int DiseaseModel::getNumLocationInterventions() const {
 void DiseaseModel::applyInterventions(int day, int newDailyInfections) {
   toggleInterventions(day, newDailyInfections);
 
-  for (int i = 0; i < personInterventions.size(); ++i) {
+  for (uint i = 0; i < personInterventions.size(); ++i) {
     if (triggerFlags[personInterventions[i]->getTriggerIndex()]) {
       peopleArray.ReceiveIntervention(i);
     }
   }
-  for (int i = 0; i < locationInterventions.size(); ++i) {
+  for (uint i = 0; i < locationInterventions.size(); ++i) {
     if (triggerFlags[locationInterventions[i]->getTriggerIndex()]) {
       locationsArray.ReceiveIntervention(i);
     }
@@ -465,7 +466,7 @@ void DiseaseModel::applyInterventions(int day, int newDailyInfections) {
 }
 
 void DiseaseModel::toggleInterventions(int day, int newDailyInfections) {
-  for (int i = 0; i < interventionDef->triggers_size(); ++i) {
+  for (uint i = 0; i < interventionDef->triggers_size(); ++i) {
     const loimos::proto::InterventionModel::Trigger &trigger =
       interventionDef->triggers(i);
 

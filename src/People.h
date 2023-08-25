@@ -44,7 +44,7 @@ class People : public CBase_People {
   explicit People(int seed, std::string scenarioPath);
   explicit People(CkMigrateMessage *msg);
   void pup(PUP::er &p);  // NOLINT(runtime/references)
-  void generatePeopleData(int firstLocalPersonIndex);
+  void generatePeopleData(Id firstLocalPersonIndex);
   void generateVisitData();
   void SendVisitMessages();
   double getTransmissionModifier(const Person &person);

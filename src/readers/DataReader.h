@@ -35,7 +35,7 @@ class DataReader {
     // Rows to read.
     for (T &obj : *dataObjs) {
       // Get next line.
-      uint64_t pos = input->tellg();
+      CacheOffset pos = input->tellg();
       input->getline(buf, MAX_INPUT_lineLength);
 
       // Read over people data format.
@@ -86,11 +86,14 @@ class DataReader {
 
     // Parse byte stream to the correct representation.
     if (field->has_unique_id()) {
-      obj->setUniqueId(std::stoi(rawData));
+      obj->setUniqueId(ID_PARSE(rawData));
       return 0;
     } else {
-      if (field->has_b10int() || field->has_foreign_id() || field->has_int32()) {
+      if (field->has_b10int() || field->has_int32()) {
         data->at(fieldIdx).int_b10 = std::stoi(rawData);
+
+      } else if (field->has_foreign_id()) {
+        data->at(fieldIdx).ID_PROTOBUF_TYPE = ID_PARSE(rawData);
 
       } else if (field->has_b10double() || field->has_double_()) {
         data->at(fieldIdx).double_b10 = std::stod(rawData);
@@ -111,12 +114,12 @@ class DataReader {
     }
   }
 
-  static std::tuple<int, int, int, int> parseActivityStream(std::ifstream *input,
+  static std::tuple<Id, Id, Time, Time> parseActivityStream(std::ifstream *input,
       loimos::proto::CSVDefinition *dataFormat, std::vector<union Data> *attributes) {
-    int personId = -1;
-    int locationId = -1;
-    int startTime = -1;
-    int duration = -1;
+    Id personId = -1;
+    Id locationId = -1;
+    Time startTime = -1;
+    Time duration = -1;
     // TODO(IanCostello) don't reallocate this every time.
     char buf[MAX_INPUT_lineLength];
 
@@ -148,16 +151,16 @@ class DataReader {
 
           // Parse byte stream to the correct representation.
           if (field->has_unique_id()) {
-            personId = std::atoi(start);
+            personId = ID_PARSE(start);
 
           } else if (field->has_foreign_id()) {
-            locationId = std::atoi(start);
+            locationId = ID_PARSE(start);
 
           } else if (field->has_start_time()) {
-            startTime = std::atoi(start);
+            startTime = TIME_PARSE(start);
 
           } else if (field->has_duration()) {
-            duration = std::atoi(start);
+            duration = TIME_PARSE(start);
 
           } else {
             numDataFields++;
@@ -172,7 +175,7 @@ class DataReader {
 
   static int getNonZeroAttributes(loimos::proto::CSVDefinition *dataFormat) {
     int count = -1;
-    for (int c = 0; c < dataFormat->fields_size(); c++) {
+    for (uint c = 0; c < dataFormat->fields_size(); c++) {
       if (!dataFormat->fields(c).has_ignore()) {
         count++;
       }
@@ -183,7 +186,7 @@ class DataReader {
   static int getAttributeIndex(loimos::proto::CSVDefinition *dataFormat,
       std::string attributeName) {
     int count = -1;
-    for (int i = 0; i < dataFormat->fields_size(); ++i) {
+    for (uint i = 0; i < dataFormat->fields_size(); ++i) {
       loimos::proto::DataField const *field = &dataFormat->fields(i);
 
       // Only need to keep track of location among attributes stored in
