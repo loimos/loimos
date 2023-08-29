@@ -26,17 +26,17 @@ jobs:
       - name: Build code
         uses: actions/checkout@v3
 
-      - name: Restore dependencies
-        id: cache-dependencies-restore
-        uses: actions/cache/restore@v3
-        with:
-          path: |
-            charm
-            protobuf
-          key: ${{ runner.os }}-dependencies
+      # - name: Restore dependencies
+      #   id: cache-dependencies-restore
+      #   uses: actions/cache/restore@v3
+      #   with:
+      #     path: |
+      #       charm
+      #       protobuf
+      #     key: ${{ runner.os }}-dependencies
 
       - name: build-charm
-        if: ${{ ! steps.cache-dependencies-restore.outputs.cache-primary-key }}
+      # if: ${{ ! steps.cache-dependencies-restore.outputs.cache-primary-key }}
         run: |
           git clone https://github.com/UIUC-PPL/charm.git charm
           cd charm
@@ -47,7 +47,7 @@ jobs:
           --enable-error-checking
 
       - name: build-protobuf
-        if: ${{ ! steps.cache-dependencies-restore.outputs.cache-primary-key }}
+      # if: ${{ ! steps.cache-dependencies-restore.outputs.cache-primary-key }}
         run: |
           git clone https://github.com/protocolbuffers/protobuf.git
           cd protobuf
