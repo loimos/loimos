@@ -114,8 +114,8 @@ test-large: all
 		echo CoC data not available;\
 	fi
 
-test-validation: all
-	./charmrun +p4 ./loimos 0 25000 5001 60 40 30 1 test-validation.csv ../data/disease_models/validation_model.textproto ../data/populations/validation_set/ ++local
+test-safe-risky: all
+	./charmrun +p4 ./loimos 0 25000 5001 60 40 30 1 test-validation.csv ../data/disease_models/safe_risky.textproto ../data/populations/safe_risky_population/ ++local
 
 test-intervention: all
 	if [ -f ../data/populations/coc/visits.csv ]; then \
