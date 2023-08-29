@@ -39,8 +39,8 @@ void MinMaxAlphaModel::computeLocationValues(Location *location) {
   // varies by location
   union Data contactProbability;
   double max_visits =
-    static_cast<double>(data[maxSimVisitsIdx].int_b10);
-  contactProbability.double_b10 = fmin(1,
+    static_cast<double>(data[maxSimVisitsIdx].int32_val);
+  contactProbability.double_val = fmin(1,
     (MIN + (MAX - MIN) * (1.0 - exp(-max_visits / ALPHA))) / (max_visits - 1));
 
   data.push_back(contactProbability);
@@ -54,11 +54,11 @@ bool MinMaxAlphaModel::madeContact(
 ) {
   union Data contactProbability =
     location.getValue(contactProbabilityIndex);
-  return unitDistrib(*generator) < contactProbability.double_b10;
+  return unitDistrib(*generator) < contactProbability.double_val;
 }
 
 double MinMaxAlphaModel::getContactProbability(const Location &location) const {
   union Data contactProbability =
     location.getValue(contactProbabilityIndex);
-  return contactProbability.double_b10;
+  return contactProbability.double_val;
 }

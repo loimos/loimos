@@ -104,13 +104,9 @@ void Locations::loadLocationData(std::string scenarioPath) {
     DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
 
   // Load in location information.
-  int startingLineIndex = getGlobalIndex(
-    0,
-    thisIndex,
-    numLocations,
-    numLocationPartitions,
-    firstLocationIdx) - firstLocationIdx;
-  int endingLineIndex = startingLineIndex + numLocalLocations;
+  Id startingLineIndex = getGlobalIndex(0, thisIndex, numLocations,
+    numLocationPartitions, firstLocationIdx) - firstLocationIdx;
+  Id endingLineIndex = startingLineIndex + numLocalLocations;
   std::string line;
 
   std::string scenarioId = getScenarioId(numPeople, numPeoplePartitions,
@@ -129,9 +125,7 @@ void Locations::loadLocationData(std::string scenarioPath) {
   locationData.seekg(locationOffset);
 
   // Read in our location data.
-  DataReader<Location>::readData(
-      &locationData,
-      diseaseModel->locationDef,
+  DataReader<Location>::readData(&locationData, diseaseModel->locationDef,
       &locations);
   locationData.close();
   locationCache.close();
@@ -162,12 +156,8 @@ void Locations::pup(PUP::er &p) {
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   // adding person to location visit list
-  Id localLocIdx = getLocalIndex(
-    visitMsg.locationIdx,
-    thisIndex,
-    numLocations,
-    numLocationPartitions,
-    firstLocationIdx);
+  Id localLocIdx = getLocalIndex(visitMsg.locationIdx, thisIndex,
+    numLocations, numLocationPartitions, firstLocationIdx);
 
   // Interventions might cause us to reject some visits
   if (!locations[localLocIdx].acceptsVisit(visitMsg)) {
@@ -382,8 +372,7 @@ inline void Locations::registerInteraction(Location *loc,
 
   double propensity = diseaseModel->getPropensity(susceptibleEvent.personState,
     infectiousEvent.personState, startTime, endTime,
-    susceptibleEvent.transmissionModifier,
-    infectiousEvent.transmissionModifier);
+    susceptibleEvent.transmissionModifier, infectiousEvent.transmissionModifier);
 
   // Note that this will create a new vector if this is the first potential
   // infection for the susceptible person in question
@@ -396,11 +385,8 @@ inline void Locations::registerInteraction(Location *loc,
 // specified person to the appropriate People chare
 inline void Locations::sendInteractions(Location *loc,
     Id personIdx) {
-  Id peoplePartitionIdx = getPartitionIndex(
-    personIdx,
-    numPeople,
-    numPeoplePartitions,
-    firstPersonIdx);
+  PartitionId peoplePartitionIdx = getPartitionIndex(personIdx,
+    numPeople, numPeoplePartitions, firstPersonIdx);
 
   InteractionMessage interMsg(loc->getUniqueId(), personIdx,
       interactions[personIdx]);
@@ -428,7 +414,7 @@ inline void Locations::sendInteractions(Location *loc,
   interactions.erase(personIdx);
 }
 
-void Locations::ReceiveIntervention(int interventionIdx) {
+void Locations::ReceiveIntervention(PartitionId interventionIdx) {
   for (Location &location : locations) {
     const Intervention<Location> &inter =
       diseaseModel->getLocationIntervention(interventionIdx);

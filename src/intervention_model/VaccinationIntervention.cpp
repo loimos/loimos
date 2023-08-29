@@ -28,12 +28,12 @@ VaccinationIntervention::VaccinationIntervention(
 
 bool VaccinationIntervention::test(const Person &p,
     std::default_random_engine *generator) const {
-  return !p.getValue(vaccinatedIndex).boolean
+  return !p.getValue(vaccinatedIndex).bool_val
     && unitDistrib(*generator) < vaccinationProbability;
 }
 
 void VaccinationIntervention::apply(Person *p) const {
   std::vector<union Data> &objData = p->getData();
-  objData[vaccinatedIndex].boolean = true;
-  objData[susceptibilityIndex].double_b10 = vaccinatedSusceptibility;
+  objData[vaccinatedIndex].bool_val = true;
+  objData[susceptibilityIndex].double_val = vaccinatedSusceptibility;
 }

@@ -22,7 +22,7 @@
 class DataInterface {
  protected:
   // Unique global identifier
-  int uniqueId;
+  Id uniqueId;
 
   // Various dynamic attributes
   std::vector<union Data> data;

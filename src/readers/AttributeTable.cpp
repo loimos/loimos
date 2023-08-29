@@ -9,6 +9,8 @@
 #include "Data.h"
 #include "../loimos.decl.h"
 #include "../protobuf/data.pb.h"
+#include "../Types.h"
+#include "../Defs.h"
 #include "../Person.h"
 #include "../Location.h"
 
@@ -32,20 +34,26 @@ union Data AttributeTable::getDefaultValue(int i) const {
 double AttributeTable::getDefaultValueAsDouble(int i) const {
   const union Data &defaultValue = list[i].defaultValue;
   switch (list[i].dataType) {
-    case DataTypes::int_b10:
-      return static_cast<double>(defaultValue.int_b10);
+    case DataTypes::int32_:
+      return static_cast<double>(defaultValue.int32_val);
 
-    case DataTypes::uint_32:
-      return static_cast<double>(defaultValue.uint_32);
+    case DataTypes::int64_:
+      return static_cast<double>(defaultValue.int64_val);
 
-    case DataTypes::double_b10:
-      return static_cast<double>(defaultValue.double_b10);
+    case DataTypes::uint32_:
+      return static_cast<double>(defaultValue.uint32_val);
 
-    case DataTypes::category:
-      return static_cast<double>(defaultValue.category);
+    case DataTypes::uint64_:
+      return static_cast<double>(defaultValue.uint64_val);
 
-    case DataTypes::boolean:
-      return static_cast<double>(defaultValue.boolean);
+    case DataTypes::double_:
+      return static_cast<double>(defaultValue.double_val);
+
+    case DataTypes::category_:
+      return static_cast<double>(defaultValue.category_val);
+
+    case DataTypes::bool_:
+      return static_cast<double>(defaultValue.bool_val);
   }
 }
 std::string AttributeTable::getName(int i) const {
@@ -70,49 +78,50 @@ int AttributeTable::getAttributeIndex(std::string name) const {
   return -1;
 }
 
+#define SET_DEFAULT(DEFAULT_VAR, TYPE_VAR, FIELD_VAR, TYPE, TYPE_CAP) do {\
+  TYPE_VAR = DataTypes::CONCAT(TYPE, _);\
+  if (field.default_value_case()\
+    == loimos::proto::DataField::DefaultValueCase::CONCAT(kDefault, TYPE_CAP)) {\
+      DEFAULT_VAR.CONCAT(TYPE, _val) = FIELD_VAR.CONCAT(default_, TYPE)();\
+    } else {\
+      DEFAULT_VAR.CONCAT(TYPE, _val) = 0;\
+    }\
+} while (0);
+
+
 void AttributeTable::readAttributes(const AttributeList &attributes) {
   for (int i = 0; i < attributes.size(); i++) {
     loimos::proto::DataField const &field = attributes[i];
     if (!field.has_ignore() && !field.has_unique_id()) {
       DataTypes::DataType type;
       Data defaultValue;
-      if (field.has_b10int() || field.has_int32() || field.has_foreign_id()) {
-        type = DataTypes::int_b10;
-        if (field.default_value_case()
-            == loimos::proto::DataField::DefaultValueCase::kDefaultInt) {
-          defaultValue.int_b10 = field.default_int();
-        } else {
-          defaultValue.int_b10 = 0;
-        }
 
-      } else if (field.has_b10double() || field.has_double_()) {
-        type = DataTypes::double_b10;
-        if (field.default_value_case()
-            == loimos::proto::DataField::DefaultValueCase::kDefaultDouble) {
-          defaultValue.double_b10 = field.default_double();
-        } else {
-          defaultValue.double_b10 = 0.0;
-        }
-
-      } else if (field.has_label()) {
-        type = DataTypes::string;
+      if (field.has_unique_id() || field.has_foreign_id()) {
+        SET_DEFAULT(defaultValue, type, field, ID_PROTOBUF_TYPE,
+          ID_PROTOBUF_TYPE_CAP);
+      } else if (field.has_start_time() || field.has_duration()) {
+        SET_DEFAULT(defaultValue, type, field, TIME_PROTOBUF_TYPE,
+          TIME_PROTOBUF_TYPE_CAP);
+      } else if (field.has_bool_()) {
+        SET_DEFAULT(defaultValue, type, field, bool, Bool);
+      } else if (field.has_int32()) {
+        SET_DEFAULT(defaultValue, type, field, int32, Int32);
+      } else if (field.has_int64()) {
+        SET_DEFAULT(defaultValue, type, field, int64, Int64);
+      } else if (field.has_uint32()) {
+        SET_DEFAULT(defaultValue, type, field, uint32, Uint32);
+      } else if (field.has_uint64()) {
+        SET_DEFAULT(defaultValue, type, field, uint64, Uint64);
+      } else if (field.has_double_()) {
+        SET_DEFAULT(defaultValue, type, field, double, Double);
+      } else if (field.has_string()) {
+        type = DataTypes::string_;
         if (field.default_value_case()
             == loimos::proto::DataField::DefaultValueCase::kDefaultString) {
-          defaultValue.str = new std::string(field.default_string());
+          defaultValue.string_val = new std::string(field.default_string());
         } else {
-          defaultValue.str = new std::string("");
+          defaultValue.string_val = new std::string("");
         }
-
-      } else if (field.has_bool_()) {
-        type = DataTypes::boolean;
-        defaultValue.boolean = false;
-        if (field.default_value_case()
-            == loimos::proto::DataField::DefaultValueCase::kDefaultBool) {
-          defaultValue.boolean = field.default_bool();
-        } else {
-          defaultValue.boolean = false;
-        }
-
       } else {
         CkAbort("Error: attribute \"%s\" has invalid type\n",
             field.field_name().c_str());

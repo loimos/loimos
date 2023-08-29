@@ -18,8 +18,8 @@
  *    Id numPartitions: The total number of chares.
  *
  */
-Id getNumElementsPerPartition(Id numElements, Id numPartitions) {
-  return ceil(static_cast<float>(numElements) / numPartitions);
+Id getNumElementsPerPartition(Id numElements, PartitionId numPartitions) {
+  return static_cast<Id>(ceil(1.0 * numElements / numPartitions));
 }
 
 /**
@@ -34,7 +34,8 @@ Id getNumElementsPerPartition(Id numElements, Id numPartitions) {
  *
  * Notes: Will likely change as we Idroduce active load balancing.
  */
-Id getPartitionIndex(Id globalIndex, Id numElements, Id numPartitions, Id offset) {
+PartitionId getPartitionIndex(Id globalIndex, Id numElements,
+    PartitionId numPartitions, Id offset) {
   Id partitionIndex = (globalIndex - offset)
     / getNumElementsPerPartition(numElements, numPartitions);
   if (partitionIndex >= numPartitions)
@@ -53,7 +54,8 @@ Id getPartitionIndex(Id globalIndex, Id numElements, Id numPartitions, Id offset
  *      could be replaced with a better system.
  *
  */
-Id getFirstIndex(Id partitionIndex, Id numElements, Id numPartitions, Id offset) {
+Id getFirstIndex(PartitionId partitionIndex, Id numElements,
+    PartitionId numPartitions, Id offset) {
   Id elementsPerPartition = getNumElementsPerPartition(numElements,
       numPartitions);
   return partitionIndex * elementsPerPartition + offset;
@@ -68,7 +70,8 @@ Id getFirstIndex(Id partitionIndex, Id numElements, Id numPartitions, Id offset)
  *    Id partitionIndex: Chare index
  *
  */
-Id getNumLocalElements(Id numElements, Id numPartitions, Id partitionIndex) {
+Id getNumLocalElements(Id numElements, PartitionId numPartitions,
+    PartitionId partitionIndex) {
   Id elementsPerPartition = getNumElementsPerPartition(numElements,
       numPartitions);
   Id firstIndex = getFirstIndex(partitionIndex, numElements, numPartitions,
@@ -93,8 +96,8 @@ Id getNumLocalElements(Id numElements, Id numPartitions, Id partitionIndex) {
  *      could be replaced with a better system.
  *
  */
-Id getGlobalIndex(Id localIndex, Id partitionIndex, Id numElements,
-    Id numPartitions, Id offset) {
+Id getGlobalIndex(Id localIndex, PartitionId partitionIndex, Id numElements,
+    PartitionId numPartitions, Id offset) {
   Id firstLocalIndex = getFirstIndex(partitionIndex, numElements,
       numPartitions, offset);
   return firstLocalIndex + localIndex;
@@ -107,15 +110,15 @@ Id getGlobalIndex(Id localIndex, Id partitionIndex, Id numElements,
  * Args:
  *    Id globalIndex: The global unique object identifier.
  *    Id partitionIndex: The index of the chare containing the specified
- *      object
+ *      objectsrc/Defs.cpp
  *    Id numElements: The total number of objects of this type.
  *    Id numPartitions: The total number of chares.
  *    Id offset: The globalIndex number referring to the first object. Likely
  *      could be replaced with a better system.
  *
  */
-Id getLocalIndex(Id globalIndex, Id partitionIndex, Id numElements,
-    Id numPartitions, Id offset) {
+Id getLocalIndex(Id globalIndex, PartitionId partitionIndex, Id numElements,
+    PartitionId numPartitions, Id offset) {
   Id firstLocalIndex = getFirstIndex(partitionIndex, numElements,
       numPartitions, offset);
   return globalIndex - firstLocalIndex;

@@ -425,9 +425,9 @@ void Main::SeedInfections() {
   // guarentee they are unique (not checking this quickly runs into birthday
   // problem issues, even for sizable datasets)
   if (0 == day) {
-    std::uniform_int_distribution<> personDistrib(firstPersonIdx,
+    std::uniform_int_distribution<Id> personDistrib(firstPersonIdx,
         firstPersonIdx + numPeople - 1);
-    std::unordered_set<int> initialInfectionsSet;
+    std::unordered_set<Id> initialInfectionsSet;
     initialInfections.reserve(INITIAL_INFECTIONS);
     // Use set to check membership becuase it's faster and we can spare the
     // memory; INITIAL_INFECTIONS should be fairly small
@@ -436,7 +436,7 @@ void Main::SeedInfections() {
         // This loop will go forever on small test populations without
         // this check
         && initialInfectionsSet.size() < numPeople) {
-      int personIdx = personDistrib(generator);
+      Id personIdx = personDistrib(generator);
       if (initialInfectionsSet.count(personIdx) == 0) {
         initialInfections.emplace_back(personIdx);
         initialInfectionsSet.emplace(personIdx);
@@ -447,7 +447,7 @@ void Main::SeedInfections() {
   // Check for empty is to avoid issues with small test populations
   for (int i = 0; i < INITIAL_INFECTIONS_PER_DAY && !initialInfections.empty();
       ++i) {
-    int personIdx = initialInfections.back();
+    Id personIdx = initialInfections.back();
     initialInfections.pop_back();
 
     int peoplePartitionIdx = getPartitionIndex(

@@ -64,16 +64,17 @@ const Time MINUTE_LENGTH = 60;
 #endif
 #define INITIAL_INFECTIONS (INITIAL_INFECTIONS_PER_DAY * DAYS_TO_SEED_INFECTION)
 
-Id getNumElementsPerPartition(Id numElements, Id numPartitions);
-Id getPartitionIndex(Id globalIndex, Id numElements,
-    Id numPartitions, Id offset);
-Id getFirstIndex(Id partitionIndex, Id numElements,
-    Id numPartitions, Id offset);
-Id getNumLocalElements(Id numElements, Id numPartitions,
-    Id partitionIndex);
-Id getGlobalIndex(Id localIndex, Id partitionIndex, Id numElements,
-    Id numPartitions, Id offset);
-Id getLocalIndex(Id globalIndex, Id partitionIndex, Id numElements,
-    Id numPartitions, Id offset);
+
+Id getNumElementsPerPartition(Id numElements, PartitionId numPartitions);
+PartitionId getPartitionIndex(Id globalIndex, Id numElements,
+    PartitionId numPartitions, Id offset);
+Id getFirstIndex(PartitionId partitionIndex, Id numElements,
+    PartitionId numPartitions, Id offset);
+Id getNumLocalElements(Id numElements, PartitionId numPartitions,
+    PartitionId partitionIndex);
+Id getGlobalIndex(Id localIndex, PartitionId partitionIndex, Id numElements,
+    PartitionId numPartitions, Id offset);
+Id getLocalIndex(Id globalIndex, PartitionId partitionIndex, Id numElements,
+    PartitionId numPartitions, Id offset);
 
 #endif  // DEFS_H_

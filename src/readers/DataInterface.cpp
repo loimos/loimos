@@ -23,7 +23,7 @@ DataInterface::DataInterface(const AttributeTable &attributes, int numInterventi
   }
 }
 
-void DataInterface::setUniqueId(int idx) {
+void DataInterface::setUniqueId(Id idx) {
   uniqueId = idx;
 }
 

@@ -21,7 +21,7 @@
 
 class Locations : public CBase_Locations {
  private:
-  int numLocalLocations;
+  Id numLocalLocations;
   Id firstLocalLocationIdx;
   std::vector<Location> locations;
   DiseaseModel *diseaseModel;
@@ -60,7 +60,7 @@ class Locations : public CBase_Locations {
 
   // Simple helper function which send the list of interactions with the
   // specified person to the appropriate People chare
-  inline void sendInteractions(Location *loc, int personIdx);
+  inline void sendInteractions(Location *loc, Id personIdx);
 
   #if ENABLE_DEBUG >= DEBUG_VERBOSE
   Counter saveInteractions(const Location &loc, const Event &departure,
@@ -73,7 +73,7 @@ class Locations : public CBase_Locations {
   void pup(PUP::er &p);  // NOLINT(runtime/references)
   void ReceiveVisitMessages(VisitMessage visitMsg);
   void ComputeInteractions();  // calls ReceiveInfections
-  void ReceiveIntervention(int interventionIdx);
+  void ReceiveIntervention(PartitionId interventionIdx);
   // Load location data from CSV.
   void loadLocationData(std::string scenarioPath);
   #ifdef ENABLE_LB

@@ -27,13 +27,13 @@
 
 class People : public CBase_People {
  private:
-  int numLocalPeople;
   int day;
+  Id numLocalPeople;
   Counter totalVisitsForDay;
   std::vector<Person> people;
   std::default_random_engine generator;
   DiseaseModel *diseaseModel;
-  std::vector<int> stateSummaries;
+  std::vector<DiseaseState> stateSummaries;
 
   void ProcessInteractions(Person *person);
   void UpdateDiseaseState(Person *person);

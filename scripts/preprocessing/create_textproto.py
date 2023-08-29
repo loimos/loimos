@@ -7,11 +7,11 @@ import pandas as pd
 
 PEOPLE_TYPES = {
     "pid": "unique_id",
-    "age": "b10int",
+    "age": "int32",
 }
 LOCATIONS_TYPES = {
     "lid": "unique_id",
-    "max_simultaneous_visits": "b10int",
+    "max_simultaneous_visits": "int32",
     "school": "bool",
 }
 VISITS_TYPES = {

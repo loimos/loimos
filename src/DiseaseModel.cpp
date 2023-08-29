@@ -355,7 +355,7 @@ DiseaseState DiseaseModel::getHealthyState(const std::vector<Data> &dataField) c
   }
 
   // Age based transition.
-  int personAge = dataField[ageIdx].int_b10;
+  int personAge = dataField[ageIdx].int32_val;
   for (uint stateNum = 0; stateNum < numStartingStates; stateNum++) {
     const loimos::proto::DiseaseModel_StartingCondition state =
       model->starting_states(stateNum);

@@ -89,25 +89,33 @@ class DataReader {
       obj->setUniqueId(ID_PARSE(rawData));
       return 0;
     } else {
-      if (field->has_b10int() || field->has_int32()) {
-        data->at(fieldIdx).int_b10 = std::stoi(rawData);
+      if (field->has_int32()) {
+        data->at(fieldIdx).int32_val = std::stoi(rawData);
+
+      } else if (field->has_int64()) {
+        data->at(fieldIdx).int64_val = std::stol(rawData);
+      
+      } else if (field->has_uint32()) {
+        data->at(fieldIdx).uint32_val =
+          static_cast<uint32_t>(std::stoi(rawData));
+
+      } else if (field->has_uint64()) {
+        data->at(fieldIdx).uint64_val =
+          static_cast<uint64_t>(std::stol(rawData));
 
       } else if (field->has_foreign_id()) {
-        data->at(fieldIdx).ID_PROTOBUF_TYPE = ID_PARSE(rawData);
+        data->at(fieldIdx).CONCAT(ID_PROTOBUF_TYPE, _val) =
+          ID_PARSE(rawData);
 
-      } else if (field->has_b10double() || field->has_double_()) {
-        data->at(fieldIdx).double_b10 = std::stod(rawData);
+      } else if (field->has_double_()) {
+        data->at(fieldIdx).double_val = std::stod(rawData);
 
-      } else if (field->has_label()) {
-        data->at(fieldIdx).str = new std::string(rawData);
+      } else if (field->has_string()) {
+        data->at(fieldIdx).string_val = new std::string(rawData);
 
       } else if (field->has_bool_()) {
-        if (rawData.length() == 1) {
-          data->at(fieldIdx).boolean =
-            (rawData[0] == 't' || rawData[0] == '1');
-        } else {
-          data->at(fieldIdx).boolean = false;
-        }
+        data->at(fieldIdx).bool_val = (rawData.length() == 1)
+          && (rawData[0] == 't' || rawData[0] == '1');
       }
 
       return 1;

@@ -1,8 +1,8 @@
 fields {
-    field_name: "person_id"
-    unique_id {}
+    field_name: "pid"
+    unique_id: {}
 }
 fields {
     field_name: "age"
-    b10int {}
+    int32: {}
 }
