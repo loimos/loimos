@@ -58,15 +58,14 @@ jobs:
           ../configure --prefix="$GITHUB_WORKSPACE/protobuf/install"
           make -j4 && make install
 
-      # Build protobuf
-      - name: Save Dependencies
-        id: cache-dependencies-save
-        uses: actions/cache@v3
-        with:
-          path: |
-            charm
-            protobuf
-          key: ${{ steps.cache-dependencies-restore.outputs.cache-primary-key }}
+      # - name: Save Dependencies
+      #   id: cache-dependencies-save
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: |
+      #       charm
+      #       protobuf
+      #     key: ${{ steps.cache-dependencies-restore.outputs.cache-primary-key }}
 
 #    # Build googletest
 #    - name: build-gtest
