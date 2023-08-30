@@ -28,7 +28,7 @@ class Main : public CBase_Main {
   explicit Main(CkArgMsg* msg);
   void CharesCreated();
   void SeedInfections();
-  void SaveStats(int *data);
+  void SaveStats(Id *data);
 };
 
 #endif  // MAIN_H_

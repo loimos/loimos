@@ -33,7 +33,7 @@ class People : public CBase_People {
   std::vector<Person> people;
   std::default_random_engine generator;
   DiseaseModel *diseaseModel;
-  std::vector<DiseaseState> stateSummaries;
+  std::vector<Id> stateSummaries;
 
   void ProcessInteractions(Person *person);
   void UpdateDiseaseState(Person *person);

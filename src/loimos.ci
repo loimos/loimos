@@ -154,7 +154,7 @@ mainmodule loimos {
             peopleArray.EndOfDayStateUpdate();
           }
         }
-        when ReceiveInfectiousCount(int infectiousCount) {
+        when ReceiveInfectiousCount(Id infectiousCount) {
           serial {
             double diff = CkWallTimer() - stepStartTime;
             CkPrintf("  End of day state update and reduction took %fs\n",
@@ -168,7 +168,7 @@ mainmodule loimos {
 
             // Print how long this iteration took to run
             CkPrintf(
-              "Iteration %d Execution Time: %lf seconds. Infectious Count: %d.\n",
+              "Iteration %d Execution Time: %lf seconds. Infectious Count: "ID_PRINT_TYPE".\n",
               day, CkWallTimer() - iterationStartTime, infectiousCount
             );
 
@@ -217,7 +217,8 @@ mainmodule loimos {
         #endif // ENABLE_TRACING
       }
       serial {
-        CkPrintf("Finished simulating %d days in %lf seconds.\n", numDays, (CkWallTimer() - simulationStartTime));
+        CkPrintf("Finished simulating %d days in %lf seconds.\n",
+          numDays, (CkWallTimer() - simulationStartTime));
         #if ENABLE_DEBUG >= 2
         CkPrintf("  Processed "COUNTER_PRINT_TYPE" visits, "
           COUNTER_PRINT_TYPE" interactions, and "
@@ -235,7 +236,7 @@ mainmodule loimos {
       }
       when ReceiveStats(CkReductionMsg *summary) {
         serial {
-          int *data = reinterpret_cast<int *>(summary->getData());
+          Id *data = reinterpret_cast<Id *>(summary->getData());
           SaveStats(data);
         }
       }
@@ -264,7 +265,7 @@ mainmodule loimos {
       serial{CkPrintf("  Processed "COUNTER_PRINT_TYPE" exposures\n", count);}
     };
     #endif // ENABLE_DEBUG
-    entry [reductiontarget] void ReceiveInfectiousCount(int infectiousCount);
+    entry [reductiontarget] void ReceiveInfectiousCount(Id infectiousCount);
     entry [reductiontarget] void ReceiveStats(CkReductionMsg *summary);
     #ifdef ENABLE_TRACING
     entry [reductiontarget] void traceSwitchOn();

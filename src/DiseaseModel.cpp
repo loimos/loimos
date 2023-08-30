@@ -450,7 +450,7 @@ int DiseaseModel::getNumLocationInterventions() const {
   return static_cast<int>(locationInterventions.size());
 }
 
-void DiseaseModel::applyInterventions(int day, int newDailyInfections) {
+void DiseaseModel::applyInterventions(int day, Id newDailyInfections) {
   toggleInterventions(day, newDailyInfections);
 
   for (uint i = 0; i < personInterventions.size(); ++i) {
@@ -465,7 +465,7 @@ void DiseaseModel::applyInterventions(int day, int newDailyInfections) {
   }
 }
 
-void DiseaseModel::toggleInterventions(int day, int newDailyInfections) {
+void DiseaseModel::toggleInterventions(int day, Id newDailyInfections) {
   for (uint i = 0; i < interventionDef->triggers_size(); ++i) {
     const loimos::proto::InterventionModel::Trigger &trigger =
       interventionDef->triggers(i);

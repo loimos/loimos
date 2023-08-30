@@ -90,8 +90,8 @@ void intitialiseLocationInterventions(
   const Intervention<Location> &getLocationIntervention(int index) const;
   int getNumPersonInterventions() const;
   int getNumLocationInterventions() const;
-  void applyInterventions(int day, int newDailyInfections);
-  void toggleInterventions(int day, int newDailyInfections);
+  void applyInterventions(int day, Id newDailyInfections);
+  void toggleInterventions(int day, Id newDailyInfections);
 };
 
 #endif  // DISEASEMODEL_H_

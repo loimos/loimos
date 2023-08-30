@@ -500,7 +500,7 @@ void People::EndOfDayStateUpdate() {
   int offset = totalStates * day;
 
   // Handle state transitions at the end of the day.
-  Counter infectiousCount = 0;
+  Id infectiousCount = 0;
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   Counter totalExposuresPerDay = 0;
 #endif
@@ -518,10 +518,15 @@ void People::EndOfDayStateUpdate() {
     }
   }
 
+  for (DiseaseState i = 0; i < totalStates; ++i) {
+    CkPrintf("    Chare %d: "ID_PRINT_TYPE" in state %d\n",
+      thisIndex, stateSummaries[i + offset], i);
+  }
+
   // contributing to reduction
   CkCallback cb(CkReductionTarget(Main, ReceiveInfectiousCount), mainProxy);
-  contribute(sizeof(Counter), &infectiousCount,
-      CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), cb);
+  contribute(sizeof(Id), &infectiousCount,
+      CONCAT(CkReduction::sum_, ID_REDUCTION_TYPE), cb);
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   CkCallback expCb(CkReductionTarget(Main, ReceiveExposuresCount), mainProxy);
   contribute(sizeof(Counter), &totalExposuresPerDay,
@@ -534,7 +539,8 @@ void People::EndOfDayStateUpdate() {
 
 void People::SendStats() {
   CkCallback cb(CkReductionTarget(Main, ReceiveStats), mainProxy);
-  contribute(stateSummaries, CkReduction::sum_int, cb);
+  contribute(stateSummaries, CkReduction::CONCAT(sum_, ID_REDUCTION_TYPE),
+    cb);
 }
 
 void People::ProcessInteractions(Person *person) {

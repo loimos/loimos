@@ -18,6 +18,7 @@ using Id = int64_t;
 #define ID_PRINT_TYPE "%ld"
 #define ID_PROTOBUF_TYPE int64
 #define ID_PROTOBUF_TYPE_CAP Int64
+#define ID_REDUCTION_TYPE long
 #define ID_PARSE std::stol
 
 using PartitionId = int;
