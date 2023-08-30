@@ -94,7 +94,7 @@ class DataReader {
 
       } else if (field->has_int64()) {
         data->at(fieldIdx).int64_val = std::stol(rawData);
-      
+
       } else if (field->has_uint32()) {
         data->at(fieldIdx).uint32_val =
           static_cast<uint32_t>(std::stoi(rawData));

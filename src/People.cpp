@@ -290,8 +290,8 @@ void People::loadPeopleData(std::string scenarioPath) {
   }
 
   // Load preprocessing meta data.
-  CacheOffset *buf =
-    reinterpret_cast<CacheOffset *>(malloc(sizeof(CacheOffset) * numDaysWithDistinctVisits));
+  CacheOffset *buf = reinterpret_cast<CacheOffset *>(
+    malloc(sizeof(CacheOffset) * numDaysWithDistinctVisits));
   for (Id c = 0; c < numLocalPeople; c++) {
     std::vector<CacheOffset> *data_pos = &people[c].visitOffsetByDay;
     Id curr_id = people[c].getUniqueId();
