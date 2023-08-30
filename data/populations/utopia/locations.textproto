@@ -8,5 +8,5 @@ fields {
 }
 fields {
     field_name: "max_simultaneous_visits"
-    b10int: {}
+    int32: {}
 }

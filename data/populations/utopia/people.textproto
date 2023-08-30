@@ -20,7 +20,7 @@ fields {
 }
 fields {
     field_name: "age"
-    b10int: {}
+    int32: {}
 }
 fields {
     field_name: "relationship"
