@@ -498,9 +498,6 @@ void People::EndOfDayStateUpdate() {
   // Get ready to count today's states
   DiseaseState totalStates = diseaseModel->getNumberOfStates();
   int offset = totalStates * day;
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
-  Counter totalExposuresPerDay = 0;
-#endif
 
   // Handle state transitions at the end of the day.
   Counter infectiousCount = 0;
