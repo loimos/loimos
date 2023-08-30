@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+
 include Makefile.include
 
 OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o  \
