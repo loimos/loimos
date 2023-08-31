@@ -27,13 +27,13 @@
 
 class People : public CBase_People {
  private:
-  int numLocalPeople;
   int day;
+  Id numLocalPeople;
   Counter totalVisitsForDay;
   std::vector<Person> people;
   std::default_random_engine generator;
   DiseaseModel *diseaseModel;
-  std::vector<int> stateSummaries;
+  std::vector<Id> stateSummaries;
 
   void ProcessInteractions(Person *person);
   void UpdateDiseaseState(Person *person);
@@ -44,7 +44,7 @@ class People : public CBase_People {
   explicit People(int seed, std::string scenarioPath);
   explicit People(CkMigrateMessage *msg);
   void pup(PUP::er &p);  // NOLINT(runtime/references)
-  void generatePeopleData(int firstLocalPersonIndex);
+  void generatePeopleData(Id firstLocalPersonIndex);
   void generateVisitData();
   void SendVisitMessages();
   double getTransmissionModifier(const Person &person);

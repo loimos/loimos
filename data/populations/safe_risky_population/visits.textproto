@@ -1,16 +1,16 @@
 fields {
     field_name: "pid"
-    unique_id {}
+    unique_id: {}
 }
 fields {
-    field_name: "activity_number"
-    foreign_id {}
+    field_name: "lid"
+    foreign_id: {}
 }
 fields {
     field_name: "start_time"
-    start_time {}
+    start_time: {}
 }
 fields {
     field_name: "duration"
-    duration {}
+    duration: {}
 }

@@ -12,16 +12,18 @@
 #include <string>
 
 namespace DataTypes {
-  enum DataType {int_b10, uint_32, string, double_b10, category, boolean};
+  enum DataType {int32_, int64_, uint32_, uint64_, string_, double_, category_, bool_};
 }
 
 union Data {
-  int int_b10;
-  bool boolean;
-  uint32_t uint_32;
-  double double_b10;
-  uint16_t category;
-  std::string *str;
+  int32_t int32_val;
+  int64_t int64_val;
+  bool bool_val;
+  uint32_t uint32_val;
+  uint64_t uint64_val;
+  double double_val;
+  uint16_t category_val;
+  std::string *string_val;
 };
 PUPbytes(union Data);
 

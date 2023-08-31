@@ -65,13 +65,13 @@ void Person::_print_information(loimos::proto::CSVDefinition *personDef) {
       // Skip
     } else {
       printf("-- %s is ", field->field_name().c_str());
-      if (field->has_unique_id() || field->has_b10int()
+      if (field->has_unique_id() || field->has_int32()
           || field->has_foreign_id()) {
-        printf("%d\n", this->data[attr].int_b10);
-      } else if (field->has_label()) {
+        printf("%d\n", this->data[attr].int32_val);
+      } else if (field->has_string()) {
         // printf("%s\n", this->data[attr].str.c_str());
       } else if (field->has_bool_()) {
-        printf("%s\n", this->data[attr].boolean ? "True" : "False");
+        printf("%s\n", this->data[attr].bool_val ? "True" : "False");
       }
       attr++;
     }

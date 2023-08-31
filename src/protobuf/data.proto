@@ -23,20 +23,24 @@ message DataField {
     Empty start_time = 4;
     Empty duration = 5;
     Empty bool = 6;
-    Empty b10int = 7;
-    Empty int32 = 8;
-    Empty double = 9;
-    Empty b10double = 10;
-    Empty ignore = 11;
-    Empty label = 12;
-    Category category = 13;
+    Empty int32 = 7;
+    Empty int64 = 8;
+    Empty uint32 = 9;
+    Empty uint64 = 10;
+    Empty double = 11;
+    Empty ignore = 13;
+    Empty string = 14;
+    Category category = 15;
   }
 
   oneof default_value {
-    bool default_bool = 14;
-    int32 default_int = 15;
-    double default_double = 16;
-    string default_string = 17;
+    bool default_bool = 16;
+    int32 default_int32 = 17;
+    int64 default_int64 = 18;
+    uint32 default_uint32 = 19;
+    uint64 default_uint64 = 20;
+    double default_double = 21;
+    string default_string = 22;
   }
 }
 

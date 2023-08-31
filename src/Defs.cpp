@@ -14,28 +14,29 @@
  * Returns the number of elements that each chare will track at a minimum.
  *
  * Args:
- *    int numElements: The total number of objects of this type.
- *    int numPartitions: The total number of chares.
+ *    Id numElements: The total number of objects of this type.
+ *    Id numPartitions: The total number of chares.
  *
  */
-int getNumElementsPerPartition(int numElements, int numPartitions) {
-  return ceil(static_cast<float>(numElements) / numPartitions);
+Id getNumElementsPerPartition(Id numElements, PartitionId numPartitions) {
+  return static_cast<Id>(ceil(1.0 * numElements / numPartitions));
 }
 
 /**
  * Returns the number of the chare that tracks a particular element.
  *
  * Args:
- *    int globalIndex: The global unique object identifier.
- *    int numElements: The total number of objects of this type.
- *    int numPartitions: The total number of chares.
- *    int offset: The globalIndex number referring to the first object. Likely
+ *    Id globalIndex: The global unique object identifier.
+ *    Id numElements: The total number of objects of this type.
+ *    Id numPartitions: The total number of chares.
+ *    Id offset: The globalIndex number referring to the first object. Likely
  *      could be replaced with a better system.
  *
- * Notes: Will likely change as we introduce active load balancing.
+ * Notes: Will likely change as we Idroduce active load balancing.
  */
-int getPartitionIndex(int globalIndex, int numElements, int numPartitions, int offset) {
-  int partitionIndex = (globalIndex - offset)
+PartitionId getPartitionIndex(Id globalIndex, Id numElements,
+    PartitionId numPartitions, Id offset) {
+  Id partitionIndex = (globalIndex - offset)
     / getNumElementsPerPartition(numElements, numPartitions);
   if (partitionIndex >= numPartitions)
     return (numPartitions - 1);
@@ -46,15 +47,16 @@ int getPartitionIndex(int globalIndex, int numElements, int numPartitions, int o
  * Returns the first global index of an object present on the specified chare
  *
  * Args:
- *    int partitionIndex: The index of the chare in question
- *    int numElements: The total number of objects of this type.
- *    int numPartitions: The total number of chares.
- *    int offset: The globalIndex number referring to the first object. Likely
+ *    Id partitionIndex: The index of the chare in question
+ *    Id numElements: The total number of objects of this type.
+ *    Id numPartitions: The total number of chares.
+ *    Id offset: The globalIndex number referring to the first object. Likely
  *      could be replaced with a better system.
  *
  */
-int getFirstIndex(int partitionIndex, int numElements, int numPartitions, int offset) {
-  int elementsPerPartition = getNumElementsPerPartition(numElements,
+Id getFirstIndex(PartitionId partitionIndex, Id numElements,
+    PartitionId numPartitions, Id offset) {
+  Id elementsPerPartition = getNumElementsPerPartition(numElements,
       numPartitions);
   return partitionIndex * elementsPerPartition + offset;
 }
@@ -63,15 +65,16 @@ int getFirstIndex(int partitionIndex, int numElements, int numPartitions, int of
  * Returns the number of the objects that a particular chare tracks.
  *
  * Args:
- *    int numElements: The total number of objects of this type.
- *    int numPartitions: The total number of chares.
- *    int partitionIndex: Chare index
+ *    Id numElements: The total number of objects of this type.
+ *    Id numPartitions: The total number of chares.
+ *    Id partitionIndex: Chare index
  *
  */
-int getNumLocalElements(int numElements, int numPartitions, int partitionIndex) {
-  int elementsPerPartition = getNumElementsPerPartition(numElements,
+Id getNumLocalElements(Id numElements, PartitionId numPartitions,
+    PartitionId partitionIndex) {
+  Id elementsPerPartition = getNumElementsPerPartition(numElements,
       numPartitions);
-  int firstIndex = getFirstIndex(partitionIndex, numElements, numPartitions,
+  Id firstIndex = getFirstIndex(partitionIndex, numElements, numPartitions,
       0);
   if (firstIndex >= numElements) {
     return 0;
@@ -84,18 +87,18 @@ int getNumLocalElements(int numElements, int numPartitions, int partitionIndex) 
  * id on a chare.
  *
  * Args:
- *    int localIndex: The local (zero-indexed) unique object identifier.
- *    int partitionIndex: The index of the chare containing the specified
+ *    Id localIndex: The local (zero-indexed) unique object identifier.
+ *    Id partitionIndex: The index of the chare containing the specified
  *      object
- *    int numElements: The total number of objects of this type.
- *    int numPartitions: The total number of chares.
- *    int offset: The globalIndex number referring to the first object. Likely
+ *    Id numElements: The total number of objects of this type.
+ *    Id numPartitions: The total number of chares.
+ *    Id offset: The globalIndex number referring to the first object. Likely
  *      could be replaced with a better system.
  *
  */
-int getGlobalIndex(int localIndex, int partitionIndex, int numElements,
-    int numPartitions, int offset) {
-  int firstLocalIndex = getFirstIndex(partitionIndex, numElements,
+Id getGlobalIndex(Id localIndex, PartitionId partitionIndex, Id numElements,
+    PartitionId numPartitions, Id offset) {
+  Id firstLocalIndex = getFirstIndex(partitionIndex, numElements,
       numPartitions, offset);
   return firstLocalIndex + localIndex;
 }
@@ -105,18 +108,18 @@ int getGlobalIndex(int localIndex, int partitionIndex, int numElements,
  * global id.
  *
  * Args:
- *    int globalIndex: The global unique object identifier.
- *    int partitionIndex: The index of the chare containing the specified
- *      object
- *    int numElements: The total number of objects of this type.
- *    int numPartitions: The total number of chares.
- *    int offset: The globalIndex number referring to the first object. Likely
+ *    Id globalIndex: The global unique object identifier.
+ *    Id partitionIndex: The index of the chare containing the specified
+ *      objectsrc/Defs.cpp
+ *    Id numElements: The total number of objects of this type.
+ *    Id numPartitions: The total number of chares.
+ *    Id offset: The globalIndex number referring to the first object. Likely
  *      could be replaced with a better system.
  *
  */
-int getLocalIndex(int globalIndex, int partitionIndex, int numElements,
-    int numPartitions, int offset) {
-  int firstLocalIndex = getFirstIndex(partitionIndex, numElements,
+Id getLocalIndex(Id globalIndex, PartitionId partitionIndex, Id numElements,
+    PartitionId numPartitions, Id offset) {
+  Id firstLocalIndex = getFirstIndex(partitionIndex, numElements,
       numPartitions, offset);
   return globalIndex - firstLocalIndex;
 }

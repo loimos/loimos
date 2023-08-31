@@ -1,72 +1,72 @@
 fields {
     field_name: "hid"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "pid"
-    unique_id {}
+    unique_id: {}
 }
 fields {
     field_name: "age"
-    b10int {}
+    int32: {}
 }
 fields {
     field_name: "sex"
-    b10int {}
+    ignore: {}
 }
 fields {
     field_name: "employment_status"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "race"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "hispanic"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "designation"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "hh_size"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "hh_income"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "workers_in_family"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "lid"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "longitude"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "latitude"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "admin1"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "admin2"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "admin3"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "admin4"
-    ignore {}
+    ignore: {}
 }

@@ -28,7 +28,7 @@ class SchoolClosureIntervention : public VisitFilterIntervention<Location> {
   }
 
   bool test(const Location &p, std::default_random_engine *generator) const override {
-    return p.getValue(schoolIndex).boolean;
+    return p.getValue(schoolIndex).bool_val;
   }
 };
 

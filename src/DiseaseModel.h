@@ -32,15 +32,9 @@ using NameIndexLookupType = std::unordered_map<std::string, int>;
 class DiseaseModel : public CBase_DiseaseModel {
  private:
   loimos::proto::DiseaseModel *model;
-  // Map from state name to index of state in model.
-  // TODO(iancostello): Change these maps to be non-pointers.
-  std::unordered_map<std::string, int> *stateLookup;
-  // For each state index, map from stategy name string to index of strategy labels.
-  std::vector<std::unordered_map<std::string, int> *> *strategyLookup;
   Time getTimeInNextState(const
     loimos::proto::DiseaseModel_DiseaseState_TimedTransitionSet_StateTransition
-      *transitionSet,
-    std::default_random_engine *generator) const;
+      *transitionSet, std::default_random_engine *generator) const;
   Time timeDefToSeconds(TimeDef time) const;
 
   // Intervention related.
@@ -60,22 +54,22 @@ void intitialiseLocationInterventions(
   // move back to private later
   DiseaseModel(std::string pathToModel, std::string scenarioPath,
       std::string pathToIntervention);
-  int getIndexOfState(std::string stateLabel) const;
+  DiseaseState getIndexOfState(std::string stateLabel) const;
   // TODO(iancostello): Change interventionStategies to index based.
-  std::tuple<int, int> transitionFromState(int fromState,
+  std::tuple<DiseaseState, Time> transitionFromState(DiseaseState fromState,
     std::default_random_engine *generator) const;
-  std::string lookupStateName(int state) const;
+  std::string lookupStateName(DiseaseState state) const;
   int getNumberOfStates() const;
-  int getHealthyState(const std::vector<Data> &dataField) const;
-  bool isInfectious(int personState) const;
-  bool isSusceptible(int personState) const;
-  const char * getStateLabel(int personState) const;
+  DiseaseState getHealthyState(const std::vector<Data> &dataField) const;
+  bool isInfectious(DiseaseState personState) const;
+  bool isSusceptible(DiseaseState personState) const;
+  const char * getStateLabel(DiseaseState personState) const;
   double getLogProbNotInfected(Event susceptibleEvent, Event infectiousEvent) const;
   double getPropensity(
-      int susceptibleState,
-      int infectiousState,
-      int startTime,
-      int endTime,
+      DiseaseState susceptibleState,
+      DiseaseState infectiousState,
+      Time startTime,
+      Time endTime,
       double susceptibility,
       double infectivity) const;
 
@@ -96,8 +90,8 @@ void intitialiseLocationInterventions(
   const Intervention<Location> &getLocationIntervention(int index) const;
   int getNumPersonInterventions() const;
   int getNumLocationInterventions() const;
-  void applyInterventions(int day, int newDailyInfections);
-  void toggleInterventions(int day, int newDailyInfections);
+  void applyInterventions(int day, Id newDailyInfections);
+  void toggleInterventions(int day, Id newDailyInfections);
 };
 
 #endif  // DISEASEMODEL_H_

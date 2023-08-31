@@ -15,13 +15,14 @@
 #include "pup_stl.h"
 #include "Data.h"
 #include "AttributeTable.h"
+#include "../Types.h"
 #include "../Message.h"
 #include "../protobuf/data.pb.h"
 
 class DataInterface {
  protected:
   // Unique global identifier
-  int uniqueId;
+  Id uniqueId;
 
   // Various dynamic attributes
   std::vector<union Data> data;
@@ -32,8 +33,8 @@ class DataInterface {
   DataInterface() = default;
   DataInterface(const AttributeTable &attributes, int numInterventions);
   virtual ~DataInterface() = default;
-  void setUniqueId(int idx);
-  int getUniqueId() const;
+  void setUniqueId(Id idx);
+  Id getUniqueId() const;
   union Data getValue(int idx) const;
   std::vector<union Data> &getData();
   void toggleCompliance(int interventionIndex, bool value);

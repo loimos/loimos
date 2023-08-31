@@ -1,113 +1,112 @@
 fields {
     field_name: "lid"
-    unique_id {}
+    unique_id: {}
 }
 fields {
     field_name: "longitude"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "latitude"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "altitude"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "admin1"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "admin2"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "admin3"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "admin4"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "work"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "shopping"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "school"
-    b10int {}
+    bool: {}
 }
 fields {
     field_name: "other"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "college"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "religion"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "designation"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "home"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "total_visits"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "total_on_day_0"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "total_on_day_1"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "total_on_day_2"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "total_on_day_3"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "total_on_day_4"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "total_on_day_5"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "total_on_day_6"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "average_daily_total"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "median_daily_total"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "max_daily_total"
-    ignore {}
+    ignore: {}
 }
 fields {
     field_name: "max_simultaneous_visits"
-    b10int {}
+    int32: {}
 }
-

@@ -62,7 +62,7 @@ Locations::Locations(int seed, std::string scenarioPath) {
 
   int numInterventions = diseaseModel->getNumLocationInterventions();
   locations.reserve(numLocalLocations);
-  int firstIdx = thisIndex * getNumElementsPerPartition(numLocations,
+  Id firstIdx = thisIndex * getNumElementsPerPartition(numLocations,
       numLocationPartitions);
   for (int p = 0; p < numLocalLocations; p++) {
     locations.emplace_back(diseaseModel->locationAttributes,
@@ -104,13 +104,9 @@ void Locations::loadLocationData(std::string scenarioPath) {
     DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
 
   // Load in location information.
-  int startingLineIndex = getGlobalIndex(
-    0,
-    thisIndex,
-    numLocations,
-    numLocationPartitions,
-    firstLocationIdx) - firstLocationIdx;
-  int endingLineIndex = startingLineIndex + numLocalLocations;
+  Id startingLineIndex = getGlobalIndex(0, thisIndex, numLocations,
+    numLocationPartitions, firstLocationIdx) - firstLocationIdx;
+  Id endingLineIndex = startingLineIndex + numLocalLocations;
   std::string line;
 
   std::string scenarioId = getScenarioId(numPeople, numPeoplePartitions,
@@ -123,15 +119,13 @@ void Locations::loadLocationData(std::string scenarioPath) {
   }
 
   // Find starting line for our data through location cache.
-  locationCache.seekg(thisIndex * sizeof(uint64_t));
-  uint64_t locationOffset;
-  locationCache.read(reinterpret_cast<char *>(&locationOffset), sizeof(uint64_t));
+  locationCache.seekg(thisIndex * sizeof(CacheOffset));
+  CacheOffset locationOffset;
+  locationCache.read(reinterpret_cast<char *>(&locationOffset), sizeof(CacheOffset));
   locationData.seekg(locationOffset);
 
   // Read in our location data.
-  DataReader<Location>::readData(
-      &locationData,
-      diseaseModel->locationDef,
+  DataReader<Location>::readData(&locationData, diseaseModel->locationDef,
       &locations);
   locationData.close();
   locationCache.close();
@@ -162,12 +156,8 @@ void Locations::pup(PUP::er &p) {
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   // adding person to location visit list
-  int localLocIdx = getLocalIndex(
-    visitMsg.locationIdx,
-    thisIndex,
-    numLocations,
-    numLocationPartitions,
-    firstLocationIdx);
+  Id localLocIdx = getLocalIndex(visitMsg.locationIdx, thisIndex,
+    numLocations, numLocationPartitions, firstLocationIdx);
 
   // Interventions might cause us to reject some visits
   if (!locations[localLocIdx].acceptsVisit(visitMsg)) {
@@ -175,10 +165,11 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   }
 
 #ifdef ENABLE_DEBUG
-  int trueIdx = locations[localLocIdx].getUniqueId();
+  Id trueIdx = locations[localLocIdx].getUniqueId();
   if (visitMsg.locationIdx != trueIdx) {
-    CkPrintf("Error on chare %d: Visit by person %d to loc %d recieved by "
-        "loc %d (local %d)\n",
+    CkPrintf("Error on chare %d: Visit by person "ID_PRINT_TYPE
+        " to loc "ID_PRINT_TYPE" recieved by "
+        "loc "ID_PRINT_TYPE" (local "ID_PRINT_TYPE")\n",
         thisIndex, visitMsg.personIdx, visitMsg.locationIdx, trueIdx,
         localLocIdx);
   }
@@ -202,7 +193,7 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 }
 
 void Locations::ComputeInteractions() {
-  int firstLocalIndex = getFirstIndex(thisIndex, numLocations,
+  Id firstLocalIndex = getFirstIndex(thisIndex, numLocations,
     numLocationPartitions, firstLocationIdx);
 
   // traverses list of locations
@@ -242,6 +233,8 @@ Counter Locations::processEvents(Location *loc) {
   #if ENABLE_DEBUG >= DEBUG_VERBOSE
   Counter numInteractions = 0;
   Counter numPresent = 0;
+  Counter numVisits = loc->events.size() / 2;
+  double startTime = CkWallTimer();
   #endif
 
   std::sort(loc->events.begin(), loc->events.end());
@@ -289,8 +282,11 @@ Counter Locations::processEvents(Location *loc) {
 
   #if ENABLE_DEBUG == DEBUG_LOCATION_SUMMARY
   if (0 != numInteractions) {
-    CkPrintf("      %d,%d,%f,"COUNTER_PRINT_TYPE","COUNTER_PRINT_TYPE"\n",
-        uniqueId, data[maxSimVisitsIdx].int_b10, p, numInteractions, total);
+    double elapsedTime = CkWallTimer() - startTime;
+    CkPrintf("      %d,%d,%f,"COUNTER_PRINT_TYPE","COUNTER_PRINT_TYPE","
+        COUNTER_PRINT_TYPE",%f\n",
+        loc->getUniqueId(), loc->getValue(maxSimVisitsIdx).int_b10,
+        p, numInteractions, total, numVisits, elapsedTime);
   }
   #endif  // DEBUG_LOCATION_SUMMARY
   return total;
@@ -369,15 +365,14 @@ void Locations::onInfectiousDeparture(Location *loc,
 
 inline void Locations::registerInteraction(Location *loc,
     const Event &susceptibleEvent, const Event &infectiousEvent,
-    int startTime, int endTime) {
+    Time startTime, Time endTime) {
   if (!contactModel->madeContact(susceptibleEvent, infectiousEvent, *loc)) {
     return;
   }
 
   double propensity = diseaseModel->getPropensity(susceptibleEvent.personState,
     infectiousEvent.personState, startTime, endTime,
-    susceptibleEvent.transmissionModifier,
-    infectiousEvent.transmissionModifier);
+    susceptibleEvent.transmissionModifier, infectiousEvent.transmissionModifier);
 
   // Note that this will create a new vector if this is the first potential
   // infection for the susceptible person in question
@@ -389,12 +384,9 @@ inline void Locations::registerInteraction(Location *loc,
 // Simple helper function which send the list of interactions with the
 // specified person to the appropriate People chare
 inline void Locations::sendInteractions(Location *loc,
-    int personIdx) {
-  int peoplePartitionIdx = getPartitionIndex(
-    personIdx,
-    numPeople,
-    numPeoplePartitions,
-    firstPersonIdx);
+    Id personIdx) {
+  PartitionId peoplePartitionIdx = getPartitionIndex(personIdx,
+    numPeople, numPeoplePartitions, firstPersonIdx);
 
   InteractionMessage interMsg(loc->getUniqueId(), personIdx,
       interactions[personIdx]);
@@ -422,7 +414,7 @@ inline void Locations::sendInteractions(Location *loc,
   interactions.erase(personIdx);
 }
 
-void Locations::ReceiveIntervention(int interventionIdx) {
+void Locations::ReceiveIntervention(PartitionId interventionIdx) {
   for (Location &location : locations) {
     const Intervention<Location> &inter =
       diseaseModel->getLocationIntervention(interventionIdx);
