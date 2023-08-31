@@ -518,11 +518,6 @@ void People::EndOfDayStateUpdate() {
     }
   }
 
-  for (DiseaseState i = 0; i < totalStates; ++i) {
-    CkPrintf("    Chare %d: "ID_PRINT_TYPE" in state %d\n",
-      thisIndex, stateSummaries[i + offset], i);
-  }
-
   // contributing to reduction
   CkCallback cb(CkReductionTarget(Main, ReceiveInfectiousCount), mainProxy);
   contribute(sizeof(Id), &infectiousCount,
