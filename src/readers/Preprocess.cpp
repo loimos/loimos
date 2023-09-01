@@ -13,17 +13,22 @@
 
 #include "../loimos.decl.h"
 #include "Preprocess.h"
+#include "Partition.h"
 #include "DataReader.h"
 #include "../Defs.h"
 #include "../Extern.h"
+#include "../Location.h"
+#include "../Person.h"
 #include "charm++.h"
 
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <vector>
 #include <tuple>
 #include <sstream>
+#include <sys/stat.h>
 #include <google/protobuf/text_format.h>
 
 #define MAX_WRITE_SIZE 65536  // 2^16
@@ -35,23 +40,39 @@
 //                    string object in subfunctions.
 std::tuple<Id, Id, std::string> buildCache(std::string scenarioPath, Id numPeople,
     int numPeopleChares, Id numLocations, int numLocationChares, int numDays) {
+  // We need to uniquely identify this run configuration
   std::string uniqueScenario = getScenarioId(numPeople, numPeopleChares,
       numLocations, numLocationChares);
+
+  // All data will be saved to a sub-dir of the scenario dir
+  std::string cachePath = scenarioPath + uniqueScenario + "/";
+  // std::filesystem::create_directory(cachePath, scenarioPath);
+  createDirectory(cachePath, scenarioPath);
+
+  // Partition the data
+  std::vector<Id> lidUpdate;
+  std::vector<Id> pidUpdate;
+  partitionData<Location>(numLocations, numLocationChares, scenarioPath + "locations.textproto",
+    scenarioPath + "locations.csv", cachePath + "locations.csv", &lidUpdate);
+  // partitionData<Person>(numPeople, numLocationChares, scenarioPath + "locations.textproto",
+  //   scenarioPath + "locations.csv", cachePath + "locations.csv", &lidUpdate);
+  updateVisitIds(lidUpdate, pidUpdate, scenarioPath + "visits.textproto",
+    scenarioPath + "visits.csv", cachePath + "visits.csv");
+
   // Build person and location cache.
-  Id firstPersonIdx = buildObjectLookupCache(scenarioPath + "people.csv",
-    scenarioPath + uniqueScenario + "_people.cache", numPeople, numPeopleChares,
-    scenarioPath + "people.textproto");
-  Id firstLocationIdx = buildObjectLookupCache(scenarioPath + "locations.csv",
-    scenarioPath + uniqueScenario + "_locations.cache", numLocations,
-    numLocationChares, scenarioPath + "locations.textproto");
-  buildActivityCache(scenarioPath + "visits.csv",
-    scenarioPath + uniqueScenario + "_visits.cache", numPeople, numDays,
-    firstPersonIdx, scenarioPath + "visits.textproto");
+  Id firstPersonIdx = buildObjectLookupCache(numPeople, numPeopleChares,
+    scenarioPath + "people.textproto", scenarioPath + "people.csv",
+    scenarioPath + uniqueScenario + "_people.cache");
+  Id firstLocationIdx = buildObjectLookupCache(numLocations,
+    numLocationChares, scenarioPath + "locations.textproto",
+    scenarioPath + "locations.csv", scenarioPath + uniqueScenario + "_locations.cache");
+  buildActivityCache(numPeople, numDays, firstPersonIdx, scenarioPath + "visits.textproto",
+    scenarioPath + "visits.csv", scenarioPath + uniqueScenario + "_visits.cache");
   return std::make_tuple(firstPersonIdx, firstLocationIdx, uniqueScenario);
 }
 
-Id buildObjectLookupCache(std::string inputPath, std::string outputPath,
-    Id numObjs, int numChares, std::string pathToCsvDefinition) {
+Id buildObjectLookupCache(Id numObjs, PartitionId numChares,
+  std::string metadataPath, std::string inputPath, std::string outputPath) {
   /**
    * Assumptions: (about person file)
    * -- Contigious block of IDs that are sorted.
@@ -68,7 +89,7 @@ Id buildObjectLookupCache(std::string inputPath, std::string outputPath,
 
   // Read config file.
   loimos::proto::CSVDefinition csvDefinition;
-  std::ifstream csvConfigDefStream(pathToCsvDefinition);
+  std::ifstream csvConfigDefStream(metadataPath);
   std::string strData((std::istreambuf_iterator<char>(csvConfigDefStream)),
       std::istreambuf_iterator<char>());
   if (!google::protobuf::TextFormat::ParseFromString(strData, &csvDefinition)) {
@@ -134,8 +155,8 @@ Id buildObjectLookupCache(std::string inputPath, std::string outputPath,
 }
 
 
-void buildActivityCache(std::string inputPath, std::string outputPath,
-    Id numPeople, int numDays, Id firstPersonIdx, std::string pathToCsvDefinition) {
+void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
+  std::string metadataPath, std::string inputPath, std::string outputPath) {
   /**
    * Assumptions.
    * Stream is sorted by start time per person.
@@ -154,7 +175,7 @@ void buildActivityCache(std::string inputPath, std::string outputPath,
 
   // Read config file.
   loimos::proto::CSVDefinition csvDefinition;
-  std::ifstream csvConfigDefStream(pathToCsvDefinition);
+  std::ifstream csvConfigDefStream(metadataPath);
   std::string strData((std::istreambuf_iterator<char>(csvConfigDefStream)),
       std::istreambuf_iterator<char>());
   if (!google::protobuf::TextFormat::ParseFromString(strData, &csvDefinition)) {
@@ -242,11 +263,24 @@ int getDay(Time timeInSeconds) {
   return timeInSeconds / DAY_LENGTH;
 }
 
-std::string getScenarioId(Id numPeople, int numPeopleChares, Id numLocations,
-    int numLocationChares) {
+std::string getScenarioId(Id numPeople, PartitionId numPeopleChares, Id numLocations,
+    PartitionId numLocationChares) {
   std::ostringstream oss;
   oss << numPeople << "-" << numPeopleChares << "_" << numLocations
     << "-" << numLocationChares;
   return oss.str();
 }
 
+// If path does not name an existing file, create a directory
+// there, with permissions match that of refPath. Return whether
+// or not a new directory was created
+// Should have behavior analogous to C++17 std::filesystem::create_directory
+bool createDirectory(std::string path, std::string refPath) {
+  struct stat dirStat;
+  if (0 == stat(path.c_str(), &dirStat)) {
+    struct stat refStat;
+    stat(refPath.c_str(), &refStat);
+    return 0 == mkdir(path.c_str(), refStat.st_mode);
+  }
+  return false;
+}
