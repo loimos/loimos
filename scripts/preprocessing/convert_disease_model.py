@@ -37,8 +37,10 @@ def convert_transition(transition_edge):
                 "tvariance": {"days": transition_edge["normal"]["standardDeviation"]},
             }
         }
+    elif "fixed" in transition_edge:
+        return {"fixed": transition_edge["fixed"]}
     else:
-        raise f"Unknown type {transition_edge}"
+        raise Exception(f"Unknown type {transition_edge}")
 
 
 def create_transition_set(paths):
@@ -118,8 +120,8 @@ def convert_file(filepath):
     # Convert from their json to intermediary dictionary format.
     converted_states = []
     for state in states.values():
-        if "_a" not in state["id"]:
-            continue
+        #if "_a" not in state["id"]:
+        #    continue
 
         disease_state = {}
         disease_state["state_label"] = state["id"]
