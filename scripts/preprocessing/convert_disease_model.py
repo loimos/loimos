@@ -11,6 +11,7 @@ our simulation.
 
 import argparse
 import json
+import os
 
 
 # Helpers to convert between the meta format to final textproto.
@@ -140,10 +141,16 @@ def convert_file(filepath):
             }
         converted_states.append({"disease_states": disease_state})
 
-    # Output as textproto.
-    to_textproto({"label": "TODO_FILL_IN"})
-    to_textproto({"starting_state": "TODO_FILL_IN"})
-    to_textproto({"starting_exposed_state": "TODO_FILL_IN"})
+    # Output as textproto
+    basename = os.path.basename(filepath)
+    label, _ = os.path.splitext(basename)
+    to_textproto({"label": label})
+    to_textproto({"transmissibility": int(disease_dict["transmissibility"])})
+    to_textproto({"starting_states": {
+        "lower": 0,
+        "upper": 999,
+        "starting_state": state_names_to_index[disease_dict["initialState"]]
+        }})
     for state in converted_states:
         to_textproto(state)
     print("\n\n\n")
