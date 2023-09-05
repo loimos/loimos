@@ -99,10 +99,6 @@ Locations::Locations(CkMigrateMessage *msg) {}
 void Locations::loadLocationData(std::string scenarioPath) {
   double startTime = CkWallTimer();
 
-  // Init local.
-  int numAttributesPerLocation =
-    DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
-
   // Load in location information.
   Id startingLineIndex = getGlobalIndex(0, thisIndex, numLocations,
     numLocationPartitions, firstLocationIdx) - firstLocationIdx;
@@ -125,7 +121,7 @@ void Locations::loadLocationData(std::string scenarioPath) {
   locationData.seekg(locationOffset);
 
   // Read in our location data.
-  DataReader<Location>::readData(&locationData, diseaseModel->locationDef,
+  readData(&locationData, diseaseModel->locationDef,
       &locations);
   locationData.close();
   locationCache.close();

@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-#ifndef READERS_PARTITIONER_H_
-#define READERS_PARTITIONER_H_
+#ifndef READERS_PARTITION_H_
+#define READERS_PARTITION_H_
 
 #include "DataInterface.h"
 #include "DataReader.h"
@@ -18,10 +18,9 @@
 
 template <class T = DataInterface>
 void partitionData(Id numObjs, PartitionId numChares,
-  std::string metadataPath, std::string inputPath, std::string outputPath,
-  std::vector<Id> *lidUpdate) {
-
-  }
+    std::string metadataPath, std::string inputPath, std::string outputPath,
+    std::vector<Id> *lidUpdate) {
+}
 
 void updateVisitIds(const std::vector<Id> &lidUpdate,
   const std::vector<Id> &pidUpdate, std::string metadataPath,
@@ -29,4 +28,4 @@ void updateVisitIds(const std::vector<Id> &lidUpdate,
 
 }
 
-#endif  // READERS_PARTITIONER_H_
+#endif  // READERS_PARTITION_H_

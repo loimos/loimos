@@ -11,6 +11,7 @@
 
 #include <tuple>
 #include <string>
+#include <google/protobuf/text_format.h>
 
 // Main entry point.
 std::tuple<Id, Id, std::string> buildCache(std::string scenarioPath, Id numPeople,
@@ -24,6 +25,5 @@ void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
 int getDay(Time timeInSeconds);
 std::string getScenarioId(Id numPeople, PartitionId numPeopleChares, Id numLocations,
   PartitionId numLocationChares);
-bool createDirectory(std::string path, std::string refPath);
 
 #endif  // READERS_PREPROCESS_H_
