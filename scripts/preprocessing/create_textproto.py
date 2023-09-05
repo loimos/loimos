@@ -4,6 +4,7 @@ import argparse
 import os
 
 import pandas as pd
+from subprocess import check_output
 
 PEOPLE_TYPES = {
     "pid": "unique_id",
@@ -20,12 +21,14 @@ VISITS_TYPES = {
     "start_time": "start_time",
     "duration": "duration",
 }
+LOAD_COLUMNS = {"locations": "total_visits"}
 DEFAULT_TYPE = "ignore"
-TEXTPROTO_ENTRY = """fields {{
+COLUMN_METADATA_ENTRY = """fields {{
     field_name: \"{name}\"
     {dtype}: {{}}
 }}
 """
+SINGLETON_ENTRY = "{name}: {value}\n"
 
 
 def parse_args():
@@ -67,16 +70,31 @@ def parse_args():
     return parser.parse_args()
 
 
+# Based on response given in:
+# https://stackoverflow.com/questions/6520761/running-wc-l-filename-within-python-code
+def wc(path):
+    result = check_output(["wc", "-l", path])
+    return int(result.split()[0])
+
+
 def create_textproto(pop_dir, csv_filename, dtypes):
     csv_path = os.path.join(pop_dir, csv_filename)
     tmp, _ = os.path.splitext(csv_path)
     textproto_path = tmp + ".textproto"
+    name = os.path.basename(tmp)
+
+    # Ignore header row
+    num_rows = wc(csv_path) - 1
 
     df = pd.read_csv(csv_path, nrows=1)
     with open(textproto_path, "w") as f:
+        f.write(SINGLETON_ENTRY.format(name="num_rows", value=num_rows))
+        if name in LOAD_COLUMNS:
+            f.write(SINGLETON_ENTRY.format(name="load_column",
+                                           value=f"\"{LOAD_COLUMNS[name]}\""))
         for c in df.columns:
             dtype = dtypes.get(c, DEFAULT_TYPE)
-            f.write(TEXTPROTO_ENTRY.format(name=c, dtype=dtype))
+            f.write(COLUMN_METADATA_ENTRY.format(name=c, dtype=dtype))
 
 
 def main():
