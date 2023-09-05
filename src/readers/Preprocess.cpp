@@ -30,6 +30,7 @@
 #include <sstream>
 #include <sys/stat.h>
 #include <google/protobuf/text_format.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
 
 #define MAX_WRITE_SIZE 65536  // 2^16
 
@@ -89,13 +90,7 @@ Id buildObjectLookupCache(Id numObjs, PartitionId numChares,
 
   // Read config file.
   loimos::proto::CSVDefinition csvDefinition;
-  std::ifstream csvConfigDefStream(metadataPath);
-  std::string strData((std::istreambuf_iterator<char>(csvConfigDefStream)),
-      std::istreambuf_iterator<char>());
-  if (!google::protobuf::TextFormat::ParseFromString(strData, &csvDefinition)) {
-    CkAbort("Could not parse protobuf!");
-  }
-  csvConfigDefStream.close();
+  readProtobuf(metadataPath, &csvDefinition);
 
   int csvLocationOfPid = -1;
   for (int i = 0; i < csvDefinition.fields_size(); i += 1) {
@@ -130,7 +125,6 @@ Id buildObjectLookupCache(Id numObjs, PartitionId numChares,
   if (existenceCheck.good()) {
     CkPrintf("Using existing cache.\n");
     existenceCheck.close();
-    return firstIdx;
 
   } else {
     existenceCheck.close();
@@ -150,8 +144,9 @@ Id buildObjectLookupCache(Id numObjs, PartitionId numChares,
       currentPosition = activityStream.tellg();
     }
     outputStream.flush();
-    return firstIdx;
   }
+
+  return firstIdx;
 }
 
 
@@ -175,13 +170,7 @@ void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
 
   // Read config file.
   loimos::proto::CSVDefinition csvDefinition;
-  std::ifstream csvConfigDefStream(metadataPath);
-  std::string strData((std::istreambuf_iterator<char>(csvConfigDefStream)),
-      std::istreambuf_iterator<char>());
-  if (!google::protobuf::TextFormat::ParseFromString(strData, &csvDefinition)) {
-    CkAbort("Could not parse protobuf!");
-  }
-  csvConfigDefStream.close();
+  readProtobuf(metadataPath, &csvDefinition);
 
   // Create position vector for each person.
   std::size_t totalDataSize = numPeople * numDaysWithDistinctVisits
@@ -207,7 +196,7 @@ void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
   Id totalVisits = 0;
   // For better looping efficiency simulate one break of inner loop to start.
   std::tie(nextPerson, locationId, nextTime, duration) =
-    DataReader<>::parseActivityStream(&activityStream, &csvDefinition, NULL);
+    parseActivityStream(&activityStream, &csvDefinition, NULL);
   nextTimeSec = nextTime;
   nextTime = getDay(nextTime);
 
@@ -243,7 +232,7 @@ void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
         && lastPerson == nextPerson) {
       current_position = activityStream.tellg();
       std::tie(nextPerson, locationId, nextTime, duration) =
-        DataReader<>::parseActivityStream(&activityStream,
+        parseActivityStream(&activityStream,
             &csvDefinition, NULL);
 
       nextTime = getDay(nextTime);
@@ -269,18 +258,4 @@ std::string getScenarioId(Id numPeople, PartitionId numPeopleChares, Id numLocat
   oss << numPeople << "-" << numPeopleChares << "_" << numLocations
     << "-" << numLocationChares;
   return oss.str();
-}
-
-// If path does not name an existing file, create a directory
-// there, with permissions match that of refPath. Return whether
-// or not a new directory was created
-// Should have behavior analogous to C++17 std::filesystem::create_directory
-bool createDirectory(std::string path, std::string refPath) {
-  struct stat dirStat;
-  if (0 == stat(path.c_str(), &dirStat)) {
-    struct stat refStat;
-    stat(refPath.c_str(), &refStat);
-    return 0 == mkdir(path.c_str(), refStat.st_mode);
-  }
-  return false;
 }

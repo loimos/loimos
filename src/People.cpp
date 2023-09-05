@@ -277,7 +277,7 @@ void People::loadPeopleData(std::string scenarioPath) {
   peopleData.seekg(peopleOffset);
 
   // Read in from remote file.
-  DataReader<Person>::readData(&peopleData, diseaseModel->personDef, &people);
+  readData(&peopleData, diseaseModel->personDef, &people);
   peopleData.close();
   peopleCache.close();
 
@@ -344,7 +344,7 @@ void People::loadVisitData(std::ifstream *activityData) {
       Time visitStart = -1;
       Time visitDuration = -1;
       std::tie(personId, locationId, visitStart, visitDuration) =
-        DataReader<Person>::parseActivityStream(activityData,
+        parseActivityStream(activityData,
             diseaseModel->activityDef, NULL);
 
 #if ENABLE_DEBUG >= DEBUG_PER_OBJECT
@@ -367,7 +367,7 @@ void People::loadVisitData(std::ifstream *activityData) {
         #endif
 
         std::tie(personId, locationId, visitStart, visitDuration) =
-          DataReader<Person>::parseActivityStream(activityData,
+          parseActivityStream(activityData,
               diseaseModel->activityDef, NULL);
       }
 

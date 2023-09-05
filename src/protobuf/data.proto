@@ -46,4 +46,6 @@ message DataField {
 
 message CSVDefinition {
   repeated DataField fields = 1;
+  uint64 num_rows = 2;
+  string load_column = 3;
 }

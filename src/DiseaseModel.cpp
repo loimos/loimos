@@ -20,6 +20,7 @@
 #include "Event.h"
 #include "Person.h"
 #include "Location.h"
+#include "readers/Preprocess.h"
 #include "readers/DataReader.h"
 #include "readers/AttributeTable.h"
 #include "contact_model/ContactModel.h"
@@ -59,32 +60,15 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
 
   // Load Disease model
   model = new loimos::proto::DiseaseModel();
-  std::ifstream diseaseModelStream(pathToModel);
-  if (!diseaseModelStream) {
-    CkAbort("Could not read disease model at %s.", pathToModel.c_str());
-  }
-  std::string str((std::istreambuf_iterator<char>(diseaseModelStream)),
-      std::istreambuf_iterator<char>());
-  if (!google::protobuf::TextFormat::ParseFromString(str, model)) {
-    CkAbort("Could not parse protobuf!");
-  }
-  diseaseModelStream.close();
+  readProtobuf(pathToModel, model);
   assert(model->disease_states_size() != 0);
 
   // Setup other shared PE objects.
   if (!syntheticRun) {
     // Handle people...
-    personDef = new loimos::proto::CSVDefinition();
-    std::ifstream personInputStream(scenarioPath + "people.textproto");
-    if (!personInputStream)
-      CkAbort("Could not open people textproto!");
-    std::string strPerson((std::istreambuf_iterator<char>(personInputStream)),
-                    std::istreambuf_iterator<char>());
-    if (!google::protobuf::TextFormat::ParseFromString(strPerson, personDef)) {
-      CkAbort("Could not parse person protobuf!");
-    }
-    personInputStream.close();
-    ageIdx = DataReader<>::getAttributeIndex(personDef, "age");
+    personDef = new loimos::proto::CSVDefinition;
+    readProtobuf(scenarioPath + "people.textproto", personDef);
+
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
     if (0 == CkMyNode()) {
     CkPrintf("  Age to be stored at index %d\n",
@@ -93,47 +77,12 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
 #endif
 
     // ...locations...
-    locationDef = new loimos::proto::CSVDefinition();
-    std::ifstream locationInputStream(scenarioPath + "locations.textproto");
-    if (!locationInputStream)
-      CkAbort("Could not open location textproto!");
-    std::string strLocation((std::istreambuf_iterator<char>(
-            locationInputStream)),
-                    std::istreambuf_iterator<char>());
-    if (!google::protobuf::TextFormat::ParseFromString(strLocation,
-          locationDef)) {
-      CkAbort("Could not parse location protobuf!");
-    }
-    locationInputStream.close();
-
-    if (static_cast<int>(ContactModelType::min_max_alpha) == contactModelType) {
-      maxSimVisitsIdx = DataReader<>::getAttributeIndex(locationDef,
-          "max_simultaneous_visits");
-      if (-1 == maxSimVisitsIdx) {
-        CkAbort("Error: required attribute \"max_simultaneous_visits\" not present\n");
-      } else {
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
-        if (0 == CkMyNode()) {
-          CkPrintf("  Max sim visit count to be stored at index %d\n",
-              maxSimVisitsIdx);
-        }
-#endif
-      }
-    }
+    locationDef = new loimos::proto::CSVDefinition;
+    readProtobuf(scenarioPath + "locations.textproto", locationDef);
 
     // ...and visits
-    activityDef = new loimos::proto::CSVDefinition();
-    std::ifstream activityInputStream(scenarioPath + "visits.textproto");
-    if (!activityInputStream)
-      CkAbort("Could not open activity textproto!");
-    std::string strActivity((std::istreambuf_iterator<char>(
-            activityInputStream)),
-                    std::istreambuf_iterator<char>());
-    if (!google::protobuf::TextFormat::ParseFromString(strActivity,
-          activityDef)) {
-      CkAbort("Could not parse activity protobuf!");
-    }
-    activityInputStream.close();
+    activityDef = new loimos::proto::CSVDefinition;
+    readProtobuf(scenarioPath + "visits.textproto", activityDef);
 
     personAttributes.readAttributes(personDef->fields());
     locationAttributes.readAttributes(locationDef->fields());
@@ -141,17 +90,7 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
 
   if (interventionStategy) {
     interventionDef = new loimos::proto::InterventionModel();
-    std::ifstream interventionActivityStream(pathToIntervention);
-    if (!interventionActivityStream)
-      CkAbort("Could not open intervention textproto!");
-    std::string interventionString((std::istreambuf_iterator<char>(
-            interventionActivityStream)),
-                    std::istreambuf_iterator<char>());
-    if (!google::protobuf::TextFormat::ParseFromString(interventionString,
-          interventionDef)) {
-      CkAbort("Could not parse protobuf!");
-    }
-    interventionActivityStream.close();
+    readProtobuf(pathToIntervention, interventionDef);
 
     triggerFlags.resize(interventionDef->triggers_size(), false);
 
@@ -165,8 +104,11 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
         locationAttributes);
   }
 
+  // Some attributes are priviledged and handled in unique ways
   susceptibilityIndex = personAttributes.getAttributeIndex("susceptibility");
   infectivityIndex = personAttributes.getAttributeIndex("infectivity");
+  ageIdx = personAttributes.getAttributeIndex("age");
+  maxSimVisitsIdx = locationAttributes.getAttributeIndex("max_simultaneous_visits");
 }
 
 void DiseaseModel::intitialisePersonInterventions(
