@@ -2,8 +2,6 @@ label: "covid19"
 transmissibility: 6e-13
 
 starting_states: {
-	lower: 0
-	upper: 999
 	starting_state: 0
 }
 

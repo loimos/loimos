@@ -155,8 +155,6 @@ def convert_file(in_path, out_path):
             out_file,
             {
                 "starting_states": {
-                    "lower": 0,
-                    "upper": 999,
                     "starting_state": state_names_to_index[
                         disease_dict["initialState"]
                     ],
