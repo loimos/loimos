@@ -23,7 +23,7 @@ const unsigned int ALPHA = 1000;
 
 MinMaxAlphaModel::MinMaxAlphaModel() {
   contactProbabilityIndex = -1;
-  
+
   if (-1 == maxSimVisitsIdx) {
     CkAbort("Error: required attribute \"max_simultaneous_visits\" not present\n");
   } else {
