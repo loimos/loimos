@@ -90,8 +90,11 @@ def create_textproto(pop_dir, csv_filename, dtypes):
     with open(textproto_path, "w") as f:
         f.write(SINGLETON_ENTRY.format(name="num_rows", value=num_rows))
         if name in LOAD_COLUMNS:
-            f.write(SINGLETON_ENTRY.format(name="load_column",
-                                           value=f"\"{LOAD_COLUMNS[name]}\""))
+            f.write(
+                SINGLETON_ENTRY.format(
+                    name="load_column", value=f'"{LOAD_COLUMNS[name]}"'
+                )
+            )
         for c in df.columns:
             dtype = dtypes.get(c, DEFAULT_TYPE)
             f.write(COLUMN_METADATA_ENTRY.format(name=c, dtype=dtype))
