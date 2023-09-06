@@ -45,21 +45,6 @@ std::tuple<Id, Id, std::string> buildCache(std::string scenarioPath, Id numPeopl
   std::string uniqueScenario = getScenarioId(numPeople, numPeopleChares,
       numLocations, numLocationChares);
 
-  // All data will be saved to a sub-dir of the scenario dir
-  std::string cachePath = scenarioPath + uniqueScenario + "/";
-  // std::filesystem::create_directory(cachePath, scenarioPath);
-  createDirectory(cachePath, scenarioPath);
-
-  // Partition the data
-  std::vector<Id> lidUpdate;
-  std::vector<Id> pidUpdate;
-  partitionData<Location>(numLocations, numLocationChares, scenarioPath + "locations.textproto",
-    scenarioPath + "locations.csv", cachePath + "locations.csv", &lidUpdate);
-  // partitionData<Person>(numPeople, numLocationChares, scenarioPath + "locations.textproto",
-  //   scenarioPath + "locations.csv", cachePath + "locations.csv", &lidUpdate);
-  updateVisitIds(lidUpdate, pidUpdate, scenarioPath + "visits.textproto",
-    scenarioPath + "visits.csv", cachePath + "visits.csv");
-
   // Build person and location cache.
   Id firstPersonIdx = buildObjectLookupCache(numPeople, numPeopleChares,
     scenarioPath + "people.textproto", scenarioPath + "people.csv",
