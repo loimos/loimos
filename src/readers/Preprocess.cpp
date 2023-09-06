@@ -13,7 +13,6 @@
 
 #include "../loimos.decl.h"
 #include "Preprocess.h"
-#include "Partition.h"
 #include "DataReader.h"
 #include "../Defs.h"
 #include "../Extern.h"
@@ -24,7 +23,6 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <vector>
 #include <vector>
 #include <tuple>
 #include <sstream>
@@ -52,8 +50,9 @@ std::tuple<Id, Id, std::string> buildCache(std::string scenarioPath, Id numPeopl
   Id firstLocationIdx = buildObjectLookupCache(numLocations,
     numLocationChares, scenarioPath + "locations.textproto",
     scenarioPath + "locations.csv", scenarioPath + uniqueScenario + "_locations.cache");
-  buildActivityCache(numPeople, numDays, firstPersonIdx, scenarioPath + "visits.textproto",
-    scenarioPath + "visits.csv", scenarioPath + uniqueScenario + "_visits.cache");
+  buildActivityCache(numPeople, numDays, firstPersonIdx,
+    scenarioPath + "visits.textproto", scenarioPath + "visits.csv",
+    scenarioPath + uniqueScenario + "_visits.cache");
   return std::make_tuple(firstPersonIdx, firstLocationIdx, uniqueScenario);
 }
 
