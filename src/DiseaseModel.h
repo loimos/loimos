@@ -7,9 +7,9 @@
 #define DISEASEMODEL_H_
 
 #include "Event.h"
-
 #include "Person.h"
 #include "Location.h"
+#include "Types.h"
 #include "protobuf/disease.pb.h"
 #include "protobuf/distribution.pb.h"
 #include "protobuf/data.pb.h"
@@ -18,7 +18,6 @@
 #include "readers/DataInterface.h"
 #include "readers/AttributeTable.h"
 #include "intervention_model/Intervention.h"
-#include "Event.h"
 
 #include <unordered_map>
 #include <random>
@@ -36,6 +35,8 @@ class DiseaseModel : public CBase_DiseaseModel {
     loimos::proto::DiseaseModel_DiseaseState_TimedTransitionSet_StateTransition
       *transitionSet, std::default_random_engine *generator) const;
   Time timeDefToSeconds(TimeDef time) const;
+  std::vector<Id> locationPartitionOffsets;
+  std::vector<Id> personPartitionOffsets;
 
   // Intervention related.
   std::vector<bool> triggerFlags;
@@ -43,12 +44,14 @@ class DiseaseModel : public CBase_DiseaseModel {
   std::vector<std::shared_ptr<Intervention<Location>>> locationInterventions;
 
 
-void intitialisePersonInterventions(
+  void intitialisePersonInterventions(
     const InterventionList &interventionSpecs,
     const AttributeTable &attributes);
-void intitialiseLocationInterventions(
+  void intitialiseLocationInterventions(
     const InterventionList &interventionSpecs,
     const AttributeTable &attributes);
+  void setPartitionOffsets(PartitionId numPartitions,
+    loimos::proto::CSVDefinition *metadata, std::vector<Id> *partitionOffsets);
 
  public:
   // move back to private later

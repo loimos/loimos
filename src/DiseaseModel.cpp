@@ -31,6 +31,7 @@
 #include "protobuf/interventions.pb.h"
 #include "protobuf/disease.pb.h"
 #include "protobuf/distribution.pb.h"
+#include "protobuf/data.pb.h"
 
 #include <cmath>
 #include <cstdio>
@@ -68,17 +69,12 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     // Handle people...
     personDef = new loimos::proto::CSVDefinition;
     readProtobuf(scenarioPath + "people.textproto", personDef);
-
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
-    if (0 == CkMyNode()) {
-    CkPrintf("  Age to be stored at index %d\n",
-        ageIdx);
-    }
-#endif
+    setPartitionOffsets(numPeoplePartitions, personDef, &personPartitionOffsets);
 
     // ...locations...
     locationDef = new loimos::proto::CSVDefinition;
     readProtobuf(scenarioPath + "locations.textproto", locationDef);
+    setPartitionOffsets(numLocationPartitions, locationDef, &locationPartitionOffsets);
 
     // ...and visits
     activityDef = new loimos::proto::CSVDefinition;
@@ -109,6 +105,25 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
   infectivityIndex = personAttributes.getAttributeIndex("infectivity");
   ageIdx = personAttributes.getAttributeIndex("age");
   maxSimVisitsIdx = locationAttributes.getAttributeIndex("max_simultaneous_visits");
+
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
+    if (0 == CkMyNode()) {
+    CkPrintf("  Age to be stored at index %d\n",
+        ageIdx);
+    }
+#endif
+}
+
+void DiseaseModel::setPartitionOffsets(PartitionId numPartitions,
+    loimos::proto::CSVDefinition *metadata, std::vector<Id> *partitionOffsets) {
+  partitionOffsets->reserve(numPartitions);
+  PartitionId numOffsets = metadata->partition_offsets_size();
+  for (PartitionId i = 0; i < numOffsets; ++i) {
+    PartitionId p = getPartitionIndex(i, numOffsets, numPartitions, 0);
+    if (partitionOffsets->size() == p) {
+      partitionOffsets->emplace_back(metadata->partition_offsets(i));
+    }
+  }
 }
 
 void DiseaseModel::intitialisePersonInterventions(
@@ -372,7 +387,6 @@ double DiseaseModel::getPropensity(DiseaseState susceptibleState,
  * Intervention Methods
  * TODO: Move to own chare as these become more complex.
  */
-
 
 const Intervention<Person> & DiseaseModel::getPersonIntervention(int index)
   const {
