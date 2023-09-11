@@ -48,7 +48,11 @@ def analyze_by_location(locations, people, visits, output_dir):
     print(visited_location_counts.shape, visit_counts.shape)
 
     fig, ax = plt.subplots(figsize=(10, 6))
-    sns.histplot(visited_location_counts, bins=50, kde=False, log_scale=(True, True))
+    sns.histplot(visited_location_counts, bins=50, kde=False,
+            log_scale=(False, True))
+    plt.ylim(1, visited_location_counts.max())
+    plt.xlabel("total_visits")
+    plt.title(f"Total Visits Histogram")
     plt.savefig(os.path.join(output_dir, "visits_location_hist.pdf"))
     # sns.kdeplot(visited_location_counts, log_scale=(True,True))
 
@@ -61,32 +65,36 @@ def analyze_by_location(locations, people, visits, output_dir):
     print(visited_location_counts.shape, visit_counts.shape)
 
     fig, ax = plt.subplots(figsize=(10, 6))
-    sns.histplot(visited_location_counts, bins=50, kde=True, log_scale=(True, True))
+    sns.histplot(visited_location_counts, bins=50, kde=False,
+            log_scale=(False, True))
+    plt.ylim(1, visited_location_counts.max())
+    plt.xlabel("max_simultaneous_visits")
+    plt.title(f"Max Simultaneous Visit Histogram")
     plt.savefig(os.path.join(output_dir, "max_sim_visits_location_hist.pdf"))
 
     visits_by_location = visits.groupby(by="lid")
     visit_counts_by_location = visits_by_location[["lid", "start_time"]].count()
 
-    visit_counts_by_location["num_visit_sources"] = [
-        len(np.unique(people.iloc[grouped["pid"]]["lid"]))
-        for lid, grouped in visits_by_location
-    ]
-    print(visit_counts_by_location)
+    #visit_counts_by_location["num_visit_sources"] = [
+    #    len(np.unique(people.iloc[grouped["pid"]]["lid"]))
+    #    for lid, grouped in visits_by_location
+    #]
+    #print(visit_counts_by_location)
 
-    fig, ax = plt.subplots(figsize=(10, 6))
-    sns.histplot(
-        visit_counts_by_location,
-        bins=50,
-        x="num_visit_sources",
-        kde=False,
-        log_scale=(True, True),
-    )
-    plt.savefig(os.path.join(output_dir, "visit_sources_hist.pdf"))
+    #fig, ax = plt.subplots(figsize=(10, 6))
+    #sns.histplot(
+    #    visit_counts_by_location,
+    #    bins=50,
+    #    x="num_visit_sources",
+    #    kde=False,
+    #    log_scale=(True, True),
+    #)
+    #plt.savefig(os.path.join(output_dir, "visit_sources_hist.pdf"))
 
-    print(
-        visit_counts_by_location["num_visit_sources"].mean(),
-        visit_counts_by_location["num_visit_sources"].std(),
-    )
+    #print(
+    #    visit_counts_by_location["num_visit_sources"].mean(),
+    #    visit_counts_by_location["num_visit_sources"].std(),
+    #)
 
 
 def analyze_by_person(locations, people, visits, output_dir):
