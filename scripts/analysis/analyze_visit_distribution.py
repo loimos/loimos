@@ -70,8 +70,8 @@ def analyze_by_location(locations, people, visits, output_dir):
     plt.title("Max Simultaneous Visit Histogram")
     plt.savefig(os.path.join(output_dir, "max_sim_visits_location_hist.pdf"))
 
-    visits_by_location = visits.groupby(by="lid")
-    visit_counts_by_location = visits_by_location[["lid", "start_time"]].count()
+    # visits_by_location = visits.groupby(by="lid")
+    # visit_counts_by_location = visits_by_location[["lid", "start_time"]].count()
 
     # visit_counts_by_location["num_visit_sources"] = [
     #    len(np.unique(people.iloc[grouped["pid"]]["lid"]))
