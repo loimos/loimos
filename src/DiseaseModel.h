@@ -50,7 +50,7 @@ class DiseaseModel : public CBase_DiseaseModel {
   void intitialiseLocationInterventions(
     const InterventionList &interventionSpecs,
     const AttributeTable &attributes);
-  void setPartitionOffsets(PartitionId numPartitions,
+  void setPartitionOffsets(PartitionId numPartitions, Id numObjects,
     loimos::proto::CSVDefinition *metadata, std::vector<Id> *partitionOffsets);
 
  public:
