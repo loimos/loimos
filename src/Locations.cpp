@@ -62,11 +62,9 @@ Locations::Locations(int seed, std::string scenarioPath) {
 
   int numInterventions = diseaseModel->getNumLocationInterventions();
   locations.reserve(numLocalLocations);
-  Id firstIdx = thisIndex * getNumElementsPerPartition(numLocations,
-      numLocationPartitions);
-  for (int p = 0; p < numLocalLocations; p++) {
+  for (int i = 0; i < numLocalLocations; i++) {
     locations.emplace_back(diseaseModel->locationAttributes,
-      numInterventions, firstIdx + p);
+      numInterventions, firstLocalLocationIdx + i);
   }
 
   // Load application data
