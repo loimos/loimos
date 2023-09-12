@@ -65,18 +65,16 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
   assert(model->disease_states_size() != 0);
 
   // Setup other shared PE objects.
+  personDef = NULL;
+  locationDef = NULL;
   if (!syntheticRun) {
     // Handle people...
     personDef = new loimos::proto::CSVDefinition;
     readProtobuf(scenarioPath + "people.textproto", personDef);
-    setPartitionOffsets(numPeoplePartitions, numPeople,
-      personDef, &personPartitionOffsets);
 
     // ...locations...
     locationDef = new loimos::proto::CSVDefinition;
     readProtobuf(scenarioPath + "locations.textproto", locationDef);
-    setPartitionOffsets(numLocationPartitions, numLocations,
-      locationDef, &locationPartitionOffsets);
 
     // ...and visits
     activityDef = new loimos::proto::CSVDefinition;
@@ -85,6 +83,11 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     personAttributes.readAttributes(personDef->fields());
     locationAttributes.readAttributes(locationDef->fields());
   }
+
+  setPartitionOffsets(numPeoplePartitions, numPeople,
+    personDef, &personPartitionOffsets);
+  setPartitionOffsets(numLocationPartitions, numLocations,
+    locationDef, &locationPartitionOffsets);
 
   if (interventionStategy) {
     interventionDef = new loimos::proto::InterventionModel();
@@ -119,25 +122,52 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
 void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
     loimos::proto::CSVDefinition *metadata, std::vector<Id> *partitionOffsets) {
   partitionOffsets->reserve(numPartitions);
-  PartitionId numOffsets = metadata->partition_offsets_size();
+  if (0 == CkMyNode()) {
+    CkPrintf("  partitions: %d, objs: %d\n", numPartitions, numObjects);
+  }
 
-  if (0 < numOffsets) {
+  if (NULL != metadata && 0 < metadata->partition_offsets_size()) {
+    PartitionId numOffsets = metadata->partition_offsets_size();
     for (PartitionId i = 0; i < numOffsets; ++i) {
       PartitionId p = getPartitionIndex(i, numOffsets, numPartitions, 0);
+      Id offset = metadata->partition_offsets(i);
       if (partitionOffsets->size() == p) {
-        partitionOffsets->emplace_back(metadata->partition_offsets(i));
+        partitionOffsets->emplace_back(offset);
       }
+
+      #ifdef ENABLE_DEBUG
+      if (0 > offset || numObjects <= offset) {
+        CkAbort("Error: Offset "ID_PRINT_TYPE" outside of valid range [0,"
+          ID_PRINT_TYPE")\n", offset, numObjects);
+      }
+      
+      #if ENABLE_DEBUG <= DEBUG_PER_CHARE
+      else if (0 == CkMyNode()) {
+        CkPrintf("  Chare %d: %d\n", i, offset);
+      }
+      #endif
+      #endif  // ENABLE_DEBUG
     }
   
   // If no offsets are provided, try to put about the same number of objects
   // in each partition (i.e. use the old partitioning scheme)
   } else {
-    for (PartitionId i = 0; i < numOffsets; ++i) {
-      Id numObjects = getNumLocalElements(numObjects,
-        numPartitions, i);
-      Id firstIdx = getFirstIndex(i, numObjects,
+    for (PartitionId i = 0; i < numPartitions; ++i) {
+      Id offset = getFirstIndex(i, numObjects,
           numPartitions, 0);
-      partitionOffsets->emplace_back(firstIdx);
+      partitionOffsets->emplace_back(offset);
+
+      #ifdef ENABLE_DEBUG
+      if (0 > offset || numObjects <= offset) {
+        CkAbort("Error: Offset "ID_PRINT_TYPE" outside of valid range [0,"
+          ID_PRINT_TYPE")\n", offset, numObjects);
+      }
+      #if ENABLE_DEBUG <= DEBUG_PER_CHARE
+      else if (0 == CkMyNode()) {
+        CkPrintf("  Chare %d: %d\n", i, offset);
+      }
+      #endif
+      #endif  // ENABLE_DEBUG
     }
   }
 }
