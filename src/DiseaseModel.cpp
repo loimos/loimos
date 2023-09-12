@@ -33,6 +33,8 @@
 #include "protobuf/distribution.pb.h"
 #include "protobuf/data.pb.h"
 
+#include <algorithm>
+#include <iterator>
 #include <cmath>
 #include <cstdio>
 #include <fstream>
@@ -139,8 +141,12 @@ void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
       if (0 > offset || numObjects <= offset) {
         CkAbort("Error: Offset "ID_PRINT_TYPE" outside of valid range [0,"
           ID_PRINT_TYPE")\n", offset, numObjects);
-      }
-      
+
+      // Offsets should be sorted so we can do a binary search later
+      } else if (0 != p && partitionOffsets->get(p - 1) >= offset) {
+        CkAbort("Error: Offset "ID_PRINT_TYPE" for parition "
+        PARTITION_ID_PRINT_TYPE" out of order\n", offset, p);
+
       #if ENABLE_DEBUG <= DEBUG_PER_CHARE
       else if (0 == CkMyNode()) {
         CkPrintf("  Chare %d: %d\n", i, offset);
@@ -170,6 +176,63 @@ void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
       #endif  // ENABLE_DEBUG
     }
   }
+}
+
+Id DiseaseModel::getLocalIndex(Id globalIndex, PartitionId PartitionId,
+    const std::vector<Id> &offsets) {
+  return globalIndex - offsets[PartitionId];
+}
+
+Id DiseaseModel::getGlobalIndex(Id localIndex, PartitionId PartitionId,
+    const std::vector<Id> &offsets) {
+  return localIndex + offsets[PartitionId];
+}
+
+PartitionId DiseaseModel::getPartition(Id globalIndex,
+    const std::vector<Id> &offsets) {
+  return std::distance(offsets.begin(),
+    std::lower_bound(offsets.begin(), offsets.end(), globalIndex));
+}
+
+Id DiseaseModel::getPartitionSize(PartitionId partitionIndex,
+    Id numObjects, const std::vector<Id> &offsets) {
+  if (offsets.size() - 1 == partitionIndex) {
+    return numObjects - offsets[partitionIndex];
+  } else {
+    return offsets[partitionIndex + 1] - offsets[partitionIndex];
+  }
+}
+
+Id DiseaseModel::getLocalLocationIndex(Id globalIndex, PartitionId PartitionId) const {
+  return DiseaseModel::getLocalIndex(globalIndex, PartitionId, locationPartitionOffsets);
+}
+
+Id DiseaseModel::getGlobalLocationIndex(Id localIndex, PartitionId PartitionId) const {
+  return DiseaseModel::getGlobalIndex(localIndex, PartitionId, locationPartitionOffsets);
+}
+
+PartitionId DiseaseModel::getLocationPartitionIndex(Id globalIndex) const {
+  return DiseaseModel::getPartition(globalIndex, locationPartitionOffsets);
+}
+
+Id DiseaseModel::getLocationPartitionSize(PartitionId partitionIndex) const {
+  return getPartitionSize(partitionIndex, numLocations, locationPartitionOffsets);
+}
+
+Id DiseaseModel::getLocalPersonIndex(Id globalIndex, PartitionId partitionIndex) const {
+  return DiseaseModel::getLocalIndex(globalIndex, partitionIndex, personPartitionOffsets);
+}
+
+Id DiseaseModel::getGlobalPersonIndex(Id localIndex, PartitionId partitionIndex) const {
+  return DiseaseModel::getGlobalIndex(localIndex, partitionIndex, personPartitionOffsets);
+}
+
+PartitionId DiseaseModel::getPersonPartitionIndex(Id globalIndex) const {
+  return DiseaseModel::getPartition(globalIndex, personPartitionOffsets);
+}
+
+Id DiseaseModel::getPersonPartitionSize(PartitionId partitionIndex) const {
+  return getPartitionSize(partitionIndex, numPeople, personPartitionOffsets);
 }
 
 void DiseaseModel::intitialisePersonInterventions(
