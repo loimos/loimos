@@ -69,12 +69,14 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     // Handle people...
     personDef = new loimos::proto::CSVDefinition;
     readProtobuf(scenarioPath + "people.textproto", personDef);
-    setPartitionOffsets(numPeoplePartitions, personDef, &personPartitionOffsets);
+    setPartitionOffsets(numPeoplePartitions, numPeople,
+      personDef, &personPartitionOffsets);
 
     // ...locations...
     locationDef = new loimos::proto::CSVDefinition;
     readProtobuf(scenarioPath + "locations.textproto", locationDef);
-    setPartitionOffsets(numLocationPartitions, locationDef, &locationPartitionOffsets);
+    setPartitionOffsets(numLocationPartitions, numLocations,
+      locationDef, &locationPartitionOffsets);
 
     // ...and visits
     activityDef = new loimos::proto::CSVDefinition;
@@ -114,14 +116,28 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
 #endif
 }
 
-void DiseaseModel::setPartitionOffsets(PartitionId numPartitions,
+void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
     loimos::proto::CSVDefinition *metadata, std::vector<Id> *partitionOffsets) {
   partitionOffsets->reserve(numPartitions);
   PartitionId numOffsets = metadata->partition_offsets_size();
-  for (PartitionId i = 0; i < numOffsets; ++i) {
-    PartitionId p = getPartitionIndex(i, numOffsets, numPartitions, 0);
-    if (partitionOffsets->size() == p) {
-      partitionOffsets->emplace_back(metadata->partition_offsets(i));
+
+  if (0 < numOffsets) {
+    for (PartitionId i = 0; i < numOffsets; ++i) {
+      PartitionId p = getPartitionIndex(i, numOffsets, numPartitions, 0);
+      if (partitionOffsets->size() == p) {
+        partitionOffsets->emplace_back(metadata->partition_offsets(i));
+      }
+    }
+  
+  // If no offsets are provided, try to put about the same number of objects
+  // in each partition (i.e. use the old partitioning scheme)
+  } else {
+    for (PartitionId i = 0; i < numOffsets; ++i) {
+      Id numObjects = getNumLocalElements(numObjects,
+        numPartitions, i);
+      Id firstIdx = getFirstIndex(i, numObjects,
+          numPartitions, 0);
+      partitionOffsets->emplace_back(firstIdx);
     }
   }
 }
