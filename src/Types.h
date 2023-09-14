@@ -22,6 +22,7 @@ using Id = int64_t;
 #define ID_PARSE std::stol
 
 using PartitionId = int;
+#define PARTITION_ID_PRINT_TYPE "%d"
 
 // Disease states
 using DiseaseState = int16_t;

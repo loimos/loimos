@@ -39,16 +39,8 @@ class DiseaseModel : public CBase_DiseaseModel {
   // Offset-based index lookup
   std::vector<Id> locationPartitionOffsets;
   std::vector<Id> personPartitionOffsets;
-  static void setPartitionOffsets(PartitionId numPartitions, Id numObjects,
+  void setPartitionOffsets(PartitionId numPartitions, Id numObjects,
     loimos::proto::CSVDefinition *metadata, std::vector<Id> *partitionOffsets);
-  static inline Id getLocalIndex(Id globalIndex, PartitionId PartitionId,
-    const std::vector<Id> &offsets);
-  static inline Id getGlobalIndex(Id localIndex, PartitionId PartitionId,
-    const std::vector<Id> &offsets);
-  static inline PartitionId getPartition(Id globalIndex,
-    const std::vector<Id> &offsets);
-  static inline Id getPartitionSize(PartitionId partitionIndex,
-    Id numObjects, const std::vector<Id> &offsets);
 
   // Intervention related.
   std::vector<bool> triggerFlags;

@@ -10,6 +10,7 @@
 #include "DataInterface.h"
 #include "../protobuf/data.pb.h"
 #include "../Defs.h"
+#include "../Types.h"
 
 #include <vector>
 #include <stdio.h>
@@ -27,6 +28,7 @@
  * file pointed to by refPath
  */
 bool createDirectory(std::string path, std::string refPath);
+
 /**
  * Reads the protobuf file pointed to by path and saves the results in buffer
  */
@@ -43,7 +45,7 @@ std::tuple<Id, Id, Time, Time> parseActivityStream(std::ifstream *input,
 template <class T = DataInterface>
 void readData(std::ifstream *input,
     loimos::proto::CSVDefinition *dataFormat,
-    std::vector<T> *dataObjs) {
+    std::vector<T> *dataObjs, Id totalObjs) {
   char buf[MAX_INPUT_lineLength];
   // Rows to read.
   for (T &obj : *dataObjs) {
@@ -78,6 +80,16 @@ void readData(std::ifstream *input,
         std::string rawData(start, dataLen);
         try {
           numDataFields += parseObjectData(rawData, field, numDataFields, &obj);
+
+          #ifdef ENABLE_DEBUG
+          Id id = obj.getUniqueId();
+          if (outOfBounds(0l, totalObjs, id)) {
+            CkAbort("Error at byte %lu: location id ("
+              ID_PRINT_TYPE") outside of valid range [0, "
+              ID_PRINT_TYPE")\n", pos, id, totalObjs);
+          }
+          #endif
+
         } catch (const std::exception &e) {
           CkPrintf("Error at byte %lu: '%s' (%s)\n", pos, buf, rawData.c_str());
           CkAbort("%\n", e.what());

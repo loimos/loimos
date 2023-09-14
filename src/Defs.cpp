@@ -9,6 +9,7 @@
 
 #include <cmath>
 #include <algorithm>
+#include <iterator>
 
 /**
  * Returns the number of elements that each chare will track at a minimum.
@@ -122,4 +123,32 @@ Id getLocalIndex(Id globalIndex, PartitionId partitionIndex, Id numElements,
   Id firstLocalIndex = getFirstIndex(partitionIndex, numElements,
       numPartitions, offset);
   return globalIndex - firstLocalIndex;
+}
+
+Id getLocalIndex(Id globalIndex, PartitionId PartitionId,
+    const std::vector<Id> &offsets) {
+  return globalIndex - offsets[PartitionId];
+}
+
+Id getGlobalIndex(Id localIndex, PartitionId PartitionId,
+    const std::vector<Id> &offsets) {
+  return localIndex + offsets[PartitionId];
+}
+
+PartitionId getPartition(Id globalIndex,
+    const std::vector<Id> &offsets) {
+  PartitionId result = std::distance(offsets.begin(),
+    std::upper_bound(offsets.begin(), offsets.end(), globalIndex)) - 1;
+  // CkPrintf("    Index "ID_PRINT_TYPE" in partition %d\n",
+  //   globalIndex, result);
+  return result;
+}
+
+Id getPartitionSize(PartitionId partitionIndex,
+    Id numObjects, const std::vector<Id> &offsets) {
+  if (offsets.size() - 1 == partitionIndex) {
+    return numObjects - offsets[partitionIndex];
+  } else {
+    return offsets[partitionIndex + 1] - offsets[partitionIndex];
+  }
 }

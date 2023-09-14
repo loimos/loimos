@@ -37,18 +37,22 @@
  */
 // TODO(IanCostello): Replace getline with function that doesn't need to copy to
 //                    string object in subfunctions.
-std::tuple<Id, Id, std::string> buildCache(std::string scenarioPath, Id numPeople,
-    int numPeopleChares, Id numLocations, int numLocationChares, int numDays) {
+std::tuple<Id, Id, std::string> buildCache(std::string scenarioPath,
+    Id numPeople, const std::vector<Id> &personPartitionOffsets,
+    Id numLocations, const std::vector<Id> &locationPartitionOffsets, int numDays) {
+  Id numPeopleChares = personPartitionOffsets.size();
+  Id numLocationChares = locationPartitionOffsets.size();
+  
   // We need to uniquely identify this run configuration
   std::string uniqueScenario = getScenarioId(numPeople, numPeopleChares,
       numLocations, numLocationChares);
 
   // Build person and location cache.
-  Id firstPersonIdx = buildObjectLookupCache(numPeople, numPeopleChares,
+  Id firstPersonIdx = buildObjectLookupCache(numPeople, personPartitionOffsets,
     scenarioPath + "people.textproto", scenarioPath + "people.csv",
     scenarioPath + uniqueScenario + "_people.cache");
   Id firstLocationIdx = buildObjectLookupCache(numLocations,
-    numLocationChares, scenarioPath + "locations.textproto",
+    locationPartitionOffsets, scenarioPath + "locations.textproto",
     scenarioPath + "locations.csv", scenarioPath + uniqueScenario + "_locations.cache");
   buildActivityCache(numPeople, numDays, firstPersonIdx,
     scenarioPath + "visits.textproto", scenarioPath + "visits.csv",
@@ -56,7 +60,7 @@ std::tuple<Id, Id, std::string> buildCache(std::string scenarioPath, Id numPeopl
   return std::make_tuple(firstPersonIdx, firstLocationIdx, uniqueScenario);
 }
 
-Id buildObjectLookupCache(Id numObjs, PartitionId numChares,
+Id buildObjectLookupCache(Id numObjs, const std::vector<Id> offsets,
   std::string metadataPath, std::string inputPath, std::string outputPath) {
   /**
    * Assumptions: (about person file)
@@ -70,7 +74,6 @@ Id buildObjectLookupCache(Id numObjs, PartitionId numChares,
    */
   // Open activity stream..
   std::ifstream activityStream(inputPath, std::ios_base::binary);
-  Id objPerChare = getNumElementsPerPartition(numObjs, numChares);
 
   // Read config file.
   loimos::proto::CSVDefinition csvDefinition;
@@ -113,7 +116,7 @@ Id buildObjectLookupCache(Id numObjs, PartitionId numChares,
   } else {
     existenceCheck.close();
     std::ofstream outputStream(outputPath, std::ios_base::binary);
-    for (int chareNum = 0; chareNum < numChares; chareNum++) {
+    for (PartitionId p = 0; p < offsets.size(); p++) {
       // Write current offset.
       outputStream.write(reinterpret_cast<char *>(&currentPosition),
         sizeof(CacheOffset));
@@ -121,7 +124,8 @@ Id buildObjectLookupCache(Id numObjs, PartitionId numChares,
       // Skip next n lines.
       // We already read the first location on the first chare to get
       // its id, so don't double count that line
-      Id numObjs = objPerChare - (0 == chareNum);
+      Id numObjs = getPartitionSize(p, numObjs, offsets)
+        - (0 == p);
       for (int i = 0; i < numObjs; i++) {
         std::getline(activityStream, line);
       }
@@ -132,7 +136,6 @@ Id buildObjectLookupCache(Id numObjs, PartitionId numChares,
 
   return firstIdx;
 }
-
 
 void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
   std::string metadataPath, std::string inputPath, std::string outputPath) {

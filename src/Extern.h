@@ -18,10 +18,10 @@ extern /* readonly */ CProxy_Locations locationsArray;
 extern /* readonly */ CProxy_Aggregator aggregatorProxy;
 #endif
 extern /* readonly */ CProxy_DiseaseModel globDiseaseModel;
-extern /* readonly */ int numPeople;
-extern /* readonly */ int numLocations;
-extern /* readonly */ int numPeoplePartitions;
-extern /* readonly */ int numLocationPartitions;
+extern /* readonly */ Id numPeople;
+extern /* readonly */ Id numLocations;
+extern /* readonly */ PartitionId numPersonPartitions;
+extern /* readonly */ PartitionId numLocationPartitions;
 extern /* readonly */ int numPeoplePerPartition;
 extern /* readonly */ int numLocationsPerPartition;
 extern /* readonly */ int numDays;
