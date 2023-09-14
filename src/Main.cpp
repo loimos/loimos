@@ -45,10 +45,10 @@
 #endif
 /* readonly */ CProxy_DiseaseModel globDiseaseModel;
 /* readonly */ CProxy_TraceSwitcher traceArray;
-/* readonly */ int numPeople;
-/* readonly */ int numLocations;
-/* readonly */ int numPeoplePartitions;
-/* readonly */ int numLocationPartitions;
+/* readonly */ Id numPeople;
+/* readonly */ Id numLocations;
+/* readonly */ PartitionId numPersonPartitions;
+/* readonly */ PartitionId numLocationPartitions;
 /* readonly */ int numPeoplePerPartition;
 /* readonly */ int numLocationsPerPartition;
 /* readonly */ int numDays;
@@ -171,7 +171,7 @@ Main::Main(CkArgMsg* msg) {
     synLocationPartitionGridHeight = atoi(msg->argv[++argNum]);
     numLocationPartitions =
       synLocationPartitionGridWidth * synLocationPartitionGridHeight;
-    numPeoplePartitions = atoi(msg->argv[++argNum]);
+    numPersonPartitions = atoi(msg->argv[++argNum]);
 
     // Calculate the dimensions of the block of locations stored by each
     // location chare
@@ -199,15 +199,15 @@ Main::Main(CkArgMsg* msg) {
   } else {
     numPeople = atoi(msg->argv[++argNum]);
     numLocations = atoi(msg->argv[++argNum]);
-    numPeoplePartitions = atoi(msg->argv[++argNum]);
+    numPersonPartitions = atoi(msg->argv[++argNum]);
     numLocationPartitions = atoi(msg->argv[++argNum]);
     numDays = atoi(msg->argv[++argNum]);
     numDaysWithDistinctVisits = atoi(msg->argv[++argNum]);
   }
 
-  if (numPeople < numPeoplePartitions) {
+  if (numPeople < numPersonPartitions) {
     CkAbort("Error: running on more people chares (%d) than people (%d)",
-        numPeoplePartitions, numPeople);
+        numPersonPartitions, numPeople);
   }
   if (numLocations < numLocationPartitions) {
     CkAbort("Error: running on more location chares (%d) than locations (%d)",
@@ -215,7 +215,7 @@ Main::Main(CkArgMsg* msg) {
   }
 
   numPeoplePerPartition = getNumElementsPerPartition(numPeople,
-      numPeoplePartitions);
+      numPersonPartitions);
   numLocationsPerPartition = getNumElementsPerPartition(numLocations,
       numLocationPartitions);
 
@@ -228,13 +228,13 @@ Main::Main(CkArgMsg* msg) {
   CkPrintf("Reading disease model from %s\n", msg->argv[argNum]);
 #endif
 
+  firstPersonIdx = 0;
+  firstLocationIdx = 0;
+
   // Handle both real data runs or runs using synthetic populations.
   std::string scenarioPath;
   std::string scenarioId;
-  if (syntheticRun) {
-    firstPersonIdx = 0;
-    firstLocationIdx = 0;
-  } else {
+  if (!syntheticRun) {
     // Create data caches.
     scenarioPath = std::string(msg->argv[++argNum]);
     // This allows users to omit the trailing "/" from the scenario path
@@ -242,9 +242,6 @@ Main::Main(CkArgMsg* msg) {
     if (scenarioPath.back() != '/') {
       scenarioPath.push_back('/');
     }
-    std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(
-        scenarioPath, numPeople, numPeoplePartitions, numLocations,
-        numLocationPartitions, numDaysWithDistinctVisits);
   }
 
   // Detemine which contact modle to use
@@ -269,7 +266,7 @@ Main::Main(CkArgMsg* msg) {
   // setup main proxy
   CkPrintf("\nRunning Loimos on %d PEs with %d people, %d locations, "
       "%d people chares, %d location chares, and %d days\n",
-    CkNumPes(), numPeople, numLocations, numPeoplePartitions,
+    CkNumPes(), numPeople, numLocations, numPersonPartitions,
     numLocationPartitions, numDays);
   mainProxy = thisProxy;
 
@@ -339,7 +336,7 @@ Main::Main(CkArgMsg* msg) {
 #endif
   }
 
-  chareCount = numPeoplePartitions;  // Number of chare arrays/groups
+  chareCount = numPersonPartitions;  // Number of chare arrays/groups
   createdCount = 0;
 
   dataLoadingStartTime = CkWallTimer();
@@ -350,7 +347,7 @@ Main::Main(CkArgMsg* msg) {
   seed = 0;
 #endif
 
-  peopleArray = CProxy_People::ckNew(seed, scenarioPath, numPeoplePartitions);
+  peopleArray = CProxy_People::ckNew(seed, scenarioPath, numPersonPartitions);
   locationsArray = CProxy_Locations::ckNew(seed, scenarioPath,
       numLocationPartitions);
 
@@ -453,7 +450,7 @@ void Main::SeedInfections() {
     int peoplePartitionIdx = getPartitionIndex(
       personIdx,
       numPeople,
-      numPeoplePartitions,
+      numPersonPartitions,
       firstPersonIdx);
 
     // Make a super contagious visit for that person.

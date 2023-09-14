@@ -42,10 +42,10 @@ mainmodule loimos {
   #endif // USE_HYPERCOMM
   readonly CProxy_DiseaseModel globDiseaseModel;
   readonly CProxy_TraceSwitcher traceArray;
-  readonly int numPeople;
-  readonly int numLocations;
-  readonly int numPeoplePartitions;
-  readonly int numLocationPartitions;
+  readonly Id numPeople;
+  readonly Id numLocations;
+  readonly PartitionId numPersonPartitions;
+  readonly PartitionId numLocationPartitions;
   readonly int numDays;
   readonly int numDaysWithDistinctVisits;
 
