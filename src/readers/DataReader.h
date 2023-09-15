@@ -89,7 +89,6 @@ void readData(std::ifstream *input,
               ID_PRINT_TYPE")\n", pos, id, totalObjs);
           }
           #endif
-
         } catch (const std::exception &e) {
           CkPrintf("Error at byte %lu: '%s' (%s)\n", pos, buf, rawData.c_str());
           CkAbort("%\n", e.what());

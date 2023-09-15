@@ -441,11 +441,11 @@ void People::SendVisitMessages() {
       if (agg->visit_aggregator) {
         agg->visit_aggregator->send(locationsArray[locationPartition], visitMessage);
       } else {
-#endif // USE_HYPERCOMM
+#endif  // USE_HYPERCOMM
         locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
 #ifdef USE_HYPERCOMM
       }
-#endif // USE_HYPERCOMM
+#endif  // USE_HYPERCOMM
     }
   }
 

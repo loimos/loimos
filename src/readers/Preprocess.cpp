@@ -42,7 +42,7 @@ std::tuple<Id, Id, std::string> buildCache(std::string scenarioPath,
     Id numLocations, const std::vector<Id> &locationPartitionOffsets, int numDays) {
   Id numPeopleChares = personPartitionOffsets.size();
   Id numLocationChares = locationPartitionOffsets.size();
-  
+
   // We need to uniquely identify this run configuration
   std::string uniqueScenario = getScenarioId(numPeople, numPeopleChares,
       numLocations, numLocationChares);
