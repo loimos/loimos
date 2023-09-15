@@ -153,7 +153,7 @@ void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
 
       #endif  // ENABLE_DEBUG
     }
-  
+
   // If no offsets are provided, try to put about the same number of objects
   // in each partition (i.e. use the old partitioning scheme)
   } else {

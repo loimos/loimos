@@ -9,6 +9,7 @@
 
 #include "../Types.h"
 
+#include <vector>
 #include <tuple>
 #include <string>
 #include <google/protobuf/text_format.h>

@@ -391,13 +391,10 @@ inline void Locations::sendInteractions(Location *loc,
       interactions[personIdx]);
 #ifdef USE_HYPERCOMM
       Aggregator *agg = aggregatorProxy.ckLocalBranch();
-      if (agg->interact_aggregator)
-      {
+      if (agg->interact_aggregator) {
         agg->interact_aggregator->send(peopleArray[personPartition], interMsg);
-      }
-      else
-      {
-#endif // USE_HYPERCOMM
+      } else {
+#endif  // USE_HYPERCOMM
         peopleArray[personPartition].ReceiveInteractions(interMsg);
 #ifdef USE_HYPERCOMM
       }
