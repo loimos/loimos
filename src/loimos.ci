@@ -219,7 +219,7 @@ mainmodule loimos {
       serial {
         CkPrintf("Finished simulating %d days in %lf seconds.\n",
           numDays, (CkWallTimer() - simulationStartTime));
-        #if ENABLE_DEBUG >= 2
+        #if ENABLE_DEBUG >= DEBUG_VERBOSE
         CkPrintf("  Processed "COUNTER_PRINT_TYPE" visits, "
           COUNTER_PRINT_TYPE" interactions, and "
           COUNTER_PRINT_TYPE" exposures\n",
@@ -248,7 +248,7 @@ mainmodule loimos {
     entry void SeedInfections();
     entry void StartComputingInteractions();
     entry void ComputedInteractions();
-    #if ENABLE_DEBUG >= 2
+    #if ENABLE_DEBUG >= DEBUG_VERBOSE
     entry [reductiontarget] void ReceiveVisitsLoadedCount(int visitsCount) {
       serial{CkPrintf("  Loaded a total of %d visits\n", visitsCount);}
     };
