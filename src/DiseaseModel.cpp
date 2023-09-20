@@ -56,9 +56,6 @@
  */
 DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     std::string pathToIntervention) {
-  // Load in text proto definition.
-  // TODO(iancostello): Load directly without string.
-
   // Load Disease model
   model = new loimos::proto::DiseaseModel();
   readProtobuf(pathToModel, model);
@@ -67,14 +64,18 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
   // Setup other shared PE objects.
   personDef = NULL;
   locationDef = NULL;
+  Id firstPersonIdx = 0;
+  Id firstLocationIdx = 0;
   if (!syntheticRun) {
     // Handle people...
     personDef = new loimos::proto::CSVDefinition;
     readProtobuf(scenarioPath + "people.textproto", personDef);
+    firstPersonIdx = getFirstIndex(personDef, scenarioPath + "people.csv");
 
     // ...locations...
     locationDef = new loimos::proto::CSVDefinition;
     readProtobuf(scenarioPath + "locations.textproto", locationDef);
+    firstLocationIdx = getFirstIndex(locationDef, scenarioPath + "locations.csv");
 
     // ...and visits
     activityDef = new loimos::proto::CSVDefinition;
@@ -84,10 +85,23 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     locationAttributes.readAttributes(locationDef->fields());
   }
 
-  setPartitionOffsets(numPersonPartitions, numPeople,
+  setPartitionOffsets(numPersonPartitions, numPeople, firstPersonIdx,
     personDef, &personPartitionOffsets);
-  setPartitionOffsets(numLocationPartitions, numLocations,
+  setPartitionOffsets(numLocationPartitions, numLocations, firstLocationIdx,
     locationDef, &locationPartitionOffsets);
+
+#if ENABLE_DEBUG >= DEBUG_PER_CAHRE
+  if (0 == CkMyNode()) {
+    for (int i = 0; i < personPartitionOffsets.size(); ++i) {
+      CkPrintf("  Person Offset %d: "ID_PRINT_TYPE"\n",
+        i, personPartitionOffsets[i]);
+    }
+    for (int i = 0; i < locationPartitionOffsets.size(); ++i) {
+      CkPrintf("  Location Offset %d: "ID_PRINT_TYPE"\n",
+        i, locationPartitionOffsets[i]);
+    }
+  }
+#endif
 
   if (!syntheticRun) {
     buildCache(scenarioPath, numPeople, personPartitionOffsets,
@@ -125,11 +139,9 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
 }
 
 void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
-    loimos::proto::CSVDefinition *metadata, std::vector<Id> *partitionOffsets) {
+    Id firstIndex, loimos::proto::CSVDefinition *metadata,
+    std::vector<Id> *partitionOffsets) {
   partitionOffsets->reserve(numPartitions);
-  if (0 == CkMyNode()) {
-    CkPrintf("  partitions: %d, objs: %d\n", numPartitions, numObjects);
-  }
 
   if (NULL != metadata && 0 < metadata->partition_offsets_size()) {
     PartitionId numOffsets = metadata->partition_offsets_size();
@@ -140,7 +152,7 @@ void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
         partitionOffsets->emplace_back(offset);
       }
 
-      #ifdef ENABLE_DEBUG
+#ifdef ENABLE_DEBUG
       if (0 > offset || numObjects <= offset) {
         CkAbort("Error: Offset "ID_PRINT_TYPE" outside of valid range [0,"
           ID_PRINT_TYPE")\n", offset, numObjects);
@@ -150,8 +162,7 @@ void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
         CkAbort("Error: Offset "ID_PRINT_TYPE" for parition "
         PARTITION_ID_PRINT_TYPE" out of order\n", offset, p);
       }
-
-      #endif  // ENABLE_DEBUG
+#endif // ENABLE_DEBUG
     }
 
   // If no offsets are provided, try to put about the same number of objects
@@ -159,15 +170,15 @@ void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
   } else {
     for (PartitionId i = 0; i < numPartitions; ++i) {
       Id offset = getFirstIndex(i, numObjects,
-          numPartitions, 0);
+          numPartitions, firstIndex);
       partitionOffsets->emplace_back(offset);
 
-      #ifdef ENABLE_DEBUG
-      if (0 > offset || numObjects <= offset) {
+#ifdef ENABLE_DEBUG
+      if (outOfBounds(0l, numObjects, offset)) {
         CkAbort("Error: Offset "ID_PRINT_TYPE" outside of valid range [0,"
           ID_PRINT_TYPE")\n", offset, numObjects);
       }
-      #endif  // ENABLE_DEBUG
+#endif // ENABLE_DEBUG
     }
   }
 }
@@ -178,6 +189,10 @@ Id DiseaseModel::getLocalLocationIndex(Id globalIndex, PartitionId PartitionId) 
 
 Id DiseaseModel::getGlobalLocationIndex(Id localIndex, PartitionId PartitionId) const {
   return getGlobalIndex(localIndex, PartitionId, locationPartitionOffsets);
+}
+
+CacheOffset DiseaseModel::getPersonCacheIndex(Id globalIndex) const {
+  return getLocalIndex(globalIndex, 0, locationPartitionOffsets);
 }
 
 PartitionId DiseaseModel::getLocationPartitionIndex(Id globalIndex) const {
@@ -194,6 +209,10 @@ Id DiseaseModel::getLocalPersonIndex(Id globalIndex, PartitionId partitionIndex)
 
 Id DiseaseModel::getGlobalPersonIndex(Id localIndex, PartitionId partitionIndex) const {
   return getGlobalIndex(localIndex, partitionIndex, personPartitionOffsets);
+}
+
+CacheOffset DiseaseModel::getLocationCacheIndex(Id globalIndex) const {
+  return getLocalIndex(globalIndex, 0, personPartitionOffsets);
 }
 
 PartitionId DiseaseModel::getPersonPartitionIndex(Id globalIndex) const {

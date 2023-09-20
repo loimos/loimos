@@ -42,10 +42,12 @@ Locations::Locations(int seed, std::string scenarioPath) {
   firstLocalLocationIdx = diseaseModel->getGlobalLocationIndex(0, thisIndex);
 
 #ifdef ENABLE_DEBUG
-  if (outOfBounds(0l, numLocations, firstLocalLocationIdx)) {
+  Id firstLocationIdx = diseaseModel->getGlobalLocationIndex(0, 0);
+  Id lastLocationIdx = firstLocationIdx + numLocations;
+  if (outOfBounds(firstLocationIdx, lastLocationIdx, firstLocalLocationIdx)) {
     CkAbort("Error on chare %d: first location index ("
-      ID_PRINT_TYPE") out of bounds [0, "ID_PRINT_TYPE")",
-      thisIndex, firstLocalLocationIdx, numLocations);
+      ID_PRINT_TYPE") out of bounds ["ID_PRINT_TYPE", "ID_PRINT_TYPE")",
+      thisIndex, firstLocalLocationIdx, firstLocationIdx, lastLocationIdx);
   }
 #endif
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
@@ -88,9 +90,9 @@ Locations::Locations(int seed, std::string scenarioPath) {
 #endif
 
   // Notify Main
-  #ifdef USE_HYPERCOMM
+#ifdef USE_HYPERCOMM
   contribute(CkCallback(CkReductionTarget(Main, CharesCreated), mainProxy));
-  #endif
+#endif
 }
 
 Locations::Locations(CkMigrateMessage *msg) {}
@@ -151,8 +153,8 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 #ifdef ENABLE_DEBUG
   if (outOfBounds(0l, numLocalLocations, localLocIdx)) {
     CkAbort("Error on chare %d: recieved visit to location ("
-      ID_PRINT_TYPE"/"ID_PRINT_TYPE") outside of valid range [0, "
-      ID_PRINT_TYPE")\n", thisIndex, localLocIdx, visitMsg.locationIdx,
+      ID_PRINT_TYPE" loc, "ID_PRINT_TYPE" glob) outside of valid range [0, "
+      ID_PRINT_TYPE") loc\n", thisIndex, localLocIdx, visitMsg.locationIdx,
       numLocalLocations);
   }
   Id trueIdx = locations[localLocIdx].getUniqueId();
@@ -221,16 +223,16 @@ void Locations::ComputeInteractions() {
 
 Counter Locations::processEvents(Location *loc) {
   std::vector<Event> *arrivals;
-  #if ENABLE_DEBUG >= DEBUG_VERBOSE
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
   Counter numInteractions = 0;
   Counter numPresent = 0;
   Counter numVisits = loc->events.size() / 2;
   double startTime = CkWallTimer();
-  #endif
+#endif
 
   std::sort(loc->events.begin(), loc->events.end());
   for (const Event &event : loc->events) {
-    #if ENABLE_DEBUG >= DEBUG_VERBOSE
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
     if (ARRIVAL == event.type) {
       numPresent++;
     } else {
@@ -238,7 +240,7 @@ Counter Locations::processEvents(Location *loc) {
       numInteractions += numPresent;
       saveInteractions(*loc, event, interactionsFile);
     }
-    #endif
+#endif
 
     if (diseaseModel->isSusceptible(event.personState)) {
       arrivals = &susceptibleArrivals;
@@ -267,23 +269,23 @@ Counter Locations::processEvents(Location *loc) {
   loc->events.clear();
   interactions.clear();
 
-  #if ENABLE_DEBUG >= DEBUG_VERBOSE
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
   double p = contactModel->getContactProbability(*loc);
   Counter total = static_cast<Counter>(p * numInteractions);
 
-  #if ENABLE_DEBUG == DEBUG_LOCATION_SUMMARY
-  if (0 != numInteractions) {
+#if ENABLE_DEBUG == DEBUG_LOCATION_SUMMARY
+  if (0 != numInteractions && -1 != maxSimVisitsIdx) {
     double elapsedTime = CkWallTimer() - startTime;
     CkPrintf("      %d,%d,%f,"COUNTER_PRINT_TYPE","COUNTER_PRINT_TYPE","
         COUNTER_PRINT_TYPE",%f\n",
-        loc->getUniqueId(), loc->getValue(maxSimVisitsIdx).int_b10,
+        loc->getUniqueId(), loc->getValue(maxSimVisitsIdx).int32_val,
         p, numInteractions, total, numVisits, elapsedTime);
   }
-  #endif  // DEBUG_LOCATION_SUMMARY
+#endif  // DEBUG_LOCATION_SUMMARY
   return total;
-  #else
+#else
   return 0;
-  #endif  // DEBUG_VERBOSE
+#endif  // DEBUG_VERBOSE
 }
 
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
@@ -378,26 +380,26 @@ inline void Locations::sendInteractions(Location *loc,
     Id personIdx) {
   PartitionId personPartition = diseaseModel->getPersonPartitionIndex(personIdx);
 #ifdef ENABLE_DEBUG
-      if (outOfBounds(0, numPersonPartitions, personPartition)) {
-        CkAbort("Error on chare %d: sending exposures at "
-          ID_PRINT_TYPE" to person "ID_PRINT_TYPE" on chare "
-          PARTITION_ID_PRINT_TYPE" outside of valid range [0, "
-          PARTITION_ID_PRINT_TYPE")\n", thisIndex, loc->getUniqueId(),
-          personIdx, personPartition, numPersonPartitions);
-      }
+  if (outOfBounds(0, numPersonPartitions, personPartition)) {
+    CkAbort("Error on chare %d: sending exposures at "
+      ID_PRINT_TYPE" to person "ID_PRINT_TYPE" on chare "
+      PARTITION_ID_PRINT_TYPE" outside of valid range [0, "
+      PARTITION_ID_PRINT_TYPE")\n", thisIndex, loc->getUniqueId(),
+      personIdx, personPartition, numPersonPartitions);
+  }
 #endif
 
   InteractionMessage interMsg(loc->getUniqueId(), personIdx,
       interactions[personIdx]);
 #ifdef USE_HYPERCOMM
-      Aggregator *agg = aggregatorProxy.ckLocalBranch();
-      if (agg->interact_aggregator) {
-        agg->interact_aggregator->send(peopleArray[personPartition], interMsg);
-      } else {
+  Aggregator *agg = aggregatorProxy.ckLocalBranch();
+  if (agg->interact_aggregator) {
+    agg->interact_aggregator->send(peopleArray[personPartition], interMsg);
+  } else {
 #endif  // USE_HYPERCOMM
-        peopleArray[personPartition].ReceiveInteractions(interMsg);
+    peopleArray[personPartition].ReceiveInteractions(interMsg);
 #ifdef USE_HYPERCOMM
-      }
+  }
 #endif  // USE_HYPERCOMM
 
   // CkPrintf(

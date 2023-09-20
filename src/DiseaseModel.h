@@ -40,7 +40,8 @@ class DiseaseModel : public CBase_DiseaseModel {
   std::vector<Id> locationPartitionOffsets;
   std::vector<Id> personPartitionOffsets;
   void setPartitionOffsets(PartitionId numPartitions, Id numObjects,
-    loimos::proto::CSVDefinition *metadata, std::vector<Id> *partitionOffsets);
+    Id firstIndex, loimos::proto::CSVDefinition *metadata,
+    std::vector<Id> *partitionOffsets);
 
   // Intervention related.
   std::vector<bool> triggerFlags;
@@ -94,10 +95,12 @@ class DiseaseModel : public CBase_DiseaseModel {
   // with the corresponding offset vector
   Id getLocalLocationIndex(Id globalIndex, PartitionId PartitionId) const;
   Id getGlobalLocationIndex(Id localIndex, PartitionId PartitionId) const;
+  CacheOffset getLocationCacheIndex(Id globalIndex) const;
   PartitionId getLocationPartitionIndex(Id globalIndex) const;
   Id getLocationPartitionSize(PartitionId partitionIndex) const;
   Id getLocalPersonIndex(Id globalIndex, PartitionId PartitionId) const;
   Id getGlobalPersonIndex(Id localIndex, PartitionId PartitionId) const;
+  CacheOffset getPersonCacheIndex(Id globalIndex) const;
   PartitionId getPersonPartitionIndex(Id globalIndex) const;
   Id getPersonPartitionSize(PartitionId partitionIndex) const;
 

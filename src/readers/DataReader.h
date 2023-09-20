@@ -77,21 +77,13 @@ void readData(std::ifstream *input,
         if (c + 1 == lineLength) {
           dataLen += 1;
         }
+
         std::string rawData(start, dataLen);
         try {
           numDataFields += parseObjectData(rawData, field, numDataFields, &obj);
-
-          #ifdef ENABLE_DEBUG
-          Id id = obj.getUniqueId();
-          if (outOfBounds(0l, totalObjs, id)) {
-            CkAbort("Error at byte %lu: location id ("
-              ID_PRINT_TYPE") outside of valid range [0, "
-              ID_PRINT_TYPE")\n", pos, id, totalObjs);
-          }
-          #endif
         } catch (const std::exception &e) {
           CkPrintf("Error at byte %lu: '%s' (%s)\n", pos, buf, rawData.c_str());
-          CkAbort("%\n", e.what());
+          CkAbort("%s\n", e.what());
         }
       }
 

@@ -51,10 +51,13 @@ People::People(int seed, std::string scenarioPath) {
   numLocalPeople = diseaseModel->getPersonPartitionSize(thisIndex);
   Id firstLocalPersonIdx = diseaseModel->getGlobalPersonIndex(0, thisIndex);
 #ifdef ENABLE_DEBUG
-  if (outOfBounds(0l, numPeople, firstLocalPersonIdx)) {
+  Id firstPersonIdx = diseaseModel->getGlobalPersonIndex(0, 0);
+  Id lastPersonIdx = numPeople + firstPersonIdx;
+  if (outOfBounds(firstPersonIdx, lastPersonIdx,
+      firstLocalPersonIdx)) {
     CkAbort("Error on chare %d: first person index ("
-      ID_PRINT_TYPE") out of bounds [0, "ID_PRINT_TYPE")",
-      thisIndex, firstLocalPersonIdx, numPeople);
+      ID_PRINT_TYPE") out of bounds ["ID_PRINT_TYPE", "ID_PRINT_TYPE")",
+      thisIndex, firstLocalPersonIdx, firstPersonIdx, lastPersonIdx);
   }
 #endif
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
@@ -163,6 +166,7 @@ void People::generateVisitData() {
     numLocations, numLocationPartitions, homePartitionIdx);
 
   // Calculate schedule for each person.
+  Id firstLocationIdx = diseaseModel->getGlobalLocationIndex(0, 0);
   for (Person &p : people) {
     Id personIdx = p.getUniqueId();
 
@@ -297,11 +301,11 @@ void People::loadPeopleData(std::string scenarioPath) {
     malloc(sizeof(CacheOffset) * numDaysWithDistinctVisits));
   for (Id c = 0; c < numLocalPeople; c++) {
     std::vector<CacheOffset> *data_pos = &people[c].visitOffsetByDay;
-    Id curr_id = people[c].getUniqueId();
+    Id currId = people[c].getUniqueId();
 
     // Read in their activity data offsets.
     activityCache.seekg(sizeof(CacheOffset) * numDaysWithDistinctVisits
-       * (curr_id - firstPersonIdx));
+       * diseaseModel->getPersonCacheIndex(currId));
     activityCache.read(reinterpret_cast<char *>(buf),
       sizeof(CacheOffset) * numDaysWithDistinctVisits);
     for (int day = 0; day < numDaysWithDistinctVisits; day++) {

@@ -18,6 +18,7 @@
 #include "../Extern.h"
 #include "../Location.h"
 #include "../Person.h"
+#include "../protobuf/data.pb.h"
 #include "charm++.h"
 
 #include <string>
@@ -37,7 +38,7 @@
  */
 // TODO(IanCostello): Replace getline with function that doesn't need to copy to
 //                    string object in subfunctions.
-std::tuple<Id, Id, std::string> buildCache(std::string scenarioPath,
+std::string buildCache(std::string scenarioPath,
     Id numPeople, const std::vector<Id> &personPartitionOffsets,
     Id numLocations, const std::vector<Id> &locationPartitionOffsets, int numDays) {
   Id numPeopleChares = personPartitionOffsets.size();
@@ -48,19 +49,19 @@ std::tuple<Id, Id, std::string> buildCache(std::string scenarioPath,
       numLocations, numLocationChares);
 
   // Build person and location cache.
-  Id firstPersonIdx = buildObjectLookupCache(numPeople, personPartitionOffsets,
+  buildObjectLookupCache(numPeople, personPartitionOffsets,
     scenarioPath + "people.textproto", scenarioPath + "people.csv",
     scenarioPath + uniqueScenario + "_people.cache");
-  Id firstLocationIdx = buildObjectLookupCache(numLocations,
+  buildObjectLookupCache(numLocations,
     locationPartitionOffsets, scenarioPath + "locations.textproto",
     scenarioPath + "locations.csv", scenarioPath + uniqueScenario + "_locations.cache");
-  buildActivityCache(numPeople, numDays, firstPersonIdx,
+  buildActivityCache(numPeople, numDays, personPartitionOffsets[0],
     scenarioPath + "visits.textproto", scenarioPath + "visits.csv",
     scenarioPath + uniqueScenario + "_visits.cache");
-  return std::make_tuple(firstPersonIdx, firstLocationIdx, uniqueScenario);
+  return uniqueScenario;
 }
 
-Id buildObjectLookupCache(Id numObjs, const std::vector<Id> offsets,
+void buildObjectLookupCache(Id numObjs, const std::vector<Id> &offsets,
   std::string metadataPath, std::string inputPath, std::string outputPath) {
   /**
    * Assumptions: (about person file)
@@ -93,20 +94,6 @@ Id buildObjectLookupCache(Id numObjs, const std::vector<Id> offsets,
   std::getline(activityStream, line);
   CacheOffset currentPosition = activityStream.tellg();
 
-  // Special case to get lowest person ID first.
-  std::getline(activityStream, line);
-  char *str = strdup(line.c_str());
-  char *tmp;
-  char *tok = strtok_r(str, ",", &tmp);
-  for (int i = 0; i < csvLocationOfPid; i++) {
-    tok = strtok_r(tmp, ",", &tmp);
-  }
-  Id firstIdx = std::atoi(tok);
-  free(str);
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
-  CkPrintf("  Found first id as %d\n", firstIdx);
-#endif
-
   // Check if file cache already created.
   std::ifstream existenceCheck(outputPath, std::ios_base::binary);
   if (existenceCheck.good()) {
@@ -124,8 +111,8 @@ Id buildObjectLookupCache(Id numObjs, const std::vector<Id> offsets,
       // Skip next n lines.
       // We already read the first location on the first chare to get
       // its id, so don't double count that line
-      Id numObjs = getPartitionSize(p, numObjs, offsets)
-        - (0 == p);
+      Id numObjs = getPartitionSize(p, numObjs, offsets);
+      // - (0 == p);
       for (int i = 0; i < numObjs; i++) {
         std::getline(activityStream, line);
       }
@@ -133,8 +120,6 @@ Id buildObjectLookupCache(Id numObjs, const std::vector<Id> offsets,
     }
     outputStream.flush();
   }
-
-  return firstIdx;
 }
 
 void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
@@ -245,4 +230,33 @@ std::string getScenarioId(Id numPeople, PartitionId numPeopleChares, Id numLocat
   oss << numPeople << "-" << numPeopleChares << "_" << numLocations
     << "-" << numLocationChares;
   return oss.str();
+}
+
+Id getFirstIndex(const loimos::proto::CSVDefinition *metadata, std::string inputPath) {
+  std::ifstream activityStream(inputPath, std::ios_base::binary);
+
+  // Skip header
+  std::string line;
+  std::getline(activityStream, line);
+
+  // Find the id column
+  std::getline(activityStream, line);
+  char *str = strdup(line.c_str());
+  char *tmp;
+  char *tok = strtok_r(str, ",", &tmp);
+  int i;
+  for (i = 0; i < metadata->fields_size()
+      && !metadata->fields(i).has_unique_id(); i++) {
+    tok = strtok_r(tmp, ",", &tmp);
+  }
+
+  Id firstIdx;
+  if (metadata->fields(i).has_unique_id()) {
+    firstIdx = ID_PARSE(tok);
+    free(str);
+  } else {
+    CkAbort("Error: no column in %s marked as id\n", inputPath.c_str());    
+  }
+
+  return firstIdx;
 }
