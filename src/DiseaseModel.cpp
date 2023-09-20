@@ -162,7 +162,7 @@ void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
         CkAbort("Error: Offset "ID_PRINT_TYPE" for parition "
         PARTITION_ID_PRINT_TYPE" out of order\n", offset, p);
       }
-#endif // ENABLE_DEBUG
+#endif  // ENABLE_DEBUG
     }
 
   // If no offsets are provided, try to put about the same number of objects
@@ -178,7 +178,7 @@ void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
         CkAbort("Error: Offset "ID_PRINT_TYPE" outside of valid range [0,"
           ID_PRINT_TYPE")\n", offset, numObjects);
       }
-#endif // ENABLE_DEBUG
+#endif  // ENABLE_DEBUG
     }
   }
 }

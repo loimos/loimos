@@ -66,7 +66,7 @@ Id getFirstIndex(PartitionId partitionIndex, Id numElements,
   if (partitionIndex < firstSmallerPartition) {
     return maxIndex;
   } else {
-    return maxIndex - (partitionIndex - firstSmallerPartition); 
+    return maxIndex - (partitionIndex - firstSmallerPartition);
   }
 }
 

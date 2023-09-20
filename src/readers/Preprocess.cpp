@@ -255,7 +255,7 @@ Id getFirstIndex(const loimos::proto::CSVDefinition *metadata, std::string input
     firstIdx = ID_PARSE(tok);
     free(str);
   } else {
-    CkAbort("Error: no column in %s marked as id\n", inputPath.c_str());    
+    CkAbort("Error: no column in %s marked as id\n", inputPath.c_str());
   }
 
   return firstIdx;
