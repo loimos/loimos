@@ -55,8 +55,6 @@ mainmodule loimos {
   readonly int contactModelType;
   readonly int maxSimVisitsIdx;
   readonly int ageIdx;
-  readonly int firstPersonIdx;
-  readonly int firstLocationIdx;
 
   readonly Counter totalVisits;
   readonly Counter totalInteractions;

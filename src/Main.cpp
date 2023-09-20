@@ -57,8 +57,6 @@
 /* readonly */ int contactModelType;
 /* readonly */ int maxSimVisitsIdx;
 /* readonly */ int ageIdx;
-/* readonly */ int firstPersonIdx;
-/* readonly */ int firstLocationIdx;
 /* readonly */ Counter totalVisits;
 /* readonly */ Counter totalInteractions;
 /* readonly */ Counter totalExposures;
@@ -228,15 +226,13 @@ Main::Main(CkArgMsg* msg) {
   CkPrintf("Reading disease model from %s\n", msg->argv[argNum]);
 #endif
 
-  firstPersonIdx = 0;
-  firstLocationIdx = 0;
-
   // Handle both real data runs or runs using synthetic populations.
   std::string scenarioPath;
   std::string scenarioId;
   if (!syntheticRun) {
     // Create data caches.
     scenarioPath = std::string(msg->argv[++argNum]);
+
     // This allows users to omit the trailing "/" from the scenario path
     // while still allowing us to find the files properly
     if (scenarioPath.back() != '/') {
@@ -422,6 +418,7 @@ void Main::SeedInfections() {
   // guarentee they are unique (not checking this quickly runs into birthday
   // problem issues, even for sizable datasets)
   if (0 == day) {
+    Id firstPersonIdx = diseaseModel->getGlobalLocationIndex(0, 0);
     std::uniform_int_distribution<Id> personDistrib(firstPersonIdx,
         firstPersonIdx + numPeople - 1);
     std::unordered_set<Id> initialInfectionsSet;
@@ -447,11 +444,7 @@ void Main::SeedInfections() {
     Id personIdx = initialInfections.back();
     initialInfections.pop_back();
 
-    int peoplePartitionIdx = getPartitionIndex(
-      personIdx,
-      numPeople,
-      numPersonPartitions,
-      firstPersonIdx);
+    PartitionId peoplePartitionIdx = diseaseModel->getPersonPartitionIndex(personIdx);
 
     // Make a super contagious visit for that person.
     std::vector<Interaction> interactions;

@@ -59,7 +59,15 @@ Id getFirstIndex(PartitionId partitionIndex, Id numElements,
     PartitionId numPartitions, Id offset) {
   Id elementsPerPartition = getNumElementsPerPartition(numElements,
       numPartitions);
-  return partitionIndex * elementsPerPartition + offset;
+  Id maxIndex = partitionIndex * elementsPerPartition + offset;
+  return maxIndex;
+
+  PartitionId firstSmallerPartition = numElements % numPartitions;
+  if (partitionIndex < firstSmallerPartition) {
+    return maxIndex;
+  } else {
+    return maxIndex - (partitionIndex - firstSmallerPartition); 
+  }
 }
 
 /**
@@ -147,7 +155,7 @@ PartitionId getPartition(Id globalIndex,
 Id getPartitionSize(PartitionId partitionIndex,
     Id numObjects, const std::vector<Id> &offsets) {
   if (offsets.size() - 1 == partitionIndex) {
-    return numObjects - offsets[partitionIndex];
+    return numObjects + offsets[0] - offsets[partitionIndex];
   } else {
     return offsets[partitionIndex + 1] - offsets[partitionIndex];
   }

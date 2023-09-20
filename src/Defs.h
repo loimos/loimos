@@ -81,13 +81,12 @@ Id getLocalIndex(Id globalIndex, PartitionId partitionIndex, Id numElements,
 
 // New, offset-based partitioning scheme:
 Id getLocalIndex(Id globalIndex, PartitionId PartitionId,
-const std::vector<Id> &offsets);
+    const std::vector<Id> &offsets);
 Id getGlobalIndex(Id localIndex, PartitionId PartitionId,
-const std::vector<Id> &offsets);
-PartitionId getPartition(Id globalIndex,
-const std::vector<Id> &offsets);
+    const std::vector<Id> &offsets);
+PartitionId getPartition(Id globalIndex, const std::vector<Id> &offsets);
 Id getPartitionSize(PartitionId partitionIndex,
-Id numObjects, const std::vector<Id> &offsets);
+    Id numObjects, const std::vector<Id> &offsets);
 
 template <typename T>
 bool outOfBounds(T lower, T upper, T value) {
