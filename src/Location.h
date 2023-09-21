@@ -44,11 +44,9 @@ class Location : public DataInterface {
   Location(Location&&) = default;
   ~Location() = default;
 
-
   // Default assignment operators.
   Location& operator=(const Location&) = default;
   Location& operator=(Location&&) = default;
-
 
   // Lets us migrate these objects
   void pup(PUP::er &p);  // NOLINT(runtime/references)
