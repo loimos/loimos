@@ -77,7 +77,13 @@ ifdef ENABLE_AGGREGATION
 OPTS     += -DENABLE_AGGREGATION
 endif
 
-# Set the ENABLE_RANDOM_SEED environment variable to compile for unit testing
+ifdef ENABLE_AGGREGATION
+OPTS     += -DENABLE_AGGREGATION
+endif
+
+# Set the ENABLE_RANDOM_SEED environment variable to use a "random"
+# (time-based) seed for all psuedo-random number generators. Makes simulation
+# results non-deterministic, even given same run settings
 ifdef ENABLE_RANDOM_SEED
 OPTS      = -DENABLE_RANDOM_SEED
 endif
