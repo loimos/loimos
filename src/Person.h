@@ -18,9 +18,9 @@
 class Person : public DataInterface {
  public:
   // Numeric disease state of the person.
-  int state;
-  int next_state;
-  int secondsLeftInState;
+  DiseaseState state;
+  DiseaseState next_state;
+  Time secondsLeftInState;
 
   // If this is a susceptible person, this is a list of all of their
   // interactions with infectious people in the past day
@@ -37,7 +37,7 @@ class Person : public DataInterface {
   // Constructors and assignment operators
   Person() = default;
   Person(const AttributeTable &attributes, int numInterventions,
-    int startingState, int timeLeftInState, int numDays);
+    DiseaseState startingState, Time timeLeftInState, int numDays);
   Person(const Person&) = default;
   Person(Person&&) = default;
   Person& operator=(const Person&) = default;
