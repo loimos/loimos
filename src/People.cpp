@@ -570,11 +570,18 @@ void People::SendStats() {
     cb);
 }
 
+double propensityToProbability(double propensity) {
+  return 1.0 - exp(-propensity);
+}
+
 void People::ProcessInteractions(Person *person) {
   double totalPropensity = 0.0;
   uint numInteractions = static_cast<uint>(person->interactions.size());
   for (uint i = 0; i < numInteractions; ++i) {
     totalPropensity += person->interactions[i].propensity;
+    // CkPrintf("    Person %d has %f propensity of infection from %d\n",
+    //     person->getUniqueId(), person->interactions[i].propensity,
+    //     person->interactions[i].infectiousIdx);
   }
 
   // Detemine whether or not this person was infected...
@@ -590,21 +597,26 @@ void People::ProcessInteractions(Person *person) {
     for (interactionIdx = 0; interactionIdx < numInteractions;
         ++interactionIdx) {
       partialSum += person->interactions[interactionIdx].propensity;
-      if (partialSum > roll) {
+      if (partialSum > roll2) {
         break;
       }
     }
 
-    // TODO(jkitson): Save any useful information about the interaction which caused
-    // the infection
+    // TODO(jkitson): Save any useful information about the interaction which
+    // caused the infection
 
     // Mark that exposed healthy individuals should make transition at the end
     // of the day.
     if (diseaseModel->isSusceptible(person->state)) {
       person->secondsLeftInState = -1;
+      CkPrintf("    %d,%d,%d,%f,true\n", day, person->getUniqueId(),
+          person->interactions[interactionIdx].infectiousIdx,
+          propensityToProbability(totalPropensity));
     }
+  } else if (0 < numInteractions) {
+    CkPrintf("    %d,%d,,%f,false\n",
+      day, person->getUniqueId(), propensityToProbability(totalPropensity));
   }
-
   person->interactions.clear();
 }
 
@@ -614,19 +626,24 @@ void People::UpdateDiseaseState(Person *person) {
   std::default_random_engine *generator = person->getGenerator();
   if (person->secondsLeftInState <= 0) {
     // If they have already been infected
-    if (person->next_state != -1) {
+    if (person->next_state > -1) {
       person->state = person->next_state;
       std::tie(person->next_state, person->secondsLeftInState) =
         diseaseModel->transitionFromState(person->state, generator);
 
     } else {
       // Get which exposed state they should transition to.
+      DiseaseState cur = person->state;
       std::tie(person->state, std::ignore) =
         diseaseModel->transitionFromState(person->state, generator);
       // See where they will transition next.
       std::tie(person->next_state, person->secondsLeftInState) =
         diseaseModel->transitionFromState(person->state, generator);
     }
+
+    // CkPrintf("  Person %d: transitioned (%d, %d -> %d, %d)\n",
+    //   person->getUniqueId(), curState, nextState,
+    //   person->state, person->next_state);
   }
 }
 
