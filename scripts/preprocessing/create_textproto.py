@@ -98,8 +98,9 @@ def create_textproto(pop_dir, csv_filename, dtypes, partition_offsets=None):
 
         if partition_offsets is not None:
             for offset in partition_offsets:
-                f.write(SINGLETON_ENTRY.format(name="partition_offsets",
-                    value=f"{offset}"))
+                f.write(
+                    SINGLETON_ENTRY.format(name="partition_offsets", value=f"{offset}")
+                )
 
         for c in df.columns:
             dtype = dtypes.get(c, DEFAULT_TYPE)
