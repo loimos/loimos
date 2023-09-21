@@ -17,7 +17,7 @@
  */
 
 Person::Person(const AttributeTable &attributes, int numInterventions,
-    int startingState, int secondsLeftInState_, int numDays) :
+    DiseaseState startingState, Time secondsLeftInState_, int numDays) :
     DataInterface(attributes, numInterventions),
     state(startingState), next_state(-1),
     secondsLeftInState(secondsLeftInState_) {
