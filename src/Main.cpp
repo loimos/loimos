@@ -62,6 +62,7 @@
 /* readonly */ Counter totalVisits;
 /* readonly */ Counter totalInteractions;
 /* readonly */ Counter totalExposures;
+/* readonly */ Counter totalExposureDuration;
 /* readonly */ double simulationStartTime;
 /* readonly */ double iterationStartTime;
 /* readonly */ double stepStartTime;
@@ -459,7 +460,7 @@ void Main::SeedInfections() {
     // Make a super contagious visit for that person.
     std::vector<Interaction> interactions;
     interactions.emplace_back(
-      std::numeric_limits<double>::max(), 0, 0, 0, std::numeric_limits<int>::max());
+      std::numeric_limits<double>::max(), -1, -1, -1, -1);
 
     InteractionMessage interMsg(-1, personIdx, interactions);
     #ifdef USE_HYPERCOMM

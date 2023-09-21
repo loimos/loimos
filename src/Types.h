@@ -24,7 +24,7 @@ using Id = int64_t;
 using PartitionId = int;
 
 // Disease states
-using DiseaseState = int16_t;
+using DiseaseState = int;
 
 // Event types
 using EventType = char;

@@ -59,6 +59,7 @@ mainmodule loimos {
   readonly Counter totalVisits;
   readonly Counter totalInteractions;
   readonly Counter totalExposures;
+  readonly Counter totalExposureDuration;
   readonly double simulationStartTime;
   readonly double iterationStartTime;
   readonly double stepStartTime;
@@ -96,6 +97,7 @@ mainmodule loimos {
         totalVisits = 0;
         totalInteractions = 0;
         totalExposures = 0;
+        totalExposureDuration = 0;
         totalTime.resize(TOTAL_TIME_SIZE, 0);
         CkPrintf("Running ...\n\n");
         simulationStartTime = CkWallTimer();
@@ -222,8 +224,10 @@ mainmodule loimos {
         #if ENABLE_DEBUG >= 2
         CkPrintf("  Processed "COUNTER_PRINT_TYPE" visits, "
           COUNTER_PRINT_TYPE" interactions, and "
-          COUNTER_PRINT_TYPE" exposures\n",
-          totalVisits, totalInteractions, totalExposures);
+          COUNTER_PRINT_TYPE" exposures, "
+          COUNTER_PRINT_TYPE" total exposure duration\n",
+          totalVisits, totalInteractions, totalExposures,
+          totalExposureDuration);
         #endif
         CkPrintf("  Visit messages took %lf seconds\n",
           totalTime[TOTAL_VISITS_TIME_INDEX]);
@@ -248,7 +252,7 @@ mainmodule loimos {
     entry void SeedInfections();
     entry void StartComputingInteractions();
     entry void ComputedInteractions();
-    #if ENABLE_DEBUG >= 2
+    #if ENABLE_DEBUG >= DEBUG_VERBOSE
     entry [reductiontarget] void ReceiveVisitsLoadedCount(int visitsCount) {
       serial{CkPrintf("  Loaded a total of %d visits\n", visitsCount);}
     };
@@ -263,6 +267,10 @@ mainmodule loimos {
     entry [reductiontarget] void ReceiveExposuresCount(Counter count) {
       serial{totalExposures += count;}
       serial{CkPrintf("  Processed "COUNTER_PRINT_TYPE" exposures\n", count);}
+    };
+    entry [reductiontarget] void ReceiveExposureDuration(Counter duration) {
+      serial{totalExposureDuration += duration;}
+      serial{CkPrintf("  "COUNTER_PRINT_TYPE"s total exposure\n", duration);}
     };
     #endif // ENABLE_DEBUG
     entry [reductiontarget] void ReceiveInfectiousCount(Id infectiousCount);
