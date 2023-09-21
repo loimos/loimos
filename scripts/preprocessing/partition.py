@@ -6,8 +6,12 @@ import shutil
 
 import pandas as pd
 from preprocess import read_csv, write_csv, make_contiguous, update_ids
-from create_textproto import create_textproto, PEOPLE_TYPES, LOCATIONS_TYPES,\
-    VISITS_TYPES
+from create_textproto import (
+    create_textproto,
+    PEOPLE_TYPES,
+    LOCATIONS_TYPES,
+    VISITS_TYPES,
+)
 
 
 def parse_args():
@@ -19,7 +23,7 @@ def parse_args():
     parser.add_argument(
         "in_dir",
         metavar="I",
-        help="A path to a directory containing data on the population to partition"
+        help="A path to a directory containing data on the population to partition",
     )
     parser.add_argument(
         "num_partitions",
@@ -33,7 +37,7 @@ def parse_args():
         "-o",
         "--out-dir",
         default=None,
-        help="The name of the directory where the partitioned population data"
+        help="The name of the directory where the partitioned population data",
     )
     parser.add_argument(
         "-p",
@@ -60,7 +64,7 @@ def parse_args():
         "-ll",
         "--location-load-col",
         default="total_visits",
-        help="The column to use to represent location load"
+        help="The column to use to represent location load",
     )
 
     args = parser.parse_args()
@@ -73,17 +77,12 @@ def parse_args():
 
 
 def get_partition_load(df, load_col="total_visits", partition_col="partition"):
-    partition_summary = df[[partition_col, load_col]]\
-            .groupby(partition_col)
+    partition_summary = df[[partition_col, load_col]].groupby(partition_col)
     cols = [
-            partition_summary.sum()\
-                    .rename(columns={load_col: "total_load"}),
-            partition_summary.count()\
-                    .rename(columns={load_col: "size"}),
-            partition_summary.min()\
-                    .rename(columns={load_col: "min_load"}),
-            partition_summary.max()\
-                    .rename(columns={load_col: "max_load"}),
+        partition_summary.sum().rename(columns={load_col: "total_load"}),
+        partition_summary.count().rename(columns={load_col: "size"}),
+        partition_summary.min().rename(columns={load_col: "min_load"}),
+        partition_summary.max().rename(columns={load_col: "max_load"}),
     ]
     return pd.concat(cols, axis="columns")
 
@@ -100,8 +99,9 @@ def get_offsets(df, partition_col="partition"):
 
 # Assumes df has already been sorted, and returns list of cuts to make to form
 # partitions (i.e. the partition offsets)
-def linear_cut_partition(df, load_col="total_visits", num_partitions=16,
-        partition_col="partition"):
+def linear_cut_partition(
+    df, load_col="total_visits", num_partitions=16, partition_col="partition"
+):
     mean_load = df[load_col].mean()
     mean_load_per_partition = mean_load * df.shape[0] / num_partitions
 
@@ -117,14 +117,17 @@ def linear_cut_partition(df, load_col="total_visits", num_partitions=16,
             partition_load = 0
 
     print(mean_load_per_partition)
-    partition_load = get_partition_load(df, load_col=load_col,
-            partition_col=partition_col)
+    partition_load = get_partition_load(
+        df, load_col=load_col, partition_col=partition_col
+    )
     print(partition_load)
 
     return get_offsets(df, partition_col=partition_col)
 
 
 LOCATION_SORT_BY = ["admin1", "admin2", "admin3", "admin4"]
+
+
 def main():
     args = parse_args()
 
@@ -139,16 +142,18 @@ def main():
     lid_update = make_contiguous(locations, name="locations", reset_index=True)
     visits = update_ids(visits, lid_update, name="visits")
 
-    offsets = linear_cut_partition(locations, load_col=args.location_load_col,
-            num_partitions=args.num_partitions)
+    offsets = linear_cut_partition(
+        locations, load_col=args.location_load_col, num_partitions=args.num_partitions
+    )
 
     shutil.copy(os.path.join(args.in_dir, args.people_file), args.out_dir)
     write_csv(args.out_dir, args.locations_file, locations)
     write_csv(args.out_dir, args.visits_file, visits)
 
     create_textproto(args.out_dir, args.people_file, PEOPLE_TYPES)
-    create_textproto(args.out_dir, args.locations_file, LOCATIONS_TYPES,
-            partition_offsets=offsets)
+    create_textproto(
+        args.out_dir, args.locations_file, LOCATIONS_TYPES, partition_offsets=offsets
+    )
     create_textproto(args.out_dir, args.visits_file, VISITS_TYPES)
 
 

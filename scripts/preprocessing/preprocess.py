@@ -4,7 +4,12 @@ import argparse
 import os
 
 import pandas as pd
-from create_textproto import create_textproto, PEOPLE_TYPES, LOCATIONS_TYPES,\
+from create_textproto import (
+    create_textproto,
+    PEOPLE_TYPES,
+    LOCATIONS_TYPES,
+    VISITS_TYPES,
+)
 
 DEFAULT_VALUES = {
     "work": 0,
@@ -153,8 +158,9 @@ def is_contiguous(df, col="lid"):
     return (1 == df[col].diff())[1:].all()
 
 
-def make_contiguous(df, id_col="lid", offset=0, name="df",
-        suplimental_cols=list(), reset_index=False):
+def make_contiguous(
+    df, id_col="lid", offset=0, name="df", suplimental_cols=list(), reset_index=False
+):
     if reset_index:
         df.reset_index(inplace=True, drop=True)
 
