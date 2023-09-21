@@ -27,6 +27,8 @@ class Locations : public CBase_Locations {
   DiseaseModel *diseaseModel;
   ContactModel *contactModel;
   std::ofstream *interactionsFile;
+  Counter exposureDuration;
+  Counter expectedExposureDuration;
   int day;
 
   // For random generation.
@@ -63,7 +65,7 @@ class Locations : public CBase_Locations {
 
   #if ENABLE_DEBUG >= DEBUG_VERBOSE
   Counter saveInteractions(const Location &loc, const Event &departure,
-    std::ofstream *out) const;
+    std::ofstream *out);
   #endif
 
  public:

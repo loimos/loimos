@@ -25,7 +25,7 @@ using PartitionId = int;
 #define PARTITION_ID_PRINT_TYPE "%d"
 
 // Disease states
-using DiseaseState = int16_t;
+using DiseaseState = int;
 
 // Event types
 using EventType = char;
