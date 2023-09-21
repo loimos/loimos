@@ -201,6 +201,8 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 void Locations::ComputeInteractions() {
   Counter numVisits = 0;
   Counter numInteractions = 0;
+  exposureDuration = 0;
+  expectedExposureDuration = 0;
   for (Location &loc : locations) {
     Counter locVisits = loc.events.size() / 2;
     numVisits += locVisits;
@@ -217,6 +219,18 @@ void Locations::ComputeInteractions() {
   CkCallback cb(CkReductionTarget(Main, ReceiveInteractionsCount), mainProxy);
   contribute(sizeof(Counter), &numInteractions,
       CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), cb);
+
+  CkCallback cb2(CkReductionTarget(Main, ReceiveExposureDuration), mainProxy);
+#if ENABLE_DEBUG == DEBUG_PER_INTERACTION
+  contribute(sizeof(Counter), &expectedExposureDuration,
+      CkReduction::sum_double, cb2);
+  // if (0 < expectedExposureDuration) {
+  //   CkPrintf("    Chare %d: "COUNTER_PRINT_TYPE"s expected duration\n",
+  //       thisIndex, expectedExposureDuration);
+  // }
+#else
+  contribute(sizeof(Counter), &exposureDuration, CkReduction::sum_double, cb2);
+#endif  // DEBUG_PER_INTERACTION
 #endif
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
@@ -302,27 +316,34 @@ Counter Locations::processEvents(Location *loc) {
 
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
 Counter Locations::saveInteractions(const Location &loc,
-    const Event &departure, std::ofstream *out) const {
+    const Event &departure, std::ofstream *out) {
   Counter count = 0;
+  Time end = departure.scheduledTime;
   for (const Event &a : susceptibleArrivals) {
-    if (NULL != out) {
-      *out << loc.getUniqueId() << "," << departure.personIdx << ","
-      << departure.partnerTime << ","  << departure.scheduledTime << ","
-      << a.personIdx << "," << a.scheduledTime << "," << a.partnerTime
-      << std::endl;
-    }
     if (Event::overlap(a, departure)) {
+      if (NULL != out) {
+        // *out << loc.getUniqueId() << "," << departure.personIdx << ","
+        // << departure.partnerTime << ","  << departure.scheduledTime << ","
+        // << a.personIdx << "," << a.scheduledTime << "," << a.partnerTime
+        // << std::endl;
+      }
+
+      Time start = std::max(a.scheduledTime, departure.partnerTime);
+      expectedExposureDuration += end - start;
       count++;
     }
   }
   for (const Event &a : infectiousArrivals) {
-    if (NULL != out) {
-      *out << loc.getUniqueId() << "," << departure.personIdx << ","
-      << departure.partnerTime << ","  << departure.scheduledTime << ","
-      << a.personIdx << "," << a.scheduledTime << "," << a.partnerTime
-      << std::endl;
-    }
     if (Event::overlap(a, departure)) {
+      if (NULL != out) {
+        // *out << loc.getUniqueId() << "," << departure.personIdx << ","
+        // << departure.partnerTime << ","  << departure.scheduledTime << ","
+        // << a.personIdx << "," << a.scheduledTime << "," << a.partnerTime
+        // << std::endl;
+      }
+
+      Time start = std::max(a.scheduledTime, departure.partnerTime);
+      expectedExposureDuration += end - start;
       count++;
     }
   }
@@ -375,6 +396,10 @@ inline void Locations::registerInteraction(Location *loc,
     return;
   }
 
+  exposureDuration += endTime - startTime;
+  CkPrintf("  inf: %ld sus: %ld dt: "COUNTER_PRINT_TYPE"\n",
+      infectiousEvent.personIdx, susceptibleEvent.personIdx,
+      endTime - startTime);
   double propensity = diseaseModel->getPropensity(susceptibleEvent.personState,
     infectiousEvent.personState, startTime, endTime,
     susceptibleEvent.transmissionModifier, infectiousEvent.transmissionModifier);
@@ -440,7 +465,7 @@ void Locations::ReceiveIntervention(PartitionId interventionIdx) {
 #ifdef ENABLE_LB
 void Locations::ResumeFromSync() {
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
-  CkPrintf("\tDone load balancing on location chare %d\n", thisIndex);
+  CkPrintf("  Done load balancing on location chare %d\n", thisIndex);
 #endif
 
   CkCallback cb(CkReductionTarget(Main, locationsLBComplete), mainProxy);
