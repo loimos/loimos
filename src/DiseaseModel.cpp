@@ -71,6 +71,14 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
   diseaseModelStream.close();
   assert(model->disease_states_size() != 0);
 
+  if (0 == CkMyNode()) {
+    for (int i = 0; i < model->disease_states_size(); ++i) {
+      CkPrintf("  Disease state %d: sus=%f, inf=%f\n",
+        i, model->disease_states(i).susceptibility(),
+        model->disease_states(i).infectivity());
+    }
+  }
+
   // Setup other shared PE objects.
   if (!syntheticRun) {
     // Handle people...
@@ -256,8 +264,9 @@ DiseaseModel::transitionFromState(DiseaseState fromState,
       // TODO(IanCostello): Create a CDF vector in initialization.
       cdfSoFar += transition->with_prob();
       if (randomCutoff <= cdfSoFar) {
-        DiseaseState nextState = transition->next_state();
+        DiseaseState nextState = static_cast<DiseaseState>(transition->next_state());
         Time timeInNextState = getTimeInNextState(transition, generator);
+        // CkPrintf("  Transitioning from %d to %d\n", fromState, nextState);
         return std::make_tuple(nextState, timeInNextState);
       }
     }
@@ -265,8 +274,12 @@ DiseaseModel::transitionFromState(DiseaseState fromState,
     CkAbort("No state transition made! From state %d.", fromState);
 
   } else if (currState->has_exposure_transition()) {
-    return std::make_tuple(
-        currState->exposure_transition().transitions(0).next_state(), 0);
+    DiseaseState nextState = static_cast<DiseaseState>(
+      currState->exposure_transition()
+        .transitions(0)
+        .next_state());
+    // CkPrintf("  Transitioning from %d to %d\n", fromState, nextState);
+    return std::make_tuple(nextState, 0);
 
     /*
     // If already infected then they are settling in this state so no transition.
@@ -342,13 +355,13 @@ int DiseaseModel::getNumberOfStates() const {
 
 /** Returns the initial starting healthy and exposed state */
 DiseaseState DiseaseModel::getHealthyState(const std::vector<Data> &dataField) const {
-  uint numStartingStates = model->starting_states_size();
+  DiseaseState numStartingStates = model->starting_states_size();
 
   // Shouldn't need to check age if there's only one starting state
   if (1 == numStartingStates) {
     const loimos::proto::DiseaseModel_StartingCondition state =
       model->starting_states(0);
-    return state.starting_state();
+    return static_cast<DiseaseState>(state.starting_state());
 
   } else if (-1 == ageIdx) {
     CkAbort("No age data (needed for determinign healthy disease state)\n");
@@ -361,7 +374,7 @@ DiseaseState DiseaseModel::getHealthyState(const std::vector<Data> &dataField) c
       model->starting_states(stateNum);
 
     if (state.lower() <= personAge && personAge <= state.upper()) {
-      return state.starting_state();
+      return static_cast<DiseaseState>(state.starting_state());
     }
   }
   CkAbort("No starting state for person of age %d. Read %d states total.",
@@ -421,9 +434,16 @@ double DiseaseModel::getPropensity(DiseaseState susceptibleState,
   // EpiHiper had a number of weights/scaling constants that we may add in
   // later, but for now we omit most of them (which is equivalent to setting
   // them all to one)
-  return model->transmissibility() * dt * susceptibility * infectivity
+  double result = model->transmissibility() * dt * susceptibility * infectivity
     * model->disease_states(susceptibleState).susceptibility()
-    * model->disease_states(infectiousState).infectivity();
+    * model->disease_states(infectiousState).infectivity() / DAY_LENGTH;
+
+  // CkPrintf("  Propensity %f: transmissibility=%f, dt=%d, sus=%d(%f,%f), inf=%d(%f,%f)\n",
+  //     result, model->transmissibility(), dt, susceptibleState, susceptibility,
+  //     model->disease_states(susceptibleState).susceptibility(),
+  //     infectiousState, infectivity,
+  //     model->disease_states(infectiousState).infectivity());
+  return result;
 }
 
 /**
