@@ -4,6 +4,7 @@ import argparse
 import os
 
 import pandas as pd
+from create_textproto import create_textproto, PEOPLE_TYPES, LOCATIONS_TYPES,\
 
 DEFAULT_VALUES = {
     "work": 0,
@@ -330,6 +331,10 @@ def main():
     activity_update, home_update = merge_locations(args)
     people_update = fix_people(args)
     merge_visits(args, activity_update, home_update, people_update)
+
+    create_textproto(args.out_dir, args.people_out_file, PEOPLE_TYPES)
+    create_textproto(args.out_dir, args.locations_out_file, LOCATIONS_TYPES)
+    create_textproto(args.out_dir, args.visits_out_file, VISITS_TYPES)
 
 
 if __name__ == "__main__":
