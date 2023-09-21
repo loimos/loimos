@@ -77,7 +77,7 @@ endif
 # (time-based) seed for all psuedo-random number generators. Makes simulation
 # results non-deterministic, even given same run settings
 ifdef ENABLE_RANDOM_SEED
-OPTS      = -DENABLE_RANDOM_SEED
+OPTS      += -DENABLE_RANDOM_SEED
 endif
 
 CXXFLAGS  = $(OPTS) -std=c++11 $(INCLUDES)
