@@ -77,7 +77,7 @@ def wc(path):
     return int(result.split()[0])
 
 
-def create_textproto(pop_dir, csv_filename, dtypes):
+def create_textproto(pop_dir, csv_filename, dtypes, partition_offsets=None):
     csv_path = os.path.join(pop_dir, csv_filename)
     tmp, _ = os.path.splitext(csv_path)
     textproto_path = tmp + ".textproto"
@@ -95,6 +95,12 @@ def create_textproto(pop_dir, csv_filename, dtypes):
                     name="load_column", value=f'"{LOAD_COLUMNS[name]}"'
                 )
             )
+
+        if partition_offsets is not None:
+            for offset in partition_offsets:
+                f.write(SINGLETON_ENTRY.format(name="partition_offsets",
+                    value=f"{offset}"))
+
         for c in df.columns:
             dtype = dtypes.get(c, DEFAULT_TYPE)
             f.write(COLUMN_METADATA_ENTRY.format(name=c, dtype=dtype))

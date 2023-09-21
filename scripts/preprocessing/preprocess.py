@@ -18,8 +18,8 @@ DEFAULT_VALUES = {
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Samples a given set of locations (along with their "
-        + "associated visits and people) from the given population"
+        description="Merges population data to create files in a format "
+        + "Loimos can read"
     )
 
     # Positional/required arguments:
@@ -31,7 +31,7 @@ def parse_args():
     parser.add_argument(
         "in_dir",
         metavar="I",
-        help="A path to a directory containing data on the population to sample from",
+        help="A path to a directory containing raw data on the population",
     )
 
     # Named/optional arguments:
@@ -39,7 +39,7 @@ def parse_args():
         "-o",
         "--out-dir",
         default=None,
-        help="The name of the directory where the sampled population "
+        help="The name of the directory where the reformated population "
         + "should be saved. If this argument is not specified, "
         + "the same path will be used for the input and output "
         + "directories",
@@ -133,7 +133,7 @@ def parse_args():
     return args
 
 
-def read_csv(in_dir, filename, region, should_flatten=False):
+def read_csv(in_dir, filename, region="", should_flatten=False):
     if should_flatten:
         filename = os.path.basename(filename)
 
@@ -152,7 +152,11 @@ def is_contiguous(df, col="lid"):
     return (1 == df[col].diff())[1:].all()
 
 
-def make_contiguous(df, id_col="lid", offset=0, name="df", suplimental_cols=list()):
+def make_contiguous(df, id_col="lid", offset=0, name="df",
+        suplimental_cols=list(), reset_index=False):
+    if reset_index:
+        df.reset_index(inplace=True, drop=True)
+
     # Check if its already contiguous
     if is_contiguous(df, col=id_col):
         print(f"  {name} are already contiguous; subtracting offset")
