@@ -85,7 +85,7 @@ endif
 # (time-based) seed for all psuedo-random number generators. Makes simulation
 # results non-deterministic, even given same run settings
 ifdef ENABLE_RANDOM_SEED
-OPTS      = -DENABLE_RANDOM_SEED
+OPTS      += -DENABLE_RANDOM_SEED
 endif
 
 # Set the ENABLE_FORCE_FULL_RUN environment variable to force the code to run
