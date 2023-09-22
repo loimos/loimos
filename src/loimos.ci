@@ -66,8 +66,8 @@ mainmodule loimos {
 
   readonly Counter totalVisits;
   readonly Counter totalInteractions;
-  readonly Counter totalExposures;
-  readonly Counter totalExposureDuration;
+  readonly int64_t totalExposures;
+  readonly int64_t totalExposureDuration;
   readonly double simulationStartTime;
   readonly double iterationStartTime;
   readonly double stepStartTime;
@@ -237,8 +237,8 @@ mainmodule loimos {
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
         CkPrintf("  Processed "COUNTER_PRINT_TYPE" visits, "
           COUNTER_PRINT_TYPE" interactions, and "
-          COUNTER_PRINT_TYPE" exposures, "
-          COUNTER_PRINT_TYPE" total exposure duration\n",
+          "%ld exposures, "
+          "%ld total exposure duration\n",
           totalVisits, totalInteractions, totalExposures,
           totalExposureDuration);
         #endif
@@ -277,11 +277,11 @@ mainmodule loimos {
       serial{totalInteractions += count;}
       serial{CkPrintf("  Processed "COUNTER_PRINT_TYPE" interactions\n", count);}
     };
-    entry [reductiontarget] void ReceiveExposuresCount(Counter count) {
+    entry [reductiontarget] void ReceiveExposuresCount(int64_t count) {
       serial{totalExposures += count;}
       serial{CkPrintf("  Processed "COUNTER_PRINT_TYPE" exposures\n", count);}
     };
-    entry [reductiontarget] void ReceiveExposureDuration(Counter duration) {
+    entry [reductiontarget] void ReceiveExposureDuration(int64_t duration) {
       serial{totalExposureDuration += duration;}
       serial{CkPrintf("  "COUNTER_PRINT_TYPE"s total exposure\n", duration);}
     };
