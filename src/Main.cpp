@@ -61,8 +61,8 @@
 /* readonly */ int firstLocationIdx;
 /* readonly */ Counter totalVisits;
 /* readonly */ Counter totalInteractions;
-/* readonly */ Counter totalExposures;
-/* readonly */ Counter totalExposureDuration;
+/* readonly */ int64_t totalExposures;
+/* readonly */ int64_t totalExposureDuration;
 /* readonly */ double simulationStartTime;
 /* readonly */ double iterationStartTime;
 /* readonly */ double stepStartTime;

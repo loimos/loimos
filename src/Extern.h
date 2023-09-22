@@ -31,8 +31,8 @@ extern /* readonly */ bool syntheticRun;
 
 extern /* readonly */ Counter totalVisits;
 extern /* readonly */ Counter totalInteractions;
-extern /* readonly */ Counter totalExposures;
-extern /* readonly */ Counter totalExposureDuration;
+extern /* readonly */ int64_t totalExposures;
+extern /* readonly */ int64_t totalExposureDuration;
 extern /* readonly */ double simulationStartTime;
 extern /* readonly */ double iterationStartTime;
 
