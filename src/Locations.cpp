@@ -155,8 +155,8 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   }
   Id trueIdx = locations[localLocIdx].getUniqueId();
   if (visitMsg.locationIdx != trueIdx) {
-    CkAbort("Error on chare %d: Visit by person "ID_PRINT_TYPE
-        " to loc " ID_PRINT_TYPE " recieved by "
+    CkAbort("Error on chare %d: Visit by person " ID_PRINT_TYPE
+        " to loc " ID_PRINT_TYPE " received by "
         "loc " ID_PRINT_TYPE " (local " ID_PRINT_TYPE ")\n",
         thisIndex, visitMsg.personIdx, visitMsg.locationIdx, trueIdx,
         localLocIdx);
@@ -218,8 +218,8 @@ void Locations::ComputeInteractions() {
 
   CkCallback cb2(CkReductionTarget(Main, ReceiveExposureDuration), mainProxy);
 #if ENABLE_DEBUG == DEBUG_PER_INTERACTION
-  contribute(sizeof(Counter), &expectedExposureDuration,
-      CkReduction::sum_double, cb2);
+  contribute(sizeof(int64_t), &expectedExposureDuration,
+      CkReduction::sum_long, cb2);
   // if (0 < expectedExposureDuration) {
   //   CkPrintf("    Chare %d: "COUNTER_PRINT_TYPE"s expected duration\n",
   //       thisIndex, expectedExposureDuration);
@@ -246,6 +246,7 @@ Counter Locations::processEvents(Location *loc) {
   Counter numInteractions = 0;
   Counter numPresent = 0;
   Counter numVisits = loc->events.size() / 2;
+  Counter duration = 0;
   double startTime = CkWallTimer();
 #endif
 
@@ -257,6 +258,7 @@ Counter Locations::processEvents(Location *loc) {
     } else {
       numPresent--;
       numInteractions += numPresent;
+      duration += saveInteractions(*loc, event, interactionsFile);
     }
 #endif
 
@@ -294,6 +296,7 @@ Counter Locations::processEvents(Location *loc) {
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   double p = contactModel->getContactProbability(*loc);
   Counter total = static_cast<Counter>(p * numInteractions);
+  expectedExposureDuration += duration * p;
 
 #if ENABLE_DEBUG == DEBUG_LOCATION_SUMMARY
   if (0 != numInteractions && -1 != maxSimVisitsIdx) {
@@ -313,7 +316,7 @@ Counter Locations::processEvents(Location *loc) {
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
 Counter Locations::saveInteractions(const Location &loc,
     const Event &departure, std::ofstream *out) {
-  Counter count = 0;
+  Counter duration = 0;
   Time end = departure.scheduledTime;
   for (const Event &a : susceptibleArrivals) {
     if (Event::overlap(a, departure)) {
@@ -325,8 +328,7 @@ Counter Locations::saveInteractions(const Location &loc,
       }
 
       Time start = std::max(a.scheduledTime, departure.partnerTime);
-      expectedExposureDuration += end - start;
-      count++;
+      duration += end - start;
     }
   }
   for (const Event &a : infectiousArrivals) {
@@ -339,11 +341,10 @@ Counter Locations::saveInteractions(const Location &loc,
       }
 
       Time start = std::max(a.scheduledTime, departure.partnerTime);
-      expectedExposureDuration += end - start;
-      count++;
+      duration += end - start;
     }
   }
-  return count;
+  return duration;
 }
 #endif  // DEBUG_VERBOSE
 
@@ -393,9 +394,9 @@ inline void Locations::registerInteraction(Location *loc,
   }
 
   exposureDuration += endTime - startTime;
-  CkPrintf("  inf: %ld sus: %ld dt: "COUNTER_PRINT_TYPE"\n",
-      infectiousEvent.personIdx, susceptibleEvent.personIdx,
-      endTime - startTime);
+  // CkPrintf("  inf: %ld sus: %ld dt: "COUNTER_PRINT_TYPE"\n",
+  //     infectiousEvent.personIdx, susceptibleEvent.personIdx,
+  //     endTime - startTime);
   double propensity = diseaseModel->getPropensity(susceptibleEvent.personState,
     infectiousEvent.personState, startTime, endTime,
     susceptibleEvent.transmissionModifier, infectiousEvent.transmissionModifier);
