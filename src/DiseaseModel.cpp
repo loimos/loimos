@@ -103,7 +103,7 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
   }
 #endif
 
-  if (!syntheticRun) {
+  if (!syntheticRun && 0 == CkMyNode()) {
     buildCache(scenarioPath, numPeople, personPartitionOffsets,
       numLocations, locationPartitionOffsets, numDaysWithDistinctVisits);
   }
