@@ -123,6 +123,8 @@ def parse_args():
         help="The name of the file containing visit data within the "
         + "population dir",
     )
+
+    # Flags
     parser.add_argument(
         "-f",
         "--flat",
@@ -161,7 +163,6 @@ def is_contiguous(df, col="lid"):
 def make_contiguous(
     df, id_col="lid", offset=0, name="df", suplimental_cols=list(),
     reset_index=False, validate=True):
-):
     if reset_index:
         df.reset_index(inplace=True, drop=True)
 

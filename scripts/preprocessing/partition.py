@@ -67,6 +67,14 @@ def parse_args():
         help="The column to use to represent location load",
     )
 
+    # Flags
+    parser.add_argument(
+        "-val",
+        "--validate",
+        action="store_true",
+        help="Pass this flag if the script should validate its results",
+    )
+
     args = parser.parse_args()
 
     # Assume out and in dirs are the same by default for convience
@@ -139,7 +147,8 @@ def main():
 
     # Reindexing doesn't depend on the partition
     locations.sort_values(LOCATION_SORT_BY, inplace=True)
-    lid_update = make_contiguous(locations, name="locations", reset_index=True)
+    lid_update = make_contiguous(locations, name="locations", reset_index=True,
+            validate=args.validate)
     visits = update_ids(visits, lid_update, name="visits")
 
     offsets = linear_cut_partition(
