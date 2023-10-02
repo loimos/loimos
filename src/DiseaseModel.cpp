@@ -85,8 +85,14 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     locationAttributes.readAttributes(locationDef->fields());
   }
 
+  // if (0 == CkMyNode()) {
+  //   CkPrintf("People offsets:\n");
+  // }
   setPartitionOffsets(numPersonPartitions, numPeople, firstPersonIdx,
     personDef, &personPartitionOffsets);
+  // if (0 == CkMyNode()) {
+  //   CkPrintf("Location offsets:\n");
+  // }
   setPartitionOffsets(numLocationPartitions, numLocations, firstLocationIdx,
     locationDef, &locationPartitionOffsets);
 
@@ -142,6 +148,7 @@ void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
     Id firstIndex, loimos::proto::CSVDefinition *metadata,
     std::vector<Id> *partitionOffsets) {
   partitionOffsets->reserve(numPartitions);
+  Id lastIndex = firstIndex + numObjects;
 
   if (NULL != metadata && 0 < metadata->partition_offsets_size()) {
     PartitionId numOffsets = metadata->partition_offsets_size();
@@ -153,7 +160,7 @@ void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
       }
 
 #ifdef ENABLE_DEBUG
-      if (0 > offset || numObjects <= offset) {
+      if (outOfBounds(firstIndex, lastIndex, offset)) {
         CkAbort("Error: Offset "ID_PRINT_TYPE" outside of valid range [0,"
           ID_PRINT_TYPE")\n", offset, numObjects);
 
@@ -162,22 +169,30 @@ void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
         CkAbort("Error: Offset "ID_PRINT_TYPE" for parition "
         PARTITION_ID_PRINT_TYPE" out of order\n", offset, p);
       }
+      // else if (0 == CkMyNode()) {
+      //   CkPrintf("  Chare %d: offset "ID_PRINT_TYPE" (provided)\n",
+      //       p, offset);
+      // }
 #endif  // ENABLE_DEBUG
     }
 
   // If no offsets are provided, try to put about the same number of objects
   // in each partition (i.e. use the old partitioning scheme)
   } else {
-    for (PartitionId i = 0; i < numPartitions; ++i) {
-      Id offset = getFirstIndex(i, numObjects,
+    for (PartitionId p = 0; p < numPartitions; ++p) {
+      Id offset = getFirstIndex(p, numObjects,
           numPartitions, firstIndex);
       partitionOffsets->emplace_back(offset);
 
 #ifdef ENABLE_DEBUG
-      if (outOfBounds(0l, numObjects, offset)) {
+      if (outOfBounds(firstIndex, lastIndex, offset)) {
         CkAbort("Error: Offset "ID_PRINT_TYPE" outside of valid range [0,"
           ID_PRINT_TYPE")\n", offset, numObjects);
       }
+      // else if (0 == CkMyNode()) {
+      //   CkPrintf("  Chare %d: offset "ID_PRINT_TYPE" (default)\n",
+      //       p, offset);
+      // }
 #endif  // ENABLE_DEBUG
     }
   }
@@ -477,7 +492,7 @@ double DiseaseModel::getPropensity(DiseaseState susceptibleState,
   // them all to one)
   return model->transmissibility() * dt * susceptibility * infectivity
     * model->disease_states(susceptibleState).susceptibility()
-    * model->disease_states(infectiousState).infectivity();
+    * model->disease_states(infectiousState).infectivity() / DAY_LENGTH;
 }
 
 /**
