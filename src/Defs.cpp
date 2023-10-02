@@ -33,15 +33,30 @@ Id getNumElementsPerPartition(Id numElements, PartitionId numPartitions) {
  *    Id offset: The globalIndex number referring to the first object. Likely
  *      could be replaced with a better system.
  *
- * Notes: Will likely change as we Idroduce active load balancing.
+ * Notes: Will likely change as we introduce active load balancing.
  */
 PartitionId getPartitionIndex(Id globalIndex, Id numElements,
     PartitionId numPartitions, Id offset) {
-  Id partitionIndex = (globalIndex - offset)
-    / getNumElementsPerPartition(numElements, numPartitions);
-  if (partitionIndex >= numPartitions)
-    return (numPartitions - 1);
-  return partitionIndex;
+  globalIndex -= offset;
+
+  Id elementsPerPartition = getNumElementsPerPartition(numElements,
+      numPartitions);
+  Id numLargerPartitions = numElements % numPartitions;
+  Id numElementsInLargerPartitions =
+    numLargerPartitions * elementsPerPartition;
+
+  if (globalIndex < numElementsInLargerPartitions) {
+    return globalIndex / elementsPerPartition;
+  } else {
+    return numLargerPartitions - 1
+      + (globalIndex - numElementsInLargerPartitions)
+      / (elementsPerPartition - 1);
+  }
+  //Id partitionIndex = (globalIndex - offset)
+  //  / getNumElementsPerPartition(numElements, numPartitions);
+  // if (partitionIndex >= numPartitions)
+  //   return (numPartitions - 1);
+  // return partitionIndex;
 }
 
 /**
@@ -60,13 +75,13 @@ Id getFirstIndex(PartitionId partitionIndex, Id numElements,
   Id elementsPerPartition = getNumElementsPerPartition(numElements,
       numPartitions);
   Id maxIndex = partitionIndex * elementsPerPartition + offset;
-  return maxIndex;
+  //return maxIndex;
 
-  PartitionId firstSmallerPartition = numElements % numPartitions;
-  if (partitionIndex < firstSmallerPartition) {
+  PartitionId numLargerPartitions = numElements % numPartitions;
+  if (partitionIndex < numLargerPartitions) {
     return maxIndex;
   } else {
-    return maxIndex - (partitionIndex - firstSmallerPartition);
+    return maxIndex - (partitionIndex - numLargerPartitions);
   }
 }
 
@@ -83,12 +98,18 @@ Id getNumLocalElements(Id numElements, PartitionId numPartitions,
     PartitionId partitionIndex) {
   Id elementsPerPartition = getNumElementsPerPartition(numElements,
       numPartitions);
-  Id firstIndex = getFirstIndex(partitionIndex, numElements, numPartitions,
-      0);
-  if (firstIndex >= numElements) {
-    return 0;
+  Id numLargerPartitions = numElements % numPartitions;
+  if (partitionIndex < numLargerPartitions) {
+    return elementsPerPartition;
+  } else {
+    return elementsPerPartition - 1;
   }
-  return std::min(elementsPerPartition, numElements - firstIndex);
+  //Id firstIndex = getFirstIndex(partitionIndex, numElements, numPartitions,
+  //    0);
+  // if (firstIndex >= numElements) {
+  //   return 0;
+  // }
+  // return std::min(elementsPerPartition, numElements - firstIndex);
 }
 
 /**
