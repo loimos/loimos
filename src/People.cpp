@@ -50,6 +50,13 @@ People::People(int seed, std::string scenarioPath) {
   // Get the number of people assigned to this chare
   numLocalPeople = diseaseModel->getPersonPartitionSize(thisIndex);
   Id firstLocalPersonIdx = diseaseModel->getGlobalPersonIndex(0, thisIndex);
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
+  CkPrintf("  Chare %d has %d people (%d-%d)\n",
+      thisIndex, numLocalPeople, firstLocalPersonIdx,
+      firstLocalPersonIdx + numLocalPeople - 1);
+
+  double startTime = CkWallTimer();
+#endif
 #ifdef ENABLE_DEBUG
   Id firstPersonIdx = diseaseModel->getGlobalPersonIndex(0, 0);
   Id lastPersonIdx = numPeople + firstPersonIdx;
@@ -59,13 +66,6 @@ People::People(int seed, std::string scenarioPath) {
       ID_PRINT_TYPE") out of bounds ["ID_PRINT_TYPE", "ID_PRINT_TYPE")",
       thisIndex, firstLocalPersonIdx, firstPersonIdx, lastPersonIdx);
   }
-#endif
-#if ENABLE_DEBUG >= DEBUG_PER_CHARE
-  CkPrintf("  Chare %d has %d people (%d-%d)\n",
-      thisIndex, numLocalPeople, firstLocalPersonIdx,
-      firstLocalPersonIdx + numLocalPeople - 1);
-
-  double startTime = CkWallTimer();
 #endif
 
   int numInterventions = diseaseModel->getNumPersonInterventions();
@@ -565,7 +565,7 @@ void People::ProcessInteractions(Person *person) {
   // Detemine whether or not this person was infected...
   double roll = -log(unitDistrib(generator)) / totalPropensity;
 
-  if (roll <= DAY_LENGTH) {
+  if (roll <= 1) {
     // ...if they were, determine which interaction was responsible, by
     // chooseing an interaction, with a weight equal to the propensity
     roll = std::uniform_real_distribution<>(0, totalPropensity)(generator);
