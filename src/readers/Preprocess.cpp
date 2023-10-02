@@ -47,6 +47,7 @@ std::string buildCache(std::string scenarioPath,
   // We need to uniquely identify this run configuration
   std::string uniqueScenario = getScenarioId(numPeople, numPeopleChares,
       numLocations, numLocationChares);
+  CkPrintf("  Running with scenario id: %s\n", uniqueScenario.c_str());
 
   // Build person and location cache.
   buildObjectLookupCache(numPeople, personPartitionOffsets,

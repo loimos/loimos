@@ -90,20 +90,20 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
   setPartitionOffsets(numLocationPartitions, numLocations, firstLocationIdx,
     locationDef, &locationPartitionOffsets);
 
-#if ENABLE_DEBUG >= DEBUG_PER_CAHRE
-  if (0 == CkMyNode()) {
-    for (int i = 0; i < personPartitionOffsets.size(); ++i) {
-      CkPrintf("  Person Offset %d: "ID_PRINT_TYPE"\n",
-        i, personPartitionOffsets[i]);
-    }
-    for (int i = 0; i < locationPartitionOffsets.size(); ++i) {
-      CkPrintf("  Location Offset %d: "ID_PRINT_TYPE"\n",
-        i, locationPartitionOffsets[i]);
-    }
-  }
-#endif
+// #if ENABLE_DEBUG >= DEBUG_PER_CAHRE
+//   if (0 == CkMyNode()) {
+//     for (int i = 0; i < personPartitionOffsets.size(); ++i) {
+//       CkPrintf("  Person Offset %d: "ID_PRINT_TYPE"\n",
+//         i, personPartitionOffsets[i]);
+//     }
+//     for (int i = 0; i < locationPartitionOffsets.size(); ++i) {
+//       CkPrintf("  Location Offset %d: "ID_PRINT_TYPE"\n",
+//         i, locationPartitionOffsets[i]);
+//     }
+//   }
+// #endif
 
-  if (!syntheticRun) {
+  if (!syntheticRun && 0 == CkMyNode()) {
     buildCache(scenarioPath, numPeople, personPartitionOffsets,
       numLocations, locationPartitionOffsets, numDaysWithDistinctVisits);
   }
