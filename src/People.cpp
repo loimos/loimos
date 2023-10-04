@@ -134,7 +134,7 @@ void People::generateVisitData() {
   std::poisson_distribution<int> num_visits_generator(averageDegreeOfVisit);
 
   // Model visit distance as poisson distribution.
-  std::poisson_distribution<int> visit_distance_generator(LOCATION_LAMBDA);
+  std::poisson_distribution<Id> visit_distance_generator(LOCATION_LAMBDA);
 
   // Model visit times as uniform.
   std::uniform_int_distribution<Time> time_dist(0, DAY_LENGTH);  // in seconds
@@ -172,8 +172,8 @@ void People::generateVisitData() {
 
     // Calculate home location
     Id localPersonIdx = (personIdx - firstLocationIdx) % homePartitionNumLocations;
-    int homeX = homePartitionStartX + localPersonIdx % locationPartitionWidth;
-    int homeY = homePartitionStartY + localPersonIdx / locationPartitionWidth;
+    Id homeX = homePartitionStartX + localPersonIdx % locationPartitionWidth;
+    Id homeY = homePartitionStartY + localPersonIdx / locationPartitionWidth;
 
     p.visitsByDay.resize(numDaysWithDistinctVisits);
     for (std::vector<VisitMessage> &visits : p.visitsByDay) {
@@ -199,24 +199,24 @@ void People::generateVisitData() {
           continue;
 
         // Get number of locations away this person should visit.
-        int numHops = std::min(visit_distance_generator(generator),
+        Id numHops = std::min(visit_distance_generator(generator),
           synLocationGridWidth + synLocationGridHeight - 2);
 
-        int destinationOffsetX = 0;
-        int destinationOffsetY = 0;
+        Id destinationOffsetX = 0;
+        Id destinationOffsetY = 0;
 
         if (numHops != 0) {
           // Calculate maximum hops that can be taken from home location in each
           // direction. (i.e. might be constrained for home locations close to edge)
-          int maxHopsNegativeX = std::min(numHops, homeX);
-          int maxHopsPositiveX = std::min(numHops,
+          Id maxHopsNegativeX = std::min(numHops, homeX);
+          Id maxHopsPositiveX = std::min(numHops,
             synLocationGridWidth - 1 - homeX);
-          int maxHopsNegativeY = std::min(numHops, homeY);
-          int maxHopsPositiveY = std::min(numHops,
+          Id maxHopsNegativeY = std::min(numHops, homeY);
+          Id maxHopsPositiveY = std::min(numHops,
             synLocationGridHeight - 1 - homeY);
 
           // Choose random number of hops in the X direction.
-          std::uniform_int_distribution<int> dist_gen(-maxHopsNegativeX,
+          std::uniform_int_distribution<Id> dist_gen(-maxHopsNegativeX,
             maxHopsPositiveX);
           destinationOffsetX = dist_gen(generator);
 

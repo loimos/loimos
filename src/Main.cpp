@@ -49,8 +49,6 @@
 /* readonly */ Id numLocations;
 /* readonly */ PartitionId numPersonPartitions;
 /* readonly */ PartitionId numLocationPartitions;
-/* readonly */ int numPeoplePerPartition;
-/* readonly */ int numLocationsPerPartition;
 /* readonly */ int numDays;
 /* readonly */ int numDaysWithDistinctVisits;
 /* readonly */ bool syntheticRun;
@@ -68,14 +66,14 @@
 
 
 // For synthetic run.
-/* readonly */ int synPeopleGridWidth;
-/* readonly */ int synPeopleGridHeight;
-/* readonly */ int synLocationGridWidth;
-/* readonly */ int synLocationGridHeight;
-/* readonly */ int synLocalLocationGridWidth;
-/* readonly */ int synLocalLocationGridHeight;
-/* readonly */ int synLocationPartitionGridWidth;
-/* readonly */ int synLocationPartitionGridHeight;
+/* readonly */ Id synPeopleGridWidth;
+/* readonly */ Id synPeopleGridHeight;
+/* readonly */ Id synLocationGridWidth;
+/* readonly */ Id synLocationGridHeight;
+/* readonly */ Id synLocalLocationGridWidth;
+/* readonly */ Id synLocalLocationGridHeight;
+/* readonly */ PartitionId synLocationPartitionGridWidth;
+/* readonly */ PartitionId synLocationPartitionGridHeight;
 /* readonly */ int averageDegreeOfVisit;
 /* readonly */ bool interventionStategy;
 
@@ -150,8 +148,8 @@ Main::Main(CkArgMsg* msg) {
 
   if (syntheticRun) {
     // Get number of people.
-    synPeopleGridWidth = atoi(msg->argv[++argNum]);
-    synPeopleGridHeight = atoi(msg->argv[++argNum]);
+    synPeopleGridWidth = atol(msg->argv[++argNum]);
+    synPeopleGridHeight = atol(msg->argv[++argNum]);
     numPeople = synPeopleGridWidth * synPeopleGridHeight;
 
     // Location data
@@ -211,11 +209,6 @@ Main::Main(CkArgMsg* msg) {
     CkAbort("Error: running on more location chares (%d) than locations (%d)",
         numLocationPartitions, numLocations);
   }
-
-  numPeoplePerPartition = getNumElementsPerPartition(numPeople,
-      numPersonPartitions);
-  numLocationsPerPartition = getNumElementsPerPartition(numLocations,
-      numLocationPartitions);
 
   pathToOutput = std::string(msg->argv[++argNum]);
 #if ENABLE_DEBUG >= DEBUG_BASIC

@@ -22,8 +22,6 @@ extern /* readonly */ Id numPeople;
 extern /* readonly */ Id numLocations;
 extern /* readonly */ PartitionId numPersonPartitions;
 extern /* readonly */ PartitionId numLocationPartitions;
-extern /* readonly */ int numPeoplePerPartition;
-extern /* readonly */ int numLocationsPerPartition;
 extern /* readonly */ int numDays;
 extern /* readonly */ int numDaysWithDistinctVisits;
 extern /* readonly */ int contactModelType;
@@ -38,20 +36,18 @@ extern /* readonly */ double iterationStartTime;
 // For real data run.
 extern /* readonly */ std::string scenarioPath;
 extern /* readonly */ std::string scenarioId;
-extern /* readonly */ int firstPersonIdx;
-extern /* readonly */ int firstLocationIdx;
 extern /* readonly */ int maxSimVisitsIdx;
 extern /* readonly */ int ageIdx;
 
 // For synthetic run.
-extern /* readonly */ int synPeopleGridWidth;
-extern /* readonly */ int synPeopleGridHeight;
-extern /* readonly */ int synLocationGridWidth;
-extern /* readonly */ int synLocationGridHeight;
-extern /* readonly */ int synLocalLocationGridWidth;
-extern /* readonly */ int synLocalLocationGridHeight;
-extern /* readonly */ int synLocationPartitionGridWidth;
-extern /* readonly */ int synLocationPartitionGridHeight;
+extern /* readonly */ Id synPeopleGridWidth;
+extern /* readonly */ Id synPeopleGridHeight;
+extern /* readonly */ Id synLocationGridWidth;
+extern /* readonly */ Id synLocationGridHeight;
+extern /* readonly */ Id synLocalLocationGridWidth;
+extern /* readonly */ Id synLocalLocationGridHeight;
+extern /* readonly */ PartitionId synLocationPartitionGridWidth;
+extern /* readonly */ PartitionId synLocationPartitionGridHeight;
 extern /* readonly */ int averageDegreeOfVisit;
 
 // Intervention
