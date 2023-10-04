@@ -66,6 +66,22 @@ def parse_args():
         default="total_visits",
         help="The column to use to represent location load",
     )
+    parser.add_argument(
+        "-nl",
+        "--num_locations",
+        default=None,
+        type=int,
+        help="The number of rows to read from the locations file. Defaults to "
+        + "reading all rows if not passed. Can be helpful for debugging."
+    )
+    parser.add_argument(
+        "-nv",
+        "--num_visits",
+        default=None,
+        type=int,
+        help="The number of rows to read from the visits file. Defaults to "
+        + "reading all rows if not passed. Can be helpful for debugging."
+    )
 
     args = parser.parse_args()
 
@@ -128,32 +144,46 @@ def linear_cut_partition(
 LOCATION_SORT_BY = ["admin1", "admin2", "admin3", "admin4"]
 
 
-def main():
-    args = parse_args()
-
-    if not os.path.isdir(args.out_dir):
-        os.makedirs(args.out_dir)
-
-    locations = read_csv(args.in_dir, args.locations_file)
-    visits = read_csv(args.in_dir, args.visits_file)
+def partition_locations(args):
+    locations = read_csv(args.in_dir, args.locations_file,
+            nrows=args.num_locations)
+    print("locations loaded:")
+    print(locations)
 
     # Reindexing doesn't depend on the partition
     locations.sort_values(LOCATION_SORT_BY, inplace=True)
     lid_update = make_contiguous(locations, name="locations", reset_index=True)
-    visits = update_ids(visits, lid_update, name="visits")
-
-    offsets = linear_cut_partition(
-        locations, load_col=args.location_load_col, num_partitions=args.num_partitions
-    )
-
-    shutil.copy(os.path.join(args.in_dir, args.people_file), args.out_dir)
+    offsets = linear_cut_partition(locations, load_col=args.location_load_col,
+            num_partitions=args.num_partitions)
     write_csv(args.out_dir, args.locations_file, locations)
+    return offsets, lid_update
+
+
+def update_visits(args, lid_update):
+    visits = read_csv(args.in_dir, args.visits_file, nrows=args.num_visits)
+    #if args.num_locations:
+    #    visits = visits[visits["lid"].isin(locations["lid"])]
+    print("visits loaded:")
+    print(visits)
+    visits = update_ids(visits, lid_update, name="visits")
     write_csv(args.out_dir, args.visits_file, visits)
 
+
+def main():
+    args = parse_args()
+    print("Parsed args", args)
+
+    if not os.path.isdir(args.out_dir):
+        os.makedirs(args.out_dir)
+
+    offsets, lid_update = partition_locations(args)
+    update_visits(args, lid_update)
+    # Not partitioning people yet
+    shutil.copy(os.path.join(args.in_dir, args.people_file), args.out_dir)
+
     create_textproto(args.out_dir, args.people_file, PEOPLE_TYPES)
-    create_textproto(
-        args.out_dir, args.locations_file, LOCATIONS_TYPES, partition_offsets=offsets
-    )
+    create_textproto(args.out_dir, args.locations_file, LOCATIONS_TYPES,
+            partition_offsets=offsets)
     create_textproto(args.out_dir, args.visits_file, VISITS_TYPES)
 
 

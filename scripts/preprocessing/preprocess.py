@@ -139,13 +139,13 @@ def parse_args():
     return args
 
 
-def read_csv(in_dir, filename, region="", should_flatten=False):
+def read_csv(in_dir, filename, region="", should_flatten=False, nrows=None):
     if should_flatten:
         filename = os.path.basename(filename)
 
     path = os.path.join(in_dir, filename.format(region=region))
-    print(f"Reading {path}")
-    return pd.read_csv(path)
+    print(f"Reading {path} ({nrows})")
+    return pd.read_csv(path, nrows=nrows)
 
 
 def write_csv(out_dir, filename, df):
@@ -213,7 +213,15 @@ def update_ids(df, update, id_col="lid", name="df", suplimental_cols=[]):
         tmp = new_df.drop(columns=id_col)
         inverted_cols = [new_col] + suplimental_cols
         inverted_df = pd.merge(tmp, update, how="left", on=inverted_cols)
-        assert (inverted_df[df.columns] == df).all(axis=None)
+        print(df.columns)
+        print(inverted_df.columns)
+        df.to_csv("visits.csv", index=False)
+        inverted_df.to_csv("inverted_visits.csv", index=False)
+        update.to_csv("update.csv")
+        match_mask = inverted_df[df.columns] == df
+        print(df[match_mask])
+        print(inverted_df[match_mask])
+        assert match_mask.all(axis=None)
 
         # Make sure the number of visits per location is unchanged by this
         # transformation
