@@ -8,7 +8,7 @@
 #define EVENT_H_
 
 #include "charm++.h"
-#include "Defs.h"
+#include "Types.h"
 
 // This is just a bundle of information that we don't need to
 // guarentee any constraints on, hence why this is a stuct rather than
@@ -17,17 +17,17 @@ struct Event {
   // indicates whether they're arriving or leaving
   EventType type;
   // the index of the person arriving or leaving
-  int personIdx;
+  Id personIdx;
   // the person's curent state in the disease model
   int personState;
   // Susceptibility or infectivity, depending on disease state
   double transmissionModifier;
   // the time when this event is scheduled to occur, in seconds from the
   // start of the day
-  int scheduledTime;
+  Time scheduledTime;
   // if this is an arrival, the time of the corresponding departure,
   // and vice versa
-  int partnerTime;
+  Time partnerTime;
 
   // Lets us order events in the location queues
   bool operator<(const Event& rhs) const;

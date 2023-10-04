@@ -70,14 +70,14 @@ mainmodule loimos {
   #define TOTAL_EOD_UPDATE_TIME_INDEX 3
   #define TOTAL_TIME_SIZE 4
 
-  readonly int synPeopleGridWidth;
-  readonly int synPeopleGridHeight;
-  readonly int synLocationGridWidth;
-  readonly int synLocationGridHeight;
-  readonly int synLocalLocationGridWidth;
-  readonly int synLocalLocationGridHeight;
-  readonly int synLocationPartitionGridWidth;
-  readonly int synLocationPartitionGridHeight;
+  readonly Id synPeopleGridWidth;
+  readonly Id synPeopleGridHeight;
+  readonly Id synLocationGridWidth;
+  readonly Id synLocationGridHeight;
+  readonly Id synLocalLocationGridWidth;
+  readonly Id synLocalLocationGridHeight;
+  readonly PartitionId synLocationPartitionGridWidth;
+  readonly PartitionId synLocationPartitionGridHeight;
   readonly int averageDegreeOfVisit;
 
   readonly bool interventionStategy;
