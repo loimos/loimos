@@ -141,13 +141,13 @@ def parse_args():
     return args
 
 
-def read_csv(in_dir, filename, region="", should_flatten=False):
+def read_csv(in_dir, filename, region="", should_flatten=False, nrows=None):
     if should_flatten:
         filename = os.path.basename(filename)
 
     path = os.path.join(in_dir, filename.format(region=region))
-    print(f"Reading {path}")
-    return pd.read_csv(path)
+    print(f"Reading {path} ({nrows})")
+    return pd.read_csv(path, nrows=nrows)
 
 
 def write_csv(out_dir, filename, df):
