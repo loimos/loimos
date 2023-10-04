@@ -123,6 +123,8 @@ def parse_args():
         help="The name of the file containing visit data within the "
         + "population dir",
     )
+
+    # Flags
     parser.add_argument(
         "-f",
         "--flat",
@@ -159,8 +161,8 @@ def is_contiguous(df, col="lid"):
 
 
 def make_contiguous(
-    df, id_col="lid", offset=0, name="df", suplimental_cols=list(), reset_index=False
-):
+    df, id_col="lid", offset=0, name="df", suplimental_cols=list(),
+    reset_index=False, validate=True):
     if reset_index:
         df.reset_index(inplace=True, drop=True)
 
@@ -171,7 +173,8 @@ def make_contiguous(
         offset -= int(df[id_col].iloc[0])
         df[id_col] += offset
 
-        assert is_contiguous(df, col=id_col)
+        if validate:
+            assert is_contiguous(df, col=id_col)
         return offset
 
     else:
@@ -186,11 +189,13 @@ def make_contiguous(
         df[old_col] = df[id_col]
         df[id_col] = df.index + offset
 
-        assert is_contiguous(df, col=id_col)
+        if validate:
+            assert is_contiguous(df, col=id_col)
         return update_record
 
 
-def update_ids(df, update, id_col="lid", name="df", suplimental_cols=[]):
+def update_ids(df, update, id_col="lid", name="df", suplimental_cols=[],
+        validate=True):
     # If update is offset
     if isinstance(update, int):
         print(f"  Updating {name} using offset")
@@ -205,47 +210,40 @@ def update_ids(df, update, id_col="lid", name="df", suplimental_cols=[]):
         old_col = f"old_{id_col}"
         merge_cols = [id_col] + suplimental_cols
         new_df = pd.merge(df, update, how="left", on=merge_cols)
-        assert num_rows == new_df.shape[0]
-        # if num_rows != new_df.shape[0]:
-        #    print(f"Had {num_rows} before, but now have {new_df.shape[0]}")
 
-        # Make sure the transformation is inverible
-        tmp = new_df.drop(columns=id_col)
-        inverted_cols = [new_col] + suplimental_cols
-        inverted_df = pd.merge(tmp, update, how="left", on=inverted_cols)
-        print(df.columns)
-        print(inverted_df.columns)
-        df.to_csv("visits.csv", index=False)
-        inverted_df.to_csv("inverted_visits.csv", index=False)
-        update.to_csv("update.csv")
-        match_mask = inverted_df[df.columns] == df
-        print(df[match_mask])
-        print(inverted_df[match_mask])
-        assert match_mask.all(axis=None)
+        if validate:
+            assert num_rows == new_df.shape[0]
+            # if num_rows != new_df.shape[0]:
+            #    print(f"Had {num_rows} before, but now have {new_df.shape[0]}")
+            # Make sure the transformation is inverible
+            tmp = new_df.drop(columns=id_col)
+            inverted_cols = [new_col] + suplimental_cols
+            inverted_df = pd.merge(tmp, update, how="left", on=inverted_cols)
+            assert (inverted_df[df.columns] == df).all(axis=None)
 
-        # Make sure the number of visits per location is unchanged by this
-        # transformation
-        new_counts = (
-            new_df[merge_cols + [new_col]]
-            .groupby(merge_cols)
-            .count()
-            .rename(columns={new_col: "count"})
-            .reset_index()
-            .merge(update, on=merge_cols)
-            .sort_values(merge_cols + [new_col])
-            .reset_index(drop=True)
-        )
-        old_counts = (
-            new_df[inverted_cols + [id_col]]
-            .groupby(inverted_cols)
-            .count()
-            .rename(columns={id_col: "count"})
-            .reset_index()
-            .merge(update, on=inverted_cols)
-            .sort_values(merge_cols + [new_col])[new_counts.columns]
-            .reset_index(drop=True)
-        )
-        assert (new_counts == old_counts).all(axis=None)
+            # Make sure the number of visits per location is unchanged by this
+            # transformation
+            new_counts = (
+                new_df[merge_cols + [new_col]]
+                .groupby(merge_cols)
+                .count()
+                .rename(columns={new_col: "count"})
+                .reset_index()
+                .merge(update, on=merge_cols)
+                .sort_values(merge_cols + [new_col])
+                .reset_index(drop=True)
+            )
+            old_counts = (
+                new_df[inverted_cols + [id_col]]
+                .groupby(inverted_cols)
+                .count()
+                .rename(columns={id_col: "count"})
+                .reset_index()
+                .merge(update, on=inverted_cols)
+                .sort_values(merge_cols + [new_col])[new_counts.columns]
+                .reset_index(drop=True)
+            )
+            assert (new_counts == old_counts).all(axis=None)
 
         new_df.rename(columns={id_col: old_col, new_col: id_col}, inplace=True)
 

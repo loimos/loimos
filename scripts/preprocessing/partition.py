@@ -66,6 +66,14 @@ def parse_args():
         default="total_visits",
         help="The column to use to represent location load",
     )
+
+    # Flags
+    parser.add_argument(
+        "-val",
+        "--validate",
+        action="store_true",
+        help="Pass this flag if the script should validate its results",
+    )
     parser.add_argument(
         "-nl",
         "--num_locations",
@@ -152,7 +160,8 @@ def partition_locations(args):
 
     # Reindexing doesn't depend on the partition
     locations.sort_values(LOCATION_SORT_BY, inplace=True)
-    lid_update = make_contiguous(locations, name="locations", reset_index=True)
+    lid_update = make_contiguous(locations, name="locations", reset_index=True,
+            validate=args.validate)
     offsets = linear_cut_partition(locations, load_col=args.location_load_col,
             num_partitions=args.num_partitions)
     write_csv(args.out_dir, args.locations_file, locations)
