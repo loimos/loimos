@@ -1,0 +1,33 @@
+triggers: {
+  new_daily_cases: {
+    trigger_on: 0.004;
+    trigger_off: 0.001;
+  }
+}  
+
+person_interventions: {
+  compliance: 0.95;
+  trigger_index: 0;
+  vaccination: {
+    probability: 0.01;
+    vaccinated_susceptibility: 0.5;
+  }
+}
+
+location_interventions: {
+  compliance: 0.95;
+  trigger_index: 0;
+  school_closures: {}
+}
+
+person_attributes: {
+  field_name: "vaccinated";
+  bool: {}
+  default_bool: false;
+}
+
+person_attributes: {
+  field_name: "susceptibility";
+  double: {}
+  default_double: 1.0;
+}
