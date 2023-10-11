@@ -4,12 +4,7 @@ import argparse
 import os
 
 import pandas as pd
-from create_textproto import (
-    create_textproto,
-    PEOPLE_TYPES,
-    LOCATIONS_TYPES,
-    VISITS_TYPES,
-)
+from create_textproto import create_pop_textprotos
 
 DEFAULT_VALUES = {
     "work": 0,
@@ -123,6 +118,13 @@ def parse_args():
         help="The name of the file containing visit data within the "
         + "population dir",
     )
+    parser.add_argument(
+        "-d",
+        "--num-days",
+        default=7,
+        type=int,
+        help="The number of days of visits in data",
+    )
 
     # Flags
     parser.add_argument(
@@ -161,8 +163,14 @@ def is_contiguous(df, col="lid"):
 
 
 def make_contiguous(
-    df, id_col="lid", offset=0, name="df", suplimental_cols=list(),
-    reset_index=False, validate=True):
+    df,
+    id_col="lid",
+    offset=0,
+    name="df",
+    suplimental_cols=list(),
+    reset_index=False,
+    validate=True,
+):
     if reset_index:
         df.reset_index(inplace=True, drop=True)
 
@@ -194,8 +202,7 @@ def make_contiguous(
         return update_record
 
 
-def update_ids(df, update, id_col="lid", name="df", suplimental_cols=[],
-        validate=True):
+def update_ids(df, update, id_col="lid", name="df", suplimental_cols=[], validate=True):
     # If update is offset
     if isinstance(update, int):
         print(f"  Updating {name} using offset")
@@ -344,9 +351,13 @@ def main():
     people_update = fix_people(args)
     merge_visits(args, activity_update, home_update, people_update)
 
-    create_textproto(args.out_dir, args.people_out_file, PEOPLE_TYPES)
-    create_textproto(args.out_dir, args.locations_out_file, LOCATIONS_TYPES)
-    create_textproto(args.out_dir, args.visits_out_file, VISITS_TYPES)
+    create_pop_textprotos(
+        args.out_dir,
+        args.people_out_file,
+        args.locations_out_file,
+        args.visits_out_file,
+        num_days=args.num_days,
+    )
 
 
 if __name__ == "__main__":

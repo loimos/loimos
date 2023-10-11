@@ -28,6 +28,10 @@ COLUMN_METADATA_ENTRY = """fields {{
     {dtype}: {{}}
 }}
 """
+TIME_ENTRY = """{name}: {{
+    {unit}: {value}
+}}
+"""
 SINGLETON_ENTRY = "{name}: {value}\n"
 
 
@@ -66,6 +70,13 @@ def parse_args():
         help="The name of the file containing visit data within the "
         + "population dir",
     )
+    parser.add_argument(
+        "-d",
+        "--num-days",
+        default=7,
+        type=int,
+        help="The number of days of visits in data",
+    )
 
     return parser.parse_args()
 
@@ -77,7 +88,9 @@ def wc(path):
     return int(result.split()[0])
 
 
-def create_textproto(pop_dir, csv_filename, dtypes, partition_offsets=None):
+def create_textproto(
+    pop_dir, csv_filename, dtypes, partition_offsets=None, num_days=None
+):
     csv_path = os.path.join(pop_dir, csv_filename)
     tmp, _ = os.path.splitext(csv_path)
     textproto_path = tmp + ".textproto"
@@ -89,6 +102,15 @@ def create_textproto(pop_dir, csv_filename, dtypes, partition_offsets=None):
     df = pd.read_csv(csv_path, nrows=1)
     with open(textproto_path, "w") as f:
         f.write(SINGLETON_ENTRY.format(name="num_rows", value=num_rows))
+        if num_days is not None:
+            f.write(
+                TIME_ENTRY.format(
+                    name="range",
+                    unit="days",
+                    value=num_days,
+                )
+            )
+
         if name in LOAD_COLUMNS:
             f.write(
                 SINGLETON_ENTRY.format(
@@ -107,12 +129,37 @@ def create_textproto(pop_dir, csv_filename, dtypes, partition_offsets=None):
             f.write(COLUMN_METADATA_ENTRY.format(name=c, dtype=dtype))
 
 
+def create_pop_textprotos(
+    pop_dir,
+    people_file,
+    locations_file,
+    visits_file,
+    num_days=7,
+    location_partition_offsets=None,
+    person_partition_offsets=None,
+):
+    create_textproto(
+        pop_dir, people_file, PEOPLE_TYPES, partition_offsets=person_partition_offsets
+    )
+    create_textproto(
+        pop_dir,
+        locations_file,
+        LOCATIONS_TYPES,
+        partition_offsets=location_partition_offsets,
+    )
+    create_textproto(pop_dir, visits_file, VISITS_TYPES, num_days=num_days)
+
+
 def main():
     args = parse_args()
 
-    create_textproto(args.pop_dir, args.people_file, PEOPLE_TYPES)
-    create_textproto(args.pop_dir, args.locations_file, LOCATIONS_TYPES)
-    create_textproto(args.pop_dir, args.visits_file, VISITS_TYPES)
+    create_pop_textprotos(
+        args.pop_dir,
+        args.people_file,
+        args.locations_file,
+        args.visits_file,
+        num_days=args.num_days,
+    )
 
 
 if __name__ == "__main__":

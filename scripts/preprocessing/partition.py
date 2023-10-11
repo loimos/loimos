@@ -6,12 +6,7 @@ import shutil
 
 import pandas as pd
 from preprocess import read_csv, write_csv, make_contiguous, update_ids
-from create_textproto import (
-    create_textproto,
-    PEOPLE_TYPES,
-    LOCATIONS_TYPES,
-    VISITS_TYPES,
-)
+from create_textproto import create_pop_textprotos
 
 
 def parse_args():
@@ -66,6 +61,13 @@ def parse_args():
         default="total_visits",
         help="The column to use to represent location load",
     )
+    parser.add_argument(
+        "-d",
+        "--num-days",
+        default=7,
+        type=int,
+        help="The number of days of visits in data",
+    )
 
     # Flags
     parser.add_argument(
@@ -80,7 +82,7 @@ def parse_args():
         default=None,
         type=int,
         help="The number of rows to read from the locations file. Defaults to "
-        + "reading all rows if not passed. Can be helpful for debugging."
+        + "reading all rows if not passed. Can be helpful for debugging.",
     )
     parser.add_argument(
         "-nv",
@@ -88,7 +90,7 @@ def parse_args():
         default=None,
         type=int,
         help="The number of rows to read from the visits file. Defaults to "
-        + "reading all rows if not passed. Can be helpful for debugging."
+        + "reading all rows if not passed. Can be helpful for debugging.",
     )
 
     args = parser.parse_args()
@@ -153,24 +155,25 @@ LOCATION_SORT_BY = ["admin1", "admin2", "admin3", "admin4"]
 
 
 def partition_locations(args):
-    locations = read_csv(args.in_dir, args.locations_file,
-            nrows=args.num_locations)
+    locations = read_csv(args.in_dir, args.locations_file, nrows=args.num_locations)
     print("locations loaded:")
     print(locations)
 
     # Reindexing doesn't depend on the partition
     locations.sort_values(LOCATION_SORT_BY, inplace=True)
-    lid_update = make_contiguous(locations, name="locations", reset_index=True,
-            validate=args.validate)
-    offsets = linear_cut_partition(locations, load_col=args.location_load_col,
-            num_partitions=args.num_partitions)
+    lid_update = make_contiguous(
+        locations, name="locations", reset_index=True, validate=args.validate
+    )
+    offsets = linear_cut_partition(
+        locations, load_col=args.location_load_col, num_partitions=args.num_partitions
+    )
     write_csv(args.out_dir, args.locations_file, locations)
     return offsets, lid_update
 
 
 def update_visits(args, lid_update):
     visits = read_csv(args.in_dir, args.visits_file, nrows=args.num_visits)
-    #if args.num_locations:
+    # if args.num_locations:
     #    visits = visits[visits["lid"].isin(locations["lid"])]
     print("visits loaded:")
     print(visits)
@@ -190,10 +193,14 @@ def main():
     # Not partitioning people yet
     shutil.copy(os.path.join(args.in_dir, args.people_file), args.out_dir)
 
-    create_textproto(args.out_dir, args.people_file, PEOPLE_TYPES)
-    create_textproto(args.out_dir, args.locations_file, LOCATIONS_TYPES,
-            partition_offsets=offsets)
-    create_textproto(args.out_dir, args.visits_file, VISITS_TYPES)
+    create_pop_textprotos(
+        args.out_dir,
+        args.people_file,
+        args.locations_file,
+        args.visits_file,
+        num_days=args.num_days,
+        location_partition_offsets=offsets,
+    )
 
 
 if __name__ == "__main__":
