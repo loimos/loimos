@@ -170,8 +170,10 @@ def partition_locations(args):
 
 def update_visits(args, lid_update):
     visits = read_csv(args.in_dir, args.visits_file, nrows=args.num_visits)
-    #if args.num_locations:
-    #    visits = visits[visits["lid"].isin(locations["lid"])]
+    if args.num_locations:
+        n = visits.shape[0]
+        visits = visits[visits["lid"].isin(lid_update["lid"])]
+        print(f"{visits.shape[0]}/{n} visits kept")
     print("visits loaded:")
     print(visits)
     visits = update_ids(visits, lid_update, name="visits")

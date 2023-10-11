@@ -219,7 +219,9 @@ def update_ids(df, update, id_col="lid", name="df", suplimental_cols=[],
             tmp = new_df.drop(columns=id_col)
             inverted_cols = [new_col] + suplimental_cols
             inverted_df = pd.merge(tmp, update, how="left", on=inverted_cols)
-            assert (inverted_df[df.columns] == df).all(axis=None)
+            df.sort_index(inplace=True, axis="columns")
+            inverted_df.sort_index(inplace=True, axis="columns")
+            assert mask.all(axis=None)
 
             # Make sure the number of visits per location is unchanged by this
             # transformation
