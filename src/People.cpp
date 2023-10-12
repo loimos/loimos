@@ -609,14 +609,14 @@ void People::ProcessInteractions(Person *person) {
     // of the day.
     if (diseaseModel->isSusceptible(person->state)) {
       person->secondsLeftInState = -1;
-      CkPrintf("    %d,%d,%d,%f,true\n", day, person->getUniqueId(),
-          person->interactions[interactionIdx].infectiousIdx,
-          propensityToProbability(totalPropensity));
+      // CkPrintf("    %d,%d,%d,%f,true\n", day, person->getUniqueId(),
+      //     person->interactions[interactionIdx].infectiousIdx,
+      //     propensityToProbability(totalPropensity));
     }
-  } else if (0 < numInteractions) {
-    CkPrintf("    %d,%d,,%f,false\n",
-      day, person->getUniqueId(), propensityToProbability(totalPropensity));
-  }
+  }// else if (0 < numInteractions) {
+   // CkPrintf("    %d,%d,,%f,false\n",
+   //   day, person->getUniqueId(), propensityToProbability(totalPropensity));
+  //}
   person->interactions.clear();
 }
 
