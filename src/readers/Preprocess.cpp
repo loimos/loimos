@@ -107,7 +107,9 @@ Id buildObjectLookupCache(std::string inputPath, std::string outputPath,
   // Check if file cache already created.
   std::ifstream existenceCheck(outputPath, std::ios_base::binary);
   if (existenceCheck.good()) {
-    CkPrintf("Using existing cache.\n");
+    if (0 == CkMyNode()) {
+      CkPrintf("Using existing cache.\n");
+    }
     existenceCheck.close();
     return firstIdx;
 

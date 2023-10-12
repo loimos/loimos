@@ -71,13 +71,13 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
   diseaseModelStream.close();
   assert(model->disease_states_size() != 0);
 
-  if (0 == CkMyNode()) {
-    for (int i = 0; i < model->disease_states_size(); ++i) {
-      CkPrintf("  Disease state %d: sus=%f, inf=%f\n",
-        i, model->disease_states(i).susceptibility(),
-        model->disease_states(i).infectivity());
-    }
-  }
+  // if (0 == CkMyNode()) {
+  //   for (int i = 0; i < model->disease_states_size(); ++i) {
+  //     CkPrintf("  Disease state %d: sus=%f, inf=%f\n",
+  //       i, model->disease_states(i).susceptibility(),
+  //       model->disease_states(i).infectivity());
+  //   }
+  // }
 
   // Setup other shared PE objects.
   if (!syntheticRun) {
