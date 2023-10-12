@@ -72,7 +72,7 @@ def parse_args():
         default=None,
         type=int,
         help="The number of rows to read from the locations file. Defaults to "
-        + "reading all rows if not passed. Can be helpful for debugging."
+        + "reading all rows if not passed. Can be helpful for debugging.",
     )
     parser.add_argument(
         "-nv",
@@ -80,7 +80,29 @@ def parse_args():
         default=None,
         type=int,
         help="The number of rows to read from the visits file. Defaults to "
-        + "reading all rows if not passed. Can be helpful for debugging."
+        + "reading all rows if not passed. Can be helpful for debugging.",
+    )
+    parser.add_argument(
+        "-nt",
+        "--num_tasks",
+        default=1,
+        type=int,
+        help="The number of tasks with which to run any merges",
+    )
+    parser.add_argument(
+        "-ppt",
+        "--num_partitions_per_task",
+        default=None,
+        type=int,
+        help="The number of partitions for merge dataframes per task",
+    )
+
+    # Flags
+    parser.add_argument(
+        "-val",
+        "--validate",
+        action="store_true",
+        help="Pass this flag if the script should validate its results",
     )
 
     # Flags
@@ -92,6 +114,14 @@ def parse_args():
     )
 
     args = parser.parse_args()
+
+    # Don't use multiple partitions (by default) unless we're also using
+    # multiple tasks
+    if args.num_partitions_per_task is None:
+        if args.num_tasks == 1:
+            args.num_partitions_per_task = 1
+        else:
+            args.num_partitions_per_task = 4
 
     # Assume out and in dirs are the same by default for convience
     if args.out_dir is None:
@@ -153,17 +183,18 @@ LOCATION_SORT_BY = ["admin1", "admin2", "admin3", "admin4"]
 
 
 def partition_locations(args):
-    locations = read_csv(args.in_dir, args.locations_file,
-            nrows=args.num_locations)
+    locations = read_csv(args.in_dir, args.locations_file, nrows=args.num_locations)
     print("locations loaded:")
     print(locations)
 
     # Reindexing doesn't depend on the partition
     locations.sort_values(LOCATION_SORT_BY, inplace=True)
-    lid_update = make_contiguous(locations, name="locations", reset_index=True,
-            validate=args.validate)
-    offsets = linear_cut_partition(locations, load_col=args.location_load_col,
-            num_partitions=args.num_partitions)
+    lid_update = make_contiguous(
+        locations, name="locations", reset_index=True, validate=args.validate
+    )
+    offsets = linear_cut_partition(
+        locations, load_col=args.location_load_col, num_partitions=args.num_partitions
+    )
     write_csv(args.out_dir, args.locations_file, locations)
     return offsets, lid_update
 
@@ -176,7 +207,13 @@ def update_visits(args, lid_update):
         print(f"{visits.shape[0]}/{n} visits kept")
     print("visits loaded:")
     print(visits)
-    visits = update_ids(visits, lid_update, name="visits")
+    visits = update_ids(
+        visits,
+        lid_update,
+        name="visits",
+        num_tasks=args.num_tasks,
+        num_partitions=args.num_partitions_per_task * args.num_tasks,
+    )
     write_csv(args.out_dir, args.visits_file, visits)
 
 
@@ -193,8 +230,9 @@ def main():
     shutil.copy(os.path.join(args.in_dir, args.people_file), args.out_dir)
 
     create_textproto(args.out_dir, args.people_file, PEOPLE_TYPES)
-    create_textproto(args.out_dir, args.locations_file, LOCATIONS_TYPES,
-            partition_offsets=offsets)
+    create_textproto(
+        args.out_dir, args.locations_file, LOCATIONS_TYPES, partition_offsets=offsets
+    )
     create_textproto(args.out_dir, args.visits_file, VISITS_TYPES)
 
 

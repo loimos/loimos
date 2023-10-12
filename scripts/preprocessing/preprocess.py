@@ -2,14 +2,22 @@
 
 import argparse
 import os
+import sys
 
 import pandas as pd
+from functools import partial
 from create_textproto import (
     create_textproto,
     PEOPLE_TYPES,
     LOCATIONS_TYPES,
     VISITS_TYPES,
 )
+
+# Python modules need to either be in/below this dir or in the path
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.append(parentdir)
+from utils.ids import partitioned_merge  # noqa
 
 DEFAULT_VALUES = {
     "work": 0,
@@ -20,6 +28,8 @@ DEFAULT_VALUES = {
     "religion": 0,
     "designation": "none:home",
 }
+VISIT_SORT_COLS = ["pid", "start_time"]
+DAY_LENGTH = 86400
 
 
 def parse_args():
@@ -123,6 +133,20 @@ def parse_args():
         help="The name of the file containing visit data within the "
         + "population dir",
     )
+    parser.add_argument(
+        "-nt",
+        "--num_tasks",
+        default=1,
+        type=int,
+        help="The number of tasks with which to run any merges",
+    )
+    parser.add_argument(
+        "-ppt",
+        "--num_partitions_per_task",
+        default=None,
+        type=int,
+        help="The number of partitions for merge dataframes per task",
+    )
 
     # Flags
     parser.add_argument(
@@ -133,6 +157,14 @@ def parse_args():
     )
 
     args = parser.parse_args()
+
+    # Don't use multiple partitions (by default) unless we're also using
+    # multiple tasks
+    if args.num_partitions_per_task is None:
+        if args.num_tasks == 1:
+            args.num_partitions_per_task = 1
+        else:
+            args.num_partitions_per_task = 4
 
     # Assume out and in dirs are the same by default for convience
     if args.out_dir is None:
@@ -161,8 +193,14 @@ def is_contiguous(df, col="lid"):
 
 
 def make_contiguous(
-    df, id_col="lid", offset=0, name="df", suplimental_cols=list(),
-    reset_index=False, validate=True):
+    df,
+    id_col="lid",
+    offset=0,
+    name="df",
+    suplimental_cols=list(),
+    reset_index=False,
+    validate=True,
+):
     if reset_index:
         df.reset_index(inplace=True, drop=True)
 
@@ -194,8 +232,26 @@ def make_contiguous(
         return update_record
 
 
-def update_ids(df, update, id_col="lid", name="df", suplimental_cols=[],
-        validate=True):
+def update_ids(
+    df,
+    update,
+    id_col="lid",
+    name="df",
+    suplimental_cols=[],
+    validate=True,
+    num_tasks=1,
+    num_partitions=1,
+    sort_by=VISIT_SORT_COLS,
+):
+    merge = pd.merge
+    if 1 < num_partitions:
+        merge = partial(
+            partitioned_merge,
+            num_tasks=num_tasks,
+            num_partitions=num_partitions,
+            sort_by=sort_by,
+        )
+
     # If update is offset
     if isinstance(update, int):
         print(f"  Updating {name} using offset")
@@ -209,7 +265,7 @@ def update_ids(df, update, id_col="lid", name="df", suplimental_cols=[],
         new_col = update.columns[0]
         old_col = f"old_{id_col}"
         merge_cols = [id_col] + suplimental_cols
-        new_df = pd.merge(df, update, how="left", on=merge_cols)
+        new_df = merge(df, update, how="left", on=merge_cols)
 
         if validate:
             assert num_rows == new_df.shape[0]
@@ -218,9 +274,23 @@ def update_ids(df, update, id_col="lid", name="df", suplimental_cols=[],
             # Make sure the transformation is inverible
             tmp = new_df.drop(columns=id_col)
             inverted_cols = [new_col] + suplimental_cols
-            inverted_df = pd.merge(tmp, update, how="left", on=inverted_cols)
-            df.sort_index(inplace=True, axis="columns")
-            inverted_df.sort_index(inplace=True, axis="columns")
+            inverted_df = merge(tmp, update, how="left", on=inverted_cols)
+            # df.sort_index(inplace=True, axis="columns")
+            # inverted_df[df.columns].sort_index(inplace=True, axis="columns")
+            # df.to_csv("updated_visits.csv", index=False)
+            # inverted_df.to_csv("inverted_visits.csv", index=False)
+            # update.to_csv("update.csv", index=False)
+            # display_cols = [
+            #     "daynum",
+            #     "pid",
+            #     "start_time",
+            #     "duration",
+            #     "activity_number",
+            # ]
+            # print(df[display_cols])
+            # print(inverted_df[display_cols])
+            # inverted_df.drop(columns="new_lid", inplace=True)
+            mask = inverted_df[df.columns] == df
             assert mask.all(axis=None)
 
             # Make sure the number of visits per location is unchanged by this
@@ -328,10 +398,22 @@ def merge_visits(args, activity_update, home_update, people_update):
         write_csv(args.out_dir, "home_update.csv", home_update)
 
     visits = update_ids(
-        visits, loc_update, name="visit lids", suplimental_cols=LOC_SUPLIMENTAL_COLS
+        visits,
+        loc_update,
+        name="visit lids",
+        suplimental_cols=LOC_SUPLIMENTAL_COLS,
+        num_tasks=args.num_tasks,
+        num_partitions=args.num_partitions_per_task * args.num_tasks,
     )
-    visits = update_ids(visits, people_update, id_col="pid", name="visit pids")
-    visits.sort_values(["pid", "start_time"], inplace=True)
+    visits = update_ids(
+        visits,
+        people_update,
+        id_col="pid",
+        name="visit pids",
+        num_tasks=args.num_tasks,
+        num_partitions=args.num_partitions_per_task * args.num_tasks,
+    )
+    visits.sort_values(VISIT_SORT_COLS, inplace=True)
 
     write_csv(args.out_dir, args.visits_out_file, visits)
 
