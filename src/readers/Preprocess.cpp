@@ -98,7 +98,9 @@ void buildObjectLookupCache(Id numObjs, const std::vector<Id> &offsets,
   // Check if file cache already created.
   std::ifstream existenceCheck(outputPath, std::ios_base::binary);
   if (existenceCheck.good()) {
-    CkPrintf("Using existing cache.\n");
+    if (0 == CkMyNode()) {
+      CkPrintf("Using existing cache.\n");
+    }
     existenceCheck.close();
 
   } else {
