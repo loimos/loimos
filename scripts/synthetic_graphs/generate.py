@@ -74,22 +74,20 @@ def main(unused_argv):
         if len(parameters) != 3:
             raise ValueError("Incorrect number of parameters provided.")
         num_nodes, mean_degree, num_people = parameters
-        mean_people = int(num_people) / int(num_nodes)
         graph = random_graphs.generate_barabasi_albert(int(num_nodes), int(mean_degree))
         translation_strategies.graph_to_disease_model(
-            graph, out_dir, TEMPLATE_DIR.value, int(num_nodes), mean_people
+            graph, out_dir, TEMPLATE_DIR.value, int(num_nodes), int(num_people)
         )
         print(f"Synthetic population saved to {out_dir}")
     elif TRANSLATION_STRATEGY.value == "watts_strogatz":
         if len(parameters) != 4:
             raise ValueError("Incorrect number of parameters provided.")
         num_nodes, mean_degree_k, beta, num_people = parameters
-        mean_people = int(num_people) / int(num_nodes)
         graph = random_graphs.generate_watts_strogatz(
             int(num_nodes), int(mean_degree_k), float(beta)
         )
         translation_strategies.graph_to_disease_model(
-            graph, out_dir, TEMPLATE_DIR.value, int(num_nodes), mean_people
+            graph, out_dir, TEMPLATE_DIR.value, int(num_nodes), int(num_people)
         )
         print(f"Synthetic population saved to {out_dir}")
     else:

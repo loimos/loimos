@@ -58,7 +58,32 @@ class CSVWriter:
         self.file.write(",".join(map(str, objects)) + "\n")
 
 
-def graph_to_disease_model(graph, out_dir, template_dir, num_nodes, mean_people):
+def assign_num_occupants(num_locations, num_people):
+    mean_people = num_locations / num_people
+    print(f"Assigning {num_people} people to {num_locations} locs (about {mean_people}/loc)")
+    occupant_counts = np.random.poisson(lam=mean_people, size=num_locations)
+    # No point in simulating empty locations
+    occupant_counts[occupant_counts == 0] = 1
+
+    num_generated_people = np.sum(occupant_counts)
+    # Make sure the intended and actual counts match. This technically means the location
+    # occupancy distribution is no longer truely poisson-distributed, but we should only have
+    # to adjust occpancies for a small subset of locations
+    # Note that if we sample duplicate indices, they won't be incremented multiple times, so we may need to
+    # repeat this process a couple times
+    while num_generated_people < num_people:
+        to_add = np.random.random_integers(0, num_locations - 1, size=num_people - num_generated_people)
+        occupant_counts[to_add] += 1
+        num_generated_people = np.sum(occupant_counts)
+    while num_generated_people > num_people:
+        to_subtract = np.random.choice(np.where(occupant_counts != 0), size=num_generated_people - num_people)
+        occupant_counts[to_subtract] -= 1
+        num_generated_people = np.sum(occupant_counts)
+    
+    return occupant_counts
+
+
+def graph_to_disease_model(graph, out_dir, template_dir, num_nodes, num_people):
     """Translates a standard graph to a bi-partite population model for loimos."""
     # Create output folder if it doesn't exist
     if out_dir and not os.path.exists(out_dir):
@@ -80,16 +105,14 @@ def graph_to_disease_model(graph, out_dir, template_dir, num_nodes, mean_people)
     # Generated Poisson distribution centered around mean_people-1. This -1
     # used so that then we can add +1 to each number of people per location to avoid
     # having locations with 0 people in them.
-    people_per_location = np.random.poisson(lam=mean_people - 1, size=num_nodes)
-    people_per_location = people_per_location + 1
+    locations_num_occupants = assign_num_occupants(num_locations=num_nodes, num_people=num_people)
     people_created = 0
     for home_location in graph.Nodes():
         location_id = home_location.GetId()
         location_writer.write_row([location_id])
         allowed_visit_locations = [location_id] + list(home_location.GetOutEdges())
         # Generate schedule for each person.
-        # for _ in range(PEOPLE_PER_LOCATION()):
-        for _ in range(people_per_location[location_id]):
+        for _ in range(locations_num_occupants[location_id]):
             person_id = people_created
             people_created += 1
             people_writer.write_row([person_id])
