@@ -47,6 +47,7 @@ message DataField {
 message CSVDefinition {
   repeated DataField fields = 1;
   int64 num_rows = 2;
+  TimeDef range = 3;
   string load_column = 3;
   repeated int64 partition_offsets = 4;
 }
