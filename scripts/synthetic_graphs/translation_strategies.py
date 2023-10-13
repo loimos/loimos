@@ -60,7 +60,9 @@ class CSVWriter:
 
 def assign_num_occupants(num_locations, num_people):
     mean_people = num_locations / num_people
-    print(f"Assigning {num_people} people to {num_locations} locs (about {mean_people}/loc)")
+    print(
+        f"Assigning {num_people} people to {num_locations} locs (about {mean_people}/loc)"
+    )
     occupant_counts = np.random.poisson(lam=mean_people, size=num_locations)
     # No point in simulating empty locations
     occupant_counts[occupant_counts == 0] = 1
@@ -72,14 +74,18 @@ def assign_num_occupants(num_locations, num_people):
     # Note that if we sample duplicate indices, they won't be incremented multiple times, so we may need to
     # repeat this process a couple times
     while num_generated_people < num_people:
-        to_add = np.random.random_integers(0, num_locations - 1, size=num_people - num_generated_people)
+        to_add = np.random.random_integers(
+            0, num_locations - 1, size=num_people - num_generated_people
+        )
         occupant_counts[to_add] += 1
         num_generated_people = np.sum(occupant_counts)
     while num_generated_people > num_people:
-        to_subtract = np.random.choice(np.where(occupant_counts != 0), size=num_generated_people - num_people)
+        to_subtract = np.random.choice(
+            np.where(occupant_counts != 0), size=num_generated_people - num_people
+        )
         occupant_counts[to_subtract] -= 1
         num_generated_people = np.sum(occupant_counts)
-    
+
     return occupant_counts
 
 
@@ -105,7 +111,9 @@ def graph_to_disease_model(graph, out_dir, template_dir, num_nodes, num_people):
     # Generated Poisson distribution centered around mean_people-1. This -1
     # used so that then we can add +1 to each number of people per location to avoid
     # having locations with 0 people in them.
-    locations_num_occupants = assign_num_occupants(num_locations=num_nodes, num_people=num_people)
+    locations_num_occupants = assign_num_occupants(
+        num_locations=num_nodes, num_people=num_people
+    )
     people_created = 0
     for home_location in graph.Nodes():
         location_id = home_location.GetId()
