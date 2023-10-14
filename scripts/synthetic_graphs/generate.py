@@ -79,6 +79,7 @@ def main(unused_argv):
         translation_strategies.graph_to_disease_model(
             graph, out_dir, TEMPLATE_DIR.value, int(num_nodes), mean_people
         )
+        print(f"Synthetic population saved to {out_dir}")
     elif TRANSLATION_STRATEGY.value == "watts_strogatz":
         if len(parameters) != 4:
             raise ValueError("Incorrect number of parameters provided.")
