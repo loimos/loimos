@@ -61,18 +61,20 @@ class CSVWriter:
 def assign_num_occupants(num_locations, num_people):
     mean_people = num_locations / num_people
     print(
-        f"Assigning {num_people} people to {num_locations} locs (about {mean_people}/loc)"
+        f"Assigning {num_people} people to {num_locations} locs "
+        + "(about {mean_people}/loc)"
     )
     occupant_counts = np.random.poisson(lam=mean_people, size=num_locations)
     # No point in simulating empty locations
     occupant_counts[occupant_counts == 0] = 1
 
     num_generated_people = np.sum(occupant_counts)
-    # Make sure the intended and actual counts match. This technically means the location
-    # occupancy distribution is no longer truely poisson-distributed, but we should only have
-    # to adjust occpancies for a small subset of locations
-    # Note that if we sample duplicate indices, they won't be incremented multiple times, so we may need to
-    # repeat this process a couple times
+    # Make sure the intended and actual counts match. This technically means
+    # the location occupancy distribution is no longer truely
+    # poisson-distributed, but we should only have to adjust occpancies for
+    # a small subset of locations
+    # Note that if we sample duplicate indices, they won't be incremented
+    # multiple times, so we may need to repeat this process a couple times
     while num_generated_people < num_people:
         to_add = np.random.random_integers(
             0, num_locations - 1, size=num_people - num_generated_people
