@@ -32,6 +32,10 @@ struct VisitMessage {
     personState(personState_), visitStart(visitStart_),
     visitEnd(visitEnd_), transmissionModifier(transmissionModifier_),
     deactivatedBy(NULL) {}
+  
+  bool isActive() {
+    return NULL != deactivatedBy;
+  }
 };
 PUPbytes(VisitMessage);
 

@@ -337,7 +337,7 @@ void Locations::onSusceptibleDeparture(Location *loc,
       // The start time is whichever arrival happened later
       std::max(infectiousArrival.scheduledTime,
         susceptibleDeparture.partnerTime),
-      susceptibleDeparture.scheduledTime);
+        susceptibleDeparture.scheduledTime);
   }
 
   sendInteractions(loc, susceptibleDeparture.personIdx);
@@ -395,12 +395,11 @@ inline void Locations::sendInteractions(Location *loc,
   Aggregator *agg = aggregatorProxy.ckLocalBranch();
   if (agg->interact_aggregator) {
     agg->interact_aggregator->send(peopleArray[personPartition], interMsg);
-  } else {
-#endif  // USE_HYPERCOMM
-    peopleArray[personPartition].ReceiveInteractions(interMsg);
-#ifdef USE_HYPERCOMM
+    continue;
   }
 #endif  // USE_HYPERCOMM
+
+  peopleArray[personPartition].ReceiveInteractions(interMsg);
 
   // CkPrintf(
   //   "    Sending %d interactions to person %d in partition %d\r\n",

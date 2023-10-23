@@ -420,12 +420,9 @@ void People::SendVisitMessages() {
       visitMessage.transmissionModifier = getTransmissionModifier(person);
 
       // Interventions may cancel some visits
-      if (NULL != visitMessage.deactivatedBy) {
+      if (visitMessage.isActive()) {
         continue;
       }
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
-      totalVisitsForDay++;
-#endif
 
       // Find process that owns that location
       PartitionId locationPartition = diseaseModel->getLocationPartitionIndex(
@@ -438,18 +435,21 @@ void People::SendVisitMessages() {
           PARTITION_ID_PRINT_TYPE")\n", thisIndex, person.getUniqueId(),
           visitMessage.locationIdx, locationPartition, numLocationPartitions);
       }
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
+      totalVisitsForDay++;
 #endif
+#endif  // ENABLE_DEBUG
+
 // Send off the visit message.
 #ifdef USE_HYPERCOMM
       Aggregator* agg = aggregatorProxy.ckLocalBranch();
       if (agg->visit_aggregator) {
         agg->visit_aggregator->send(locationsArray[locationPartition], visitMessage);
-      } else {
-#endif  // USE_HYPERCOMM
-        locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
-#ifdef USE_HYPERCOMM
+        continue;
       }
 #endif  // USE_HYPERCOMM
+
+      locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
     }
   }
 
