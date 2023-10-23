@@ -6,6 +6,7 @@
 
 syntax = "proto3";
 package loimos.proto;
+import "distribution.proto";
 
 message DataField {
   string field_name = 1;
@@ -48,6 +49,6 @@ message CSVDefinition {
   repeated DataField fields = 1;
   int64 num_rows = 2;
   TimeDef range = 3;
-  string load_column = 3;
-  repeated int64 partition_offsets = 4;
+  string load_column = 4;
+  repeated int64 partition_offsets = 5;
 }
