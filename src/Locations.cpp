@@ -184,6 +184,15 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
     visitMsg.transmissionModifier, visitMsg.visitEnd };
   Event::pair(&arrival, &departure);
 
+#ifdef ENABLE_DEBUG
+  if (arrival.scheduledTime > departure.scheduledTime) {
+    CkAbort("Error on chare %d: visit by "ID_PRINT_TYPE" to loc "ID_PRINT_TYPE"\n"
+      "has departure (%d) before arrival (%d)\n",
+      thisIndex, visitMsg.personIdx, trueIdx, arrival.scheduledTime,
+      departure.scheduledTime);
+  }
+#endif
+
   // ...and queue it up at the appropriate location
   locations[localLocIdx].addEvent(arrival);
   locations[localLocIdx].addEvent(departure);
