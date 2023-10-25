@@ -247,7 +247,6 @@ Counter Locations::processEvents(Location *loc) {
     } else {
       numPresent--;
       numInteractions += numPresent;
-      saveInteractions(*loc, event, interactionsFile);
     }
 #endif
 
@@ -271,6 +270,10 @@ Counter Locations::processEvents(Location *loc) {
       // Remove the arrival event corresponding to this departure
       std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
       arrivals->pop_back();
+
+#if ENABLE_DEBUG == DEBUG_PER_INTERACTION
+      saveInteractions(*loc, event, interactionsFile);
+#endif
 
       onDeparture(loc, event);
     }
