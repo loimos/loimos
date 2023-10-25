@@ -113,6 +113,13 @@ def parse_args():
         action="store_true",
         help="Pass this flag if the script should validate its results",
     )
+    parser.add_argument(
+        "-oo",
+        "--offsets-only",
+        action="store_true",
+        help="Pass this flag if the script should only update the partition "
+        + "offsets and not the population files",
+    )
 
     args = parser.parse_args()
 
@@ -197,7 +204,8 @@ def partition_locations(args):
     print("partition completed with offsets:", flush=True)
     print(offsets, flush=True)
 
-    write_csv(args.out_dir, args.locations_file, locations)
+    if not args.offsets_only:
+        write_csv(args.out_dir, args.locations_file, locations)
     return offsets, lid_update
 
 
@@ -213,7 +221,7 @@ def update_chunk(args, visits_chunk, lid_update):
         name="visits",
         num_tasks=args.num_tasks,
         num_partitions=args.num_partitions_per_task * args.num_tasks,
-        validate=False,
+        validate=args.validate,
     )
     print("  Lids updated in visits", flush=True)
     return visits_chunk
@@ -241,24 +249,24 @@ def update_visits(args, lid_update):
         write_csv(args.out_dir, args.visits_file, visits)
 
 
-def main():
-    args = parse_args()
-    print("Parsed args", args, flush=True)
-
+def main(args):
     if not os.path.isdir(args.out_dir):
         os.makedirs(args.out_dir)
 
     offsets, lid_update = partition_locations(args)
-    update_visits(args, lid_update)
-    # Not partitioning people yet
-    shutil.copy(os.path.join(args.in_dir, args.people_file), args.out_dir)
+
+    if not args.offsets_only:
+        update_visits(args, lid_update)
+        create_textproto(args.out_dir, args.visits_file, VISITS_TYPES)
+
+        # Not partitioning people yet
+        shutil.copy(os.path.join(args.in_dir, args.people_file), args.out_dir)
 
     create_textproto(args.out_dir, args.people_file, PEOPLE_TYPES)
     create_textproto(
         args.out_dir, args.locations_file, LOCATIONS_TYPES, partition_offsets=offsets
     )
-    create_textproto(args.out_dir, args.visits_file, VISITS_TYPES)
 
 
 if __name__ == "__main__":
-    main()
+    main(parse_args())
