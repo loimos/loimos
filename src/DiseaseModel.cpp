@@ -152,9 +152,12 @@ void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
 
   if (NULL != metadata && 0 < metadata->partition_offsets_size()) {
     PartitionId numOffsets = metadata->partition_offsets_size();
+    CkPrintf("Dividing %d offsets among %d chares\n", numOffsets, numPartitions);
     for (PartitionId i = 0; i < numOffsets; ++i) {
       PartitionId p = getPartitionIndex(i, numOffsets, numPartitions, 0);
       Id offset = metadata->partition_offsets(i);
+      CkPrintf("  Chare %d: starts at offset %d (id %ld)\n", i,
+          p, offset);
       if (partitionOffsets->size() == p) {
         partitionOffsets->emplace_back(offset);
       }

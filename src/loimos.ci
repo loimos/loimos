@@ -331,9 +331,9 @@ mainmodule loimos {
   };
 
   nodegroup DiseaseModel {
-      entry DiseaseModel(std::string pathToModel, std::string scenarioPath,
-          std::string pathToIntervention);
-      entry void applyInterventions(int day, int newDailyInfections);
+    entry DiseaseModel(std::string pathToModel, std::string scenarioPath,
+        std::string pathToIntervention);
+    entry void applyInterventions(int day, int newDailyInfections);
   };
 
 #ifdef USE_HYPERCOMM
