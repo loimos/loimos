@@ -82,7 +82,7 @@ Locations::Locations(int seed, std::string scenarioPath) {
 
 #if ENABLE_DEBUG == DEBUG_PER_INTERACTION
   interactionsFile = new std::ofstream(scenarioPath + "interactions_chare_"
-      + std::to_string(thisIndex) + ".csv");
+     + std::to_string(thisIndex) + ".csv");
 #else
   interactionsFile = NULL;
 #endif
@@ -258,7 +258,6 @@ Counter Locations::processEvents(Location *loc) {
     } else {
       numPresent--;
       numInteractions += numPresent;
-      duration += saveInteractions(*loc, event, interactionsFile);
     }
 #endif
 
@@ -282,6 +281,9 @@ Counter Locations::processEvents(Location *loc) {
       // Remove the arrival event corresponding to this departure
       std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
       arrivals->pop_back();
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
+      duration += saveInteractions(*loc, event, interactionsFile);
+#endif
 
 #if ENABLE_DEBUG == DEBUG_PER_INTERACTION
       saveInteractions(*loc, event, interactionsFile);
@@ -321,10 +323,10 @@ Counter Locations::saveInteractions(const Location &loc,
   for (const Event &a : susceptibleArrivals) {
     if (Event::overlap(a, departure)) {
       if (NULL != out) {
-        // *out << loc.getUniqueId() << "," << departure.personIdx << ","
-        // << departure.partnerTime << ","  << departure.scheduledTime << ","
-        // << a.personIdx << "," << a.scheduledTime << "," << a.partnerTime
-        // << std::endl;
+        *out << loc.getUniqueId() << "," << departure.personIdx << ","
+          << departure.partnerTime << ","  << departure.scheduledTime << ","
+          << a.personIdx << "," << a.scheduledTime << "," << a.partnerTime
+          << std::endl;
       }
 
       Time start = std::max(a.scheduledTime, departure.partnerTime);
@@ -334,10 +336,10 @@ Counter Locations::saveInteractions(const Location &loc,
   for (const Event &a : infectiousArrivals) {
     if (Event::overlap(a, departure)) {
       if (NULL != out) {
-        // *out << loc.getUniqueId() << "," << departure.personIdx << ","
-        // << departure.partnerTime << ","  << departure.scheduledTime << ","
-        // << a.personIdx << "," << a.scheduledTime << "," << a.partnerTime
-        // << std::endl;
+        *out << loc.getUniqueId() << "," << departure.personIdx << ","
+          << departure.partnerTime << ","  << departure.scheduledTime << ","
+          << a.personIdx << "," << a.scheduledTime << "," << a.partnerTime
+          << std::endl;
       }
 
       Time start = std::max(a.scheduledTime, departure.partnerTime);
