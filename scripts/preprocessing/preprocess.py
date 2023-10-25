@@ -173,19 +173,20 @@ def parse_args():
     return args
 
 
-def read_csv(in_dir, filename, region="", should_flatten=False, nrows=None):
+def read_csv(in_dir, filename, region="", should_flatten=False, nrows=None,
+        **kwargs):
     if should_flatten:
         filename = os.path.basename(filename)
 
     path = os.path.join(in_dir, filename.format(region=region))
     print(f"Reading {path} ({nrows})")
-    return pd.read_csv(path, nrows=nrows)
+    return pd.read_csv(path, nrows=nrows, **kwargs)
 
 
-def write_csv(out_dir, filename, df):
+def write_csv(out_dir, filename, df, **kwargs):
     path = os.path.join(out_dir, filename)
     print(f"Saving results to {path}")
-    df.to_csv(path, index=False)
+    df.to_csv(path, index=False, **kwargs)
 
 
 def is_contiguous(df, col="lid"):

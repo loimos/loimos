@@ -5,6 +5,7 @@ import os
 import shutil
 
 import pandas as pd
+import numpy as np
 from preprocess import read_csv, write_csv, make_contiguous, update_ids
 from create_textproto import (
     create_textproto,
@@ -158,23 +159,15 @@ def linear_cut_partition(
 ):
     mean_load = df[load_col].mean()
     mean_load_per_partition = mean_load * df.shape[0] / num_partitions
+    print(f"Calcualting {num_partitions} partitions with a mean load of {mean_load_per_partition}", flush=True)
 
-    # Add df to each partition until it exceeds the mean load
-    df["partition"] = -1
-    partition_id = 0
-    partition_load = 0
-    for index, row in df.iterrows():
-        partition_load += row[load_col]
-        df.loc[index, "partition"] = partition_id
-        if partition_load > mean_load_per_partition:
-            partition_id += 1
-            partition_load = 0
+    df[partition_col] = np.ceil(df[load_col].cumsum()
+            / mean_load_per_partition) - 1
 
-    print(mean_load_per_partition)
     partition_load = get_partition_load(
         df, load_col=load_col, partition_col=partition_col
     )
-    print(partition_load)
+    print(partition_load, flush=True)
 
     return get_offsets(df, partition_col=partition_col)
 
@@ -184,42 +177,73 @@ LOCATION_SORT_BY = ["admin1", "admin2", "admin3", "admin4"]
 
 def partition_locations(args):
     locations = read_csv(args.in_dir, args.locations_file, nrows=args.num_locations)
-    print("locations loaded:")
-    print(locations)
+    print("locations loaded:", flush=True)
+    print(locations, flush=True)
 
     # Reindexing doesn't depend on the partition
     locations.sort_values(LOCATION_SORT_BY, inplace=True)
+    print("locations sorted:", flush=True)
+    print(locations, flush=True)
+
     lid_update = make_contiguous(
         locations, name="locations", reset_index=True, validate=args.validate
     )
+    print("lids reset:", flush=True)
+    print(lid_update, flush=True)
+
     offsets = linear_cut_partition(
         locations, load_col=args.location_load_col, num_partitions=args.num_partitions
     )
+    print("partition completed with offsets:", flush=True)
+    print(offsets, flush=True)
+
     write_csv(args.out_dir, args.locations_file, locations)
     return offsets, lid_update
 
 
-def update_visits(args, lid_update):
-    visits = read_csv(args.in_dir, args.visits_file, nrows=args.num_visits)
+def update_chunk(args, visits_chunk, lid_update):
     if args.num_locations:
-        n = visits.shape[0]
-        visits = visits[visits["lid"].isin(lid_update["lid"])]
-        print(f"{visits.shape[0]}/{n} visits kept")
-    print("visits loaded:")
-    print(visits)
-    visits = update_ids(
-        visits,
+        n = visits_chunk.shape[0]
+        visits_chunk = visits_chunk[visits_chunk["lid"].isin(lid_update["lid"])]
+        print(f"  {visits_chunk.shape[0]}/{n} visits kept", flush=True)
+
+    visits_chunk = update_ids(
+        visits_chunk,
         lid_update,
         name="visits",
         num_tasks=args.num_tasks,
         num_partitions=args.num_partitions_per_task * args.num_tasks,
+        validate=False,
     )
-    write_csv(args.out_dir, args.visits_file, visits)
+    print("  Lids updated in visits", flush=True)
+    return visits_chunk
+
+def update_visits(args, lid_update):
+    if args.num_visits is not None:
+        visit_chunks = read_csv(args.in_dir, args.visits_file, iterator=True,
+                chunksize=args.num_visits)
+        for i, chunk in enumerate(visit_chunks):
+            print(f"Updating lids in chunk {i}")
+            chunk = update_chunk(args, chunk, lid_update)
+            if i == 0:
+                write_csv(args.out_dir, args.visits_file, chunk)
+            else:
+                write_csv(args.out_dir, args.visits_file, chunk, mode="a",
+                        header=False)
+
+    else:
+        visits = read_csv(args.in_dir, args.visits_file, args.num_visits)
+
+        print("Updating visits lids", flush=True)
+        visits = update_chunk(args, visits, lid_update)
+
+        print("Saving visits", flush=True)
+        write_csv(args.out_dir, args.visits_file, visits)
 
 
 def main():
     args = parse_args()
-    print("Parsed args", args)
+    print("Parsed args", args, flush=True)
 
     if not os.path.isdir(args.out_dir):
         os.makedirs(args.out_dir)
