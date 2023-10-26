@@ -57,7 +57,7 @@ void Person::pup(PUP::er &p) {
 }
 
 void Person::_print_information(loimos::proto::CSVDefinition *personDef) {
-  printf("My ID is %d.\n", this->uniqueId);
+  printf("My ID is "ID_PRINT_TYPE".\n", this->uniqueId);
   int attr = 0;
   for (int c = 0; c < personDef->fields_size(); c++) {
     loimos::proto::DataField const *field = &personDef->fields(c);

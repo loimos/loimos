@@ -567,7 +567,7 @@ void People::ProcessInteractions(Person *person) {
 
   if (roll <= 1) {
     // ...if they were, determine which interaction was responsible, by
-    // chooseing an interaction, with a weight equal to the propensity
+    // choosing an interaction, with a weight equal to the propensity
     roll = std::uniform_real_distribution<>(0, totalPropensity)(generator);
     double partialSum = 0.0;
     int interactionIdx;

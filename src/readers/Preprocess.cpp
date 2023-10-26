@@ -41,8 +41,8 @@
 std::string buildCache(std::string scenarioPath,
     Id numPeople, const std::vector<Id> &personPartitionOffsets,
     Id numLocations, const std::vector<Id> &locationPartitionOffsets, int numDays) {
-  Id numPeopleChares = personPartitionOffsets.size();
-  Id numLocationChares = locationPartitionOffsets.size();
+  PartitionId numPeopleChares = personPartitionOffsets.size();
+  PartitionId numLocationChares = locationPartitionOffsets.size();
 
   // We need to uniquely identify this run configuration
   std::string uniqueScenario = getScenarioId(numPeople, numPeopleChares,

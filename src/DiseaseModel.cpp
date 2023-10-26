@@ -152,15 +152,10 @@ void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
 
   if (NULL != metadata && 0 < metadata->partition_offsets_size()) {
     PartitionId numOffsets = metadata->partition_offsets_size();
-    CkPrintf("Dividing %d offsets among %d chares\n", numOffsets, numPartitions);
-    for (PartitionId i = 0; i < numOffsets; ++i) {
-      PartitionId p = getPartitionIndex(i, numOffsets, numPartitions, 0);
-      Id offset = metadata->partition_offsets(i);
-      CkPrintf("  Chare %d: starts at offset %d (id %ld)\n", i,
-          p, offset);
-      if (partitionOffsets->size() == p) {
-        partitionOffsets->emplace_back(offset);
-      }
+    for (PartitionId i = 0; i < numPartitions; ++i) {
+      PartitionId offsetIdx = getFirstIndex(i, numOffsets, numPartitions, 0);
+      Id offset = metadata->partition_offsets(offsetIdx);
+      partitionOffsets->emplace_back(offset);
 
 #ifdef ENABLE_DEBUG
       if (outOfBounds(firstIndex, lastIndex, offset)) {
@@ -168,9 +163,9 @@ void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
           ID_PRINT_TYPE")\n", offset, numObjects);
 
       // Offsets should be sorted so we can do a binary search later
-      } else if (0 != p && partitionOffsets->at(p - 1) >= offset) {
+      } else if (0 != i && partitionOffsets->at(i - 1) >= offset) {
         CkAbort("Error: Offset "ID_PRINT_TYPE" for parition "
-        PARTITION_ID_PRINT_TYPE" out of order\n", offset, p);
+        PARTITION_ID_PRINT_TYPE" out of order\n", offset, i);
       }
       // else if (0 == CkMyNode()) {
       //   CkPrintf("  Chare %d: offset "ID_PRINT_TYPE" (provided)\n",
