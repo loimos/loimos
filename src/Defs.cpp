@@ -12,7 +12,7 @@
 #include <iterator>
 
 /**
- * Returns the number of elements that each chare will track at a minimum.
+ * Returns the number of elements that each chare will track at a maximum
  *
  * Args:
  *    Id numElements: The total number of objects of this type.
@@ -21,6 +21,24 @@
  */
 Id getNumElementsPerPartition(Id numElements, PartitionId numPartitions) {
   return static_cast<Id>(ceil(1.0 * numElements / numPartitions));
+}
+
+/**
+ * Returns the number of chares that will which will have the maximum number
+ * of elements (as returned by getNumElementsPerPartition). All other chares
+ * will have one less element.
+ *
+ * Args:
+ *    Id numElements: The total number of objects of this type.
+ *    Id numPartitions: The total number of chares.
+ *
+ */
+PartitionId getNumLargerPartitions(Id numElements, PartitionId numPartitions) {
+  Id numLargerPartitions = numElements % numPartitions;
+  if (0 == numLargerPartitions) {
+    numLargerPartitions = numPartitions;
+  }
+  return numLargerPartitions;
 }
 
 /**
@@ -41,7 +59,8 @@ PartitionId getPartitionIndex(Id globalIndex, Id numElements,
 
   Id elementsPerPartition = getNumElementsPerPartition(numElements,
       numPartitions);
-  Id numLargerPartitions = numElements % numPartitions;
+
+  Id numLargerPartitions = getNumLargerPartitions(numElements, numPartitions);
   Id numElementsInLargerPartitions =
     numLargerPartitions * elementsPerPartition;
 
@@ -77,7 +96,8 @@ Id getFirstIndex(PartitionId partitionIndex, Id numElements,
   Id maxIndex = partitionIndex * elementsPerPartition + offset;
   //return maxIndex;
 
-  PartitionId numLargerPartitions = numElements % numPartitions;
+  PartitionId numLargerPartitions = getNumLargerPartitions(numElements,
+      numPartitions);
   if (partitionIndex < numLargerPartitions) {
     return maxIndex;
   } else {

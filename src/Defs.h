@@ -68,6 +68,7 @@ const Time MINUTE_LENGTH = 60;
 // Some functions are still in use in the new scheme but most should be
 // consider depricated outside that scope
 Id getNumElementsPerPartition(Id numElements, PartitionId numPartitions);
+PartitionId getNumLargerPartitions(Id numElements, PartitionId numPartitions);
 PartitionId getPartitionIndex(Id globalIndex, Id numElements,
     PartitionId numPartitions, Id offset);
 Id getFirstIndex(PartitionId partitionIndex, Id numElements,
