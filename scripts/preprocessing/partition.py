@@ -201,8 +201,7 @@ def partition_locations(args):
     offsets = linear_cut_partition(
         locations, load_col=args.location_load_col, num_partitions=args.num_partitions
     )
-    print("partition completed with offsets:", flush=True)
-    print(offsets, flush=True)
+    print("partition completed with {len(offsets)} offsets", flush=True)
 
     if not args.offsets_only:
         write_csv(args.out_dir, args.locations_file, locations)
@@ -260,7 +259,8 @@ def main(args):
         create_textproto(args.out_dir, args.visits_file, VISITS_TYPES)
 
         # Not partitioning people yet
-        shutil.copy(os.path.join(args.in_dir, args.people_file), args.out_dir)
+        if args.in_dir != args.out_dir:
+            shutil.copy(os.path.join(args.in_dir, args.people_file), args.out_dir)
 
     create_textproto(args.out_dir, args.people_file, PEOPLE_TYPES)
     create_textproto(
