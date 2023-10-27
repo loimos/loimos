@@ -176,7 +176,9 @@ def linear_cut_partition(
     )
     print(partition_load, flush=True)
 
-    return get_offsets(df, partition_col=partition_col)
+    offsets = get_offsets(df, partition_col=partition_col)
+    df.drop(columns=partition_col, inplace)
+    return offsets
 
 
 LOCATION_SORT_BY = ["admin1", "admin2", "admin3", "admin4"]
