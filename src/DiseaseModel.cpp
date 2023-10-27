@@ -85,14 +85,14 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     locationAttributes.readAttributes(locationDef->fields());
   }
 
-  // if (0 == CkMyNode()) {
-  //   CkPrintf("People offsets:\n");
-  // }
+  if (0 == CkMyNode()) {
+    CkPrintf("People offsets:\n");
+  }
   setPartitionOffsets(numPersonPartitions, numPeople, firstPersonIdx,
     personDef, &personPartitionOffsets);
-  // if (0 == CkMyNode()) {
-  //   CkPrintf("Location offsets:\n");
-  // }
+  if (0 == CkMyNode()) {
+    CkPrintf("Location offsets:\n");
+  }
   setPartitionOffsets(numLocationPartitions, numLocations, firstLocationIdx,
     locationDef, &locationPartitionOffsets);
 
@@ -163,14 +163,14 @@ void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
           ID_PRINT_TYPE")\n", offset, numObjects);
 
       // Offsets should be sorted so we can do a binary search later
-      } else if (0 != i && partitionOffsets->at(i - 1) >= offset) {
-        CkAbort("Error: Offset "ID_PRINT_TYPE" for parition "
-        PARTITION_ID_PRINT_TYPE" out of order\n", offset, i);
+      } else if (0 != i && partitionOffsets->at(i - 1) > offset) {
+        CkAbort("Error: Offset "ID_PRINT_TYPE" (%d-th offset) for chare "
+        PARTITION_ID_PRINT_TYPE" out of order\n", offset, offsetIdx, i);
       }
-      // else if (0 == CkMyNode()) {
-      //   CkPrintf("  Chare %d: offset "ID_PRINT_TYPE" (provided)\n",
-      //       p, offset);
-      // }
+      else if (0 == CkMyNode()) {
+        CkPrintf("  Chare %d: offset "ID_PRINT_TYPE" (provided)\n",
+            i, offset);
+      }
 #endif  // ENABLE_DEBUG
     }
 
