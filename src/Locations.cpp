@@ -84,7 +84,7 @@ Locations::Locations(int seed, std::string scenarioPath) {
 
 #if ENABLE_DEBUG == DEBUG_PER_INTERACTION
   interactionsFile = new std::ofstream(scenarioPath + "interactions_chare_"
-     + std::to_string(thisIndex) + ".csv");
+      + std::to_string(thisIndex) + ".csv");
 #else
   interactionsFile = NULL;
 #endif
