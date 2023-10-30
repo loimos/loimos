@@ -159,17 +159,52 @@ def get_offsets(df, partition_col="partition"):
     return list(df[boundary_mask].index)
 
 
+UNASSIGNED_PARTITION = -1
 # Assumes df has already been sorted, and returns list of cuts to make to form
 # partitions (i.e. the partition offsets)
 def linear_cut_partition(
     df, load_col="total_visits", num_partitions=16, partition_col="partition"
 ):
-    mean_load = df[load_col].mean()
-    mean_load_per_partition = mean_load * df.shape[0] / num_partitions
-    print(f"Calcualting {num_partitions} partitions with a mean load of {mean_load_per_partition}", flush=True)
+    mean_load_per_partition = df[load_col].sum() / num_partitions
+    print(
+        f"Calculating {num_partitions} partitions with a mean load of {mean_load_per_partition}",
+        flush=True,
+    )
 
-    df[partition_col] = np.ceil(df[load_col].cumsum()
-            / mean_load_per_partition) - 1
+    # Locations larger than the expected load per partitions should get their
+    # own partition to avoid having empty partitions
+    next_partition = 0
+    df[partition_col] = UNASSIGNED_PARTITION
+    unassigned_mask = df[partition_col] == UNASSIGNED_PARTITION
+    large_loc_mask = df[load_col] > mean_load_per_partition
+    num_large_locs = large_loc_mask.sum()
+    while num_large_locs > 0:
+        print(
+            f"Found {num_large_locs} locs with load greater than {mean_load_per_partition}"
+        )
+        partition_ids = np.arange(
+            next_partition, next_partition + num_large_locs, 1
+        ).astype(int)
+        df.loc[large_loc_mask, partition_col] = partition_ids
+
+        # Assiging large locations to their own partitions reduces
+        # the mean load per partition, so we may need to do this again
+        next_partition += num_large_locs
+        unassigned_mask = df[partition_col] == UNASSIGNED_PARTITION
+        mean_load_per_partition = df.loc[unassigned_mask, load_col].sum() / (
+            num_partitions - next_partition
+        )
+        large_loc_mask = (df[load_col] > mean_load_per_partition) & unassigned_mask
+        num_large_locs = large_loc_mask.sum()
+
+    print(
+        f"Calculating remaining {num_partitions - next_partition} "
+        + "partitions with a mean load of {mean_load_per_partition}",
+        flush=True,
+    )
+    df.loc[unassigned_mask, partition_col] = (
+        np.ceil(df.loc[unassigned_mask, load_col].cumsum() / mean_load_per_partition) - 1 + next_partition
+    ).astype(int)
 
     partition_load = get_partition_load(
         df, load_col=load_col, partition_col=partition_col
@@ -177,7 +212,7 @@ def linear_cut_partition(
     print(partition_load, flush=True)
 
     offsets = get_offsets(df, partition_col=partition_col)
-    df.drop(columns=partition_col, inplace)
+    df.drop(columns=partition_col, inplace=True)
     return offsets
 
 
@@ -227,18 +262,19 @@ def update_chunk(args, visits_chunk, lid_update):
     print("  Lids updated in visits", flush=True)
     return visits_chunk
 
+
 def update_visits(args, lid_update):
     if args.num_visits is not None:
-        visit_chunks = read_csv(args.in_dir, args.visits_file, iterator=True,
-                chunksize=args.num_visits)
+        visit_chunks = read_csv(
+            args.in_dir, args.visits_file, iterator=True, chunksize=args.num_visits
+        )
         for i, chunk in enumerate(visit_chunks):
             print(f"Updating lids in chunk {i}")
             chunk = update_chunk(args, chunk, lid_update)
             if i == 0:
                 write_csv(args.out_dir, args.visits_file, chunk)
             else:
-                write_csv(args.out_dir, args.visits_file, chunk, mode="a",
-                        header=False)
+                write_csv(args.out_dir, args.visits_file, chunk, mode="a", header=False)
 
     else:
         visits = read_csv(args.in_dir, args.visits_file, args.num_visits)
