@@ -202,9 +202,18 @@ def linear_cut_partition(
         + "partitions with a mean load of {mean_load_per_partition}",
         flush=True,
     )
-    df.loc[unassigned_mask, partition_col] = (
-        np.ceil(df.loc[unassigned_mask, load_col].cumsum() / mean_load_per_partition) - 1 + next_partition
+
+    # We need partitions to be contiguous in order for them to be completely
+    # described by their starting offsets
+    assigned_mask = ~unassigned_mask
+    single_location_loads = df.loc[assigned_mask, load_col]
+    df.loc[assigned_mask, load_col] = mean_load_per_partition
+
+    df[partition_col] = (
+        np.ceil(df[load_col].cumsum() / mean_load_per_partition) - 1
     ).astype(int)
+
+    df.loc[assigned_mask, load_col] = single_location_loads
 
     partition_load = get_partition_load(
         df, load_col=load_col, partition_col=partition_col
