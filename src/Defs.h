@@ -25,9 +25,10 @@
 #define DEBUG_BASIC 1
 #define DEBUG_VERBOSE 2
 #define DEBUG_LOCATION_SUMMARY 3  // Sumary of interaction counts per location
-#define DEBUG_PER_INTERACTION 4  // Saves all interactions to a file
-#define DEBUG_PER_CHARE 5
-#define DEBUG_PER_OBJECT 6
+#define DEBUG_PER_INTERACTION 4  // Saves all interactions to files
+#define DEBUG_PER_EXPOSURE 5  // Saves all exposure and state transitions
+#define DEBUG_PER_CHARE 6
+#define DEBUG_PER_OBJECT 7
 
 // Tracing levels
 #define TRACE_BASIC 1

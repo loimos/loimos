@@ -33,6 +33,8 @@ class People : public CBase_People {
   std::vector<Person> people;
   DiseaseModel *diseaseModel;
   std::vector<Id> stateSummaries;
+  std::ofstream *exposuresFile;
+  std::ofstream *transitionsFile;
 
   void ProcessInteractions(Person *person);
   void UpdateDiseaseState(Person *person);
