@@ -105,14 +105,6 @@ def parse_args():
         action="store_true",
         help="Pass this flag if the script should validate its results",
     )
-
-    # Flags
-    parser.add_argument(
-        "-val",
-        "--validate",
-        action="store_true",
-        help="Pass this flag if the script should validate its results",
-    )
     parser.add_argument(
         "-oo",
         "--offsets-only",
