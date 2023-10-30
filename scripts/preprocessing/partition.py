@@ -247,7 +247,7 @@ def partition_locations(args):
     offsets = linear_cut_partition(
         locations, load_col=args.location_load_col, num_partitions=args.num_partitions
     )
-    print("partition completed with {len(offsets)} offsets", flush=True)
+    print(f"partition completed with {len(offsets)} offsets", flush=True)
 
     if not args.offsets_only:
         write_csv(args.out_dir, args.locations_file, locations)
