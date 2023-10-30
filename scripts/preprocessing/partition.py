@@ -199,7 +199,7 @@ def linear_cut_partition(
 
     print(
         f"Calculating remaining {num_partitions - next_partition} "
-        + "partitions with a mean load of {mean_load_per_partition}",
+        + f"partitions with a mean load of {mean_load_per_partition}",
         flush=True,
     )
 
@@ -212,6 +212,8 @@ def linear_cut_partition(
     df[partition_col] = (
         np.ceil(df[load_col].cumsum() / mean_load_per_partition) - 1
     ).astype(int)
+
+    df.at[df.shape[0] - 1, partition_col] = num_partitions - 1
 
     df.loc[assigned_mask, load_col] = single_location_loads
 
