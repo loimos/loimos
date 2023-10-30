@@ -173,8 +173,7 @@ def parse_args():
     return args
 
 
-def read_csv(in_dir, filename, region="", should_flatten=False, nrows=None,
-        **kwargs):
+def read_csv(in_dir, filename, region="", should_flatten=False, nrows=None, **kwargs):
     if should_flatten:
         filename = os.path.basename(filename)
 

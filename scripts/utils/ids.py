@@ -23,7 +23,7 @@ def get_bounds(left_col, right_col=None, num_partitions=10):
 
     if right_col is not None:
         if 2 == len(right_col.shape):
-            right_col = right_col.iloc[:,0]
+            right_col = right_col.iloc[:, 0]
         col_min = min(col_min, right_col.min())
         col_max = max(col_max, right_col.max())
 
@@ -37,7 +37,7 @@ def get_bounds(left_col, right_col=None, num_partitions=10):
 def partition_df(df, on="hid", num_partitions=10, bounds=None):
     # Make sure that we are only using the first provided column,
     # as we only want 1D bounds
-    first_col = df[on].iloc[:,0]
+    first_col = df[on].iloc[:, 0]
 
     # Choose bounds from number of partitions, if no bounds are explcitly given
     if bounds is None:
@@ -52,15 +52,24 @@ def partition_df(df, on="hid", num_partitions=10, bounds=None):
     return bounded_dfs
 
 
-def partitioned_merge(left, right, on, num_tasks=1, num_partitions=128,
-                      init_mp=False, sort_by=None, **args):
+def partitioned_merge(
+    left,
+    right,
+    on,
+    num_tasks=1,
+    num_partitions=128,
+    init_mp=False,
+    sort_by=None,
+    **args
+):
     if init_mp:
         init_multiprocessing()
 
     # Both dataframes should share the same bounds, so that correpsonding
     # ids are in the same partitions
-    bounds = get_bounds(left[on].iloc[:,0], right[on].iloc[:,0],
-                        num_partitions=num_partitions)
+    bounds = get_bounds(
+        left[on].iloc[:, 0], right[on].iloc[:, 0], num_partitions=num_partitions
+    )
 
     left_partitions = partition_df(left, on=on, bounds=bounds)
     right_partitions = partition_df(right, on=on, bounds=bounds)
@@ -98,7 +107,7 @@ def partitioned_merge(left, right, on, num_tasks=1, num_partitions=128,
     #    i += 1
 
     merged_df = pd.concat(merged_partitions)
-    
+
     # Partitioning can mess up the order of the rows, so let's fix that
     if sort_by is not None:
         merged_df.sort_values(sort_by, inplace=True)

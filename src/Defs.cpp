@@ -71,11 +71,6 @@ PartitionId getPartitionIndex(Id globalIndex, Id numElements,
       + (globalIndex - numElementsInLargerPartitions)
       / (elementsPerPartition - 1);
   }
-  //Id partitionIndex = (globalIndex - offset)
-  //  / getNumElementsPerPartition(numElements, numPartitions);
-  // if (partitionIndex >= numPartitions)
-  //   return (numPartitions - 1);
-  // return partitionIndex;
 }
 
 /**
@@ -94,7 +89,6 @@ Id getFirstIndex(PartitionId partitionIndex, Id numElements,
   Id elementsPerPartition = getNumElementsPerPartition(numElements,
       numPartitions);
   Id maxIndex = partitionIndex * elementsPerPartition + offset;
-  //return maxIndex;
 
   PartitionId numLargerPartitions = getNumLargerPartitions(numElements,
       numPartitions);
@@ -124,12 +118,6 @@ Id getNumLocalElements(Id numElements, PartitionId numPartitions,
   } else {
     return elementsPerPartition - 1;
   }
-  //Id firstIndex = getFirstIndex(partitionIndex, numElements, numPartitions,
-  //    0);
-  // if (firstIndex >= numElements) {
-  //   return 0;
-  // }
-  // return std::min(elementsPerPartition, numElements - firstIndex);
 }
 
 /**

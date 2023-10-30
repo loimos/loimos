@@ -167,10 +167,10 @@ void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
         CkAbort("Error: Offset "ID_PRINT_TYPE" (%d-th offset) for chare "
         PARTITION_ID_PRINT_TYPE" out of order\n", offset, offsetIdx, i);
       }
-      else if (0 == CkMyNode()) {
-        CkPrintf("  Chare %d: offset "ID_PRINT_TYPE" (provided)\n",
-            i, offset);
-      }
+      // else if (0 == CkMyNode()) {
+      //   CkPrintf("  Chare %d: offset "ID_PRINT_TYPE" (provided)\n",
+      //       i, offset);
+      // }
 #endif  // ENABLE_DEBUG
     }
 

@@ -152,6 +152,8 @@ def get_offsets(df, partition_col="partition"):
 
 
 UNASSIGNED_PARTITION = -1
+
+
 # Assumes df has already been sorted, and returns list of cuts to make to form
 # partitions (i.e. the partition offsets)
 def linear_cut_partition(
@@ -159,7 +161,8 @@ def linear_cut_partition(
 ):
     mean_load_per_partition = df[load_col].sum() / num_partitions
     print(
-        f"Calculating {num_partitions} partitions with a mean load of {mean_load_per_partition}",
+        f"Calculating {num_partitions} partitions with a mean load of "
+        + f"{mean_load_per_partition}",
         flush=True,
     )
 
@@ -172,7 +175,8 @@ def linear_cut_partition(
     num_large_locs = large_loc_mask.sum()
     while num_large_locs > 0:
         print(
-            f"Found {num_large_locs} locs with load greater than {mean_load_per_partition}"
+            f"Found {num_large_locs} locs with load greater than "
+            + f"{mean_load_per_partition}"
         )
         partition_ids = np.arange(
             next_partition, next_partition + num_large_locs, 1
