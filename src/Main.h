@@ -17,7 +17,6 @@ class Main : public CBase_Main {
   Main_SDAG_CODE
   int day;
   int seed;
-  std::string pathToOutput;
   std::vector<int> accumulated;
   std::vector<int> initialInfections;
   DiseaseModel* diseaseModel;

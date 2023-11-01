@@ -64,6 +64,7 @@
 /* readonly */ double stepStartTime;
 /* readonly */ double dataLoadingStartTime;
 /* readonly */ std::vector<double> totalTime;
+/* readonly */ std::string outputPath;
 
 
 // For synthetic run.
@@ -213,7 +214,8 @@ Main::Main(CkArgMsg* msg) {
         numLocationPartitions, numLocations);
   }
 
-  pathToOutput = std::string(msg->argv[++argNum]);
+  outputPath = std::string(msg->argv[++argNum]);
+  
 #if ENABLE_DEBUG >= DEBUG_BASIC
   CkPrintf("Saving simulation output to %s\n", msg->argv[argNum]);
 #endif
@@ -234,9 +236,19 @@ Main::Main(CkArgMsg* msg) {
     if (scenarioPath.back() != '/') {
       scenarioPath.push_back('/');
     }
+    scenarioId = buildCache(
+        scenarioPath, numPeople, numPeoplePartitions, numLocations,
+        numLocationPartitions, numDaysWithDistinctVisits);
   }
+#if OUTPUT_FLAGS != OUTPUT_DEFAULT
+  if (outputPath.back() == '/') {
+    outputPath.pop_back();
+  }
+  create_directory(outputPath, syntheticRun ? "." : scenarioPath);
+  outputPath.push_back('/');
+#endif
 
-  // Detemine which contact modle to use
+  // Determine which contact model to use
   contactModelType = static_cast<int>(ContactModelType::constant_probability);
   interventionStategy = false;
   int interventionStategyLocation = -1;
@@ -466,9 +478,13 @@ void Main::SaveStats(Id *data) {
   DiseaseState numDiseaseStates = diseaseModel->getNumberOfStates();
 
   // Open output csv
-  std::ofstream outFile(pathToOutput);
+#if OUTPUT_FLAGS == OUTPUT_DEFAULT
+  std::ofstream outFile(outputPath);
+#else
+  std::ofstream outFile(outputPath + "summary.csv");
+#endif
   if (!outFile) {
-    CkAbort("Error: invalid output path, %s\n", pathToOutput.c_str());
+    CkAbort("Error: invalid output path, %s\n", outputPath.c_str());
   }
 
   // Write header row

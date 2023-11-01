@@ -26,6 +26,7 @@ extern /* readonly */ int numDays;
 extern /* readonly */ int numDaysWithDistinctVisits;
 extern /* readonly */ int contactModelType;
 extern /* readonly */ bool syntheticRun;
+extern /* readonly */ std::string outputPath;
 
 extern /* readonly */ Counter totalVisits;
 extern /* readonly */ Counter totalInteractions;

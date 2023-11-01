@@ -25,10 +25,18 @@
 #define DEBUG_BASIC 1
 #define DEBUG_VERBOSE 2
 #define DEBUG_LOCATION_SUMMARY 3  // Sumary of interaction counts per location
-#define DEBUG_PER_INTERACTION 4  // Saves all interactions to files
-#define DEBUG_PER_EXPOSURE 5  // Saves all exposure and state transitions
-#define DEBUG_PER_CHARE 6
-#define DEBUG_PER_OBJECT 7
+#define DEBUG_PER_CHARE 4
+#define DEBUG_PER_OBJECT 5
+
+// Output types - these are flags that can be or-ed together
+// For now, always write out the default output (daily state transition summaries)
+#define OUTPUT_DEFAULT 0
+#define OUTPUT_TRANSITIONS 1
+#define OUTPUT_EXPOSURES 2
+#define OUTPUT_OVERLAPS 4
+#ifndef OUTPUT_FLAGS
+  #define OUTPUT_FLAGS OUTPUT_DEFAULT 
+#endif
 
 // Tracing levels
 #define TRACE_BASIC 1
@@ -62,7 +70,7 @@ const Time MINUTE_LENGTH = 60;
 #define CSV_DELIM ','
 
 #define DAYS_TO_SEED_INFECTION 10
-#if ENABLE_DEBUG == DEBUG_PER_INTERACTION
+#if OUTPUT_FLAGS & OUTPUT_OVERLAPS
   #define INITIAL_INFECTIONS_PER_DAY 0
 #else
   #define INITIAL_INFECTIONS_PER_DAY 2
