@@ -29,5 +29,7 @@ int getDay(Time timeInSeconds);
 std::string getScenarioId(Id numPeople, PartitionId numPeopleChares, Id numLocations,
   PartitionId numLocationChares);
 Id getFirstIndex(const loimos::proto::CSVDefinition *metadata, std::string inputPath);
+// Emulates C++17 std::filesystem::create_directory
+bool create_directory(std::string path, std::string referencePath);
 
 #endif  // READERS_PREPROCESS_H_

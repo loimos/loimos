@@ -263,3 +263,9 @@ Id getFirstIndex(const loimos::proto::CSVDefinition *metadata, std::string input
 
   return firstIdx;
 }
+
+bool create_directory(std::string path, std::string referencePath) {
+  struct stat referenceStat;
+  stat(referencePath.c_str(), &referenceStat);
+  mkdir(path.c_str(), referenceStat.st_mode);
+}

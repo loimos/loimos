@@ -63,6 +63,7 @@ mainmodule loimos {
   readonly int contactModelType;
   readonly int maxSimVisitsIdx;
   readonly int ageIdx;
+  readonly std::string outputPath;
 
   readonly Counter totalVisits;
   readonly Counter totalInteractions;

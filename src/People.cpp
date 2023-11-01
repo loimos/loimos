@@ -96,18 +96,21 @@ for (Person &p : people) {
       CkWallTimer() - startTime);
 #endif
 
-#if ENABLE_DEBUG == DEBUG_PER_EXPOSURE
-  exposuresFile = new std::ofstream(scenarioPath + "exposures_chare_"
+#if OUTPUT_FLAGS & OUTPUT_EXPOSURES
+  exposuresFile = new std::ofstream(outputPath + "exposures_chare_"
       + std::to_string(thisIndex) + ".csv");
-  transitionsFile = new std::ofstream(scenarioPath + "transitions_chare_"
-      + std::to_string(thisIndex) + ".csv");
-
   *exposuresFile << "tick,sus_pid,inf_pid,start_time,end_time,propensity"
-      << std::endl;
-  *transitionsFile << "tick,pid,exit_state,contact_pid,contact_start"
       << std::endl;
 #else
   exposuresFile = NULL;
+#endif
+
+#if OUTPUT_FLAGS & OUTPUT_TRANSITIONS
+  transitionsFile = new std::ofstream(outputPath + "transitions_chare_"
+      + std::to_string(thisIndex) + ".csv");
+  *transitionsFile << "tick,pid,exit_state,contact_pid,contact_start"
+      << std::endl;
+#else
   transitionsFile = NULL;
 #endif
 
@@ -588,7 +591,7 @@ void People::ProcessInteractions(Person *person) {
   uint numInteractions = static_cast<uint>(person->interactions.size());
   for (const Interaction &inter : person->interactions) {
     totalPropensity += inter.propensity;
-#if ENABLE_DEBUG == DEBUG_PER_EXPOSURE
+#if OUTPUT_FLAGS & OUTPUT_EXPOSURES
     // tick,sus_pid,inf_pid,start_time,end_time,propensity
     *exposuresFile << day << "," << person->getUniqueId() << ","
         << inter.infectiousIdx << "," << inter.startTime << ","
@@ -623,7 +626,7 @@ void People::ProcessInteractions(Person *person) {
       std::tie(person->next_state, std::ignore) =
         diseaseModel->transitionFromState(person->state, &generator);
 
-#if ENABLE_DEBUG == DEBUG_PER_EXPOSURE
+#if OUTPUT_FLAGS & OUTPUT_TRANSITIONS
       // tick,pid,exit_state,contact_pid,contact_start
       const Interaction &inter = person->interactions[interactionIdx];
       *transitionsFile << day << "," << person->getUniqueId() << ","
@@ -641,7 +644,7 @@ void People::UpdateDiseaseState(Person *person) {
   DiseaseState curState = person->state;
   DiseaseState nextState = person->next_state;
   if (person->secondsLeftInState <= 0) {
-#if ENABLE_DEBUG == DEBUG_PER_EXPOSURE
+#if OUTPUT_FLAGS & OUTPUT_TRANSITIONS
     // State transition information for initial infections is reported when
     // they're infected
     if (!diseaseModel->isSusceptible(person->state)) {

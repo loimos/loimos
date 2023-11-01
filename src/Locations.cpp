@@ -82,8 +82,8 @@ Locations::Locations(int seed, std::string scenarioPath) {
     }
   }
 
-#if ENABLE_DEBUG == DEBUG_PER_INTERACTION
-  interactionsFile = new std::ofstream(scenarioPath + "interactions_chare_"
+#if OUTPUT_FLAGS & OUTPUT_OVERLAPS
+  interactionsFile = new std::ofstream(outputPath + "interactions_chare_"
       + std::to_string(thisIndex) + ".csv");
 #else
   interactionsFile = NULL;
@@ -220,17 +220,17 @@ void Locations::ComputeInteractions() {
   contribute(sizeof(Counter), &numInteractions,
       CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), cb);
 
-  CkCallback cb2(CkReductionTarget(Main, ReceiveExposureDuration), mainProxy);
-#if ENABLE_DEBUG == DEBUG_PER_INTERACTION
-  contribute(sizeof(int64_t), &expectedExposureDuration,
-      CkReduction::sum_long, cb2);
-  // if (0 < expectedExposureDuration) {
-  //   CkPrintf("    Chare %d: "COUNTER_PRINT_TYPE"s expected duration\n",
-  //       thisIndex, expectedExposureDuration);
-  // }
-#else
-  contribute(sizeof(Counter), &exposureDuration, CkReduction::sum_double, cb2);
-#endif  // DEBUG_PER_INTERACTION
+//  CkCallback cb2(CkReductionTarget(Main, ReceiveExposureDuration), mainProxy);
+//#if ENABLE_DEBUG == DEBUG_PER_INTERACTION
+//  contribute(sizeof(int64_t), &expectedExposureDuration,
+//      CkReduction::sum_long, cb2);
+//   if (0 < expectedExposureDuration) {
+//     CkPrintf("    Chare %d: "COUNTER_PRINT_TYPE"s expected duration\n",
+//         thisIndex, expectedExposureDuration);
+//   }
+//#else
+//  contribute(sizeof(Counter), &exposureDuration, CkReduction::sum_double, cb2);
+//#endif  // DEBUG_PER_INTERACTION
 #endif
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
@@ -285,8 +285,11 @@ Counter Locations::processEvents(Location *loc) {
       // Remove the arrival event corresponding to this departure
       std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
       arrivals->pop_back();
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
-      duration += saveInteractions(*loc, event, interactionsFile);
+// #if ENABLE_DEBUG >= DEBUG_VERBOSE
+//       duration += saveInteractions(*loc, event, interactionsFile);
+// #endif
+#if OUTPUT_FLAGS & OUTPUT_OVERLAPS
+      saveInteractions(*loc, event, interactionsFile);
 #endif
 
 #if ENABLE_DEBUG >= DEBUG_PER_INTERACTION
@@ -302,7 +305,7 @@ Counter Locations::processEvents(Location *loc) {
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   double p = contactModel->getContactProbability(*loc);
   Counter total = static_cast<Counter>(p * numInteractions);
-  expectedExposureDuration += duration * p;
+  //expectedExposureDuration += duration * p;
 
 #if ENABLE_DEBUG == DEBUG_LOCATION_SUMMARY
   if (0 != numInteractions && -1 != maxSimVisitsIdx) {
@@ -319,7 +322,8 @@ Counter Locations::processEvents(Location *loc) {
 #endif  // DEBUG_VERBOSE
 }
 
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
+//#if ENABLE_DEBUG >= DEBUG_VERBOSE
+#if OUTPUT_FLAGS & OUTPUT_OVERLAPS
 Counter Locations::saveInteractions(const Location &loc,
     const Event &departure, std::ofstream *out) {
   Counter duration = 0;
@@ -352,7 +356,7 @@ Counter Locations::saveInteractions(const Location &loc,
   }
   return duration;
 }
-#endif  // DEBUG_VERBOSE
+#endif  // OUTPUT_OVERLAPS
 
 // Simple dispatch to the susceptible/infectious depature handlers
 inline void Locations::onDeparture(Location *loc, const Event& departure) {
