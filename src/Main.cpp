@@ -220,7 +220,7 @@ Main::Main(CkArgMsg* msg) {
       numLocationPartitions);
 
   outputPath = std::string(msg->argv[++argNum]);
-  
+
 #if ENABLE_DEBUG >= DEBUG_BASIC
   CkPrintf("Saving simulation output to %s\n", msg->argv[argNum]);
 #endif
@@ -250,7 +250,9 @@ Main::Main(CkArgMsg* msg) {
   if (outputPath.back() == '/') {
     outputPath.pop_back();
   }
+
   create_directory(outputPath, syntheticRun ? "." : scenarioPath);
+
   outputPath.push_back('/');
 #endif
 
