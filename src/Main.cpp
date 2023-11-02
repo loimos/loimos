@@ -244,7 +244,9 @@ Main::Main(CkArgMsg* msg) {
   if (outputPath.back() == '/') {
     outputPath.pop_back();
   }
+
   create_directory(outputPath, syntheticRun ? "." : scenarioPath);
+
   outputPath.push_back('/');
 #endif
 
