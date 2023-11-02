@@ -215,7 +215,7 @@ Main::Main(CkArgMsg* msg) {
   }
 
   outputPath = std::string(msg->argv[++argNum]);
-  
+
 #if ENABLE_DEBUG >= DEBUG_BASIC
   CkPrintf("Saving simulation output to %s\n", msg->argv[argNum]);
 #endif
@@ -350,6 +350,7 @@ Main::Main(CkArgMsg* msg) {
 #else
   seed = 0;
 #endif
+  CkPrintf("Running with random seed %d\n", seed);
 
   peopleArray = CProxy_People::ckNew(seed, scenarioPath, numPersonPartitions);
   locationsArray = CProxy_Locations::ckNew(seed, scenarioPath,
