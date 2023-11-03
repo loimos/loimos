@@ -69,6 +69,10 @@ OPTS     += -DUSE_HYPERCOMM
 INCLUDES += -I$(HYPERCOMM_HOME)/include
 endif
 
+ifdef ENABLE_AGGREGATE
+OPTS     += -DENABLE_AGGREGATE
+endif
+
 ifdef ENABLE_LB
 LIBS     += -balancer GreedyLB -balancer RefineLB
 endif

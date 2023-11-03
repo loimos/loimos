@@ -19,6 +19,9 @@ DECLS  = loimos.decl.h
 
 BIN   := loimos
 
+ifdef ENABLE_AGGREGATE
+BIN   :=$(BIN)-agg
+endif
 ifdef ENABLE_SMP
 BIN   :=$(BIN)-smp
 endif

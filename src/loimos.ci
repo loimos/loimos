@@ -12,19 +12,27 @@ mainmodule loimos {
   include "AggregatorParam.h";
 #endif // USE_HYPERCOMM
 
+#ifdef ENABLE_AGGREGATE
+  #define AGGREGATE [aggregate]
+#else
+  #define AGGREGATE
+#endif
+
   // Profiling/LB parameters (these are here because Defs.h depends on having
   // CBase_* classes defined, and these constants are only used in this file)
   #define PROFILING_START_DAY 7
-  #define PROFILING_END_DAY 10
-  #define PROFILING_INTERVAL 1
-  #define SHOULD_PROFILE(day) ((day) >= PROFILING_START_DAY &&\
-    (day) <= PROFILING_END_DAY && \
-    ((day) - PROFILING_START_DAY) % PROFILING_INTERVAL == 0)
+  #define PROFILING_END_DAY 8
+  #define SHOULD_PROFILE (day >= PROFILING_START_DAY &&\
+    day <= PROFILING_END_DAY)
+  //#define PROFILING_INTERVAL 1
+  //#define SHOULD_PROFILE(day) (day >= PROFILING_START_DAY &&\
+  //  day <= PROFILING_END_DAY && \
+  //  (day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0)
 
   #define LB_START_DAY 6
-  #define LB_INTERVAL 7
-  #define SHOULD_LB((day)) ((day) >= LB_START_DAY &&\
-    ((day) - LB_START_DAY) % LB_INTERVAL == 0)
+  #define LB_INTERVAL 8
+  #define SHOULD_LB(day) (day >= LB_START_DAY &&\
+    (day - LB_START_DAY) % LB_INTERVAL == 0)
 
 #ifdef USE_HYPERCOMM
   include "AggregatorParam.h";
@@ -102,16 +110,17 @@ mainmodule loimos {
         lastInfectiousCount = 0;
       }
 
-      for (day = 0; day < numDays
-#ifndef ENABLE_FORCE_FULL_RUN
-          // It's usually not helpful to keep running the simulation after the
-          // outbreak has died out
-          && (day < DAYS_TO_SEED_INFECTION || 0 != lastInfectiousCount)
-#endif
-          ; day++) {
+#ifdef ENABLE_FORCE_FULL_RUN
+      for (day = 0; day < numDays; day++) {
+#else
+      // It's usually not helpful to keep running the simulation after the
+      // outbreak has died out
+      for (day = 0; day < numDays \
+        && (day < DAYS_TO_SEED_INFECTION || 0 != lastInfectiousCount); day++) {
+#endif  // ENABLE_FORCE_FULL_RUN
         //serial{CkPrintf("  Starting iteration\n");}
 #ifdef ENABLE_TRACING
-          if (SHOULD_PROFILE(day) && !SHOULD_PROFILE(day - 1)){
+          if (day == PROFILING_START_DAY){
             serial{traceArray.traceOn();}
             when traceSwitchOn() {}
           }
@@ -120,7 +129,6 @@ mainmodule loimos {
           iterationStartTime = CkWallTimer();
 
           //CkPrintf("  Sending Visit Messages\n");
-          // try adding fflush
           stepStartTime = CkWallTimer();
           peopleArray.SendVisitMessages();
           CkStartQD(CkCallback(
@@ -139,7 +147,6 @@ mainmodule loimos {
             stepStartTime = CkWallTimer();
             locationsArray.ComputeInteractions();
             if (DAYS_TO_SEED_INFECTION > day) {
-              //CkPrintf("  Seeding Infections\n");
               SeedInfections();
             }
 
@@ -207,24 +214,19 @@ mainmodule loimos {
 #endif // ENABLE_LB
 
 #ifdef ENABLE_TRACING
-          if (SHOULD_PROFILE(day) && !SHOULD_PROFILE(day + 1)) {
-            serial{traceArray.traceOff();}
-            when traceSwitchOff(){
-              serial{traceArray.traceFlush();}
-            }
+        if (day == PROFILING_END_DAY) {
+          serial{traceArray.traceOff();}
+          when traceSwitchOff(){}
 
-          // Toggled by ENABLE_TRACING to group profiling code
+#if ENABLE_TRACING == TRACE_MEMORY
           serial{traceArray.reportMemoryUsage();}
           when printMemoryUsage(long usage) {
             serial {
               CkPrintf("Currently using %ld kb in total\n", usage);
             }
           }
+#endif
         }
-          if (SHOULD_PROFILE(day) {
-            serial{traceArray.traceFlush();}
-          }
-
 #endif // ENABLE_TRACING
       }
       serial {
@@ -281,7 +283,9 @@ mainmodule loimos {
 #ifdef ENABLE_TRACING
     entry [reductiontarget] void traceSwitchOn();
     entry [reductiontarget] void traceSwitchOff();
+#if ENABLE_TRACING == TRACE_MEMORY
     entry [reductiontarget] void printMemoryUsage(long usage);
+#endif
 #endif // ENABLE_TRACING
 #ifdef ENABLE_LB
     entry [reductiontarget] void instrumentSwitchOn();
@@ -297,7 +301,9 @@ mainmodule loimos {
     entry void traceOn();
     entry void traceOff();
     entry void traceFlush();
+#if ENABLE_TRACING == TRACE_MEMORY
     entry void reportMemoryUsage();
+#endif
 #endif // ENABLE_TRACING
 #ifdef ENABLE_LB
     entry void instrumentOn();
@@ -314,7 +320,7 @@ mainmodule loimos {
   array [1D] People {
     entry People(int seed, std::string scenarioPath);
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
-    entry void ReceiveInteractions(InteractionMessage);
+    entry AGGREGATE void ReceiveInteractions(InteractionMessage);
     entry void EndOfDayStateUpdate(); // contribute call to ReceiveInfectiousCount
     entry void SendStats(); // contribute call to ReceiveStats
     entry void ReceiveIntervention(int interventionIdx);
@@ -324,7 +330,7 @@ mainmodule loimos {
 
   array [1D] Locations {
     entry Locations(int seed, std::string scenarioPath);
-    entry void ReceiveVisitMessages(VisitMessage);
+    entry AGGREGATE void ReceiveVisitMessages(VisitMessage);
     entry void ComputeInteractions(); // calls ReceiveInteractions
     entry void ReceiveIntervention(int interventionIdx);
     entry void AtSync();
