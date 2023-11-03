@@ -19,9 +19,6 @@ DECLS  = loimos.decl.h
 
 BIN   := loimos
 
-ifdef ENABLE_AGGREGATE
-BIN   :=$(BIN)-agg
-endif
 ifdef ENABLE_SMP
 BIN   :=$(BIN)-smp
 endif
@@ -30,6 +27,9 @@ BIN   :=$(BIN)-prj
 endif
 ifdef ENABLE_LB
 BIN   :=$(BIN)-lb
+endif
+ifdef ENABLE_AGGREGATE
+BIN   :=$(BIN)-agg
 endif
 
 # Set the ENABLE_UNIT_TESTING environment variable to compile for unit testing
