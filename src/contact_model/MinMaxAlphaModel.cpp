@@ -23,6 +23,17 @@ const unsigned int ALPHA = 1000;
 
 MinMaxAlphaModel::MinMaxAlphaModel() {
   contactProbabilityIndex = -1;
+
+  if (-1 == maxSimVisitsIdx) {
+    CkAbort("Error: required attribute \"max_simultaneous_visits\" not present\n");
+  } else {
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
+    if (0 == CkMyNode()) {
+      CkPrintf("  Max sim visit count to be stored at index %d\n",
+          maxSimVisitsIdx);
+    }
+#endif
+  }
 }
 
 // Compute this location's contact probability and store it as an attribute

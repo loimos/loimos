@@ -9,9 +9,10 @@
 
 #include <cmath>
 #include <algorithm>
+#include <iterator>
 
 /**
- * Returns the number of elements that each chare will track at a minimum.
+ * Returns the number of elements that each chare will track at a maximum
  *
  * Args:
  *    Id numElements: The total number of objects of this type.
@@ -20,6 +21,24 @@
  */
 Id getNumElementsPerPartition(Id numElements, PartitionId numPartitions) {
   return static_cast<Id>(ceil(1.0 * numElements / numPartitions));
+}
+
+/**
+ * Returns the number of chares that will which will have the maximum number
+ * of elements (as returned by getNumElementsPerPartition). All other chares
+ * will have one less element.
+ *
+ * Args:
+ *    Id numElements: The total number of objects of this type.
+ *    Id numPartitions: The total number of chares.
+ *
+ */
+PartitionId getNumLargerPartitions(Id numElements, PartitionId numPartitions) {
+  Id numLargerPartitions = numElements % numPartitions;
+  if (0 == numLargerPartitions) {
+    numLargerPartitions = numPartitions;
+  }
+  return numLargerPartitions;
 }
 
 /**
@@ -32,15 +51,26 @@ Id getNumElementsPerPartition(Id numElements, PartitionId numPartitions) {
  *    Id offset: The globalIndex number referring to the first object. Likely
  *      could be replaced with a better system.
  *
- * Notes: Will likely change as we Idroduce active load balancing.
+ * Notes: Will likely change as we introduce active load balancing.
  */
 PartitionId getPartitionIndex(Id globalIndex, Id numElements,
     PartitionId numPartitions, Id offset) {
-  Id partitionIndex = (globalIndex - offset)
-    / getNumElementsPerPartition(numElements, numPartitions);
-  if (partitionIndex >= numPartitions)
-    return (numPartitions - 1);
-  return partitionIndex;
+  globalIndex -= offset;
+
+  Id elementsPerPartition = getNumElementsPerPartition(numElements,
+      numPartitions);
+
+  Id numLargerPartitions = getNumLargerPartitions(numElements, numPartitions);
+  Id numElementsInLargerPartitions =
+    numLargerPartitions * elementsPerPartition;
+
+  if (globalIndex < numElementsInLargerPartitions) {
+    return globalIndex / elementsPerPartition;
+  } else {
+    return numLargerPartitions - 1
+      + (globalIndex - numElementsInLargerPartitions)
+      / (elementsPerPartition - 1);
+  }
 }
 
 /**
@@ -58,7 +88,15 @@ Id getFirstIndex(PartitionId partitionIndex, Id numElements,
     PartitionId numPartitions, Id offset) {
   Id elementsPerPartition = getNumElementsPerPartition(numElements,
       numPartitions);
-  return partitionIndex * elementsPerPartition + offset;
+  Id maxIndex = partitionIndex * elementsPerPartition + offset;
+
+  PartitionId numLargerPartitions = getNumLargerPartitions(numElements,
+      numPartitions);
+  if (partitionIndex < numLargerPartitions) {
+    return maxIndex;
+  } else {
+    return maxIndex - (partitionIndex - numLargerPartitions);
+  }
 }
 
 /**
@@ -74,12 +112,12 @@ Id getNumLocalElements(Id numElements, PartitionId numPartitions,
     PartitionId partitionIndex) {
   Id elementsPerPartition = getNumElementsPerPartition(numElements,
       numPartitions);
-  Id firstIndex = getFirstIndex(partitionIndex, numElements, numPartitions,
-      0);
-  if (firstIndex >= numElements) {
-    return 0;
+  Id numLargerPartitions = numElements % numPartitions;
+  if (partitionIndex < numLargerPartitions) {
+    return elementsPerPartition;
+  } else {
+    return elementsPerPartition - 1;
   }
-  return std::min(elementsPerPartition, numElements - firstIndex);
 }
 
 /**
@@ -122,4 +160,32 @@ Id getLocalIndex(Id globalIndex, PartitionId partitionIndex, Id numElements,
   Id firstLocalIndex = getFirstIndex(partitionIndex, numElements,
       numPartitions, offset);
   return globalIndex - firstLocalIndex;
+}
+
+Id getLocalIndex(Id globalIndex, PartitionId PartitionId,
+    const std::vector<Id> &offsets) {
+  return globalIndex - offsets[PartitionId];
+}
+
+Id getGlobalIndex(Id localIndex, PartitionId PartitionId,
+    const std::vector<Id> &offsets) {
+  return localIndex + offsets[PartitionId];
+}
+
+PartitionId getPartition(Id globalIndex,
+    const std::vector<Id> &offsets) {
+  PartitionId result = std::distance(offsets.begin(),
+    std::upper_bound(offsets.begin(), offsets.end(), globalIndex)) - 1;
+  // CkPrintf("    Index "ID_PRINT_TYPE" in partition %d\n",
+  //   globalIndex, result);
+  return result;
+}
+
+Id getPartitionSize(PartitionId partitionIndex,
+    Id numObjects, const std::vector<Id> &offsets) {
+  if (offsets.size() - 1 == partitionIndex) {
+    return numObjects + offsets[0] - offsets[partitionIndex];
+  } else {
+    return offsets[partitionIndex + 1] - offsets[partitionIndex];
+  }
 }

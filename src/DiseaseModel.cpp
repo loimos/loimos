@@ -20,6 +20,7 @@
 #include "Event.h"
 #include "Person.h"
 #include "Location.h"
+#include "readers/Preprocess.h"
 #include "readers/DataReader.h"
 #include "readers/AttributeTable.h"
 #include "contact_model/ContactModel.h"
@@ -30,6 +31,7 @@
 #include "protobuf/interventions.pb.h"
 #include "protobuf/disease.pb.h"
 #include "protobuf/distribution.pb.h"
+#include "protobuf/data.pb.h"
 
 #include <cmath>
 #include <cstdio>
@@ -54,104 +56,67 @@
  */
 DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
     std::string pathToIntervention) {
-  // Load in text proto definition.
-  // TODO(iancostello): Load directly without string.
-
   // Load Disease model
   model = new loimos::proto::DiseaseModel();
-  std::ifstream diseaseModelStream(pathToModel);
-  if (!diseaseModelStream) {
-    CkAbort("Could not read disease model at %s.", pathToModel.c_str());
-  }
-  std::string str((std::istreambuf_iterator<char>(diseaseModelStream)),
-      std::istreambuf_iterator<char>());
-  if (!google::protobuf::TextFormat::ParseFromString(str, model)) {
-    CkAbort("Could not parse protobuf!");
-  }
-  diseaseModelStream.close();
+  readProtobuf(pathToModel, model);
   assert(model->disease_states_size() != 0);
 
   // Setup other shared PE objects.
+  personDef = NULL;
+  locationDef = NULL;
+  Id firstPersonIdx = 0;
+  Id firstLocationIdx = 0;
   if (!syntheticRun) {
     // Handle people...
-    personDef = new loimos::proto::CSVDefinition();
-    std::ifstream personInputStream(scenarioPath + "people.textproto");
-    if (!personInputStream)
-      CkAbort("Could not open people textproto!");
-    std::string strPerson((std::istreambuf_iterator<char>(personInputStream)),
-                    std::istreambuf_iterator<char>());
-    if (!google::protobuf::TextFormat::ParseFromString(strPerson, personDef)) {
-      CkAbort("Could not parse person protobuf!");
-    }
-    personInputStream.close();
-    ageIdx = DataReader<>::getAttributeIndex(personDef, "age");
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
-    if (0 == CkMyNode()) {
-    CkPrintf("  Age to be stored at index %d\n",
-        ageIdx);
-    }
-#endif
+    personDef = new loimos::proto::CSVDefinition;
+    readProtobuf(scenarioPath + "people.textproto", personDef);
+    firstPersonIdx = getFirstIndex(personDef, scenarioPath + "people.csv");
 
     // ...locations...
-    locationDef = new loimos::proto::CSVDefinition();
-    std::ifstream locationInputStream(scenarioPath + "locations.textproto");
-    if (!locationInputStream)
-      CkAbort("Could not open location textproto!");
-    std::string strLocation((std::istreambuf_iterator<char>(
-            locationInputStream)),
-                    std::istreambuf_iterator<char>());
-    if (!google::protobuf::TextFormat::ParseFromString(strLocation,
-          locationDef)) {
-      CkAbort("Could not parse location protobuf!");
-    }
-    locationInputStream.close();
-
-    if (static_cast<int>(ContactModelType::min_max_alpha) == contactModelType) {
-      maxSimVisitsIdx = DataReader<>::getAttributeIndex(locationDef,
-          "max_simultaneous_visits");
-      if (-1 == maxSimVisitsIdx) {
-        CkAbort("Error: required attribute \"max_simultaneous_visits\" not present\n");
-      } else {
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
-        if (0 == CkMyNode()) {
-          CkPrintf("  Max sim visit count to be stored at index %d\n",
-              maxSimVisitsIdx);
-        }
-#endif
-      }
-    }
+    locationDef = new loimos::proto::CSVDefinition;
+    readProtobuf(scenarioPath + "locations.textproto", locationDef);
+    firstLocationIdx = getFirstIndex(locationDef, scenarioPath + "locations.csv");
 
     // ...and visits
-    activityDef = new loimos::proto::CSVDefinition();
-    std::ifstream activityInputStream(scenarioPath + "visits.textproto");
-    if (!activityInputStream)
-      CkAbort("Could not open activity textproto!");
-    std::string strActivity((std::istreambuf_iterator<char>(
-            activityInputStream)),
-                    std::istreambuf_iterator<char>());
-    if (!google::protobuf::TextFormat::ParseFromString(strActivity,
-          activityDef)) {
-      CkAbort("Could not parse activity protobuf!");
-    }
-    activityInputStream.close();
+    activityDef = new loimos::proto::CSVDefinition;
+    readProtobuf(scenarioPath + "visits.textproto", activityDef);
 
     personAttributes.readAttributes(personDef->fields());
     locationAttributes.readAttributes(locationDef->fields());
   }
 
+  if (0 == CkMyNode()) {
+    CkPrintf("People offsets:\n");
+  }
+  setPartitionOffsets(numPersonPartitions, numPeople, firstPersonIdx,
+    personDef, &personPartitionOffsets);
+  if (0 == CkMyNode()) {
+    CkPrintf("Location offsets:\n");
+  }
+  setPartitionOffsets(numLocationPartitions, numLocations, firstLocationIdx,
+    locationDef, &locationPartitionOffsets);
+
+// #if ENABLE_DEBUG >= DEBUG_PER_CAHRE
+//   if (0 == CkMyNode()) {
+//     for (int i = 0; i < personPartitionOffsets.size(); ++i) {
+//       CkPrintf("  Person Offset %d: "ID_PRINT_TYPE"\n",
+//         i, personPartitionOffsets[i]);
+//     }
+//     for (int i = 0; i < locationPartitionOffsets.size(); ++i) {
+//       CkPrintf("  Location Offset %d: "ID_PRINT_TYPE"\n",
+//         i, locationPartitionOffsets[i]);
+//     }
+//   }
+// #endif
+
+  if (!syntheticRun && 0 == CkMyNode()) {
+    buildCache(scenarioPath, numPeople, personPartitionOffsets,
+      numLocations, locationPartitionOffsets, numDaysWithDistinctVisits);
+  }
+
   if (interventionStategy) {
     interventionDef = new loimos::proto::InterventionModel();
-    std::ifstream interventionActivityStream(pathToIntervention);
-    if (!interventionActivityStream)
-      CkAbort("Could not open intervention textproto!");
-    std::string interventionString((std::istreambuf_iterator<char>(
-            interventionActivityStream)),
-                    std::istreambuf_iterator<char>());
-    if (!google::protobuf::TextFormat::ParseFromString(interventionString,
-          interventionDef)) {
-      CkAbort("Could not parse protobuf!");
-    }
-    interventionActivityStream.close();
+    readProtobuf(pathToIntervention, interventionDef);
 
     triggerFlags.resize(interventionDef->triggers_size(), false);
 
@@ -165,8 +130,110 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
         locationAttributes);
   }
 
+  // Some attributes are priviledged and handled in unique ways
   susceptibilityIndex = personAttributes.getAttributeIndex("susceptibility");
   infectivityIndex = personAttributes.getAttributeIndex("infectivity");
+  ageIdx = personAttributes.getAttributeIndex("age");
+  maxSimVisitsIdx = locationAttributes.getAttributeIndex("max_simultaneous_visits");
+
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
+    if (0 == CkMyNode()) {
+    CkPrintf("  Age to be stored at index %d\n",
+        ageIdx);
+    }
+#endif
+}
+
+void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
+    Id firstIndex, loimos::proto::CSVDefinition *metadata,
+    std::vector<Id> *partitionOffsets) {
+  partitionOffsets->reserve(numPartitions);
+  Id lastIndex = firstIndex + numObjects;
+
+  if (NULL != metadata && 0 < metadata->partition_offsets_size()) {
+    PartitionId numOffsets = metadata->partition_offsets_size();
+    for (PartitionId i = 0; i < numPartitions; ++i) {
+      PartitionId offsetIdx = getFirstIndex(i, numOffsets, numPartitions, 0);
+      Id offset = metadata->partition_offsets(offsetIdx);
+      partitionOffsets->emplace_back(offset);
+
+#ifdef ENABLE_DEBUG
+      if (outOfBounds(firstIndex, lastIndex, offset)) {
+        CkAbort("Error: Offset "ID_PRINT_TYPE" outside of valid range [0,"
+          ID_PRINT_TYPE")\n", offset, numObjects);
+
+      // Offsets should be sorted so we can do a binary search later
+      } else if (0 != i && partitionOffsets->at(i - 1) > offset) {
+        CkAbort("Error: Offset "ID_PRINT_TYPE" (%d-th offset) for chare "
+        PARTITION_ID_PRINT_TYPE" out of order\n", offset, offsetIdx, i);
+      }
+      // else if (0 == CkMyNode()) {
+      //   CkPrintf("  Chare %d: offset "ID_PRINT_TYPE" (provided)\n",
+      //       i, offset);
+      // }
+#endif  // ENABLE_DEBUG
+    }
+
+  // If no offsets are provided, try to put about the same number of objects
+  // in each partition (i.e. use the old partitioning scheme)
+  } else {
+    for (PartitionId p = 0; p < numPartitions; ++p) {
+      Id offset = getFirstIndex(p, numObjects,
+          numPartitions, firstIndex);
+      partitionOffsets->emplace_back(offset);
+
+#ifdef ENABLE_DEBUG
+      if (outOfBounds(firstIndex, lastIndex, offset)) {
+        CkAbort("Error: Offset "ID_PRINT_TYPE" outside of valid range [0,"
+          ID_PRINT_TYPE")\n", offset, numObjects);
+      }
+      // else if (0 == CkMyNode()) {
+      //   CkPrintf("  Chare %d: offset "ID_PRINT_TYPE" (default)\n",
+      //       p, offset);
+      // }
+#endif  // ENABLE_DEBUG
+    }
+  }
+}
+
+Id DiseaseModel::getLocalLocationIndex(Id globalIndex, PartitionId PartitionId) const {
+  return getLocalIndex(globalIndex, PartitionId, locationPartitionOffsets);
+}
+
+Id DiseaseModel::getGlobalLocationIndex(Id localIndex, PartitionId PartitionId) const {
+  return getGlobalIndex(localIndex, PartitionId, locationPartitionOffsets);
+}
+
+CacheOffset DiseaseModel::getPersonCacheIndex(Id globalIndex) const {
+  return getLocalIndex(globalIndex, 0, locationPartitionOffsets);
+}
+
+PartitionId DiseaseModel::getLocationPartitionIndex(Id globalIndex) const {
+  return getPartition(globalIndex, locationPartitionOffsets);
+}
+
+Id DiseaseModel::getLocationPartitionSize(PartitionId partitionIndex) const {
+  return getPartitionSize(partitionIndex, numLocations, locationPartitionOffsets);
+}
+
+Id DiseaseModel::getLocalPersonIndex(Id globalIndex, PartitionId partitionIndex) const {
+  return getLocalIndex(globalIndex, partitionIndex, personPartitionOffsets);
+}
+
+Id DiseaseModel::getGlobalPersonIndex(Id localIndex, PartitionId partitionIndex) const {
+  return getGlobalIndex(localIndex, partitionIndex, personPartitionOffsets);
+}
+
+CacheOffset DiseaseModel::getLocationCacheIndex(Id globalIndex) const {
+  return getLocalIndex(globalIndex, 0, personPartitionOffsets);
+}
+
+PartitionId DiseaseModel::getPersonPartitionIndex(Id globalIndex) const {
+  return getPartition(globalIndex, personPartitionOffsets);
+}
+
+Id DiseaseModel::getPersonPartitionSize(PartitionId partitionIndex) const {
+  return getPartitionSize(partitionIndex, numPeople, personPartitionOffsets);
 }
 
 void DiseaseModel::intitialisePersonInterventions(
@@ -423,14 +490,13 @@ double DiseaseModel::getPropensity(DiseaseState susceptibleState,
   // them all to one)
   return model->transmissibility() * dt * susceptibility * infectivity
     * model->disease_states(susceptibleState).susceptibility()
-    * model->disease_states(infectiousState).infectivity();
+    * model->disease_states(infectiousState).infectivity() / DAY_LENGTH;
 }
 
 /**
  * Intervention Methods
  * TODO: Move to own chare as these become more complex.
  */
-
 
 const Intervention<Person> & DiseaseModel::getPersonIntervention(int index)
   const {

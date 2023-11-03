@@ -31,27 +31,30 @@
 std::uniform_real_distribution<> Locations::unitDistrib(0.0, 1.0);
 
 Locations::Locations(int seed, std::string scenarioPath) {
+  diseaseModel = globDiseaseModel.ckLocalBranch();
   day = 0;
 
   // Must be set to true to make AtSync work
   usesAtSync = true;
 
   // Getting number of locations assigned to this chare
-  numLocalLocations = getNumLocalElements(
-    numLocations,
-    numLocationPartitions,
-    thisIndex);
+  numLocalLocations = diseaseModel->getLocationPartitionSize(thisIndex);
+  firstLocalLocationIdx = diseaseModel->getGlobalLocationIndex(0, thisIndex);
 
-  firstLocalLocationIdx = getFirstIndex(thisIndex, numLocations,
-      numLocationPartitions, firstLocationIdx);
+#ifdef ENABLE_DEBUG
+  Id firstLocationIdx = diseaseModel->getGlobalLocationIndex(0, 0);
+  Id lastLocationIdx = firstLocationIdx + numLocations;
+  if (outOfBounds(firstLocationIdx, lastLocationIdx, firstLocalLocationIdx)) {
+    CkAbort("Error on chare %d: first location index ("
+      ID_PRINT_TYPE") out of bounds ["ID_PRINT_TYPE", "ID_PRINT_TYPE")",
+      thisIndex, firstLocalLocationIdx, firstLocationIdx, lastLocationIdx);
+  }
+#endif
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
   CkPrintf("  Chare %d has %d locs (%d-%d)\n",
       thisIndex, numLocalLocations, firstLocalLocationIdx,
       firstLocalLocationIdx + numLocalLocations - 1);
 #endif
-
-  // Init disease states
-  diseaseModel = globDiseaseModel.ckLocalBranch();
 
   // Seed random number generator via branch ID for reproducibility
   generator.seed(seed + thisIndex);
@@ -62,11 +65,9 @@ Locations::Locations(int seed, std::string scenarioPath) {
 
   int numInterventions = diseaseModel->getNumLocationInterventions();
   locations.reserve(numLocalLocations);
-  Id firstIdx = thisIndex * getNumElementsPerPartition(numLocations,
-      numLocationPartitions);
-  for (int p = 0; p < numLocalLocations; p++) {
+  for (int i = 0; i < numLocalLocations; i++) {
     locations.emplace_back(diseaseModel->locationAttributes,
-      numInterventions, firstIdx + p);
+      numInterventions, firstLocalLocationIdx + i);
   }
 
   // Load application data
@@ -89,9 +90,9 @@ Locations::Locations(int seed, std::string scenarioPath) {
 #endif
 
   // Notify Main
-  #ifdef USE_HYPERCOMM
+#ifdef USE_HYPERCOMM
   contribute(CkCallback(CkReductionTarget(Main, CharesCreated), mainProxy));
-  #endif
+#endif
 }
 
 Locations::Locations(CkMigrateMessage *msg) {}
@@ -99,17 +100,7 @@ Locations::Locations(CkMigrateMessage *msg) {}
 void Locations::loadLocationData(std::string scenarioPath) {
   double startTime = CkWallTimer();
 
-  // Init local.
-  int numAttributesPerLocation =
-    DataReader<Person>::getNonZeroAttributes(diseaseModel->locationDef);
-
-  // Load in location information.
-  Id startingLineIndex = getGlobalIndex(0, thisIndex, numLocations,
-    numLocationPartitions, firstLocationIdx) - firstLocationIdx;
-  Id endingLineIndex = startingLineIndex + numLocalLocations;
-  std::string line;
-
-  std::string scenarioId = getScenarioId(numPeople, numPeoplePartitions,
+  std::string scenarioId = getScenarioId(numPeople, numPersonPartitions,
     numLocations, numLocationPartitions);
   std::ifstream locationData(scenarioPath + "locations.csv");
   std::ifstream locationCache(scenarioPath + scenarioId
@@ -125,8 +116,8 @@ void Locations::loadLocationData(std::string scenarioPath) {
   locationData.seekg(locationOffset);
 
   // Read in our location data.
-  DataReader<Location>::readData(&locationData, diseaseModel->locationDef,
-      &locations);
+  readData(&locationData, diseaseModel->locationDef,
+      &locations, numLocations);
   locationData.close();
   locationCache.close();
 
@@ -156,24 +147,30 @@ void Locations::pup(PUP::er &p) {
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   // adding person to location visit list
-  Id localLocIdx = getLocalIndex(visitMsg.locationIdx, thisIndex,
-    numLocations, numLocationPartitions, firstLocationIdx);
-
-  // Interventions might cause us to reject some visits
-  if (!locations[localLocIdx].acceptsVisit(visitMsg)) {
-    return;
-  }
+  Id localLocIdx = diseaseModel->getLocalLocationIndex(
+    visitMsg.locationIdx, thisIndex);
 
 #ifdef ENABLE_DEBUG
+  if (outOfBounds(0l, numLocalLocations, localLocIdx)) {
+    CkAbort("Error on chare %d: recieved visit to location ("
+      ID_PRINT_TYPE" loc, "ID_PRINT_TYPE" glob) outside of valid range [0, "
+      ID_PRINT_TYPE") loc\n", thisIndex, localLocIdx, visitMsg.locationIdx,
+      numLocalLocations);
+  }
   Id trueIdx = locations[localLocIdx].getUniqueId();
   if (visitMsg.locationIdx != trueIdx) {
-    CkPrintf("Error on chare %d: Visit by person "ID_PRINT_TYPE
+    CkAbort("Error on chare %d: Visit by person "ID_PRINT_TYPE
         " to loc "ID_PRINT_TYPE" recieved by "
         "loc "ID_PRINT_TYPE" (local "ID_PRINT_TYPE")\n",
         thisIndex, visitMsg.personIdx, visitMsg.locationIdx, trueIdx,
         localLocIdx);
   }
 #endif
+
+  // Interventions might cause us to reject some visits
+  if (!locations[localLocIdx].acceptsVisit(visitMsg)) {
+    return;
+  }
 
   // CkPrintf("    Chare %d: Person %d visiting loc %d from %d to %d\n",
   //   thisIndex, visitMsg.personIdx, visitMsg.locationIdx,
@@ -187,16 +184,21 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
     visitMsg.transmissionModifier, visitMsg.visitEnd };
   Event::pair(&arrival, &departure);
 
+#ifdef ENABLE_DEBUG
+  if (arrival.scheduledTime > departure.scheduledTime) {
+    CkAbort("Error on chare %d: visit by "ID_PRINT_TYPE" to loc "ID_PRINT_TYPE"\n"
+      "has departure (%d) before arrival (%d)\n",
+      thisIndex, visitMsg.personIdx, trueIdx, arrival.scheduledTime,
+      departure.scheduledTime);
+  }
+#endif
+
   // ...and queue it up at the appropriate location
   locations[localLocIdx].addEvent(arrival);
   locations[localLocIdx].addEvent(departure);
 }
 
 void Locations::ComputeInteractions() {
-  Id firstLocalIndex = getFirstIndex(thisIndex, numLocations,
-    numLocationPartitions, firstLocationIdx);
-
-  // traverses list of locations
   Counter numVisits = 0;
   Counter numInteractions = 0;
   for (Location &loc : locations) {
@@ -230,24 +232,23 @@ void Locations::ComputeInteractions() {
 
 Counter Locations::processEvents(Location *loc) {
   std::vector<Event> *arrivals;
-  #if ENABLE_DEBUG >= DEBUG_VERBOSE
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
   Counter numInteractions = 0;
   Counter numPresent = 0;
   Counter numVisits = loc->events.size() / 2;
   double startTime = CkWallTimer();
-  #endif
+#endif
 
   std::sort(loc->events.begin(), loc->events.end());
   for (const Event &event : loc->events) {
-    #if ENABLE_DEBUG >= DEBUG_VERBOSE
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
     if (ARRIVAL == event.type) {
       numPresent++;
     } else {
       numPresent--;
       numInteractions += numPresent;
-      saveInteractions(*loc, event, interactionsFile);
     }
-    #endif
+#endif
 
     if (diseaseModel->isSusceptible(event.personState)) {
       arrivals = &susceptibleArrivals;
@@ -270,29 +271,33 @@ Counter Locations::processEvents(Location *loc) {
       std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
       arrivals->pop_back();
 
+#if ENABLE_DEBUG == DEBUG_PER_INTERACTION
+      saveInteractions(*loc, event, interactionsFile);
+#endif
+
       onDeparture(loc, event);
     }
   }
   loc->events.clear();
   interactions.clear();
 
-  #if ENABLE_DEBUG >= DEBUG_VERBOSE
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
   double p = contactModel->getContactProbability(*loc);
   Counter total = static_cast<Counter>(p * numInteractions);
 
-  #if ENABLE_DEBUG == DEBUG_LOCATION_SUMMARY
-  if (0 != numInteractions) {
+#if ENABLE_DEBUG == DEBUG_LOCATION_SUMMARY
+  if (0 != numInteractions && -1 != maxSimVisitsIdx) {
     double elapsedTime = CkWallTimer() - startTime;
     CkPrintf("      %d,%d,%f,"COUNTER_PRINT_TYPE","COUNTER_PRINT_TYPE","
         COUNTER_PRINT_TYPE",%f\n",
-        loc->getUniqueId(), loc->getValue(maxSimVisitsIdx).int_b10,
+        loc->getUniqueId(), loc->getValue(maxSimVisitsIdx).int32_val,
         p, numInteractions, total, numVisits, elapsedTime);
   }
-  #endif  // DEBUG_LOCATION_SUMMARY
+#endif  // DEBUG_LOCATION_SUMMARY
   return total;
-  #else
+#else
   return 0;
-  #endif  // DEBUG_VERBOSE
+#endif  // DEBUG_VERBOSE
 }
 
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
@@ -344,7 +349,7 @@ void Locations::onSusceptibleDeparture(Location *loc,
       // The start time is whichever arrival happened later
       std::max(infectiousArrival.scheduledTime,
         susceptibleDeparture.partnerTime),
-      susceptibleDeparture.scheduledTime);
+        susceptibleDeparture.scheduledTime);
   }
 
   sendInteractions(loc, susceptibleDeparture.personIdx);
@@ -385,27 +390,34 @@ inline void Locations::registerInteraction(Location *loc,
 // specified person to the appropriate People chare
 inline void Locations::sendInteractions(Location *loc,
     Id personIdx) {
-  PartitionId peoplePartitionIdx = getPartitionIndex(personIdx,
-    numPeople, numPeoplePartitions, firstPersonIdx);
+  PartitionId personPartition = diseaseModel->getPersonPartitionIndex(personIdx);
+#ifdef ENABLE_DEBUG
+  if (outOfBounds(0, numPersonPartitions, personPartition)) {
+    CkAbort("Error on chare %d: sending exposures at "
+      ID_PRINT_TYPE" to person "ID_PRINT_TYPE" on chare "
+      PARTITION_ID_PRINT_TYPE" outside of valid range [0, "
+      PARTITION_ID_PRINT_TYPE")\n", thisIndex, loc->getUniqueId(),
+      personIdx, personPartition, numPersonPartitions);
+  }
+#endif
 
   InteractionMessage interMsg(loc->getUniqueId(), personIdx,
       interactions[personIdx]);
-  #ifdef USE_HYPERCOMM
-  Aggregator* agg = aggregatorProxy.ckLocalBranch();
+#ifdef USE_HYPERCOMM
+  Aggregator *agg = aggregatorProxy.ckLocalBranch();
   if (agg->interact_aggregator) {
-    agg->interact_aggregator->send(peopleArray[peoplePartitionIdx], interMsg);
-  } else {
-  #endif  // USE_HYPERCOMM
-    peopleArray[peoplePartitionIdx].ReceiveInteractions(interMsg);
-  #ifdef USE_HYPERCOMM
+    agg->interact_aggregator->send(peopleArray[personPartition], interMsg);
+    continue;
   }
-  #endif  // USE_HYPERCOMM
+#endif  // USE_HYPERCOMM
+
+  peopleArray[personPartition].ReceiveInteractions(interMsg);
 
   // CkPrintf(
   //   "    Sending %d interactions to person %d in partition %d\r\n",
   //   (int) interactions[personIdx].size(),
   //   personIdx,
-  //   peoplePartitionIdx
+  //   personPartition
   // );
 
   // Free up space where we were storing interactions data. This also prevents

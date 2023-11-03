@@ -1,7 +1,6 @@
 #!/usr/bin/bash
 
 #SBATCH -N 1
-#SBATCH --exclusive
 #SBATCH -A nssac_students
 #SBATCH -p bii
 #SBATCH -t 60

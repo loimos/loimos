@@ -6,6 +6,8 @@
 
 #include "loimos.decl.h"
 #include "Event.h"
+#include "Defs.h"
+#include "Types.h"
 
 // This is just so that we can order Events in the Location queues
 bool Event::operator<(const Event& rhs) const {
@@ -52,7 +54,7 @@ bool Event::greaterPartner(const Event &e0, const Event &e1) {
 }
 
 bool Event::overlap(const Event &e0, const Event &e1) {
-  int start0, end0, start1, end1;
+  Time start0, end0, start1, end1;
   if (ARRIVAL == e0.type) {
     start0 = e0.scheduledTime;
     end0 = e0.partnerTime;

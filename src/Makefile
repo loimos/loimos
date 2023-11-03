@@ -9,6 +9,7 @@ include Makefile.include
 OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o  \
          Defs.o Event.o readers/Preprocess.o \
 				 readers/DataInterface.o readers/AttributeTable.o \
+				 readers/DataReader.o \
 				 contact_model/MinMaxAlphaModel.o contact_model/ContactModel.o \
 				 intervention_model/VaccinationIntervention.o \
          protobuf/disease.pb.o protobuf/distribution.pb.o \
@@ -88,7 +89,7 @@ clean:
 	done
 
 # All test names start with "test-"
-TEST_NAMES= -small -syn -large -validation -intervention -intervention-syn
+TEST_NAMES= -small -syn -large -validation -intervention -intervention-syn -utopia
 TESTS=$(subst -,test-,$(TEST_NAMES))
 
 # Run all tests with test rule

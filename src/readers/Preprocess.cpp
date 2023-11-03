@@ -16,6 +16,9 @@
 #include "DataReader.h"
 #include "../Defs.h"
 #include "../Extern.h"
+#include "../Location.h"
+#include "../Person.h"
+#include "../protobuf/data.pb.h"
 #include "charm++.h"
 
 #include <string>
@@ -24,7 +27,9 @@
 #include <vector>
 #include <tuple>
 #include <sstream>
+#include <sys/stat.h>
 #include <google/protobuf/text_format.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
 
 #define MAX_WRITE_SIZE 65536  // 2^16
 
@@ -33,25 +38,32 @@
  */
 // TODO(IanCostello): Replace getline with function that doesn't need to copy to
 //                    string object in subfunctions.
-std::tuple<Id, Id, std::string> buildCache(std::string scenarioPath, Id numPeople,
-    int numPeopleChares, Id numLocations, int numLocationChares, int numDays) {
+std::string buildCache(std::string scenarioPath,
+    Id numPeople, const std::vector<Id> &personPartitionOffsets,
+    Id numLocations, const std::vector<Id> &locationPartitionOffsets, int numDays) {
+  PartitionId numPeopleChares = personPartitionOffsets.size();
+  PartitionId numLocationChares = locationPartitionOffsets.size();
+
+  // We need to uniquely identify this run configuration
   std::string uniqueScenario = getScenarioId(numPeople, numPeopleChares,
       numLocations, numLocationChares);
+  CkPrintf("  Running with scenario id: %s\n", uniqueScenario.c_str());
+
   // Build person and location cache.
-  Id firstPersonIdx = buildObjectLookupCache(scenarioPath + "people.csv",
-    scenarioPath + uniqueScenario + "_people.cache", numPeople, numPeopleChares,
-    scenarioPath + "people.textproto");
-  Id firstLocationIdx = buildObjectLookupCache(scenarioPath + "locations.csv",
-    scenarioPath + uniqueScenario + "_locations.cache", numLocations,
-    numLocationChares, scenarioPath + "locations.textproto");
-  buildActivityCache(scenarioPath + "visits.csv",
-    scenarioPath + uniqueScenario + "_visits.cache", numPeople, numDays,
-    firstPersonIdx, scenarioPath + "visits.textproto");
-  return std::make_tuple(firstPersonIdx, firstLocationIdx, uniqueScenario);
+  buildObjectLookupCache(numPeople, personPartitionOffsets,
+    scenarioPath + "people.textproto", scenarioPath + "people.csv",
+    scenarioPath + uniqueScenario + "_people.cache");
+  buildObjectLookupCache(numLocations,
+    locationPartitionOffsets, scenarioPath + "locations.textproto",
+    scenarioPath + "locations.csv", scenarioPath + uniqueScenario + "_locations.cache");
+  buildActivityCache(numPeople, numDays, personPartitionOffsets[0],
+    scenarioPath + "visits.textproto", scenarioPath + "visits.csv",
+    scenarioPath + uniqueScenario + "_visits.cache");
+  return uniqueScenario;
 }
 
-Id buildObjectLookupCache(std::string inputPath, std::string outputPath,
-    Id numObjs, int numChares, std::string pathToCsvDefinition) {
+void buildObjectLookupCache(Id numObjs, const std::vector<Id> &offsets,
+  std::string metadataPath, std::string inputPath, std::string outputPath) {
   /**
    * Assumptions: (about person file)
    * -- Contigious block of IDs that are sorted.
@@ -64,17 +76,10 @@ Id buildObjectLookupCache(std::string inputPath, std::string outputPath,
    */
   // Open activity stream..
   std::ifstream activityStream(inputPath, std::ios_base::binary);
-  Id objPerChare = getNumElementsPerPartition(numObjs, numChares);
 
   // Read config file.
   loimos::proto::CSVDefinition csvDefinition;
-  std::ifstream csvConfigDefStream(pathToCsvDefinition);
-  std::string strData((std::istreambuf_iterator<char>(csvConfigDefStream)),
-      std::istreambuf_iterator<char>());
-  if (!google::protobuf::TextFormat::ParseFromString(strData, &csvDefinition)) {
-    CkAbort("Could not parse protobuf!");
-  }
-  csvConfigDefStream.close();
+  readProtobuf(metadataPath, &csvDefinition);
 
   int csvLocationOfPid = -1;
   for (int i = 0; i < csvDefinition.fields_size(); i += 1) {
@@ -90,31 +95,16 @@ Id buildObjectLookupCache(std::string inputPath, std::string outputPath,
   std::getline(activityStream, line);
   CacheOffset currentPosition = activityStream.tellg();
 
-  // Special case to get lowest person ID first.
-  std::getline(activityStream, line);
-  char *str = strdup(line.c_str());
-  char *tmp;
-  char *tok = strtok_r(str, ",", &tmp);
-  for (int i = 0; i < csvLocationOfPid; i++) {
-    tok = strtok_r(tmp, ",", &tmp);
-  }
-  Id firstIdx = std::atoi(tok);
-  free(str);
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
-  CkPrintf("  Found first id as %d\n", firstIdx);
-#endif
-
   // Check if file cache already created.
   std::ifstream existenceCheck(outputPath, std::ios_base::binary);
   if (existenceCheck.good()) {
     CkPrintf("Using existing cache.\n");
     existenceCheck.close();
-    return firstIdx;
 
   } else {
     existenceCheck.close();
     std::ofstream outputStream(outputPath, std::ios_base::binary);
-    for (int chareNum = 0; chareNum < numChares; chareNum++) {
+    for (PartitionId p = 0; p < offsets.size(); p++) {
       // Write current offset.
       outputStream.write(reinterpret_cast<char *>(&currentPosition),
         sizeof(CacheOffset));
@@ -122,20 +112,19 @@ Id buildObjectLookupCache(std::string inputPath, std::string outputPath,
       // Skip next n lines.
       // We already read the first location on the first chare to get
       // its id, so don't double count that line
-      Id numObjs = objPerChare - (0 == chareNum);
+      Id numObjs = getPartitionSize(p, numObjs, offsets);
+      // - (0 == p);
       for (int i = 0; i < numObjs; i++) {
         std::getline(activityStream, line);
       }
       currentPosition = activityStream.tellg();
     }
     outputStream.flush();
-    return firstIdx;
   }
 }
 
-
-void buildActivityCache(std::string inputPath, std::string outputPath,
-    Id numPeople, int numDays, Id firstPersonIdx, std::string pathToCsvDefinition) {
+void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
+  std::string metadataPath, std::string inputPath, std::string outputPath) {
   /**
    * Assumptions.
    * Stream is sorted by start time per person.
@@ -154,13 +143,7 @@ void buildActivityCache(std::string inputPath, std::string outputPath,
 
   // Read config file.
   loimos::proto::CSVDefinition csvDefinition;
-  std::ifstream csvConfigDefStream(pathToCsvDefinition);
-  std::string strData((std::istreambuf_iterator<char>(csvConfigDefStream)),
-      std::istreambuf_iterator<char>());
-  if (!google::protobuf::TextFormat::ParseFromString(strData, &csvDefinition)) {
-    CkAbort("Could not parse protobuf!");
-  }
-  csvConfigDefStream.close();
+  readProtobuf(metadataPath, &csvDefinition);
 
   // Create position vector for each person.
   std::size_t totalDataSize = numPeople * numDaysWithDistinctVisits
@@ -186,7 +169,7 @@ void buildActivityCache(std::string inputPath, std::string outputPath,
   Id totalVisits = 0;
   // For better looping efficiency simulate one break of inner loop to start.
   std::tie(nextPerson, locationId, nextTime, duration) =
-    DataReader<>::parseActivityStream(&activityStream, &csvDefinition, NULL);
+    parseActivityStream(&activityStream, &csvDefinition, NULL);
   nextTimeSec = nextTime;
   nextTime = getDay(nextTime);
 
@@ -222,7 +205,7 @@ void buildActivityCache(std::string inputPath, std::string outputPath,
         && lastPerson == nextPerson) {
       current_position = activityStream.tellg();
       std::tie(nextPerson, locationId, nextTime, duration) =
-        DataReader<>::parseActivityStream(&activityStream,
+        parseActivityStream(&activityStream,
             &csvDefinition, NULL);
 
       nextTime = getDay(nextTime);
@@ -242,11 +225,39 @@ int getDay(Time timeInSeconds) {
   return timeInSeconds / DAY_LENGTH;
 }
 
-std::string getScenarioId(Id numPeople, int numPeopleChares, Id numLocations,
-    int numLocationChares) {
+std::string getScenarioId(Id numPeople, PartitionId numPeopleChares, Id numLocations,
+    PartitionId numLocationChares) {
   std::ostringstream oss;
   oss << numPeople << "-" << numPeopleChares << "_" << numLocations
     << "-" << numLocationChares;
   return oss.str();
 }
 
+Id getFirstIndex(const loimos::proto::CSVDefinition *metadata, std::string inputPath) {
+  std::ifstream activityStream(inputPath, std::ios_base::binary);
+
+  // Skip header
+  std::string line;
+  std::getline(activityStream, line);
+
+  // Find the id column
+  std::getline(activityStream, line);
+  char *str = strdup(line.c_str());
+  char *tmp;
+  char *tok = strtok_r(str, ",", &tmp);
+  int i;
+  for (i = 0; i < metadata->fields_size()
+      && !metadata->fields(i).has_unique_id(); i++) {
+    tok = strtok_r(tmp, ",", &tmp);
+  }
+
+  Id firstIdx;
+  if (metadata->fields(i).has_unique_id()) {
+    firstIdx = ID_PARSE(tok);
+    free(str);
+  } else {
+    CkAbort("Error: no column in %s marked as id\n", inputPath.c_str());
+  }
+
+  return firstIdx;
+}

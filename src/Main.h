@@ -21,8 +21,9 @@ class Main : public CBase_Main {
   std::vector<int> accumulated;
   std::vector<int> initialInfections;
   DiseaseModel* diseaseModel;
-  int chareCount;
-  int createdCount;
+  PartitionId chareCount;
+  PartitionId createdCount;
+  Id lastInfectiousCount;
 
  public:
   explicit Main(CkArgMsg* msg);

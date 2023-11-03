@@ -7,9 +7,9 @@
 #define DISEASEMODEL_H_
 
 #include "Event.h"
-
 #include "Person.h"
 #include "Location.h"
+#include "Types.h"
 #include "protobuf/disease.pb.h"
 #include "protobuf/distribution.pb.h"
 #include "protobuf/data.pb.h"
@@ -18,7 +18,6 @@
 #include "readers/DataInterface.h"
 #include "readers/AttributeTable.h"
 #include "intervention_model/Intervention.h"
-#include "Event.h"
 
 #include <unordered_map>
 #include <random>
@@ -37,16 +36,22 @@ class DiseaseModel : public CBase_DiseaseModel {
       *transitionSet, std::default_random_engine *generator) const;
   Time timeDefToSeconds(TimeDef time) const;
 
+  // Offset-based index lookup
+  std::vector<Id> locationPartitionOffsets;
+  std::vector<Id> personPartitionOffsets;
+  void setPartitionOffsets(PartitionId numPartitions, Id numObjects,
+    Id firstIndex, loimos::proto::CSVDefinition *metadata,
+    std::vector<Id> *partitionOffsets);
+
   // Intervention related.
   std::vector<bool> triggerFlags;
   std::vector<std::shared_ptr<Intervention<Person>>> personInterventions;
   std::vector<std::shared_ptr<Intervention<Location>>> locationInterventions;
 
-
-void intitialisePersonInterventions(
+  void intitialisePersonInterventions(
     const InterventionList &interventionSpecs,
     const AttributeTable &attributes);
-void intitialiseLocationInterventions(
+  void intitialiseLocationInterventions(
     const InterventionList &interventionSpecs,
     const AttributeTable &attributes);
 
@@ -85,6 +90,19 @@ void intitialiseLocationInterventions(
   int infectivityIndex;
   AttributeTable personAttributes;
   AttributeTable locationAttributes;
+
+  // Offset-based index interface - each calls the corresponding function
+  // with the corresponding offset vector
+  Id getLocalLocationIndex(Id globalIndex, PartitionId PartitionId) const;
+  Id getGlobalLocationIndex(Id localIndex, PartitionId PartitionId) const;
+  CacheOffset getLocationCacheIndex(Id globalIndex) const;
+  PartitionId getLocationPartitionIndex(Id globalIndex) const;
+  Id getLocationPartitionSize(PartitionId partitionIndex) const;
+  Id getLocalPersonIndex(Id globalIndex, PartitionId PartitionId) const;
+  Id getGlobalPersonIndex(Id localIndex, PartitionId PartitionId) const;
+  CacheOffset getPersonCacheIndex(Id globalIndex) const;
+  PartitionId getPersonPartitionIndex(Id globalIndex) const;
+  Id getPersonPartitionSize(PartitionId partitionIndex) const;
 
   const Intervention<Person> &getPersonIntervention(int index) const;
   const Intervention<Location> &getLocationIntervention(int index) const;

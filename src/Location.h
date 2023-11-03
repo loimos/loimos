@@ -31,7 +31,6 @@ class Location : public DataInterface {
   std::vector<Event> events;
   std::unordered_map<const void *, VisitTest> visitFilters;
 
-
   // This distribution should always be the same - not sure how well
   // static variables work with Charm++, so this may need to be put
   // on the stack somewhere later on
@@ -45,11 +44,9 @@ class Location : public DataInterface {
   Location(Location&&) = default;
   ~Location() = default;
 
-
   // Default assignment operators.
   Location& operator=(const Location&) = default;
   Location& operator=(Location&&) = default;
-
 
   // Lets us migrate these objects
   void pup(PUP::er &p);  // NOLINT(runtime/references)

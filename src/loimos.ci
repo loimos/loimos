@@ -8,9 +8,9 @@ mainmodule loimos {
   include "Interaction.h";
   include "Message.h";
 
-  #ifdef USE_HYPERCOMM
+#ifdef USE_HYPERCOMM
   include "AggregatorParam.h";
-  #endif // USE_HYPERCOMM
+#endif // USE_HYPERCOMM
 
   // Profiling/LB parameters (these are here because Defs.h depends on having
   // CBase_* classes defined, and these constants are only used in this file)
@@ -26,9 +26,9 @@ mainmodule loimos {
   #define SHOULD_LB((day)) ((day) >= LB_START_DAY &&\
     ((day) - LB_START_DAY) % LB_INTERVAL == 0)
 
-  #ifdef USE_HYPERCOMM
+#ifdef USE_HYPERCOMM
   include "AggregatorParam.h";
-  #endif // USE_HYPERCOMM
+#endif // USE_HYPERCOMM
 
   include "string";
   include "vector";
@@ -39,15 +39,15 @@ mainmodule loimos {
   readonly CProxy_Main mainProxy;
   readonly CProxy_People peopleArray;
   readonly CProxy_Locations locationsArray;
-  #ifdef USE_HYPERCOMM
+#ifdef USE_HYPERCOMM
   readonly CProxy_Aggregator aggregatorProxy;
-  #endif // USE_HYPERCOMM
+#endif // USE_HYPERCOMM
   readonly CProxy_DiseaseModel globDiseaseModel;
   readonly CProxy_TraceSwitcher traceArray;
-  readonly int numPeople;
-  readonly int numLocations;
-  readonly int numPeoplePartitions;
-  readonly int numLocationPartitions;
+  readonly Id numPeople;
+  readonly Id numLocations;
+  readonly PartitionId numPersonPartitions;
+  readonly PartitionId numLocationPartitions;
   readonly int numDays;
   readonly int numDaysWithDistinctVisits;
 
@@ -55,8 +55,6 @@ mainmodule loimos {
   readonly int contactModelType;
   readonly int maxSimVisitsIdx;
   readonly int ageIdx;
-  readonly int firstPersonIdx;
-  readonly int firstLocationIdx;
 
   readonly Counter totalVisits;
   readonly Counter totalInteractions;
@@ -72,14 +70,14 @@ mainmodule loimos {
   #define TOTAL_EOD_UPDATE_TIME_INDEX 3
   #define TOTAL_TIME_SIZE 4
 
-  readonly int synPeopleGridWidth;
-  readonly int synPeopleGridHeight;
-  readonly int synLocationGridWidth;
-  readonly int synLocationGridHeight;
-  readonly int synLocalLocationGridWidth;
-  readonly int synLocalLocationGridHeight;
-  readonly int synLocationPartitionGridWidth;
-  readonly int synLocationPartitionGridHeight;
+  readonly Id synPeopleGridWidth;
+  readonly Id synPeopleGridHeight;
+  readonly Id synLocationGridWidth;
+  readonly Id synLocationGridHeight;
+  readonly Id synLocalLocationGridWidth;
+  readonly Id synLocalLocationGridHeight;
+  readonly PartitionId synLocationPartitionGridWidth;
+  readonly PartitionId synLocationPartitionGridHeight;
   readonly int averageDegreeOfVisit;
 
   readonly bool interventionStategy;
@@ -89,10 +87,10 @@ mainmodule loimos {
     entry [reductiontarget] void CharesCreated();
     entry void run() {
       // We only want to collect instumentation on the main loop
-      #ifdef ENABLE_LB
+#ifdef ENABLE_LB
         serial{traceArray.instrumentOn();}
         when instrumentSwitchOn() {}
-      #endif // ENABLE_LB
+#endif // ENABLE_LB
 
       serial{
         totalVisits = 0;
@@ -101,16 +99,23 @@ mainmodule loimos {
         totalTime.resize(TOTAL_TIME_SIZE, 0);
         CkPrintf("Running ...\n\n");
         simulationStartTime = CkWallTimer();
+        lastInfectiousCount = 0;
       }
 
-      for(day = 0; day < numDays; day++) {
+      for (day = 0; day < numDays
+#ifndef ENABLE_FORCE_FULL_RUN
+          // It's usually not helpful to keep running the simulation after the
+          // outbreak has died out
+          && (day < DAYS_TO_SEED_INFECTION || 0 != lastInfectiousCount)
+#endif
+          ; day++) {
         //serial{CkPrintf("  Starting iteration\n");}
-        #ifdef ENABLE_TRACING
+#ifdef ENABLE_TRACING
           if (SHOULD_PROFILE(day) && !SHOULD_PROFILE(day - 1)){
             serial{traceArray.traceOn();}
             when traceSwitchOn() {}
           }
-        #endif
+#endif
         serial {
           iterationStartTime = CkWallTimer();
 
@@ -164,6 +169,7 @@ mainmodule loimos {
             totalTime[TOTAL_EOD_UPDATE_TIME_INDEX] += diff;
 
             // Use this count as desired here
+            lastInfectiousCount = infectiousCount;
             if (interventionStategy) {
               globDiseaseModel.applyInterventions(day, infectiousCount);
             }
@@ -181,54 +187,55 @@ mainmodule loimos {
           }
         }
 
-        #ifdef ENABLE_LB
-          // Turn off instrumentation before we start load balancing
-          serial{traceArray.instrumentOff();}
-          when instrumentSwitchOff() {}
+#ifdef ENABLE_LB
+        // Turn off instrumentation before we start load balancing
+        serial{traceArray.instrumentOff();}
+        when instrumentSwitchOff() {}
 
-          if (SHOULD_LB(day)) {
-            serial {
-              locationsArray.AtSync();
-              peopleArray.AtSync();
-            }
-
-            // We don't want to continue until load balancing is complete for
-            // *both* locations and people chares
-            when locationsLBComplete() {
-              when peopleLBComplete() {}
-            }
+        if (SHOULD_LB(day)) {
+          serial {
+            locationsArray.AtSync();
+            peopleArray.AtSync();
           }
-        #endif // ENABLE_LB
 
-        #ifdef ENABLE_TRACING
+          // We don't want to continue until load balancing is complete for
+          // *both* locations and people chares
+          when locationsLBComplete() {
+            when peopleLBComplete() {}
+          }
+        }
+#endif // ENABLE_LB
+
+#ifdef ENABLE_TRACING
           if (SHOULD_PROFILE(day) && !SHOULD_PROFILE(day + 1)) {
             serial{traceArray.traceOff();}
-            when traceSwitchOff(){}
+            when traceSwitchOff(){
+              serial{traceArray.traceFlush();}
+            }
 
-            // Toggled by ENABLE_TRACING to group profiling code
-            serial{traceArray.reportMemoryUsage();}
-            when printMemoryUsage(long usage) {
-              serial {
-                CkPrintf("Currently using %ld kb in total\n", usage);
-              }
+          // Toggled by ENABLE_TRACING to group profiling code
+          serial{traceArray.reportMemoryUsage();}
+          when printMemoryUsage(long usage) {
+            serial {
+              CkPrintf("Currently using %ld kb in total\n", usage);
             }
           }
-
+        }
           if (SHOULD_PROFILE(day) {
             serial{traceArray.traceFlush();}
           }
 
-        #endif // ENABLE_TRACING
+#endif // ENABLE_TRACING
       }
       serial {
         CkPrintf("Finished simulating %d days in %lf seconds.\n",
-          numDays, (CkWallTimer() - simulationStartTime));
-        #if ENABLE_DEBUG >= 2
+          day, (CkWallTimer() - simulationStartTime));
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
         CkPrintf("  Processed "COUNTER_PRINT_TYPE" visits, "
           COUNTER_PRINT_TYPE" interactions, and "
           COUNTER_PRINT_TYPE" exposures\n",
           totalVisits, totalInteractions, totalExposures);
-        #endif
+#endif
         CkPrintf("  Visit messages took %lf seconds\n",
           totalTime[TOTAL_VISITS_TIME_INDEX]);
         CkPrintf("  Interaction calculations and messages took %lf seconds\n",
@@ -252,7 +259,7 @@ mainmodule loimos {
     entry void SeedInfections();
     entry void StartComputingInteractions();
     entry void ComputedInteractions();
-    #if ENABLE_DEBUG >= 2
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
     entry [reductiontarget] void ReceiveVisitsLoadedCount(int visitsCount) {
       serial{CkPrintf("  Loaded a total of %d visits\n", visitsCount);}
     };
@@ -268,41 +275,41 @@ mainmodule loimos {
       serial{totalExposures += count;}
       serial{CkPrintf("  Processed "COUNTER_PRINT_TYPE" exposures\n", count);}
     };
-    #endif // ENABLE_DEBUG
+#endif // ENABLE_DEBUG
     entry [reductiontarget] void ReceiveInfectiousCount(Id infectiousCount);
     entry [reductiontarget] void ReceiveStats(CkReductionMsg *summary);
-    #ifdef ENABLE_TRACING
+#ifdef ENABLE_TRACING
     entry [reductiontarget] void traceSwitchOn();
     entry [reductiontarget] void traceSwitchOff();
     entry [reductiontarget] void printMemoryUsage(long usage);
-    #endif // ENABLE_TRACING
-    #ifdef ENABLE_LB
+#endif // ENABLE_TRACING
+#ifdef ENABLE_LB
     entry [reductiontarget] void instrumentSwitchOn();
     entry [reductiontarget] void instrumentSwitchOff();
     entry [reductiontarget] void locationsLBComplete();
     entry [reductiontarget] void peopleLBComplete();
-    #endif // ENABLE_LB
+#endif // ENABLE_LB
   };
 
   group TraceSwitcher{
     entry TraceSwitcher();
-    #ifdef ENABLE_TRACING
+#ifdef ENABLE_TRACING
     entry void traceOn();
     entry void traceOff();
     entry void traceFlush();
     entry void reportMemoryUsage();
-    #endif // ENABLE_TRACING
-    #ifdef ENABLE_LB
+#endif // ENABLE_TRACING
+#ifdef ENABLE_LB
     entry void instrumentOn();
     entry void instrumentOff();
-    #endif // ENABLE_LB
+#endif // ENABLE_LB
   };
 
-  #ifdef USE_HYPERCOMM
+#ifdef USE_HYPERCOMM
   group Aggregator {
     entry Aggregator(AggregatorParam p1, AggregatorParam p2);
   };
-  #endif // USE_HYPERCOMM
+#endif // USE_HYPERCOMM
 
   array [1D] People {
     entry People(int seed, std::string scenarioPath);
@@ -324,14 +331,14 @@ mainmodule loimos {
   };
 
   nodegroup DiseaseModel {
-      entry DiseaseModel(std::string pathToModel, std::string scenarioPath,
-          std::string pathToIntervention);
-      entry void applyInterventions(int day, int newDailyInfections);
+    entry DiseaseModel(std::string pathToModel, std::string scenarioPath,
+        std::string pathToIntervention);
+    entry void applyInterventions(int day, int newDailyInfections);
   };
 
-  #ifdef USE_HYPERCOMM
+#ifdef USE_HYPERCOMM
   namespace aggregation {
     initproc void initialize(void);
   }
-  #endif // USE_HYPERCOMM
+#endif // USE_HYPERCOMM
 };

@@ -45,20 +45,16 @@
 #endif
 /* readonly */ CProxy_DiseaseModel globDiseaseModel;
 /* readonly */ CProxy_TraceSwitcher traceArray;
-/* readonly */ int numPeople;
-/* readonly */ int numLocations;
-/* readonly */ int numPeoplePartitions;
-/* readonly */ int numLocationPartitions;
-/* readonly */ int numPeoplePerPartition;
-/* readonly */ int numLocationsPerPartition;
+/* readonly */ Id numPeople;
+/* readonly */ Id numLocations;
+/* readonly */ PartitionId numPersonPartitions;
+/* readonly */ PartitionId numLocationPartitions;
 /* readonly */ int numDays;
 /* readonly */ int numDaysWithDistinctVisits;
 /* readonly */ bool syntheticRun;
 /* readonly */ int contactModelType;
 /* readonly */ int maxSimVisitsIdx;
 /* readonly */ int ageIdx;
-/* readonly */ int firstPersonIdx;
-/* readonly */ int firstLocationIdx;
 /* readonly */ Counter totalVisits;
 /* readonly */ Counter totalInteractions;
 /* readonly */ Counter totalExposures;
@@ -70,14 +66,14 @@
 
 
 // For synthetic run.
-/* readonly */ int synPeopleGridWidth;
-/* readonly */ int synPeopleGridHeight;
-/* readonly */ int synLocationGridWidth;
-/* readonly */ int synLocationGridHeight;
-/* readonly */ int synLocalLocationGridWidth;
-/* readonly */ int synLocalLocationGridHeight;
-/* readonly */ int synLocationPartitionGridWidth;
-/* readonly */ int synLocationPartitionGridHeight;
+/* readonly */ Id synPeopleGridWidth;
+/* readonly */ Id synPeopleGridHeight;
+/* readonly */ Id synLocationGridWidth;
+/* readonly */ Id synLocationGridHeight;
+/* readonly */ Id synLocalLocationGridWidth;
+/* readonly */ Id synLocalLocationGridHeight;
+/* readonly */ PartitionId synLocationPartitionGridWidth;
+/* readonly */ PartitionId synLocationPartitionGridHeight;
 /* readonly */ int averageDegreeOfVisit;
 /* readonly */ bool interventionStategy;
 
@@ -152,8 +148,8 @@ Main::Main(CkArgMsg* msg) {
 
   if (syntheticRun) {
     // Get number of people.
-    synPeopleGridWidth = atoi(msg->argv[++argNum]);
-    synPeopleGridHeight = atoi(msg->argv[++argNum]);
+    synPeopleGridWidth = atol(msg->argv[++argNum]);
+    synPeopleGridHeight = atol(msg->argv[++argNum]);
     numPeople = synPeopleGridWidth * synPeopleGridHeight;
 
     // Location data
@@ -171,7 +167,7 @@ Main::Main(CkArgMsg* msg) {
     synLocationPartitionGridHeight = atoi(msg->argv[++argNum]);
     numLocationPartitions =
       synLocationPartitionGridWidth * synLocationPartitionGridHeight;
-    numPeoplePartitions = atoi(msg->argv[++argNum]);
+    numPersonPartitions = atoi(msg->argv[++argNum]);
 
     // Calculate the dimensions of the block of locations stored by each
     // location chare
@@ -199,25 +195,20 @@ Main::Main(CkArgMsg* msg) {
   } else {
     numPeople = atoi(msg->argv[++argNum]);
     numLocations = atoi(msg->argv[++argNum]);
-    numPeoplePartitions = atoi(msg->argv[++argNum]);
+    numPersonPartitions = atoi(msg->argv[++argNum]);
     numLocationPartitions = atoi(msg->argv[++argNum]);
     numDays = atoi(msg->argv[++argNum]);
     numDaysWithDistinctVisits = atoi(msg->argv[++argNum]);
   }
 
-  if (numPeople < numPeoplePartitions) {
+  if (numPeople < numPersonPartitions) {
     CkAbort("Error: running on more people chares (%d) than people (%d)",
-        numPeoplePartitions, numPeople);
+        numPersonPartitions, numPeople);
   }
   if (numLocations < numLocationPartitions) {
     CkAbort("Error: running on more location chares (%d) than locations (%d)",
         numLocationPartitions, numLocations);
   }
-
-  numPeoplePerPartition = getNumElementsPerPartition(numPeople,
-      numPeoplePartitions);
-  numLocationsPerPartition = getNumElementsPerPartition(numLocations,
-      numLocationPartitions);
 
   pathToOutput = std::string(msg->argv[++argNum]);
 #if ENABLE_DEBUG >= DEBUG_BASIC
@@ -231,20 +222,15 @@ Main::Main(CkArgMsg* msg) {
   // Handle both real data runs or runs using synthetic populations.
   std::string scenarioPath;
   std::string scenarioId;
-  if (syntheticRun) {
-    firstPersonIdx = 0;
-    firstLocationIdx = 0;
-  } else {
+  if (!syntheticRun) {
     // Create data caches.
     scenarioPath = std::string(msg->argv[++argNum]);
+
     // This allows users to omit the trailing "/" from the scenario path
     // while still allowing us to find the files properly
     if (scenarioPath.back() != '/') {
       scenarioPath.push_back('/');
     }
-    std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(
-        scenarioPath, numPeople, numPeoplePartitions, numLocations,
-        numLocationPartitions, numDaysWithDistinctVisits);
   }
 
   // Detemine which contact modle to use
@@ -269,7 +255,7 @@ Main::Main(CkArgMsg* msg) {
   // setup main proxy
   CkPrintf("\nRunning Loimos on %d PEs with %d people, %d locations, "
       "%d people chares, %d location chares, and %d days\n",
-    CkNumPes(), numPeople, numLocations, numPeoplePartitions,
+    CkNumPes(), numPeople, numLocations, numPersonPartitions,
     numLocationPartitions, numDays);
   mainProxy = thisProxy;
 
@@ -339,7 +325,7 @@ Main::Main(CkArgMsg* msg) {
 #endif
   }
 
-  chareCount = numPeoplePartitions;  // Number of chare arrays/groups
+  chareCount = numPersonPartitions;  // Number of chare arrays/groups
   createdCount = 0;
 
   dataLoadingStartTime = CkWallTimer();
@@ -350,7 +336,7 @@ Main::Main(CkArgMsg* msg) {
   seed = 0;
 #endif
 
-  peopleArray = CProxy_People::ckNew(seed, scenarioPath, numPeoplePartitions);
+  peopleArray = CProxy_People::ckNew(seed, scenarioPath, numPersonPartitions);
   locationsArray = CProxy_Locations::ckNew(seed, scenarioPath,
       numLocationPartitions);
 
@@ -425,6 +411,7 @@ void Main::SeedInfections() {
   // guarentee they are unique (not checking this quickly runs into birthday
   // problem issues, even for sizable datasets)
   if (0 == day) {
+    Id firstPersonIdx = diseaseModel->getGlobalLocationIndex(0, 0);
     std::uniform_int_distribution<Id> personDistrib(firstPersonIdx,
         firstPersonIdx + numPeople - 1);
     std::unordered_set<Id> initialInfectionsSet;
@@ -450,11 +437,7 @@ void Main::SeedInfections() {
     Id personIdx = initialInfections.back();
     initialInfections.pop_back();
 
-    int peoplePartitionIdx = getPartitionIndex(
-      personIdx,
-      numPeople,
-      numPeoplePartitions,
-      firstPersonIdx);
+    PartitionId peoplePartitionIdx = diseaseModel->getPersonPartitionIndex(personIdx);
 
     // Make a super contagious visit for that person.
     std::vector<Interaction> interactions;
