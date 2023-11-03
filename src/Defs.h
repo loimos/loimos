@@ -29,6 +29,10 @@
 #define DEBUG_PER_CHARE 5
 #define DEBUG_PER_OBJECT 6
 
+// Tracing levels
+#define TRACE_BASIC 1
+#define TRACE_MEMORY 2
+
 // Disease states
 #define SUSCEPTIBLE 0
 #define EXPOSED 1
