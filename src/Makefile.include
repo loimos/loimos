@@ -73,8 +73,8 @@ ifdef ENABLE_LB
 LIBS     += -balancer GreedyLB -balancer RefineLB
 endif
 
-ifdef ENABLE_AGGREGATE
-OPTS     += -DENABLE_AGGREGATE
+ifdef ENABLE_AGGREGATION
+OPTS     += -DENABLE_AGGREGATION
 endif
 
 # Set the ENABLE_RANDOM_SEED environment variable to compile for unit testing

@@ -28,7 +28,7 @@ endif
 ifdef ENABLE_LB
 BIN   :=$(BIN)-lb
 endif
-ifdef ENABLE_AGGREGATE
+ifdef ENABLE_AGGREGATION
 BIN   :=$(BIN)-agg
 endif
 
