@@ -47,20 +47,24 @@ ENABLE_SMP=1 make
 We recommend running `make clean` before building Loimos with a different configuration. Loimos's various compile-time options are summarized below. Note that some options append a suffix to the executable.
 When multiple such options are used, these suffixes will be added in the order in which the appear in the table below. For example, building with `ENABLE_SMP=1 make` will build the executable `loimos-smp`, whereas building with `ENABLE_SMP=1 ENABLE_LB=1 ENABLE_DEBUG=2 make` will build the executable `loimos-smp-lb`, with the debug level not impacting the executable name.
 
-| Environment Variable  | Value | Executable Suffix | Explanation                                                                   |
-|-----------------------|-------|-------------------|-------------------------------------------------------------------------------|
-| `ENABLE_SMP`          | 1     | `-smp`            | Builds Loimos with Shared Memory Parallelism.                                 |
-| `ENABLE_TRACING`      | 1     | `-prj`            | Enables collecting performance profiles using the built-in Charm++ profiler   |
-| `ENABLE_LB`           | 1     | `-lb`             | Enables Charm++ dynamic load balancing                                        |
-| `ENABLE_RANDOM_SEED`  | 1     |                   | If not passed, will use a the same seed for all psuedo-random number          |
-|                       |       |                   | generators in each run                                                        |
-| `ENABLE_UNIT_TESTING` | 1     |                   | Builds Loimos with unit tests enabled                                         |
-| `ENABLE_DEBUG`        | 1     |                   | Basic debug information                                                       |
-|                       | 2     |                   | Verbose debug information                                                     |
-|                       | 3     |                   | Prints out counts of person-person edges for each location on each day        |
-|                       | 4     |                   | Saves list of all person-person edges to output file                          |
-|                       | 5     |                   | Chare-level debug information                                                 |
-|                       | 6     |                   | People- and location-level debug information                                  |
+| Environment Variable    | Value | Executable Suffix | Explanation                                                                   |
+|-------------------------|-------|-------------------|-------------------------------------------------------------------------------|
+| `ENABLE_SMP`            | 1     | `-smp`            | Builds Loimos with Shared Memory Parallelism.                                 |
+| `ENABLE_TRACING`        | 1     | `-prj`            | Enables collecting performance profiles using the built-in Charm++ profiler   |
+|                         | 2     |                   | Additionally prints memory usage information                                  |
+| `ENABLE_LB`             | 1     | `-lb`             | Enables Charm++ dynamic load balancing                                        |
+| `ENABLE_AGGREGATE`      | 1     | `-agg`            | Enables Charm++ message aggregation                                           |
+| `ENABLE_RANDOM_SEED`    | 1     |                   | If not passed, will use a the same seed for all psuedo-random number          |
+|                         |       |                   | generators in each run                                                        |
+| `ENABLE_FORCE_FULL_RUN` | 1     |                   | Forces the simulation to run the full number of days, even if the outbreak    |
+|                         |       |                   | dies out and no people are still infected                                     |
+| `ENABLE_UNIT_TESTING`   | 1     |                   | Builds Loimos with unit tests enabled                                         |
+| `ENABLE_DEBUG`          | 1     |                   | Basic debug information                                                       |
+|                         | 2     |                   | Verbose debug information                                                     |
+|                         | 3     |                   | Prints out counts of person-person edges for each location on each day        |
+|                         | 4     |                   | Saves list of all person-person edges to output file                          |
+|                         | 5     |                   | Chare-level debug information                                                 |
+|                         | 6     |                   | People- and location-level debug information                                  |
 
 ## Running the Code
 

@@ -94,6 +94,7 @@ class TraceSwitcher : public CBase_TraceSwitcher {
     traceFlushLog();
     traceBegin();
   }
+  #if ENABLE_TRACING == TRACE_MEMORY
   void reportMemoryUsage() {
     // Find this process's memory usage
     struct rusage self_usage;
@@ -111,6 +112,7 @@ class TraceSwitcher : public CBase_TraceSwitcher {
           static_cast<int>(pid), self_usage.ru_maxrss);
     #endif
   }
+  #endif  // ENABLE_TRACING == TRACE_MEMORY
   #endif  // ENABLE_TRACING
   #ifdef ENABLE_LB
   void instrumentOn() {
