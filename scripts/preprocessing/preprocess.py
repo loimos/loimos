@@ -356,7 +356,8 @@ def update_ids(
         return new_df
 
 
-LOC_SUPLIMENTAL_COLS = ["longitude", "latitude"]
+ACTIVITY_SUPPLEMENTAL_COLS = ["longitude", "latitude"]
+HOME_SUPPLEMENTAL_COLS = ["hid"]
 
 
 def merge_locations(args):
@@ -366,20 +367,20 @@ def merge_locations(args):
         in_dir, args.activity_locs_in_file, args.region, should_flatten=args.flat
     )
     home_locs = read_csv(
-        in_dir, args.residences_in_file, args.region, should_flatten=args.flat
+        in_dir, args.residences_assignments_in_file, args.region, should_flatten=args.flat
     )
 
     activity_locs.rename(columns={"alid": "lid"}, inplace=True)
     home_locs.rename(columns={"rlid": "lid"}, inplace=True)
 
     activity_update = make_contiguous(
-        activity_locs, name="activity locations", suplimental_cols=LOC_SUPLIMENTAL_COLS
+        activity_locs, name="activity locations", suplimental_cols=ACTIVITY_SUPPLEMENTAL_COLS
     )
     home_update = make_contiguous(
         home_locs,
         offset=activity_locs["lid"].max() + 1,
         name="home locations",
-        suplimental_cols=LOC_SUPLIMENTAL_COLS,
+        suplimental_cols=HOME_SUPPLEMENTAL_COLS,
     )
 
     # Make sure all columns are shared.
@@ -404,35 +405,24 @@ def fix_people(args):
     return people_update
 
 
-def update_visits(args, visits, loc_update, people_update):
-    visits = update_ids(
-        visits,
-        loc_update,
-        name="visit lids",
-        suplimental_cols=LOC_SUPLIMENTAL_COLS,
-        num_tasks=args.num_tasks,
-        num_partitions=args.num_partitions_per_task * args.num_tasks,
-        validate=args.validate,
-    )
-    visits = update_ids(
-        visits,
-        people_update,
-        id_col="pid",
-        name="visit pids",
-        num_tasks=args.num_tasks,
-        num_partitions=args.num_partitions_per_task * args.num_tasks,
-        validate=args.validate,
-    )
+def update_visits(args, visits, activity_update, home_update, people_update):
+    for update, name, cols in (
+            (activity_update, "activity visit lids", ACTIVITY_SUPPLEMENTAL_COLS),
+            (home_update, "home visit lids", HOME_SUPPLEMENTAL_COLS),
+            (people_update, "visit pids", None)):
+        visits = update_ids(
+            visits,
+            update,
+            name=name,
+            suplimental_cols=cols,
+            num_tasks=args.num_tasks,
+            num_partitions=args.num_partitions_per_task * args.num_tasks,
+            validate=args.validate,
+        )
     return visits
 
 
 def merge_visits(args, activity_update, home_update, people_update):
-    loc_update = activity_update
-    if isinstance(activity_update, pd.DataFrame):
-        loc_update = pd.concat([activity_update, home_update], ignore_index=True)
-        write_csv(args.out_dir, "activity_update.csv", activity_update)
-        write_csv(args.out_dir, "home_update.csv", home_update)
-
     in_dir = args.in_dir
 
     visits = None
@@ -454,7 +444,7 @@ def merge_visits(args, activity_update, home_update, people_update):
             [adult_activity_visits, child_activity_visits], ignore_index=True
         )
         print(f"loaded {visits.shape[0]} visits")
-        visits = update_visits(args, visits, loc_update, people_update)
+        visits = update_visits(args, visits, activity_update, home_update, people_update)
     else:
         adult_dfs = read_csv(
             in_dir,
@@ -478,11 +468,11 @@ def merge_visits(args, activity_update, home_update, people_update):
         dfs = []
         for i, df in enumerate(adult_dfs):
             print(f"  Updating ids in {i}th adult activity file")
-            df = update_visits(args, df, loc_update, people_update)
+            df = update_visits(args, df, activity_update, home_update, people_update)
             dfs.append(df)
         for i, df in enumerate(child_dfs):
             print(f"  Updating ids in {i}th child activity file")
-            df = update_visits(args, df, loc_update, people_update)
+            df = update_visits(args, df, activity_update, home_update, people_update)
             dfs.append(df)
         visits = pd.concat(dfs, ignore_index=True)
 
