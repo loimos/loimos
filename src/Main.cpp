@@ -214,11 +214,6 @@ Main::Main(CkArgMsg* msg) {
         numLocationPartitions, numLocations);
   }
 
-  numPeoplePerPartition = getNumElementsPerPartition(numPeople,
-      numPeoplePartitions);
-  numLocationsPerPartition = getNumElementsPerPartition(numLocations,
-      numLocationPartitions);
-
   outputPath = std::string(msg->argv[++argNum]);
 
 #if ENABLE_DEBUG >= DEBUG_BASIC
@@ -241,9 +236,6 @@ Main::Main(CkArgMsg* msg) {
     if (scenarioPath.back() != '/') {
       scenarioPath.push_back('/');
     }
-    std::tie(firstPersonIdx, firstLocationIdx, scenarioId) = buildCache(
-        scenarioPath, numPeople, numPeoplePartitions, numLocations,
-        numLocationPartitions, numDaysWithDistinctVisits);
   }
 
 #if OUTPUT_FLAGS != OUTPUT_DEFAULT
