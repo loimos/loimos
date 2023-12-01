@@ -32,8 +32,6 @@
 #include <memory>
 
 std::uniform_real_distribution<> unitDistrib(0, 1);
-#define ONE_ATTR 1
-#define DEFAULT_
 
 People::People(int seed, std::string scenarioPath) {
   // Must be set to true to make AtSync work
