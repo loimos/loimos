@@ -46,7 +46,7 @@ Locations::Locations(int seed, std::string scenarioPath) {
   Id lastLocationIdx = firstLocationIdx + numLocations;
   if (outOfBounds(firstLocationIdx, lastLocationIdx, firstLocalLocationIdx)) {
     CkAbort("Error on chare %d: first location index ("
-      ID_PRINT_TYPE") out of bounds ["ID_PRINT_TYPE", "ID_PRINT_TYPE")",
+      ID_PRINT_TYPE") out of bounds [" ID_PRINT_TYPE ", " ID_PRINT_TYPE ")",
       thisIndex, firstLocalLocationIdx, firstLocationIdx, lastLocationIdx);
   }
 #endif
@@ -153,15 +153,15 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 #ifdef ENABLE_DEBUG
   if (outOfBounds(0l, numLocalLocations, localLocIdx)) {
     CkAbort("Error on chare %d: recieved visit to location ("
-      ID_PRINT_TYPE" loc, "ID_PRINT_TYPE" glob) outside of valid range [0, "
+      ID_PRINT_TYPE" loc, " ID_PRINT_TYPE " glob) outside of valid range [0, "
       ID_PRINT_TYPE") loc\n", thisIndex, localLocIdx, visitMsg.locationIdx,
       numLocalLocations);
   }
   Id trueIdx = locations[localLocIdx].getUniqueId();
   if (visitMsg.locationIdx != trueIdx) {
     CkAbort("Error on chare %d: Visit by person "ID_PRINT_TYPE
-        " to loc "ID_PRINT_TYPE" recieved by "
-        "loc "ID_PRINT_TYPE" (local "ID_PRINT_TYPE")\n",
+        " to loc " ID_PRINT_TYPE " recieved by "
+        "loc " ID_PRINT_TYPE " (local " ID_PRINT_TYPE ")\n",
         thisIndex, visitMsg.personIdx, visitMsg.locationIdx, trueIdx,
         localLocIdx);
   }
@@ -186,7 +186,7 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 
 #ifdef ENABLE_DEBUG
   if (arrival.scheduledTime > departure.scheduledTime) {
-    CkAbort("Error on chare %d: visit by "ID_PRINT_TYPE" to loc "ID_PRINT_TYPE"\n"
+    CkAbort("Error on chare %d: visit by " ID_PRINT_TYPE " to loc " ID_PRINT_TYPE "\n"
       "has departure (%d) before arrival (%d)\n",
       thisIndex, visitMsg.personIdx, trueIdx, arrival.scheduledTime,
       departure.scheduledTime);
@@ -221,7 +221,7 @@ void Locations::ComputeInteractions() {
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
   if (0 == day) {
-    CkPrintf("    Process %d, thread %d: "COUNTER_PRINT_TYPE" visits, "
+    CkPrintf("    Process %d, thread %d: " COUNTER_PRINT_TYPE " visits, "
         COUNTER_PRINT_TYPE" interactions, %lu locations\n",
         CkMyNode(), CkMyPe(), numVisits, numInteractions, locations.size());
   }
@@ -288,7 +288,7 @@ Counter Locations::processEvents(Location *loc) {
 #if ENABLE_DEBUG == DEBUG_LOCATION_SUMMARY
   if (0 != numInteractions && -1 != maxSimVisitsIdx) {
     double elapsedTime = CkWallTimer() - startTime;
-    CkPrintf("      %d,%d,%f,"COUNTER_PRINT_TYPE","COUNTER_PRINT_TYPE","
+    CkPrintf("      %d,%d,%f," COUNTER_PRINT_TYPE "," COUNTER_PRINT_TYPE ","
         COUNTER_PRINT_TYPE",%f\n",
         loc->getUniqueId(), loc->getValue(maxSimVisitsIdx).int32_val,
         p, numInteractions, total, numVisits, elapsedTime);
@@ -394,7 +394,7 @@ inline void Locations::sendInteractions(Location *loc,
 #ifdef ENABLE_DEBUG
   if (outOfBounds(0, numPersonPartitions, personPartition)) {
     CkAbort("Error on chare %d: sending exposures at "
-      ID_PRINT_TYPE" to person "ID_PRINT_TYPE" on chare "
+      ID_PRINT_TYPE" to person " ID_PRINT_TYPE " on chare "
       PARTITION_ID_PRINT_TYPE" outside of valid range [0, "
       PARTITION_ID_PRINT_TYPE")\n", thisIndex, loc->getUniqueId(),
       personIdx, personPartition, numPersonPartitions);

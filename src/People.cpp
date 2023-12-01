@@ -63,7 +63,7 @@ People::People(int seed, std::string scenarioPath) {
   if (outOfBounds(firstPersonIdx, lastPersonIdx,
       firstLocalPersonIdx)) {
     CkAbort("Error on chare %d: first person index ("
-      ID_PRINT_TYPE") out of bounds ["ID_PRINT_TYPE", "ID_PRINT_TYPE")",
+      ID_PRINT_TYPE ") out of bounds [" ID_PRINT_TYPE ", " ID_PRINT_TYPE ")",
       thisIndex, firstLocalPersonIdx, firstPersonIdx, lastPersonIdx);
   }
 #endif
@@ -430,9 +430,9 @@ void People::SendVisitMessages() {
 #ifdef ENABLE_DEBUG
       if (outOfBounds(0, numLocationPartitions, locationPartition)) {
         CkAbort("Error on chare %d: sending visit by "
-          ID_PRINT_TYPE" to location "ID_PRINT_TYPE" on chare "
-          PARTITION_ID_PRINT_TYPE" outside of valid range [0, "
-          PARTITION_ID_PRINT_TYPE")\n", thisIndex, person.getUniqueId(),
+          ID_PRINT_TYPE" to location " ID_PRINT_TYPE " on chare "
+          PARTITION_ID_PRINT_TYPE " outside of valid range [0, "
+          PARTITION_ID_PRINT_TYPE ")\n", thisIndex, person.getUniqueId(),
           visitMessage.locationIdx, locationPartition, numLocationPartitions);
       }
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
@@ -487,8 +487,8 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
 
   if (outOfBounds(0l, numLocalPeople, localIdx)) {
     CkAbort("Error on chare %d: visit to location ("
-      ID_PRINT_TYPE"/"ID_PRINT_TYPE") outside of valid range [0, "
-      ID_PRINT_TYPE")\n", thisIndex, localIdx, interMsg.personIdx,
+      ID_PRINT_TYPE "/" ID_PRINT_TYPE") outside of valid range [0, "
+      ID_PRINT_TYPE ")\n", thisIndex, localIdx, interMsg.personIdx,
       numLocalPeople);
   }
 #endif

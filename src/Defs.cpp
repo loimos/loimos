@@ -176,7 +176,7 @@ PartitionId getPartition(Id globalIndex,
     const std::vector<Id> &offsets) {
   PartitionId result = std::distance(offsets.begin(),
     std::upper_bound(offsets.begin(), offsets.end(), globalIndex)) - 1;
-  // CkPrintf("    Index "ID_PRINT_TYPE" in partition %d\n",
+  // CkPrintf("    Index " ID_PRINT_TYPE " in partition %d\n",
   //   globalIndex, result);
   return result;
 }
