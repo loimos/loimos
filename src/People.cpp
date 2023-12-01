@@ -388,7 +388,7 @@ void People::loadVisitData(std::ifstream *activityData) {
         // Visits which span multiple days need to be split up
         visitEnd = visitStart + visitDuration;
         while (visitEnd >= nextDaySecs) {
-          int endDay = visitEnd / DAY_LENGTH;
+          int endDay = (visitEnd / DAY_LENGTH) % numDaysWithDistinctVisits;
           person.visitsByDay[endDay].emplace_back(locationId, personId, -1,
               endDay * DAY_LENGTH, visitEnd, 1.0);
           visitEnd = std::max(nextDaySecs - 1, visitEnd - DAY_LENGTH);
