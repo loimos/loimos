@@ -8,6 +8,7 @@
 #define INTERACTION_H_
 
 #include "charm++.h"
+#include "Types.h"
 
 // Simple struct to hold data on an interfaction between with a susceptible
 // person which could lead to an infection
@@ -16,17 +17,17 @@ struct Interaction {
   double propensity;
   // Data on the person who could potentially infect the susceptible person in
   // question
-  int infectiousIdx;
-  int infectiousState;
+  Id infectiousIdx;
+  DiseaseState infectiousState;
   // We need to know when the interaction occured so that, if this interaction
   // does in fact result in an infection, we can determine precisely when it
   // occurred
-  int startTime;
-  int endTime;
+  Time startTime;
+  Time endTime;
 
   Interaction() {}
-  Interaction(double propensity_, int infectiousIdx_,
-      int infectiousState_, int startTime_, int endTime_) :
+  Interaction(double propensity_, Id infectiousIdx_,
+      DiseaseState infectiousState_, Time startTime_, Time endTime_) :
     propensity(propensity_), infectiousIdx(infectiousIdx_),
     infectiousState(infectiousState_), startTime(startTime_),
     endTime(endTime_) {}
