@@ -99,11 +99,11 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
 // #if ENABLE_DEBUG >= DEBUG_PER_CAHRE
 //   if (0 == CkMyNode()) {
 //     for (int i = 0; i < personPartitionOffsets.size(); ++i) {
-//       CkPrintf("  Person Offset %d: "ID_PRINT_TYPE"\n",
+//       CkPrintf("  Person Offset %d: " ID_PRINT_TYPE "\n",
 //         i, personPartitionOffsets[i]);
 //     }
 //     for (int i = 0; i < locationPartitionOffsets.size(); ++i) {
-//       CkPrintf("  Location Offset %d: "ID_PRINT_TYPE"\n",
+//       CkPrintf("  Location Offset %d: " ID_PRINT_TYPE "\n",
 //         i, locationPartitionOffsets[i]);
 //     }
 //   }
@@ -159,16 +159,16 @@ void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
 
 #ifdef ENABLE_DEBUG
       if (outOfBounds(firstIndex, lastIndex, offset)) {
-        CkAbort("Error: Offset "ID_PRINT_TYPE" outside of valid range [0,"
+        CkAbort("Error: Offset " ID_PRINT_TYPE " outside of valid range [0,"
           ID_PRINT_TYPE")\n", offset, numObjects);
 
       // Offsets should be sorted so we can do a binary search later
       } else if (0 != i && partitionOffsets->at(i - 1) > offset) {
-        CkAbort("Error: Offset "ID_PRINT_TYPE" (%d-th offset) for chare "
+        CkAbort("Error: Offset " ID_PRINT_TYPE " (%d-th offset) for chare "
         PARTITION_ID_PRINT_TYPE" out of order\n", offset, offsetIdx, i);
       }
       // else if (0 == CkMyNode()) {
-      //   CkPrintf("  Chare %d: offset "ID_PRINT_TYPE" (provided)\n",
+      //   CkPrintf("  Chare %d: offset " ID_PRINT_TYPE " (provided)\n",
       //       i, offset);
       // }
 #endif  // ENABLE_DEBUG
@@ -184,11 +184,11 @@ void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
 
 #ifdef ENABLE_DEBUG
       if (outOfBounds(firstIndex, lastIndex, offset)) {
-        CkAbort("Error: Offset "ID_PRINT_TYPE" outside of valid range [0,"
+        CkAbort("Error: Offset " ID_PRINT_TYPE " outside of valid range [0,"
           ID_PRINT_TYPE")\n", offset, numObjects);
       }
       // else if (0 == CkMyNode()) {
-      //   CkPrintf("  Chare %d: offset "ID_PRINT_TYPE" (default)\n",
+      //   CkPrintf("  Chare %d: offset " ID_PRINT_TYPE " (default)\n",
       //       p, offset);
       // }
 #endif  // ENABLE_DEBUG

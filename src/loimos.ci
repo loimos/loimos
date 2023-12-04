@@ -183,7 +183,8 @@ mainmodule loimos {
 
             // Print how long this iteration took to run
             CkPrintf(
-              "Iteration %d Execution Time: %lf seconds. Infectious Count: "ID_PRINT_TYPE".\n",
+              "Iteration %d Execution Time: %lf seconds. Infectious Count: "
+              ID_PRINT_TYPE ".\n",
               day, CkWallTimer() - iterationStartTime, infectiousCount
             );
 
@@ -233,9 +234,9 @@ mainmodule loimos {
         CkPrintf("Finished simulating %d days in %lf seconds.\n",
           day, (CkWallTimer() - simulationStartTime));
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
-        CkPrintf("  Processed "COUNTER_PRINT_TYPE" visits, "
-          COUNTER_PRINT_TYPE" interactions, and "
-          COUNTER_PRINT_TYPE" exposures\n",
+        CkPrintf("  Processed " COUNTER_PRINT_TYPE " visits, "
+          COUNTER_PRINT_TYPE " interactions, and "
+          COUNTER_PRINT_TYPE " exposures\n",
           totalVisits, totalInteractions, totalExposures);
 #endif
         CkPrintf("  Visit messages took %lf seconds\n",
@@ -267,15 +268,15 @@ mainmodule loimos {
     };
     entry [reductiontarget] void ReceiveVisitsSentCount(Counter count) {
       serial{totalVisits += count;}
-      serial{CkPrintf("  Processed "COUNTER_PRINT_TYPE" sent visits\n", count);}
+      serial{CkPrintf("  Processed " COUNTER_PRINT_TYPE " sent visits\n", count);}
     };
     entry [reductiontarget] void ReceiveInteractionsCount(Counter count) {
       serial{totalInteractions += count;}
-      serial{CkPrintf("  Processed "COUNTER_PRINT_TYPE" interactions\n", count);}
+      serial{CkPrintf("  Processed " COUNTER_PRINT_TYPE " interactions\n", count);}
     };
     entry [reductiontarget] void ReceiveExposuresCount(Counter count) {
       serial{totalExposures += count;}
-      serial{CkPrintf("  Processed "COUNTER_PRINT_TYPE" exposures\n", count);}
+      serial{CkPrintf("  Processed " COUNTER_PRINT_TYPE " exposures\n", count);}
     };
 #endif // ENABLE_DEBUG
     entry [reductiontarget] void ReceiveInfectiousCount(Id infectiousCount);
