@@ -22,9 +22,10 @@
 #include <algorithm>
 
 Location::Location(const AttributeTable &attributes,
-    int numInterventions, int uniqueId_) :
+    int numInterventions, int uniqueId_, int seed) :
     DataInterface(attributes, numInterventions) {
   setUniqueId(uniqueId_);
+  generator.seed(seed +  uniqueId_);
 }
 
 Location::Location(CkMigrateMessage *msg) {}
@@ -33,6 +34,7 @@ void Location::pup(PUP::er &p) {
   p | data;
   p | uniqueId;
   p | events;
+  p | generator;
 }
 
 // Event processing.

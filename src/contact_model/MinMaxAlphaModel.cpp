@@ -61,11 +61,11 @@ void MinMaxAlphaModel::computeLocationValues(Location *location) {
 bool MinMaxAlphaModel::madeContact(
   const Event &susceptibleEvent,
   const Event &infectiousEvent,
-  const Location &location
+  Location *location
 ) {
   union Data contactProbability =
-    location.getValue(contactProbabilityIndex);
-  return unitDistrib(*generator) < contactProbability.double_val;
+    location->getValue(contactProbabilityIndex);
+  return unitDistrib(location->generator) < contactProbability.double_val;
 }
 
 double MinMaxAlphaModel::getContactProbability(const Location &location) const {

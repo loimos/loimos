@@ -22,7 +22,6 @@ class ContactModel;
 class ContactModel {
  protected:
   // These are protected rather than private so child classes can use them
-  std::default_random_engine *generator;
   std::uniform_real_distribution<> unitDistrib;
   int contactProbabilityIndex;
 
@@ -33,7 +32,6 @@ class ContactModel {
   ContactModel& operator=(const ContactModel &other) = default;
   ContactModel(ContactModel &&other) = default;
   ContactModel& operator=(ContactModel &&other) = default;
-  void setGenerator(std::default_random_engine *generator);
   // Calculates any location-specific values and stores them as new
   // attributes of the location
   virtual void computeLocationValues(Location *location);
@@ -41,7 +39,7 @@ class ContactModel {
   // (will probably need to mess with the arguments once we start
   // implementing more complex models)
   virtual bool madeContact(const Event &susceptibleEvent,
-    const Event &infectiousEvent, const Location &location);
+    const Event &infectiousEvent, Location *location);
   virtual double getContactProbability(const Location &location) const;
 };
 

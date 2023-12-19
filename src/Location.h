@@ -30,6 +30,7 @@ class Location : public DataInterface {
   // from this location on a given day
   std::vector<Event> events;
   std::unordered_map<const void *, VisitTest> visitFilters;
+  std::default_random_engine generator;
 
   // This distribution should always be the same - not sure how well
   // static variables work with Charm++, so this may need to be put
@@ -39,7 +40,7 @@ class Location : public DataInterface {
   Location() = default;
   explicit Location(CkMigrateMessage *msg);
   Location(const AttributeTable &attributes, int numInterventions,
-    int uniqueId);
+    int uniqueId, int seed);
   Location(const Location&) = default;
   Location(Location&&) = default;
   ~Location() = default;

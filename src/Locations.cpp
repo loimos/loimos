@@ -56,18 +56,15 @@ Locations::Locations(int seed, std::string scenarioPath) {
       firstLocalLocationIdx + numLocalLocations - 1);
 #endif
 
-  // Seed random number generator via branch ID for reproducibility
-  generator.seed(seed + thisIndex);
-
   // Init contact model
   contactModel = createContactModel();
-  contactModel->setGenerator(&generator);
 
   int numInterventions = diseaseModel->getNumLocationInterventions();
   locations.reserve(numLocalLocations);
   for (int i = 0; i < numLocalLocations; i++) {
+    // Seed random number generator via branch ID for reproducibility
     locations.emplace_back(diseaseModel->locationAttributes,
-      numInterventions, firstLocalLocationIdx + i);
+      numInterventions, firstLocalLocationIdx + i, seed);
   }
 
   // Load application data
@@ -78,7 +75,7 @@ Locations::Locations(int seed, std::string scenarioPath) {
   for (Location &l : locations) {
     for (int i = 0; i < numInterventions; ++i) {
       const Intervention<Location> &inter = diseaseModel->getLocationIntervention(i);
-      l.toggleCompliance(i, inter.willComply(l, &generator));
+      l.toggleCompliance(i, inter.willComply(l, &l.generator));
     }
   }
 
@@ -135,13 +132,11 @@ void Locations::loadLocationData(std::string scenarioPath) {
 void Locations::pup(PUP::er &p) {
   p | numLocalLocations;
   p | locations;
-  p | generator;
   p | day;
 
   if (p.isUnpacking()) {
     diseaseModel = globDiseaseModel.ckLocalBranch();
     contactModel = createContactModel();
-    contactModel->setGenerator(&generator);
   }
 }
 
@@ -371,7 +366,7 @@ void Locations::onInfectiousDeparture(Location *loc,
 inline void Locations::registerInteraction(Location *loc,
     const Event &susceptibleEvent, const Event &infectiousEvent,
     Time startTime, Time endTime) {
-  if (!contactModel->madeContact(susceptibleEvent, infectiousEvent, *loc)) {
+  if (!contactModel->madeContact(susceptibleEvent, infectiousEvent, loc)) {
     return;
   }
 
@@ -431,7 +426,7 @@ void Locations::ReceiveIntervention(PartitionId interventionIdx) {
     const Intervention<Location> &inter =
       diseaseModel->getLocationIntervention(interventionIdx);
     if (location.willComply(interventionIdx)
-        && inter.test(location, &generator)) {
+        && inter.test(location, &location.generator)) {
       inter.apply(&location);
     }
   }
