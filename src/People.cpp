@@ -72,7 +72,7 @@ People::People(int seed, std::string scenarioPath) {
   for (Id i = 0; i < numLocalPeople; i++) {
     people.emplace_back(diseaseModel->personAttributes,
         numInterventions, 0, std::numeric_limits<Time>::max(),
-        numDaysWithDistinctVisits);  
+        numDaysWithDistinctVisits);
   }
 
   if (syntheticRun) {

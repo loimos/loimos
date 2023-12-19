@@ -31,6 +31,7 @@ class DataInterface {
 
   // Indicates whether or not this entity will comply with a given intervention
   std::vector<bool> willComplyWithIntervention;
+
  public:
   DataInterface() = default;
   DataInterface(const AttributeTable &attributes, int numInterventions);
