@@ -54,6 +54,7 @@ void Person::pup(PUP::er &p) {
   p | visitOffsetByDay;
   p | visitsByDay;
   p | data;
+  p | generator;
 }
 
 void Person::_print_information(loimos::proto::CSVDefinition *personDef) {

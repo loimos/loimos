@@ -9,6 +9,7 @@
 
 #include <vector>
 #include <string>
+#include <random>
 #include <google/protobuf/repeated_field.h>
 
 #include "charm++.h"
@@ -23,6 +24,7 @@ class DataInterface {
  protected:
   // Unique global identifier
   Id uniqueId;
+  std::default_random_engine generator;
 
   // Various dynamic attributes
   std::vector<union Data> data;
@@ -37,6 +39,8 @@ class DataInterface {
   Id getUniqueId() const;
   union Data getValue(int idx) const;
   std::vector<union Data> &getData();
+  void setSeed(int seed);
+  std::default_random_engine * getGenerator();
   void toggleCompliance(int interventionIndex, bool value);
   bool willComply(int interventionIndex);
   virtual void filterVisits(const void *cause, VisitTest keepVisit) = 0;

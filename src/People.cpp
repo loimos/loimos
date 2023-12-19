@@ -40,7 +40,6 @@ People::People(int seed, std::string scenarioPath) {
   usesAtSync = true;
 
   day = 0;
-  generator.seed(seed + thisIndex);
   diseaseModel = globDiseaseModel.ckLocalBranch();
 
   // Allocate space to summarize the state summaries for every day
@@ -73,11 +72,11 @@ People::People(int seed, std::string scenarioPath) {
   for (Id i = 0; i < numLocalPeople; i++) {
     people.emplace_back(diseaseModel->personAttributes,
         numInterventions, 0, std::numeric_limits<Time>::max(),
-        numDaysWithDistinctVisits);
+        numDaysWithDistinctVisits);  
   }
 
   if (syntheticRun) {
-    generatePeopleData(firstLocalPersonIdx);
+    generatePeopleData(firstLocalPersonIdx, seed);
     generateVisitData();
   } else {
     // Load in people data from file.
@@ -85,9 +84,13 @@ People::People(int seed, std::string scenarioPath) {
   }
 
 for (Person &p : people) {
+  if (!syntheticRun) {
+    // Need to wait until after unique ids are set in case they don't start at 0
+    p.setSeed(seed);
+  }
   for (int i = 0; i < numInterventions; ++i) {
     const Intervention<Person> &inter = diseaseModel->getPersonIntervention(i);
-    p.toggleCompliance(i, inter.willComply(p, &generator));
+    p.toggleCompliance(i, inter.willComply(p, p.getGenerator()));
   }
 }
 
@@ -102,20 +105,21 @@ for (Person &p : people) {
 
 People::People(CkMigrateMessage *msg) {}
 
-void People::generatePeopleData(Id firstLocalPersonIdx) {
+void People::generatePeopleData(Id firstLocalPersonIdx, int seed) {
   // Init peoples ids and randomly init ages.
   std::uniform_int_distribution<int> age_dist(0, 100);
   int ageIndex = diseaseModel->personAttributes.getAttributeIndex("age");
   for (Id i = 0; i < numLocalPeople; i++) {
     Person &p = people[i];
+    p.setUniqueId(firstLocalPersonIdx + i);
+    // Local seed depends on uniqueId
+    p.setSeed(seed);
 
     std::vector<union Data> data = p.getData();
     if (-1 != ageIndex) {
-      data[ageIndex].int32_val = age_dist(generator);
+      data[ageIndex].int32_val = age_dist(*p.getGenerator());
     }
-
-      p.setUniqueId(firstLocalPersonIdx + i);
-      p.state = diseaseModel->getHealthyState(data);
+    p.state = diseaseModel->getHealthyState(data);
 
     // We set persons next state to equal current state to signify
     // that they are not in a disease model progression.
@@ -156,7 +160,7 @@ void People::generateVisitData() {
   }
 #endif
 
-  // Choose one location partition for the people in this parition to call home
+  // Choose one location partition for the people in this partition to call home
   Id homePartitionIdx = thisIndex % numLocationPartitions;
   Id homePartitionX = homePartitionIdx % locationPartitionGridWidth;
   Id homePartitionY = homePartitionIdx / locationPartitionGridWidth;
@@ -177,12 +181,13 @@ void People::generateVisitData() {
 
     p.visitsByDay.resize(numDaysWithDistinctVisits);
     for (std::vector<VisitMessage> &visits : p.visitsByDay) {
+      std::default_random_engine *generator = p.getGenerator();
       // Get random number of visits for this person.
-      int numVisits = num_visits_generator(generator);
+      int numVisits = num_visits_generator(*generator);
       // Randomly generate start and end times for each visit,
       // using a priority queue ensures the times are in order.
       for (int j = 0; j < 2 * numVisits; j++) {
-        times.push(time_dist(generator));
+        times.push(time_dist(*generator));
       }
 
       totalNumVisits += numVisits;
@@ -199,7 +204,7 @@ void People::generateVisitData() {
           continue;
 
         // Get number of locations away this person should visit.
-        Id numHops = std::min(visit_distance_generator(generator),
+        Id numHops = std::min(visit_distance_generator(*generator),
           synLocationGridWidth + synLocationGridHeight - 2);
 
         Id destinationOffsetX = 0;
@@ -218,13 +223,13 @@ void People::generateVisitData() {
           // Choose random number of hops in the X direction.
           std::uniform_int_distribution<Id> dist_gen(-maxHopsNegativeX,
             maxHopsPositiveX);
-          destinationOffsetX = dist_gen(generator);
+          destinationOffsetX = dist_gen(*generator);
 
           // Travel the remaining hops in the Y direction
           numHops -= std::abs(destinationOffsetX);
           if (numHops != 0) {
             // Choose a random direction between positive and negative
-            if (dir_gen(generator) == 0) {
+            if (dir_gen(*generator) == 0) {
               // Offset positively in Y.
               destinationOffsetY = std::min(numHops, maxHopsPositiveY);
             } else {
@@ -394,7 +399,6 @@ void People::pup(PUP::er &p) {
   p | day;
   p | totalVisitsForDay;
   p | people;
-  p | generator;
   p | stateSummaries;
 
   if (p.isUnpacking()) {
@@ -505,7 +509,7 @@ void People::ReceiveIntervention(int interventionIdx) {
     diseaseModel->getPersonIntervention(interventionIdx);
   for (Person &person : people) {
     if (person.willComply(interventionIdx)
-        && inter.test(person, &generator)) {
+        && inter.test(person, person.getGenerator())) {
       inter.apply(&person);
     }
   }
@@ -563,12 +567,13 @@ void People::ProcessInteractions(Person *person) {
   }
 
   // Detemine whether or not this person was infected...
-  double roll = -log(unitDistrib(generator)) / totalPropensity;
+  std::default_random_engine *generator = person->getGenerator();
+  double roll = -log(unitDistrib(*generator)) / totalPropensity;
 
   if (roll <= 1) {
     // ...if they were, determine which interaction was responsible, by
     // choosing an interaction, with a weight equal to the propensity
-    roll = std::uniform_real_distribution<>(0, totalPropensity)(generator);
+    roll = std::uniform_real_distribution<>(0, totalPropensity)(*generator);
     double partialSum = 0.0;
     int interactionIdx;
     for (interactionIdx = 0; interactionIdx < numInteractions;
@@ -595,20 +600,21 @@ void People::ProcessInteractions(Person *person) {
 void People::UpdateDiseaseState(Person *person) {
   // Transition to next state or mark the passage of time
   person->secondsLeftInState -= DAY_LENGTH;
+  std::default_random_engine *generator = person->getGenerator();
   if (person->secondsLeftInState <= 0) {
     // If they have already been infected
     if (person->next_state != -1) {
       person->state = person->next_state;
       std::tie(person->next_state, person->secondsLeftInState) =
-        diseaseModel->transitionFromState(person->state, &generator);
+        diseaseModel->transitionFromState(person->state, generator);
 
     } else {
       // Get which exposed state they should transition to.
       std::tie(person->state, std::ignore) =
-        diseaseModel->transitionFromState(person->state, &generator);
+        diseaseModel->transitionFromState(person->state, generator);
       // See where they will transition next.
       std::tie(person->next_state, person->secondsLeftInState) =
-        diseaseModel->transitionFromState(person->state, &generator);
+        diseaseModel->transitionFromState(person->state, generator);
     }
   }
 }

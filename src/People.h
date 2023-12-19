@@ -31,7 +31,6 @@ class People : public CBase_People {
   Id numLocalPeople;
   Counter totalVisitsForDay;
   std::vector<Person> people;
-  std::default_random_engine generator;
   DiseaseModel *diseaseModel;
   std::vector<Id> stateSummaries;
 
@@ -44,7 +43,7 @@ class People : public CBase_People {
   explicit People(int seed, std::string scenarioPath);
   explicit People(CkMigrateMessage *msg);
   void pup(PUP::er &p);  // NOLINT(runtime/references)
-  void generatePeopleData(Id firstLocalPersonIndex);
+  void generatePeopleData(Id firstLocalPersonIndex, int seed);
   void generateVisitData();
   void SendVisitMessages();
   double getTransmissionModifier(const Person &person);

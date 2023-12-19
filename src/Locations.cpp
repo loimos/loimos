@@ -64,7 +64,7 @@ Locations::Locations(int seed, std::string scenarioPath) {
   for (int i = 0; i < numLocalLocations; i++) {
     // Seed random number generator via branch ID for reproducibility
     locations.emplace_back(diseaseModel->locationAttributes,
-      numInterventions, firstLocalLocationIdx + i, seed);
+      numInterventions, firstLocalLocationIdx + i);
   }
 
   // Load application data
@@ -73,9 +73,10 @@ Locations::Locations(int seed, std::string scenarioPath) {
   }
 
   for (Location &l : locations) {
+    l.setSeed(seed);
     for (int i = 0; i < numInterventions; ++i) {
       const Intervention<Location> &inter = diseaseModel->getLocationIntervention(i);
-      l.toggleCompliance(i, inter.willComply(l, &l.generator));
+      l.toggleCompliance(i, inter.willComply(l, l.getGenerator()));
     }
   }
 
@@ -426,7 +427,7 @@ void Locations::ReceiveIntervention(PartitionId interventionIdx) {
     const Intervention<Location> &inter =
       diseaseModel->getLocationIntervention(interventionIdx);
     if (location.willComply(interventionIdx)
-        && inter.test(location, &location.generator)) {
+        && inter.test(location, location.getGenerator())) {
       inter.apply(&location);
     }
   }
