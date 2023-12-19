@@ -31,7 +31,7 @@ void ContactModel::computeLocationValues(Location *location) {}
 // Just use a constant probability
 bool ContactModel::madeContact(const Event &susceptibleEvent,
   const Event &infectiousEvent, Location *location) {
-  return unitDistrib(location->generator) < DEFAULT_CONTACT_PROBABILITY;
+  return unitDistrib(*location->getGenerator()) < DEFAULT_CONTACT_PROBABILITY;
 }
 
 double ContactModel::getContactProbability(const Location &location) const {

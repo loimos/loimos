@@ -65,7 +65,7 @@ bool MinMaxAlphaModel::madeContact(
 ) {
   union Data contactProbability =
     location->getValue(contactProbabilityIndex);
-  return unitDistrib(location->generator) < contactProbability.double_val;
+  return unitDistrib(*location->getGenerator()) < contactProbability.double_val;
 }
 
 double MinMaxAlphaModel::getContactProbability(const Location &location) const {
