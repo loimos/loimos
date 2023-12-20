@@ -36,7 +36,7 @@ void Location::pup(PUP::er &p) {
   p | events;
   p | generator;
 }
-  
+
 void Location::reset() {
   anyInfectious = false;
   anySusceptible = false;
