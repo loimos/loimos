@@ -25,6 +25,7 @@ Location::Location(const AttributeTable &attributes,
     int numInterventions, int uniqueId_) :
     DataInterface(attributes, numInterventions) {
   setUniqueId(uniqueId_);
+  reset();
 }
 
 Location::Location(CkMigrateMessage *msg) {}
@@ -34,6 +35,12 @@ void Location::pup(PUP::er &p) {
   p | uniqueId;
   p | events;
   p | generator;
+}
+  
+void Location::reset() {
+  anyInfectious = false;
+  anySusceptible = false;
+  events.clear();
 }
 
 // Event processing.
