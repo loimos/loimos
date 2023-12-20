@@ -46,6 +46,12 @@ void Location::reset() {
 #endif
   events.clear();
 }
+  
+void Location::reset() {
+  anyInfectious = false;
+  anySusceptible = false;
+  events.clear();
+}
 
 // Event processing.
 void Location::addEvent(const Event &e) {
