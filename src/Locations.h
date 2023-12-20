@@ -31,7 +31,6 @@ class Locations : public CBase_Locations {
 
   // For random generation.
   static std::uniform_real_distribution<> unitDistrib;
-  std::default_random_engine generator;
 
   // Each Event in one of these containers is the arrival event for a
   // a person at a location

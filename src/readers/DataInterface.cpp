@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
+#include <random>
+
 #include "DataInterface.h"
 #include "AttributeTable.h"
 #include "../Types.h"
@@ -37,6 +39,14 @@ union Data DataInterface::getValue(int idx) const {
 
 std::vector<union Data> &DataInterface::getData() {
   return data;
+}
+
+void DataInterface::setSeed(int seed) {
+  generator.seed(seed + uniqueId);
+}
+
+std::default_random_engine * DataInterface::getGenerator() {
+  return &generator;
 }
 
 void DataInterface::toggleCompliance(int interventionIndex, bool value) {

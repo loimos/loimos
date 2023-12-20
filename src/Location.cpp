@@ -33,6 +33,7 @@ void Location::pup(PUP::er &p) {
   p | data;
   p | uniqueId;
   p | events;
+  p | generator;
 }
 
 // Event processing.
