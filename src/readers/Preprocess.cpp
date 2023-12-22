@@ -98,10 +98,11 @@ void buildObjectLookupCache(Id numObjs, const std::vector<Id> &offsets,
   // Check if file cache already created.
   std::ifstream existenceCheck(outputPath, std::ios_base::binary);
   if (existenceCheck.good()) {
-    CkPrintf("Using existing cache.\n");
+    CkPrintf("  Using existing object cache\n");
     existenceCheck.close();
 
   } else {
+    CkPrintf("  Saving object cache to %s\n", outputPath.c_str());
     existenceCheck.close();
     std::ofstream outputStream(outputPath, std::ios_base::binary);
     for (PartitionId p = 0; p < offsets.size(); p++) {
@@ -132,9 +133,10 @@ void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
   // Check if cache already created.
   std::ifstream existenceCheck(outputPath, std::ios_base::binary);
   if (existenceCheck.good()) {
-    CkPrintf("Activity cache already exists.");
+    CkPrintf("  Using existing activity cache\n");
     return;
   }
+  CkPrintf("  Saving activity cache to %s\n", outputPath.c_str());
 
   std::ifstream activityStream(inputPath, std::ios_base::binary);
   if (!activityStream) {
