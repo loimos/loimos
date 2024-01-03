@@ -349,7 +349,7 @@ void People::loadPeopleData(std::string scenarioPath) {
 
 void People::loadVisitData(std::ifstream *activityData) {
   #ifdef ENABLE_DEBUG
-    int numVisits = 0;
+    Id numVisits = 0;
   #endif
   for (Person &person : people) {
     person.visitsByDay.reserve(numDaysWithDistinctVisits);
@@ -419,7 +419,7 @@ void People::loadVisitData(std::ifstream *activityData) {
   }
   #if ENABLE_DEBUG >= DEBUG_VERBOSE
     CkCallback cb(CkReductionTarget(Main, ReceiveVisitsLoadedCount), mainProxy);
-    contribute(sizeof(int), &numVisits, CkReduction::sum_int, cb);
+    contribute(sizeof(Id), &numVisits, CkReduction::CONCAT(sum_, ID_REDUCTION_TYPE), cb);
   #endif
 }
 

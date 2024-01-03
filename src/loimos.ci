@@ -121,7 +121,7 @@ mainmodule loimos {
       for (day = 0; day < numDays \
         && (day < DAYS_TO_SEED_INFECTION || 0 != lastInfectiousCount); day++) {
 #endif  // ENABLE_FORCE_FULL_RUN
-        //serial{CkPrintf("  Starting iteration\n");}
+        // serial{CkPrintf("  Starting iteration\n");}
 #ifdef ENABLE_TRACING
           if (day == PROFILING_START_DAY){
             serial{traceArray.traceOn();}
@@ -131,7 +131,7 @@ mainmodule loimos {
         serial {
           iterationStartTime = CkWallTimer();
 
-          //CkPrintf("  Sending Visit Messages\n");
+          // CkPrintf("  Sending Visit Messages\n");
           stepStartTime = CkWallTimer();
           peopleArray.SendVisitMessages();
           CkStartQD(CkCallback(
@@ -146,7 +146,7 @@ mainmodule loimos {
               diff);
             totalTime[TOTAL_VISITS_TIME_INDEX] += diff;
 
-            //CkPrintf("  Compute Interactions\n");
+            // CkPrintf("  Compute Interactions\n");
             stepStartTime = CkWallTimer();
             locationsArray.ComputeInteractions();
             if (DAYS_TO_SEED_INFECTION > day) {
@@ -166,7 +166,7 @@ mainmodule loimos {
               diff);
             totalTime[TOTAL_INTERACTIONS_TIME_INDEX] += diff;
 
-            //CkPrintf("  End of day state update starting\n");
+            // CkPrintf("  End of day state update starting\n");
             stepStartTime = CkWallTimer();
             peopleArray.EndOfDayStateUpdate();
           }
@@ -187,7 +187,7 @@ mainmodule loimos {
             // Print how long this iteration took to run
             CkPrintf(
               "Iteration %d Execution Time: %lf seconds. Infectious Count: "
-              ID_PRINT_TYPE ".\n",
+              COUNTER_PRINT_TYPE ".\n",
               day, CkWallTimer() - iterationStartTime, infectiousCount
             );
 
@@ -268,8 +268,8 @@ mainmodule loimos {
     entry void StartComputingInteractions();
     entry void ComputedInteractions();
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
-    entry [reductiontarget] void ReceiveVisitsLoadedCount(int visitsCount) {
-      serial{CkPrintf("  Loaded a total of %d visits\n", visitsCount);}
+    entry [reductiontarget] void ReceiveVisitsLoadedCount(Id visitsCount) {
+      serial{CkPrintf("  Loaded a total of " ID_PRINT_TYPE " visits\n", visitsCount);}
     };
     entry [reductiontarget] void ReceiveVisitsSentCount(Counter count) {
       serial{totalVisits += count;}
@@ -285,7 +285,7 @@ mainmodule loimos {
     };
     entry [reductiontarget] void ReceiveExposureDuration(int64_t duration) {
       serial{totalExposureDuration += duration;}
-      serial{CkPrintf("  "COUNTER_PRINT_TYPE"s total exposure\n", duration);}
+      serial{CkPrintf("  " COUNTER_PRINT_TYPE "s total exposure\n", duration);}
     };
 #endif // ENABLE_DEBUG
     entry [reductiontarget] void ReceiveInfectiousCount(Id infectiousCount);
