@@ -618,7 +618,7 @@ void People::ProcessInteractions(Person *person) {
     for (interactionIdx = 0; interactionIdx < numInteractions;
         ++interactionIdx) {
       partialSum += person->interactions[interactionIdx].propensity;
-      if (partialSum > roll2) {
+      if (partialSum > roll) {
         break;
       }
     }
@@ -631,7 +631,7 @@ void People::ProcessInteractions(Person *person) {
     if (diseaseModel->isSusceptible(person->state)) {
       person->secondsLeftInState = -1;
       std::tie(person->next_state, std::ignore) =
-        diseaseModel->transitionFromState(person->state, &generator);
+        diseaseModel->transitionFromState(person->state, generator);
 
 #if OUTPUT_FLAGS & OUTPUT_TRANSITIONS
       // tick,pid,exit_state,contact_pid,contact_start
@@ -663,7 +663,7 @@ void People::UpdateDiseaseState(Person *person) {
 
     person->state = person->next_state;
     std::tie(person->next_state, person->secondsLeftInState) =
-      diseaseModel->transitionFromState(person->state, &generator);
+      diseaseModel->transitionFromState(person->state, generator);
   }
 }
 

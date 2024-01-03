@@ -288,7 +288,7 @@ Counter Locations::processEvents(Location *loc) {
       saveInteractions(*loc, event, interactionsFile);
 #endif
 
-#if ENABLE_DEBUG == DEBUG_PER_INTERACTION
+#if OUTPUT_FLAGS & OUTPUT_OVERLAPS
       saveInteractions(*loc, event, interactionsFile);
 #endif
 
@@ -318,7 +318,6 @@ Counter Locations::processEvents(Location *loc) {
 #endif  // DEBUG_VERBOSE
 }
 
-//#if ENABLE_DEBUG >= DEBUG_VERBOSE
 #if OUTPUT_FLAGS & OUTPUT_OVERLAPS
 Counter Locations::saveInteractions(const Location &loc,
     const Event &departure, std::ofstream *out) {

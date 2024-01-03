@@ -236,17 +236,12 @@ Main::Main(CkArgMsg* msg) {
     if (scenarioPath.back() != '/') {
       scenarioPath.push_back('/');
     }
-    scenarioId = buildCache(
-        scenarioPath, numPeople, numPeoplePartitions, numLocations,
-        numLocationPartitions, numDaysWithDistinctVisits);
   }
 #if OUTPUT_FLAGS != OUTPUT_DEFAULT
   if (outputPath.back() == '/') {
     outputPath.pop_back();
   }
-
   create_directory(outputPath, syntheticRun ? "." : scenarioPath);
-
   outputPath.push_back('/');
 #endif
 
@@ -270,15 +265,19 @@ Main::Main(CkArgMsg* msg) {
   }
 
   // setup main proxy
-  CkPrintf("\nRunning Loimos on %d PEs with %d people, %d locations, "
-      "%d people chares, %d location chares, and %d days\n",
+  CkPrintf("\nRunning Loimos on %d PEs with "
+      ID_PRINT_TYPE " people, " ID_PRINT_TYPE " locations, "
+      PARTITION_ID_PRINT_TYPE " people chares, " PARTITION_ID_PRINT_TYPE
+      " location chares, and %d days\n",
     CkNumPes(), numPeople, numLocations, numPersonPartitions,
     numLocationPartitions, numDays);
   mainProxy = thisProxy;
 
   if (syntheticRun) {
-    CkPrintf("Synthetic run with (%d, %d) person grid and "
-        "(%d, %d) location grid. Average degree of %d\n\n",
+    CkPrintf("Synthetic run with (" ID_PRINT_TYPE ", " ID_PRINT_TYPE
+        ") person grid and "
+        "(" PARTITION_ID_PRINT_TYPE ", " PARTITION_ID_PRINT_TYPE
+        ") location grid. Average degree of %d\n\n",
       synPeopleGridWidth, synPeopleGridHeight, synLocationGridWidth,
       synLocationGridHeight, averageDegreeOfVisit);
   }
@@ -352,7 +351,6 @@ Main::Main(CkArgMsg* msg) {
 #else
   seed = 0;
 #endif
-  CkPrintf("Running with random seed %d\n", seed);
 
   peopleArray = CProxy_People::ckNew(seed, scenarioPath, numPersonPartitions);
   locationsArray = CProxy_Locations::ckNew(seed, scenarioPath,
