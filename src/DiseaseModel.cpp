@@ -501,7 +501,7 @@ double DiseaseModel::getPropensity(DiseaseState susceptibleState,
   // EpiHiper had a number of weights/scaling constants that we may add in
   // later, but for now we omit most of them (which is equivalent to setting
   // them all to one)
-  double result = model->transmissibility() * dt * susceptibility * infectivity
+  return model->transmissibility() * dt * susceptibility * infectivity
     * model->disease_states(susceptibleState).susceptibility()
     * model->disease_states(infectiousState).infectivity() / DAY_LENGTH;
 }
