@@ -419,7 +419,8 @@ void People::loadVisitData(std::ifstream *activityData) {
   }
   #if ENABLE_DEBUG >= DEBUG_VERBOSE
     CkCallback cb(CkReductionTarget(Main, ReceiveVisitsLoadedCount), mainProxy);
-    contribute(sizeof(Id), &numVisits, CkReduction::CONCAT(sum_, ID_REDUCTION_TYPE), cb);
+    contribute(sizeof(Id), &numVisits, CkReduction::CONCAT(sum_, ID_REDUCTION_TYPE),
+      cb);
   #endif
 }
 

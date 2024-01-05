@@ -216,17 +216,6 @@ void Locations::ComputeInteractions() {
   contribute(sizeof(Counter), &numInteractions,
       CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), cb);
 
-//  CkCallback cb2(CkReductionTarget(Main, ReceiveExposureDuration), mainProxy);
-//#if ENABLE_DEBUG == DEBUG_PER_INTERACTION
-//  contribute(sizeof(int64_t), &expectedExposureDuration,
-//      CkReduction::sum_long, cb2);
-//   if (0 < expectedExposureDuration) {
-//     CkPrintf("    Chare %d: "COUNTER_PRINT_TYPE"s expected duration\n",
-//         thisIndex, expectedExposureDuration);
-//   }
-//#else
-//  contribute(sizeof(Counter), &exposureDuration, CkReduction::sum_double, cb2);
-//#endif  // DEBUG_PER_INTERACTION
 #endif
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
@@ -301,7 +290,6 @@ Counter Locations::processEvents(Location *loc) {
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   double p = contactModel->getContactProbability(*loc);
   Counter total = static_cast<Counter>(p * numInteractions);
-  //expectedExposureDuration += duration * p;
 
 #if ENABLE_DEBUG == DEBUG_LOCATION_SUMMARY
   if (0 != numInteractions && -1 != maxSimVisitsIdx) {

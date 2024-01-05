@@ -35,7 +35,7 @@
 #define OUTPUT_EXPOSURES 2
 #define OUTPUT_OVERLAPS 4
 #ifndef OUTPUT_FLAGS
-  #define OUTPUT_FLAGS OUTPUT_DEFAULT 
+  #define OUTPUT_FLAGS OUTPUT_DEFAULT
 #endif
 
 // Tracing levels

@@ -64,7 +64,7 @@
 /* readonly */ double stepStartTime;
 /* readonly */ double dataLoadingStartTime;
 /* readonly */ std::vector<double> totalTime;
-/* readonly */ std::string outputPath;
+/* readonly */ std::string outputPath;  // NOLINT(runtime/string)
 
 
 // For synthetic run.
