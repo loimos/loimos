@@ -1,5 +1,5 @@
 label: "covid19"
-transmissibility: 1e-11
+transmissibility: .5
 
 starting_states: {
 	starting_state: 0
