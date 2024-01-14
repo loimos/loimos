@@ -1,10 +1,11 @@
-# Usage - script_name.py (visits.csv file path) (sample weight - "None", "Degree", or "Degree_Inverse") (sample size)
+# Usage - average_connectivity.py (visits.csv file path) (sample weight - "None", "Degree", or "Degree_Inverse") (sample size)
 
 import igraph as ig
 import pandas as pd
 import sys
 import numpy as np
 
+# returns sample as 2D array of vertex pairs
 def sample(G, weight, sample_size):
     if weight == "None":
         random_vertex_indices = np.random.choice(G.vcount(), size=(sample_size, 2), replace=False, p=None)
@@ -63,7 +64,7 @@ print("Updated PID and LID names to be unique \n")
 
 G = ig.Graph.TupleList(df.itertuples(index=False), directed=False)
 print("Loaded graph into igraph")
-print("Graph has " + str(G.vcount()) + " vertices and " + str(G.ecount()) + " edges")
+print("Graph has " + str(G.vcount()) + " vertices and " + str(G.ecount()) + " edges \n")
 
 random_sample = sample(G, weight, int(sample_size))
 print("Gathered sample \n")
