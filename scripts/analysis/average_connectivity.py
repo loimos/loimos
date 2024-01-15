@@ -74,7 +74,7 @@ for i in random_sample:
     cuts = G.mincut_value(source = i[0], target = i[1])
     sum += cuts
 
-print("The average connectivity is: " + str(sum / sample_size))
+print("The approximate average connectivity is: " + str(sum / sample_size))
 
 
 
