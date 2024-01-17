@@ -5,7 +5,6 @@ import pandas as pd
 import sys
 import numpy as np
 
-# returns sample as 2D array of vertex pairs
 def sample(G, weight, sample_size):
     if weight == "None":
         random_vertex_indices = np.random.choice(G.vcount(), size=(sample_size, 2), replace=False, p=None)
@@ -53,28 +52,30 @@ except IndexError:
 
 try:
     df = pd.read_csv(file_name)
-    print("Loaded CSV " + file_name + "\n")
+    print("Loaded CSV " + file_name + "\n", flush=True)
 except:
     raise FileNotFoundError("Please provide a valid path to the visits CSV file as a command line argument.\n") 
 
 
 df['pid'] = df['pid'].apply(lambda x: 'p' + str(x))
 df['lid'] = df['lid'].apply(lambda x: 'l' + str(x))
-print("Updated PID and LID names to be unique \n")
+print("Updated PID and LID names to be unique \n", flush=True)
 
 G = ig.Graph.TupleList(df.itertuples(index=False), directed=False)
-print("Loaded graph into igraph")
-print("Graph has " + str(G.vcount()) + " vertices and " + str(G.ecount()) + " edges \n")
+print("Loaded graph into igraph", flush=True)
+print("Graph has " + str(G.vcount()) + " vertices and " + str(G.ecount()) + " edges", flush=True)
 
-random_sample = sample(G, weight, int(sample_size))
-print("Gathered sample \n")
+random_sample = sample(G, weight, sample_size)
+print("Gathered sample of size " + str(sample_size) + "\n", flush=True)
 
 sum = 0 
+num = 0
 for i in random_sample:
     cuts = G.mincut_value(source = i[0], target = i[1])
     sum += cuts
 
-print("The approximate average connectivity is: " + str(sum / sample_size))
+    num += 1
+    if num % 5 == 0:
+        print(str(num) + " vertices: " + "Avg " + str(sum / num), flush=True)
 
-
-
+print("\nThe approximate average connectivity is: " + str(sum / sample_size), flush=True)
