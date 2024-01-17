@@ -52,31 +52,34 @@ except IndexError:
 
 try:
     df = pd.read_csv(file_name)
-    print("Loaded CSV " + file_name + "\n")
+    print("Loaded CSV " + file_name + "\n", flush=True)
 except:
     raise FileNotFoundError("Please provide a valid path to the visits CSV file as a command line argument.\n") 
 
 
 df['pid'] = df['pid'].apply(lambda x: 'p' + str(x))
 df['lid'] = df['lid'].apply(lambda x: 'l' + str(x))
-print("Updated PID and LID names to be unique \n")
+print("Updated PID and LID names to be unique \n", flush=True)
 
 G = ig.Graph.TupleList(df.itertuples(index=False), directed=False)
-print("Loaded graph into igraph")
-print("Graph has " + str(G.vcount()) + " vertices and " + str(G.ecount()) + " edges \n")
+print("Loaded graph into igraph", flush=True)
+print("Graph has " + str(G.vcount()) + " vertices and " + str(G.ecount()) + " edges \n", flush=True)
 
-random_sample = sample(G, weight, int(sample_size))
-print("Gathered sample \n")
+random_sample = sample(G, weight, sample_size)
+print("Gathered sample of size " + str(sample_size) + "\n", flush=True)
 
 sum = 0 
 maxEccentricity = 0
+num = 0
 for i in random_sample:
     eccentricity = G.eccentricity(vertices=i)
     sum += eccentricity
     maxEccentricity = max(maxEccentricity, eccentricity)
 
-print("The approximate average eccentricity is: " + str(sum / sample_size))
-print("The maximum eccentricity in the sample is: " + str(maxEccentricity) + "\n")
+    num += 1
+    if num % 5 == 0:
+        print(str(num) + " vertices: " + "Avg " + str(sum / num) + " Max " + str(maxEccentricity), flush=True)
 
 
-
+print("\nThe approximate average eccentricity is: " + str(sum / sample_size), flush=True)
+print("The maximum eccentricity in the sample is: " + str(maxEccentricity) + "\n", flush=True)
