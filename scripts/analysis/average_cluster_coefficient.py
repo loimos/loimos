@@ -3,6 +3,7 @@
 import igraph as ig
 import pandas as pd
 import sys
+import random
 
 arguments = sys.argv
 
@@ -30,9 +31,13 @@ print("Graph has " + str(G.vcount()) + " vertices and " + str(G.ecount()) + " ed
 num_vertices = 0
 tot_coefficient = 0
 
-for i in G.vs:
+shuffled_vertices = random.sample(list(G.vs), len(G.vs))
+
+for i in shuffled_vertices:
     if i["name"][0] != "p":
         continue
+
+    print(i["name"])
 
     num_combs = 0
     tot_local_coefficient = 0 
