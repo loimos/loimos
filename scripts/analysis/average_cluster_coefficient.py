@@ -32,12 +32,11 @@ num_vertices = 0
 tot_coefficient = 0
 
 shuffled_vertices = random.sample(list(G.vs), len(G.vs))
+print("Shuffled vertices\n", flush=True)
 
 for i in shuffled_vertices:
     if i["name"][0] != "p":
         continue
-
-    print(i["name"])
 
     num_combs = 0
     tot_local_coefficient = 0 
