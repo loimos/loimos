@@ -61,4 +61,4 @@ for i in G.vs:
         print (str(num_vertices) + " vertices: " + str(tot_coefficient / num_vertices), flush=True)
 
 
-print("\n \n The overall average cluster coefficient using squares is: " + str(tot_coefficient / num_vertices))
+print("\n \n The overall average cluster coefficient using squares is: " + str(tot_coefficient / num_vertices), flush=True)
