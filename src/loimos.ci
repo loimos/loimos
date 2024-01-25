@@ -67,8 +67,8 @@ mainmodule loimos {
 
   readonly Counter totalVisits;
   readonly Counter totalInteractions;
-  readonly int64_t totalExposures;
-  readonly int64_t totalExposureDuration;
+  readonly Counter totalExposures;
+  readonly Counter totalExposureDuration;
   readonly double simulationStartTime;
   readonly double iterationStartTime;
   readonly double stepStartTime;
@@ -236,14 +236,14 @@ mainmodule loimos {
       serial {
         CkPrintf("Finished simulating %d days in %lf seconds.\n",
           day, (CkWallTimer() - simulationStartTime));
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
-        CkPrintf("  Processed " COUNTER_PRINT_TYPE " visits, "
-          COUNTER_PRINT_TYPE " interactions, and "
-          COUNTER_PRINT_TYPE " exposures, "
-          COUNTER_PRINT_TYPE " total exposure duration\n",
-          totalVisits, totalInteractions, totalExposures,
-          totalExposureDuration);
-#endif
+        if (ENABLE_DEBUG >= DEBUG_VERBOSE) {
+          CkPrintf("  Processed " COUNTER_PRINT_TYPE " visits, "
+            COUNTER_PRINT_TYPE " interactions, and "
+            COUNTER_PRINT_TYPE " exposures, "
+            COUNTER_PRINT_TYPE " total exposure duration\n",
+            totalVisits, totalInteractions, totalExposures,
+            totalExposureDuration);
+        }
         CkPrintf("  Visit messages took %lf seconds\n",
           totalTime[TOTAL_VISITS_TIME_INDEX]);
         CkPrintf("  Interaction calculations and messages took %lf seconds\n",
@@ -279,11 +279,11 @@ mainmodule loimos {
       serial{totalInteractions += count;}
       serial{CkPrintf("  Processed " COUNTER_PRINT_TYPE " interactions\n", count);}
     };
-    entry [reductiontarget] void ReceiveExposuresCount(int64_t count) {
+    entry [reductiontarget] void ReceiveExposuresCount(Counter count) {
       serial{totalExposures += count;}
       serial{CkPrintf("  Processed " COUNTER_PRINT_TYPE " exposures\n", count);}
     };
-    entry [reductiontarget] void ReceiveExposureDuration(int64_t duration) {
+    entry [reductiontarget] void ReceiveExposureDuration(Counter duration) {
       serial{totalExposureDuration += duration;}
       serial{CkPrintf("  " COUNTER_PRINT_TYPE "s total exposure\n", duration);}
     };

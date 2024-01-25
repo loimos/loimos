@@ -57,8 +57,8 @@
 /* readonly */ int ageIdx;
 /* readonly */ Counter totalVisits;
 /* readonly */ Counter totalInteractions;
-/* readonly */ int64_t totalExposures;
-/* readonly */ int64_t totalExposureDuration;
+/* readonly */ Counter totalExposures;
+/* readonly */ Counter totalExposureDuration;
 /* readonly */ double simulationStartTime;
 /* readonly */ double iterationStartTime;
 /* readonly */ double stepStartTime;
