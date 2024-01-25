@@ -78,7 +78,7 @@ def assign_num_occupants(num_locations, num_people):
     while num_generated_people < num_people:
         num_missing = num_people - num_generated_people
         print(f"  Attempting to add {num_missing} missing people")
-        to_add = np.random.random_integers(0, num_locations - 1, size=num_missing,)
+        to_add = np.random.random_integers(0, num_locations - 1, size=num_missing)
         occupant_counts[to_add] += 1
         num_generated_people = np.sum(occupant_counts)
     while num_generated_people > num_people:
