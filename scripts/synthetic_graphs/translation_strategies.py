@@ -62,7 +62,7 @@ def assign_num_occupants(num_locations, num_people):
     mean_people = num_locations / num_people
     print(
         f"Assigning {num_people} people to {num_locations} locs "
-        + "(about {mean_people}/loc)"
+        + f"(about {mean_people}/loc)"
     )
     occupant_counts = np.random.poisson(lam=mean_people, size=num_locations)
     # No point in simulating empty locations
@@ -76,15 +76,22 @@ def assign_num_occupants(num_locations, num_people):
     # Note that if we sample duplicate indices, they won't be incremented
     # multiple times, so we may need to repeat this process a couple times
     while num_generated_people < num_people:
-        to_add = np.random.random_integers(
-            0, num_locations - 1, size=num_people - num_generated_people
-        )
+        num_missing = num_people - num_generated_people
+        print(f"  Attempting to add {num_missing} missing people")
+        to_add = np.random.random_integers(0, num_locations - 1, size=num_missing)
         occupant_counts[to_add] += 1
         num_generated_people = np.sum(occupant_counts)
     while num_generated_people > num_people:
-        to_subtract = np.random.choice(
-            np.where(occupant_counts != 0), size=num_generated_people - num_people
-        )
+        num_extra = num_generated_people - num_people
+        print(f"  Attempting to remove {num_extra} extra people")
+
+        # np.where returns a tuple wrapping the answer sometimes, which causes
+        # np.random.choice to think it's dealing with a 2D array
+        tmp = np.where(occupant_counts != 0)
+        if hasattr(tmp, "__iter__"):
+            tmp = tmp[0]
+
+        to_subtract = np.random.choice(tmp, size=num_extra)
         occupant_counts[to_subtract] -= 1
         num_generated_people = np.sum(occupant_counts)
 
