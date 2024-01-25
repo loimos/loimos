@@ -88,10 +88,8 @@ def assign_num_occupants(num_locations, num_people):
         # np.where returns a tuple wrapping the answer sometimes, which causes
         # np.random.choice to think it's dealing with a 2D array
         tmp = np.where(occupant_counts != 0)
-        try:
+        if hasattr(tmp, '__iter__'):
             tmp = tmp[0]
-        except:
-            pass
 
         to_subtract = np.random.choice(tmp, size=num_extra)
         occupant_counts[to_subtract] -= 1
