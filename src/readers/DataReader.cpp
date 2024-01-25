@@ -48,10 +48,9 @@ std::tuple<Id, Id, Time, Time> parseActivityStream(std::ifstream *input,
   Id locationId = -1;
   Time startTime = -1;
   Time duration = -1;
+
   // TODO(IanCostello) don't reallocate this every time.
   char buf[MAX_INPUT_lineLength];
-
-  // Get header line.
   input->getline(buf, MAX_INPUT_lineLength);
 
   // Read over people data format.

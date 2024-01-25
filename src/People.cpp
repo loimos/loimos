@@ -334,6 +334,7 @@ void People::loadVisitData(std::ifstream *activityData) {
     int numVisits = 0;
   #endif
   for (Person &person : people) {
+    person.visitsByDay.reserve(numDaysWithDistinctVisits);
     for (int day = 0; day < numDaysWithDistinctVisits; ++day) {
       Time nextDaySecs = (day + 1) * DAY_LENGTH;
 
@@ -355,6 +356,7 @@ void People::loadVisitData(std::ifstream *activityData) {
       Id locationId = -1;
       Time visitStart = -1;
       Time visitDuration = -1;
+      Time visitEnd = -1;
       std::tie(personId, locationId, visitStart, visitDuration) =
         parseActivityStream(activityData,
             diseaseModel->activityDef, NULL);
@@ -372,8 +374,17 @@ void People::loadVisitData(std::ifstream *activityData) {
       // Seek while same person on same day
       while (personId == person.getUniqueId() && visitStart < nextDaySecs) {
         // Save visit info
+        visitEnd = visitStart + visitDuration;
+        while (visitEnd > nextDaySecs) {
+          int endDay = (visitEnd / DAY_LENGTH) % numDaysWithDistinctVisits;
+          Time newStart = endDay * DAY_LENGTH;
+          person.visitsByDay[endDay].emplace_back(locationId, personId, -1,
+              endDay * DAY_LENGTH, visitEnd, 1.0);
+          visitEnd = std::max(nextDaySecs, visitEnd - DAY_LENGTH);
+        }
+
         person.visitsByDay[day].emplace_back(locationId, personId, -1,
-            visitStart, visitStart + visitDuration, 1.0);
+            visitStart, visitEnd, 1.0);
         #ifdef ENABLE_DEBUG
           numVisits++;
         #endif
