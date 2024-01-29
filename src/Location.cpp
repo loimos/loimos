@@ -48,8 +48,9 @@ void Location::reset() {
 }
 
 void Location::reset() {
+#ifdef ENABLE_SC
   anyInfectious = false;
-  anySusceptible = false;
+#endif
   events.clear();
 }
 
