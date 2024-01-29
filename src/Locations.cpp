@@ -190,8 +190,17 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 #endif
 
   // ...and queue it up at the appropriate location
-  locations[localLocIdx].addEvent(arrival);
-  locations[localLocIdx].addEvent(departure);
+  Location &loc = locations[localLocIdx];
+  bool isInfectious = diseaseModel->isInfectious(visitMsg.personState);
+  bool isSusceptible = diseaseModel->isInfectious(visitMsg.personState);
+#ifdef ENABLE_SC
+  if (!loc.anyInfectious && isInfectious) {
+    loc.anyInfectious = true;
+  }
+#endif
+
+  loc.addEvent(arrival);
+  loc.addEvent(departure);
 }
 
 void Locations::ComputeInteractions() {
@@ -237,6 +246,11 @@ Counter Locations::processEvents(Location *loc) {
   Counter numVisits = loc->events.size() / 2;
   Counter duration = 0;
   double startTime = CkWallTimer();
+#elif ENABLE_SC
+  if (!loc->anyInfectious) {
+    loc->reset();
+    return 0;
+  }
 #endif
 
   std::sort(loc->events.begin(), loc->events.end());
@@ -256,7 +270,7 @@ Counter Locations::processEvents(Location *loc) {
     } else if (diseaseModel->isInfectious(event.personState)) {
       arrivals = &infectiousArrivals;
 
-    // If a person can niether infect other people nor be infected themself,
+    // If a person can neither infect other people nor be infected themself,
     // we can just ignore their comings and goings
     } else {
       continue;
@@ -284,7 +298,7 @@ Counter Locations::processEvents(Location *loc) {
       onDeparture(loc, event);
     }
   }
-  loc->events.clear();
+  loc->reset();
   interactions.clear();
 
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
