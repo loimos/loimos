@@ -47,13 +47,6 @@ void Location::reset() {
   events.clear();
 }
 
-void Location::reset() {
-#ifdef ENABLE_SC
-  anyInfectious = false;
-#endif
-  events.clear();
-}
-
 // Event processing.
 void Location::addEvent(const Event &e) {
   events.push_back(e);
