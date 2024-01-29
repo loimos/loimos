@@ -217,7 +217,7 @@ void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
       totalVisits++;
     }
   }
-  CkPrintf("Parsed a total of %d visits\n", totalVisits);
+  CkPrintf("Parsed a total of " ID_PRINT_TYPE " visits\n", totalVisits);
 
   // Output
   std::ofstream outputStream(outputPath, std::ios::out | std::ios::binary);
