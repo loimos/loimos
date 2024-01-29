@@ -58,11 +58,13 @@
 /* readonly */ Counter totalVisits;
 /* readonly */ Counter totalInteractions;
 /* readonly */ Counter totalExposures;
+/* readonly */ Counter totalExposureDuration;
 /* readonly */ double simulationStartTime;
 /* readonly */ double iterationStartTime;
 /* readonly */ double stepStartTime;
 /* readonly */ double dataLoadingStartTime;
 /* readonly */ std::vector<double> totalTime;
+/* readonly */ std::string outputPath;  // NOLINT(runtime/string)
 
 
 // For synthetic run.
@@ -212,7 +214,8 @@ Main::Main(CkArgMsg* msg) {
         numLocationPartitions, numLocations);
   }
 
-  pathToOutput = std::string(msg->argv[++argNum]);
+  outputPath = std::string(msg->argv[++argNum]);
+
 #if ENABLE_DEBUG >= DEBUG_BASIC
   CkPrintf("Saving simulation output to %s\n", msg->argv[argNum]);
 #endif
@@ -234,8 +237,15 @@ Main::Main(CkArgMsg* msg) {
       scenarioPath.push_back('/');
     }
   }
+#if OUTPUT_FLAGS != OUTPUT_DEFAULT
+  if (outputPath.back() == '/') {
+    outputPath.pop_back();
+  }
+  create_directory(outputPath, syntheticRun ? "." : scenarioPath);
+  outputPath.push_back('/');
+#endif
 
-  // Detemine which contact modle to use
+  // Determine which contact model to use
   contactModelType = static_cast<int>(ContactModelType::constant_probability);
   interventionStategy = false;
   int interventionStategyLocation = -1;
@@ -255,15 +265,19 @@ Main::Main(CkArgMsg* msg) {
   }
 
   // setup main proxy
-  CkPrintf("\nRunning Loimos on %d PEs with %d people, %d locations, "
-      "%d people chares, %d location chares, and %d days\n",
+  CkPrintf("\nRunning Loimos on %d PEs with "
+      ID_PRINT_TYPE " people, " ID_PRINT_TYPE " locations, "
+      PARTITION_ID_PRINT_TYPE " people chares, " PARTITION_ID_PRINT_TYPE
+      " location chares, and %d days\n",
     CkNumPes(), numPeople, numLocations, numPersonPartitions,
     numLocationPartitions, numDays);
   mainProxy = thisProxy;
 
   if (syntheticRun) {
-    CkPrintf("Synthetic run with (%d, %d) person grid and "
-        "(%d, %d) location grid. Average degree of %d\n\n",
+    CkPrintf("Synthetic run with (" ID_PRINT_TYPE ", " ID_PRINT_TYPE
+        ") person grid and "
+        "(" PARTITION_ID_PRINT_TYPE ", " PARTITION_ID_PRINT_TYPE
+        ") location grid. Average degree of %d\n\n",
       synPeopleGridWidth, synPeopleGridHeight, synLocationGridWidth,
       synLocationGridHeight, averageDegreeOfVisit);
   }
@@ -444,7 +458,7 @@ void Main::SeedInfections() {
     // Make a super contagious visit for that person.
     std::vector<Interaction> interactions;
     interactions.emplace_back(
-      std::numeric_limits<double>::max(), 0, 0, 0, std::numeric_limits<int>::max());
+      std::numeric_limits<double>::max(), -1, -1, -1, -1);
 
     InteractionMessage interMsg(-1, personIdx, interactions);
     #ifdef USE_HYPERCOMM
@@ -465,9 +479,13 @@ void Main::SaveStats(Id *data) {
   DiseaseState numDiseaseStates = diseaseModel->getNumberOfStates();
 
   // Open output csv
-  std::ofstream outFile(pathToOutput);
+#if OUTPUT_FLAGS == OUTPUT_DEFAULT
+  std::ofstream outFile(outputPath);
+#else
+  std::ofstream outFile(outputPath + "summary.csv");
+#endif
   if (!outFile) {
-    CkAbort("Error: invalid output path, %s\n", pathToOutput.c_str());
+    CkAbort("Error: invalid output path, %s\n", outputPath.c_str());
   }
 
   // Write header row

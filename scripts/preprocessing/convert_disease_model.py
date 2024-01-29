@@ -11,6 +11,7 @@ our simulation.
 
 import argparse
 import json
+import os
 
 
 # Helpers to convert between the meta format to final textproto.
@@ -37,8 +38,10 @@ def convert_transition(transition_edge):
                 "tvariance": {"days": transition_edge["normal"]["standardDeviation"]},
             }
         }
+    elif "fixed" in transition_edge:
+        return {"fixed": {"time_in_state": {"days": transition_edge["fixed"]}}}
     else:
-        raise f"Unknown type {transition_edge}"
+        raise Exception(f"Unknown type {transition_edge}")
 
 
 def create_transition_set(paths):
@@ -50,29 +53,29 @@ def create_transition_set(paths):
     return transitions
 
 
-def to_textproto(dictv, offset=0):
-    coffset = "\t" * offset
+def to_textproto(out_file, dictv, offset=0):
+    coffset = "  " * offset
     for key, value in dictv.items():
         if type(value) == dict:
-            print(coffset + f"{key}: {{")
-            to_textproto(value, offset + 1)
-            print(coffset + "}")
+            out_file.write(coffset + f"{key}: {{\n")
+            to_textproto(out_file, value, offset + 1)
+            out_file.write(coffset + "}\n")
         elif type(value) == list:
             for x in value:
-                print(coffset + f"{key}: {{")
-                to_textproto(x, offset + 1)
-                print(coffset + "}")
+                out_file.write(coffset + f"{key}: {{\n")
+                to_textproto(out_file, x, offset + 1)
+                out_file.write(coffset + "}\n")
         elif type(value) == bool:
             formatted_value = "true" if value else "false"
-            print(coffset + f"{key}: {formatted_value}")
+            out_file.write(coffset + f"{key}: {formatted_value}\n")
         else:
             formatted_value = value if type(value) != str else f'"{value}"'
-            print(coffset + f"{key}: {formatted_value}")
+            out_file.write(coffset + f"{key}: {formatted_value}\n")
 
 
 # Main converter.
-def convert_file(filepath):
-    with open(filepath) as f:
+def convert_file(in_path, out_path):
+    with open(in_path) as f:
         disease_dict = json.loads(f.read())
 
     # Filter out only disease path for main age group.
@@ -118,8 +121,8 @@ def convert_file(filepath):
     # Convert from their json to intermediary dictionary format.
     converted_states = []
     for state in states.values():
-        if "_a" not in state["id"]:
-            continue
+        # if "_a" not in state["id"]:
+        #    continue
 
         disease_state = {}
         disease_state["state_label"] = state["id"]
@@ -138,14 +141,29 @@ def convert_file(filepath):
             }
         converted_states.append({"disease_states": disease_state})
 
-    # Output as textproto.
-    to_textproto({"label": "TODO_FILL_IN"})
-    to_textproto({"starting_state": "TODO_FILL_IN"})
-    to_textproto({"starting_exposed_state": "TODO_FILL_IN"})
-    for state in converted_states:
-        to_textproto(state)
-    print("\n\n\n")
-    print(state_names_to_index)
+    prefix, _ = os.path.splitext(in_path)
+    label = os.path.basename(prefix)
+    out_path = out_path.format(prefix=prefix)
+
+    # Output as textproto
+    with open(out_path, "w") as out_file:
+        to_textproto(out_file, {"label": label})
+        to_textproto(
+            out_file, {"transmissibility": int(disease_dict["transmissibility"])}
+        )
+        to_textproto(
+            out_file,
+            {
+                "starting_states": {
+                    "starting_state": state_names_to_index[
+                        disease_dict["initialState"]
+                    ],
+                }
+            },
+        )
+        for state in converted_states:
+            to_textproto(out_file, state)
+        print(state_names_to_index)
 
 
 if __name__ == "__main__":
@@ -154,5 +172,12 @@ if __name__ == "__main__":
         description="Converts a UVA JSON format to a new format."
     )
     parser.add_argument("model_to_convert")
+    parser.add_argument(
+        "--out-file",
+        "-o",
+        default="{prefix}.textproto",
+        help="Path to the output file. By default saves to the input "
+        + "file path with the extension changed to '.textproto'",
+    )
     args = parser.parse_args()
-    convert_file(args.model_to_convert)
+    convert_file(args.model_to_convert, args.out_file)

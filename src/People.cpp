@@ -99,6 +99,24 @@ for (Person &p : people) {
       CkWallTimer() - startTime);
 #endif
 
+#if OUTPUT_FLAGS & OUTPUT_EXPOSURES
+  exposuresFile = new std::ofstream(outputPath + "exposures_chare_"
+      + std::to_string(thisIndex) + ".csv");
+  *exposuresFile << "tick,sus_pid,inf_pid,start_time,end_time,propensity"
+      << std::endl;
+#else
+  exposuresFile = NULL;
+#endif
+
+#if OUTPUT_FLAGS & OUTPUT_TRANSITIONS
+  transitionsFile = new std::ofstream(outputPath + "transitions_chare_"
+      + std::to_string(thisIndex) + ".csv");
+  *transitionsFile << "tick,pid,exit_state,contact_pid,contact_start"
+      << std::endl;
+#else
+  transitionsFile = NULL;
+#endif
+
   // Notify Main
   mainProxy.CharesCreated();
 }
@@ -331,7 +349,7 @@ void People::loadPeopleData(std::string scenarioPath) {
 
 void People::loadVisitData(std::ifstream *activityData) {
   #ifdef ENABLE_DEBUG
-    int numVisits = 0;
+    Id numVisits = 0;
   #endif
   for (Person &person : people) {
     person.visitsByDay.reserve(numDaysWithDistinctVisits);
@@ -401,7 +419,8 @@ void People::loadVisitData(std::ifstream *activityData) {
   }
   #if ENABLE_DEBUG >= DEBUG_VERBOSE
     CkCallback cb(CkReductionTarget(Main, ReceiveVisitsLoadedCount), mainProxy);
-    contribute(sizeof(int), &numVisits, CkReduction::sum_int, cb);
+    contribute(sizeof(Id), &numVisits, CkReduction::CONCAT(sum_, ID_REDUCTION_TYPE),
+      cb);
   #endif
 }
 
@@ -570,11 +589,21 @@ void People::SendStats() {
     cb);
 }
 
+double propensityToProbability(double propensity) {
+  return 1.0 - exp(-propensity);
+}
+
 void People::ProcessInteractions(Person *person) {
   double totalPropensity = 0.0;
   uint numInteractions = static_cast<uint>(person->interactions.size());
-  for (uint i = 0; i < numInteractions; ++i) {
-    totalPropensity += person->interactions[i].propensity;
+  for (const Interaction &inter : person->interactions) {
+    totalPropensity += inter.propensity;
+#if OUTPUT_FLAGS & OUTPUT_EXPOSURES
+    // tick,sus_pid,inf_pid,start_time,end_time,propensity
+    *exposuresFile << day << "," << person->getUniqueId() << ","
+        << inter.infectiousIdx << "," << inter.startTime << ","
+        << inter.endTime << "," << inter.propensity << std::endl;
+#endif
   }
 
   // Detemine whether or not this person was infected...
@@ -595,16 +624,25 @@ void People::ProcessInteractions(Person *person) {
       }
     }
 
-    // TODO(jkitson): Save any useful information about the interaction which caused
-    // the infection
+    // TODO(jkitson): Save any useful information about the interaction which
+    // caused the infection
 
     // Mark that exposed healthy individuals should make transition at the end
     // of the day.
     if (diseaseModel->isSusceptible(person->state)) {
       person->secondsLeftInState = -1;
+      std::tie(person->next_state, std::ignore) =
+        diseaseModel->transitionFromState(person->state, generator);
+
+#if OUTPUT_FLAGS & OUTPUT_TRANSITIONS
+      // tick,pid,exit_state,contact_pid,contact_start
+      const Interaction &inter = person->interactions[interactionIdx];
+      *transitionsFile << day << "," << person->getUniqueId() << ","
+          << diseaseModel->getStateLabel(person->next_state) << ","
+          << inter.infectiousIdx << "," << inter.startTime << std::endl;
+#endif
     }
   }
-
   person->interactions.clear();
 }
 
@@ -613,20 +651,20 @@ void People::UpdateDiseaseState(Person *person) {
   person->secondsLeftInState -= DAY_LENGTH;
   std::default_random_engine *generator = person->getGenerator();
   if (person->secondsLeftInState <= 0) {
-    // If they have already been infected
-    if (person->next_state != -1) {
-      person->state = person->next_state;
-      std::tie(person->next_state, person->secondsLeftInState) =
-        diseaseModel->transitionFromState(person->state, generator);
-
-    } else {
-      // Get which exposed state they should transition to.
-      std::tie(person->state, std::ignore) =
-        diseaseModel->transitionFromState(person->state, generator);
-      // See where they will transition next.
-      std::tie(person->next_state, person->secondsLeftInState) =
-        diseaseModel->transitionFromState(person->state, generator);
+#if OUTPUT_FLAGS & OUTPUT_TRANSITIONS
+    // State transition information for initial infections is reported when
+    // they're infected
+    if (!diseaseModel->isSusceptible(person->state)) {
+      // tick,pid,exit_state,contact_pid,contact_start
+      *transitionsFile << day << "," << person->getUniqueId() << ","
+          << diseaseModel->getStateLabel(person->next_state)
+          << ",-1,-1" << std::endl;
     }
+#endif
+
+    person->state = person->next_state;
+    std::tie(person->next_state, person->secondsLeftInState) =
+      diseaseModel->transitionFromState(person->state, generator);
   }
 }
 

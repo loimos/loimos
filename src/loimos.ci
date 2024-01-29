@@ -63,10 +63,12 @@ mainmodule loimos {
   readonly int contactModelType;
   readonly int maxSimVisitsIdx;
   readonly int ageIdx;
+  readonly std::string outputPath;
 
   readonly Counter totalVisits;
   readonly Counter totalInteractions;
   readonly Counter totalExposures;
+  readonly Counter totalExposureDuration;
   readonly double simulationStartTime;
   readonly double iterationStartTime;
   readonly double stepStartTime;
@@ -104,6 +106,7 @@ mainmodule loimos {
         totalVisits = 0;
         totalInteractions = 0;
         totalExposures = 0;
+        totalExposureDuration = 0;
         totalTime.resize(TOTAL_TIME_SIZE, 0);
         CkPrintf("Running ...\n\n");
         simulationStartTime = CkWallTimer();
@@ -118,7 +121,7 @@ mainmodule loimos {
       for (day = 0; day < numDays \
         && (day < DAYS_TO_SEED_INFECTION || 0 != lastInfectiousCount); day++) {
 #endif  // ENABLE_FORCE_FULL_RUN
-        //serial{CkPrintf("  Starting iteration\n");}
+        // serial{CkPrintf("  Starting iteration\n");}
 #ifdef ENABLE_TRACING
           if (day == PROFILING_START_DAY){
             serial{traceArray.traceOn();}
@@ -128,7 +131,7 @@ mainmodule loimos {
         serial {
           iterationStartTime = CkWallTimer();
 
-          //CkPrintf("  Sending Visit Messages\n");
+          // CkPrintf("  Sending Visit Messages\n");
           stepStartTime = CkWallTimer();
           peopleArray.SendVisitMessages();
           CkStartQD(CkCallback(
@@ -143,7 +146,7 @@ mainmodule loimos {
               diff);
             totalTime[TOTAL_VISITS_TIME_INDEX] += diff;
 
-            //CkPrintf("  Compute Interactions\n");
+            // CkPrintf("  Compute Interactions\n");
             stepStartTime = CkWallTimer();
             locationsArray.ComputeInteractions();
             if (DAYS_TO_SEED_INFECTION > day) {
@@ -163,7 +166,7 @@ mainmodule loimos {
               diff);
             totalTime[TOTAL_INTERACTIONS_TIME_INDEX] += diff;
 
-            //CkPrintf("  End of day state update starting\n");
+            // CkPrintf("  End of day state update starting\n");
             stepStartTime = CkWallTimer();
             peopleArray.EndOfDayStateUpdate();
           }
@@ -233,11 +236,15 @@ mainmodule loimos {
       serial {
         CkPrintf("Finished simulating %d days in %lf seconds.\n",
           day, (CkWallTimer() - simulationStartTime));
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
-        CkPrintf("  Processed " COUNTER_PRINT_TYPE " visits, "
-          COUNTER_PRINT_TYPE " interactions, and "
-          COUNTER_PRINT_TYPE " exposures\n",
-          totalVisits, totalInteractions, totalExposures);
+#ifdef ENABLE_DEBUG
+        if (ENABLE_DEBUG >= DEBUG_VERBOSE) {
+          CkPrintf("  Processed " COUNTER_PRINT_TYPE " visits, "
+            COUNTER_PRINT_TYPE " interactions, and "
+            COUNTER_PRINT_TYPE " exposures, "
+            COUNTER_PRINT_TYPE " total exposure duration\n",
+            totalVisits, totalInteractions, totalExposures,
+            totalExposureDuration);
+        }
 #endif
         CkPrintf("  Visit messages took %lf seconds\n",
           totalTime[TOTAL_VISITS_TIME_INDEX]);
@@ -263,8 +270,8 @@ mainmodule loimos {
     entry void StartComputingInteractions();
     entry void ComputedInteractions();
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
-    entry [reductiontarget] void ReceiveVisitsLoadedCount(int visitsCount) {
-      serial{CkPrintf("  Loaded a total of %d visits\n", visitsCount);}
+    entry [reductiontarget] void ReceiveVisitsLoadedCount(Id visitsCount) {
+      serial{CkPrintf("  Loaded a total of " ID_PRINT_TYPE " visits\n", visitsCount);}
     };
     entry [reductiontarget] void ReceiveVisitsSentCount(Counter count) {
       serial{totalVisits += count;}
@@ -277,6 +284,10 @@ mainmodule loimos {
     entry [reductiontarget] void ReceiveExposuresCount(Counter count) {
       serial{totalExposures += count;}
       serial{CkPrintf("  Processed " COUNTER_PRINT_TYPE " exposures\n", count);}
+    };
+    entry [reductiontarget] void ReceiveExposureDuration(Counter duration) {
+      serial{totalExposureDuration += duration;}
+      serial{CkPrintf("  " COUNTER_PRINT_TYPE "s total exposure\n", duration);}
     };
 #endif // ENABLE_DEBUG
     entry [reductiontarget] void ReceiveInfectiousCount(Id infectiousCount);

@@ -98,7 +98,9 @@ void buildObjectLookupCache(Id numObjs, const std::vector<Id> &offsets,
   // Check if file cache already created.
   std::ifstream existenceCheck(outputPath, std::ios_base::binary);
   if (existenceCheck.good()) {
-    CkPrintf("  Using existing object cache\n");
+    if (0 == CkMyNode()) {
+      CkPrintf("  Using existing object cache\n");
+    }
     existenceCheck.close();
 
   } else {
@@ -262,4 +264,23 @@ Id getFirstIndex(const loimos::proto::CSVDefinition *metadata, std::string input
   }
 
   return firstIdx;
+}
+
+bool create_directory(std::string path, std::string referencePath) {
+  struct stat checkStat;
+  struct stat referenceStat;
+
+  int result = stat(path.c_str(), &checkStat);
+  if (0 == result && S_ISDIR(checkStat.st_mode)) {
+    CkPrintf("Directory %s already exists\n", path.c_str());
+    return false;
+  } else if (0 == result) {
+    CkError("Attempted to create directory %s which exisits as a regular file\n",
+        path.c_str());
+  } else {
+    stat(referencePath.c_str(), &referenceStat);
+    mkdir(path.c_str(), referenceStat.st_mode);
+    CkPrintf("Created directory %s\n", path.c_str());
+    return true;
+  }
 }

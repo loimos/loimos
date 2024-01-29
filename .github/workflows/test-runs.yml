@@ -144,7 +144,7 @@ jobs:
             ../data/disease_models/safe_risky.textproto \
             ../data/populations/safe_risky_population/ ++local
           cat test-safe-risky.csv
-          grep -r "29,recovered_safe,14,0" test-safe-risky.csv
+          grep -r "29,recovered_safe,7,0" test-safe-risky.csv
           grep -r "29,recovered_risky,20000,0" test-safe-risky.csv
 
       # Make sure epi-curve matches previous one for a synthetic dataset
