@@ -232,9 +232,10 @@ def partition_locations(args):
     print(locations, flush=True)
 
     # Reindexing doesn't depend on the partition
-    locations.sort_values(LOCATION_SORT_BY, inplace=True)
-    print("locations sorted:", flush=True)
-    print(locations, flush=True)
+    if not args.offsets_only:
+        locations.sort_values(LOCATION_SORT_BY, inplace=True)
+        print("locations sorted:", flush=True)
+        print(locations, flush=True)
 
     lid_update = make_contiguous(
         locations, name="locations", reset_index=True, validate=args.validate
