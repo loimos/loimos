@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import re
 import sys
 
 import pandas as pd
@@ -63,30 +64,34 @@ def parse_args():
     parser.add_argument(
         "-pi",
         "--people-in-file",
-        default=os.path.join("base_population", "{region}_person.csv"),
+        # default=os.path.join("base_population", "{region}_person.csv"),
+        default="{region}_person.csv",
         help="The name of the file containing person data within the "
         + "population dir",
     )
     parser.add_argument(
         "-ri",
         "--residences-in-file",
-        default=os.path.join("locations", "{region}_residence_locations.csv"),
+        # default=os.path.join("locations", "{region}_residence_locations.csv"),
+        default="{region}_residence_locations.csv",
         help="The name of the file containing home location data within the "
         + "population dir",
     )
     parser.add_argument(
         "-ai",
         "--activity-locs-in-file",
-        default=os.path.join("locations", "{region}_activity_locations.csv"),
+        # default=os.path.join("locations", "{region}_activity_locations.csv"),
+        default="{region}_activity_locations.csv",
         help="The name of the file containing home location data within the "
         + "population dir",
     )
     parser.add_argument(
         "-rai",
         "--residences-assignments-in-file",
-        default=os.path.join(
-            "home_location_assignment", "{region}_household_residence_assignment.csv"
-        ),
+        # default=os.path.join(
+        #    "home_location_assignment", "{region}_household_residence_assignment.csv"
+        # ),
+        default="{region}_household_residence_assignment.csv",
         help="The name of the file asigning households to home locations "
         + "within the population dir",
     )
@@ -147,6 +152,14 @@ def parse_args():
         type=int,
         help="The number of partitions for merge dataframes per task",
     )
+    parser.add_argument(
+        "-as",
+        "--activity-suffix",
+        default=None,
+        help="A regex which, when appended to the activity file names, "
+        + "describes all revelevant files, when actities are split across "
+        + "multiple files",
+    )
 
     # Flags
     parser.add_argument(
@@ -154,6 +167,12 @@ def parse_args():
         "--flat",
         action="store_true",
         help="Pass this flag if the script should expect a flat input directory",
+    )
+    parser.add_argument(
+        "-val",
+        "--validate",
+        action="store_true",
+        help="Pass this flag if the script should validate its results",
     )
 
     args = parser.parse_args()
@@ -173,13 +192,39 @@ def parse_args():
     return args
 
 
-def read_csv(in_dir, filename, region="", should_flatten=False, nrows=None, **kwargs):
+def read_csv(
+    in_dir,
+    filename,
+    region="",
+    should_flatten=False,
+    nrows=None,
+    suffix_regex=None,
+    concat=True,
+    **kwargs,
+):
     if should_flatten:
         filename = os.path.basename(filename)
 
     path = os.path.join(in_dir, filename.format(region=region))
-    print(f"Reading {path} ({nrows})")
-    return pd.read_csv(path, nrows=nrows, **kwargs)
+    if suffix_regex is None:
+        print(f"Reading {path} ({nrows})")
+        return pd.read_csv(path, nrows=nrows, **kwargs)
+    else:
+        d, filename = os.path.split(path)
+        print(f"seraching in {d} for files matching {filename + suffix_regex}")
+        regex = re.compile(filename + suffix_regex)
+        dfs = []
+        # for f in os.listdir(d):
+        #    pd.read_csv(os.path.join(d, f))
+        dfs = [
+            pd.read_csv(os.path.join(d, f))
+            for f in os.listdir(d)
+            if re.match(regex, f) is not None
+        ]
+        if concat:
+            return pd.concat(dfs)  # , ignore_index=True)
+        else:
+            return dfs
 
 
 def write_csv(out_dir, filename, df, **kwargs):
@@ -261,7 +306,7 @@ def update_ids(
     # for arbitary updates (should be DF with two columns: new_col and id_col
     elif isinstance(update, pd.DataFrame):
         num_rows = df.shape[0]
-        print(f"  Updating {name} using arbitary mapping")
+        print(f"    Updating {name} using arbitary mapping")
         new_col = update.columns[0]
         old_col = f"old_{id_col}"
         merge_cols = [id_col] + suplimental_cols
@@ -370,33 +415,7 @@ def fix_people(args):
     return people_update
 
 
-def merge_visits(args, activity_update, home_update, people_update):
-    in_dir = args.in_dir
-
-    adult_activity_visits = read_csv(
-        in_dir,
-        args.activity_loc_adult_assignments_in_file,
-        args.region,
-        should_flatten=args.flat,
-    )
-    child_activity_visits = read_csv(
-        in_dir,
-        args.activity_loc_child_assignments_in_file,
-        args.region,
-        should_flatten=args.flat,
-    )
-
-    visits = pd.concat(
-        [adult_activity_visits, child_activity_visits], ignore_index=True
-    )
-    print(f"loaded {visits.shape[0]} visits")
-
-    loc_update = activity_update
-    if isinstance(activity_update, pd.DataFrame):
-        loc_update = pd.concat([activity_update, home_update], ignore_index=True)
-        write_csv(args.out_dir, "activity_update.csv", activity_update)
-        write_csv(args.out_dir, "home_update.csv", home_update)
-
+def update_visits(args, visits, loc_update, people_update):
     visits = update_ids(
         visits,
         loc_update,
@@ -404,6 +423,7 @@ def merge_visits(args, activity_update, home_update, people_update):
         suplimental_cols=LOC_SUPLIMENTAL_COLS,
         num_tasks=args.num_tasks,
         num_partitions=args.num_partitions_per_task * args.num_tasks,
+        validate=args.validate,
     )
     visits = update_ids(
         visits,
@@ -412,7 +432,71 @@ def merge_visits(args, activity_update, home_update, people_update):
         name="visit pids",
         num_tasks=args.num_tasks,
         num_partitions=args.num_partitions_per_task * args.num_tasks,
+        validate=args.validate,
     )
+    return visits
+
+
+def merge_visits(args, activity_update, home_update, people_update):
+    loc_update = activity_update
+    if isinstance(activity_update, pd.DataFrame):
+        loc_update = pd.concat([activity_update, home_update], ignore_index=True)
+        write_csv(args.out_dir, "activity_update.csv", activity_update)
+        write_csv(args.out_dir, "home_update.csv", home_update)
+
+    in_dir = args.in_dir
+
+    visits = None
+    if args.activity_suffix is None:
+        adult_activity_visits = read_csv(
+            in_dir,
+            args.activity_loc_adult_assignments_in_file,
+            args.region,
+            should_flatten=args.flat,
+        )
+        child_activity_visits = read_csv(
+            in_dir,
+            args.activity_loc_child_assignments_in_file,
+            args.region,
+            should_flatten=args.flat,
+        )
+
+        visits = pd.concat(
+            [adult_activity_visits, child_activity_visits], ignore_index=True
+        )
+        print(f"loaded {visits.shape[0]} visits")
+        visits = update_visits(args, visits, loc_update, people_update)
+    else:
+        adult_dfs = read_csv(
+            in_dir,
+            args.activity_loc_adult_assignments_in_file,
+            args.region,
+            should_flatten=args.flat,
+            suffix_regex=args.activity_suffix,
+            concat=False,
+        )
+        print(f"Loaded {len(adult_dfs)} adult activity files")
+        child_dfs = read_csv(
+            in_dir,
+            args.activity_loc_child_assignments_in_file,
+            args.region,
+            should_flatten=args.flat,
+            suffix_regex=args.activity_suffix,
+            concat=False,
+        )
+        print(f"Loaded {len(child_dfs)} child activity files")
+
+        dfs = []
+        for i, df in enumerate(adult_dfs):
+            print(f"  Updating ids in {i}th adult activity file")
+            df = update_visits(args, df, loc_update, people_update)
+            dfs.append(df)
+        for i, df in enumerate(child_dfs):
+            print(f"  Updating ids in {i}th child activity file")
+            df = update_visits(args, df, loc_update, people_update)
+            dfs.append(df)
+        visits = pd.concat(dfs, ignore_index=True)
+
     visits.sort_values(VISIT_SORT_COLS, inplace=True)
 
     write_csv(args.out_dir, args.visits_out_file, visits)
