@@ -37,7 +37,7 @@ void Location::pup(PUP::er &p) {
   p | generator;
 #ifdef ENABLE_SC
   p | anyInfectious;
-#endif ENABLE_SC
+#endif
 }
 
 void Location::reset() {
