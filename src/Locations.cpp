@@ -193,12 +193,11 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   Location &loc = locations[localLocIdx];
   bool isInfectious = diseaseModel->isInfectious(visitMsg.personState);
   bool isSusceptible = diseaseModel->isInfectious(visitMsg.personState);
+#ifdef ENABLE_SC
   if (!loc.anyInfectious && isInfectious) {
     loc.anyInfectious = true;
   }
-  if (!loc.anySusceptible && isSusceptible) {
-    loc.anySusceptible = true;
-  }
+#endif
 
   loc.addEvent(arrival);
   loc.addEvent(departure);
@@ -247,8 +246,8 @@ Counter Locations::processEvents(Location *loc) {
   Counter numVisits = loc->events.size() / 2;
   Counter duration = 0;
   double startTime = CkWallTimer();
-#else
-  if (!loc->anyInfectious || !loc->anySusceptible) {
+#elif ENABLE_SC
+  if (!loc->anyInfectious) {
     loc->reset();
     return 0;
   }

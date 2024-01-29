@@ -35,11 +35,15 @@ void Location::pup(PUP::er &p) {
   p | uniqueId;
   p | events;
   p | generator;
+#ifdef ENABLE_SC
+  p | anyInfectious;
+#endif ENABLE_SC
 }
 
 void Location::reset() {
+#ifdef ENABLE_SC
   anyInfectious = false;
-  anySusceptible = false;
+#endif
   events.clear();
 }
 

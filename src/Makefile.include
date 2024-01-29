@@ -74,13 +74,17 @@ LIBS     += -balancer GreedyLB -balancer RefineLB
 endif
 
 # Set the OUTPUT_FLAGS environment variable to the bitwise or of the desired
-# output types (see Defs.h for values) 
+# output types (see Defs.h for values)
 ifdef OUTPUT_FLAGS
 OPTS     += -DOUTPUT_FLAGS=$(OUTPUT_FLAGS)
 endif
 
 ifdef ENABLE_AGGREGATION
 OPTS     += -DENABLE_AGGREGATION
+endif
+
+ifdef ENABLE_SC
+OPTS     += -DENABLE_SC
 endif
 
 # Set the ENABLE_RANDOM_SEED environment variable to use a "random"
