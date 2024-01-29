@@ -54,10 +54,9 @@ When multiple such options are used, these suffixes will be added in the order i
 |                         | 2     |                   | Additionally prints memory usage information                                  |
 | `ENABLE_LB`             | 1     | `-lb`             | Enables Charm++ dynamic load balancing                                        |
 | `ENABLE_AGGREGATE`      | 1     | `-agg`            | Enables Charm++ message aggregation                                           |
-| `ENABLE_RANDOM_SEED`    | 1     |                   | If not passed, will use a the same seed for all psuedo-random number          |
-|                         |       |                   | generators in each run                                                        |
-| `ENABLE_FORCE_FULL_RUN` | 1     |                   | Forces the simulation to run the full number of days, even if the outbreak    |
-|                         |       |                   | dies out and no people are still infected                                     |
+| `ENABLE_SC`             | 1     | `-sc`             | Enables short-circuit evaluation of discrete event simulation                 |
+| `ENABLE_RANDOM_SEED`    | 1     |                   | If not passed, will use a the same seed for all pseudo-random number generators in each run         |
+| `ENABLE_FORCE_FULL_RUN` | 1     |                   | Forces the simulation to run the full number of days, even if the outbreak dies out and no people are still infected   |
 | `ENABLE_UNIT_TESTING`   | 1     |                   | Builds Loimos with unit tests enabled                                         |
 | `ENABLE_DEBUG`          | 1     |                   | Basic debug information                                                       |
 |                         | 2     |                   | Verbose debug information                                                     |

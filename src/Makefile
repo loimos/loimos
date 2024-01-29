@@ -31,6 +31,9 @@ endif
 ifdef ENABLE_AGGREGATION
 BIN   :=$(BIN)-agg
 endif
+ifdef ENABLE_SC
+BIN   :=$(BIN)-sc
+endif
 
 # Set the ENABLE_UNIT_TESTING environment variable to compile for unit testing
 ifdef ENABLE_UNIT_TESTING
