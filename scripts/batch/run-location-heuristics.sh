@@ -13,6 +13,6 @@ SCRIPTS_DIR="${HOME}/biocomplexity/loimos/loimos/scripts/preprocessing"
 OUT_DIR="/scratch/${USER}/loimos/data/populations/$1"
 TASKS_PER_NODE=37
 
-echo ${SCRIPTS_DIR}/location_heuristics.py ${OUT_DIR} -n ${TASKS_PER_NODE} -O
+echo ${SCRIPTS_DIR}/location_heuristics.py ${OUT_DIR} -n ${TASKS_PER_NODE}
 echo -------------------------------------------------------------------------
-time ${SCRIPTS_DIR}/location_heuristics.py ${OUT_DIR} -n ${TASKS_PER_NODE} -O
+time ${SCRIPTS_DIR}/location_heuristics.py ${OUT_DIR} -n ${TASKS_PER_NODE}
