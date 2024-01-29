@@ -236,6 +236,7 @@ mainmodule loimos {
       serial {
         CkPrintf("Finished simulating %d days in %lf seconds.\n",
           day, (CkWallTimer() - simulationStartTime));
+#ifdef ENABLE_DEBUG
         if (ENABLE_DEBUG >= DEBUG_VERBOSE) {
           CkPrintf("  Processed " COUNTER_PRINT_TYPE " visits, "
             COUNTER_PRINT_TYPE " interactions, and "
@@ -244,6 +245,7 @@ mainmodule loimos {
             totalVisits, totalInteractions, totalExposures,
             totalExposureDuration);
         }
+#endif
         CkPrintf("  Visit messages took %lf seconds\n",
           totalTime[TOTAL_VISITS_TIME_INDEX]);
         CkPrintf("  Interaction calculations and messages took %lf seconds\n",
