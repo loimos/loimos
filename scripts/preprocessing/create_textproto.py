@@ -14,6 +14,7 @@ LOCATIONS_TYPES = {
     "lid": "unique_id",
     "max_simultaneous_visits": "int32",
     "school": "bool",
+    "home": "bool",
 }
 VISITS_TYPES = {
     "pid": "unique_id",
