@@ -14,36 +14,37 @@ function build-loimos () {
 for enable_smp in true false; do
   for enable_tracing in true false; do
     for enable_lb in true false; do
-      for enable_hypercomm in true false; do
-        BIN="loimos"
-        OPTS=""
-        
-        if $enable_smp; then
-          BIN="$BIN-smp"
-          export CHARM_HOME="$PROJECT_ROOT/charm/mpi-linux-x86_64-smp"
-        else
-          export CHARM_HOME="$PROJECT_ROOT/charm/mpi-linux-x86_64"
-        fi
+      for enable_agg in true false; do
+        for enable_prj in true; do
+          OPTS=""
+          
+          if $enable_smp; then
+            export ENABLE_SMP=1
+          fi
 
-        if $enable_tracing; then
-          BIN="$BIN-prj"
-          OPTS="$OPTS ENABLE_TRACING=1"
-          export ENABLE_TRACING=1
-        fi
+          if $enable_tracing; then
+            export ENABLE_TRACING=1
+          fi
 
-        if $enable_load_balancing; then
-          BIN="$BIN-lb"
-          OPTS="$OPTS ENABLE_LB=1"
-          export ENABLE_LB=1
-        fi
+          if $enable_load_balancing; then
+            export ENABLE_LB=1
+          fi
 
-        if $enable_hypercomm; then
-          BIN="$BIN-hc"
-          OPTS="$OPTS USE_HYPERCOMM=1"
-          export USE_HYPERCOM=1
-        fi
+          if $enable_agg; then
+            export ENABLE_AGGREGATION=1
+          fi
+          
+          if $enable_prj; then
+            export ENABLE_TRACING=1
+          fi
 
-        build-loimos ${BIN} "${OPTS}"
+          make clean
+          make
+          unset ENABLE_SMP
+          unset ENABLE_TRACING
+          unset ENABLE_LB
+          unset ENABLE_AGGREGATION
+        done
       done
     done
   done
