@@ -187,7 +187,7 @@ mainmodule loimos {
             // Print how long this iteration took to run
             CkPrintf(
               "Iteration %d Execution Time: %lf seconds. Infectious Count: "
-              COUNTER_PRINT_TYPE ".\n",
+              ID_PRINT_TYPE ".\n",
               day, CkWallTimer() - iterationStartTime, infectiousCount
             );
 
