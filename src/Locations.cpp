@@ -299,7 +299,6 @@ Counter Locations::processEvents(Location *loc) {
     }
   }
   loc->reset();
-  interactions.clear();
 
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   double p = contactModel->getContactProbability(*loc);
@@ -377,7 +376,7 @@ void Locations::onSusceptibleDeparture(Location *loc,
         susceptibleDeparture.scheduledTime);
   }
 
-  sendInteractions(loc, susceptibleDeparture.personIdx);
+  //sendInteractions(loc, susceptibleDeparture.personIdx);
 }
 
 void Locations::onInfectiousDeparture(Location *loc,
@@ -412,7 +411,7 @@ inline void Locations::registerInteraction(Location *loc,
   // infection for the susceptible person in question
   Interaction inter { propensity, infectiousEvent.personIdx,
     infectiousEvent.personState, startTime, endTime };
-  interactions[susceptibleEvent.personIdx].emplace_back(inter);
+  loc->interactions[susceptibleEvent.personIdx].emplace_back(inter);
 }
 
 // Simple helper function which send the list of interactions with the
@@ -431,7 +430,7 @@ inline void Locations::sendInteractions(Location *loc,
 #endif
 
   InteractionMessage interMsg(loc->getUniqueId(), personIdx,
-      interactions[personIdx]);
+      loc->interactions[personIdx]);
 #ifdef USE_HYPERCOMM
   Aggregator *agg = aggregatorProxy.ckLocalBranch();
   if (agg->interact_aggregator) {
@@ -452,7 +451,7 @@ inline void Locations::sendInteractions(Location *loc,
   // Free up space where we were storing interactions data. This also prevents
   // interactions from being sent multiple times if this person has multiple
   // visits to this location
-  interactions.erase(personIdx);
+  //interactions.erase(personIdx);
 }
 
 void Locations::ReceiveIntervention(PartitionId interventionIdx) {
@@ -476,3 +475,14 @@ void Locations::ResumeFromSync() {
   contribute(cb);
 }
 #endif  // ENABLE_LB
+
+
+void Locations::SendInteractionMessages() {
+  for (Id i = 0; i < locations.size(); ++i) {
+    Location *loc = &locations[i];
+    for (auto &it : loc->interactions) {
+      sendInteractions(loc, it.first);
+    }
+    loc->interactions.clear();
+  }
+}

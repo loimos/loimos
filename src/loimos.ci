@@ -76,9 +76,10 @@ mainmodule loimos {
 
   #define TOTAL_TIME_INDEX 0
   #define TOTAL_VISITS_TIME_INDEX 1
-  #define TOTAL_INTERACTIONS_TIME_INDEX 2
-  #define TOTAL_EOD_UPDATE_TIME_INDEX 3
-  #define TOTAL_TIME_SIZE 4
+  #define TOTAL_DES_TIME_INDEX 2
+  #define TOTAL_INTERACTIONS_TIME_INDEX 3
+  #define TOTAL_EOD_UPDATE_TIME_INDEX 4
+  #define TOTAL_TIME_SIZE 5
 
   readonly Id synPeopleGridWidth;
   readonly Id synPeopleGridHeight;
@@ -160,6 +161,22 @@ mainmodule loimos {
           }
         }
         when ComputedInteractions() {
+          serial {
+            double diff = CkWallTimer() - stepStartTime;
+            CkPrintf("  Interaction DES took %fs\n",
+              diff);
+            totalTime[TOTAL_DES_TIME_INDEX] += diff;
+
+            // CkPrintf("  Sending Interaction Messages\n");
+            stepStartTime = CkWallTimer();
+            locationsArray.SendInteractionMessages();
+            CkStartQD(CkCallback(
+              CkIndex_Main::StartComputingEndOfDay(),
+              mainProxy
+            ));
+          }
+        }
+        when StartComputingEndOfDay() {
           serial {
             double diff = CkWallTimer() - stepStartTime;
             CkPrintf("  Interaction messages took %fs\n",
@@ -248,7 +265,9 @@ mainmodule loimos {
 #endif
         CkPrintf("  Visit messages took %lf seconds\n",
           totalTime[TOTAL_VISITS_TIME_INDEX]);
-        CkPrintf("  Interaction calculations and messages took %lf seconds\n",
+        CkPrintf("  Interaction DES took %lf seconds\n",
+         totalTime[TOTAL_DES_TIME_INDEX]);
+        CkPrintf("  Interaction messages took %lf seconds\n",
           totalTime[TOTAL_INTERACTIONS_TIME_INDEX]);
         CkPrintf("  End of day update and reduction took %lf seconds\n",
           totalTime[TOTAL_EOD_UPDATE_TIME_INDEX]);
@@ -269,6 +288,7 @@ mainmodule loimos {
     entry void SeedInfections();
     entry void StartComputingInteractions();
     entry void ComputedInteractions();
+    entry void StartComputingEndOfDay();
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
     entry [reductiontarget] void ReceiveVisitsLoadedCount(Id visitsCount) {
       serial{CkPrintf("  Loaded a total of " ID_PRINT_TYPE " visits\n", visitsCount);}
@@ -344,6 +364,7 @@ mainmodule loimos {
     entry Locations(int seed, std::string scenarioPath);
     entry AGGREGATE void ReceiveVisitMessages(VisitMessage);
     entry void ComputeInteractions(); // calls ReceiveInteractions
+    entry void SendInteractionMessages();
     entry void ReceiveIntervention(int interventionIdx);
     entry void AtSync();
   };

@@ -30,6 +30,11 @@ class Location : public DataInterface {
   // from this location on a given day
   std::vector<Event> events;
   std::unordered_map<const void *, VisitTest> visitFilters;
+  
+  // Maps each susceptible person's id to a list of interactions with people
+  // who could have infected them
+  std::unordered_map<Id, std::vector<Interaction> > interactions;
+
 #ifdef ENABLE_SC
   bool anyInfectious;
 #endif

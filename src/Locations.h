@@ -39,10 +39,6 @@ class Locations : public CBase_Locations {
   std::vector<Event> infectiousArrivals;
   std::vector<Event> susceptibleArrivals;
 
-  // Maps each susceptible person's id to a list of interactions with people
-  // who could have infected them
-  std::unordered_map<Id, std::vector<Interaction> > interactions;
-
   // Runs through all of the current events and return the indices of
   // any people who have been infected
   Counter processEvents(Location *loc);
@@ -80,6 +76,7 @@ class Locations : public CBase_Locations {
   #ifdef ENABLE_LB
   void ResumeFromSync();
   #endif  // ENABLE_LB
+  void SendInteractionMessages();
 };
 
 #endif  // LOCATIONS_H_
