@@ -36,7 +36,7 @@ void Location::pup(PUP::er &p) {
   p | events;
   p | generator;
 #ifdef ENABLE_SC
-  p | anyInfectious;
+  p | numInfectious;
 #endif
 }
 
