@@ -27,9 +27,11 @@ class Locations : public CBase_Locations {
   DiseaseModel *diseaseModel;
   ContactModel *contactModel;
   std::ofstream *interactionsFile;
+  std::ofstream *locTimeFile;
   Counter exposureDuration;
   Counter expectedExposureDuration;
   int day;
+  int sentInteractions;
 
   // For random generation.
   static std::uniform_real_distribution<> unitDistrib;

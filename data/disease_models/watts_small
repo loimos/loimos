@@ -1,0 +1,581 @@
+label: "covid19"
+transmissibility: 4
+
+starting_states: {
+	lower: 0
+	upper: 999
+	starting_state: 0
+}
+
+disease_states: {
+	state_label: "S_a"
+	infectivity: 0
+	symptomatic: false
+	susceptibility: 1
+	exposure_transition: {
+		transitions: {
+			next_state: 3
+		}
+	}
+}
+disease_states: {
+	state_label: "HypRxFail_a"
+	infectivity: 0
+	symptomatic: false
+	susceptibility: 1
+	exposure_transition: {
+		transitions: {
+			next_state: 3
+		}
+	}
+}
+disease_states: {
+	state_label: "HypRxProt_a"
+	infectivity: 0
+	symptomatic: false
+	susceptibility: 0
+	timed_transition: {
+		transitions: {
+			next_state: 15
+			with_prob: 1
+			fixed: {
+				time_in_state: {
+					days: 1
+				}
+			}
+		}
+	}
+}
+disease_states: {
+	state_label: "E_a"
+	infectivity: 0
+	symptomatic: false
+	susceptibility: 0
+	timed_transition: {
+		transitions: {
+			next_state: 4
+			with_prob: 0.65
+			fixed: {
+				time_in_state: {
+					days: 3
+				}
+			}
+		}
+		transitions: {
+			next_state: 6
+			with_prob: 0.35
+			normal: {
+				tmean: {
+					days: 5
+				}
+				tvariance: {
+					days: 1
+				}
+			}
+		}
+	}
+}
+disease_states: {
+	state_label: "Ipresymp_a"
+	infectivity: 0.8
+	symptomatic: false
+	susceptibility: 0
+	timed_transition: {
+		transitions: {
+			next_state: 5
+			with_prob: 1
+			fixed: {
+				time_in_state: {
+					days: 2
+				}
+			}
+		}
+	}
+}
+disease_states: {
+	state_label: "Isymp_a"
+	infectivity: 1
+	symptomatic: true
+	susceptibility: 0
+	timed_transition: {
+		transitions: {
+			next_state: 7
+			with_prob: 0.9594
+			discrete: {
+				bins: {
+					tval: {
+						days: 1
+					}
+					with_prob: 0.175
+				}
+				bins: {
+					tval: {
+						days: 2
+					}
+					with_prob: 0.175
+				}
+				bins: {
+					tval: {
+						days: 3
+					}
+					with_prob: 0.1
+				}
+				bins: {
+					tval: {
+						days: 4
+					}
+					with_prob: 0.1
+				}
+				bins: {
+					tval: {
+						days: 5
+					}
+					with_prob: 0.1
+				}
+				bins: {
+					tval: {
+						days: 6
+					}
+					with_prob: 0.1
+				}
+				bins: {
+					tval: {
+						days: 7
+					}
+					with_prob: 0.1
+				}
+				bins: {
+					tval: {
+						days: 8
+					}
+					with_prob: 0.05
+				}
+				bins: {
+					tval: {
+						days: 9
+					}
+					with_prob: 0.05
+				}
+				bins: {
+					tval: {
+						days: 10
+					}
+					with_prob: 0.05
+				}
+			}
+		}
+		transitions: {
+			next_state: 8
+			with_prob: 0.04
+			fixed: {
+				time_in_state: {
+					days: 1
+				}
+			}
+		}
+		transitions: {
+			next_state: 9
+			with_prob: 0.0006
+			discrete: {
+				bins: {
+					tval: {
+						days: 1
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 2
+					}
+					with_prob: 1
+				}
+			}
+		}
+	}
+}
+disease_states: {
+	state_label: "Iasymp_a"
+	infectivity: 1.0
+	symptomatic: false
+	susceptibility: 0
+	timed_transition: {
+		transitions: {
+			next_state: 15
+			with_prob: 1
+			normal: {
+				tmean: {
+					days: 5
+				}
+				tvariance: {
+					days: 1
+				}
+			}
+		}
+	}
+}
+disease_states: {
+	state_label: "rMedAttend_a"
+	infectivity: 0
+	symptomatic: false
+	susceptibility: 0
+	timed_transition: {
+		transitions: {
+			next_state: 15
+			with_prob: 1
+			normal: {
+				tmean: {
+					days: 5
+				}
+				tvariance: {
+					days: 1
+				}
+			}
+		}
+	}
+}
+disease_states: {
+	state_label: "hMedAttend_a"
+	infectivity: 0
+	symptomatic: false
+	susceptibility: 0
+	timed_transition: {
+		transitions: {
+			next_state: 10
+			with_prob: 1
+			normal: {
+				tmean: {
+					days: 5.0
+				}
+				tvariance: {
+					days: 4.6
+				}
+			}
+		}
+	}
+}
+disease_states: {
+	state_label: "dMedAttend_a"
+	infectivity: 0
+	symptomatic: false
+	susceptibility: 0
+	timed_transition: {
+		transitions: {
+			next_state: 11
+			with_prob: 0.95
+			discrete: {
+				bins: {
+					tval: {
+						days: 1
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 2
+					}
+					with_prob: 1
+				}
+			}
+		}
+		transitions: {
+			next_state: 14
+			with_prob: 0.05
+			discrete: {
+				bins: {
+					tval: {
+						days: 1
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 2
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 3
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 4
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 5
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 6
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 7
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 8
+					}
+					with_prob: 1
+				}
+				bins: {
+					tval: {
+						days: 9
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 10
+					}
+					with_prob: 0
+				}
+			}
+		}
+	}
+}
+disease_states: {
+	state_label: "Hosp_a"
+	infectivity: 0
+	symptomatic: false
+	susceptibility: 0
+	timed_transition: {
+		transitions: {
+			next_state: 12
+			with_prob: 0.06
+			normal: {
+				tmean: {
+					days: 1
+				}
+				tvariance: {
+					days: 0.2
+				}
+			}
+		}
+		transitions: {
+			next_state: 15
+			with_prob: 0.94
+			normal: {
+				tmean: {
+					days: 3.1
+				}
+				tvariance: {
+					days: 3.7
+				}
+			}
+		}
+	}
+}
+disease_states: {
+	state_label: "dHosp_a"
+	infectivity: 0
+	symptomatic: false
+	susceptibility: 0
+	timed_transition: {
+		transitions: {
+			next_state: 13
+			with_prob: 0.06
+			discrete: {
+				bins: {
+					tval: {
+						days: 1
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 2
+					}
+					with_prob: 1
+				}
+				bins: {
+					tval: {
+						days: 3
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 4
+					}
+					with_prob: 0
+				}
+			}
+		}
+		transitions: {
+			next_state: 14
+			with_prob: 0.94
+			discrete: {
+				bins: {
+					tval: {
+						days: 1
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 2
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 3
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 4
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 5
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 6
+					}
+					with_prob: 1
+				}
+				bins: {
+					tval: {
+						days: 7
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 8
+					}
+					with_prob: 0
+				}
+			}
+		}
+	}
+}
+disease_states: {
+	state_label: "Vent_a"
+	infectivity: 0
+	symptomatic: false
+	susceptibility: 0
+	timed_transition: {
+		transitions: {
+			next_state: 15
+			with_prob: 1
+			normal: {
+				tmean: {
+					days: 2.1
+				}
+				tvariance: {
+					days: 3.7
+				}
+			}
+		}
+	}
+}
+disease_states: {
+	state_label: "dVent_a"
+	infectivity: 0
+	symptomatic: false
+	susceptibility: 0
+	timed_transition: {
+		transitions: {
+			next_state: 14
+			with_prob: 1
+			discrete: {
+				bins: {
+					tval: {
+						days: 1
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 2
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 3
+					}
+					with_prob: 0
+				}
+				bins: {
+					tval: {
+						days: 4
+					}
+					with_prob: 1
+				}
+			}
+		}
+	}
+}
+disease_states: {
+	state_label: "Death_a"
+	infectivity: 0
+	symptomatic: false
+	susceptibility: 0
+}
+disease_states: {
+	state_label: "R_a"
+	infectivity: 0
+	symptomatic: false
+	susceptibility: 0
+	timed_transition: {
+		transitions: {
+			next_state: 16
+			with_prob: 0
+			normal: {
+				tmean: {
+					days: 30
+				}
+				tvariance: {
+					days: 5
+				}
+			}
+		}
+		transitions: {
+			next_state: 17
+			with_prob: 1
+			fixed: {
+				time_in_state: {
+					days: 1
+				}
+			}
+		}
+	}
+}
+disease_states: {
+	state_label: "RyetS_a"
+	infectivity: 0
+	symptomatic: false
+	susceptibility: 1
+	exposure_transition: {
+		transitions: {
+			next_state: 3
+		}
+	}
+}
+disease_states: {
+	state_label: "Rimmune_a"
+	infectivity: 0
+	symptomatic: false
+	susceptibility: 0
+}

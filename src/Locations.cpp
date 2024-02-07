@@ -87,6 +87,7 @@ Locations::Locations(int seed, std::string scenarioPath) {
   interactionsFile = NULL;
 #endif
 
+  locTimeFile = new std::ofstream(outputPath + "loc_time_chare_" + std::to_string(thisIndex) + ".csv");
   // Notify Main
 #ifdef USE_HYPERCOMM
   contribute(CkCallback(CkReductionTarget(Main, CharesCreated), mainProxy));
@@ -212,7 +213,17 @@ void Locations::ComputeInteractions() {
     Counter locVisits = loc.events.size() / 2;
     numVisits += locVisits;
 
+    sentInteractions = 0;
+    double startTime = CkWallTimer();
+
     Counter locInters = processEvents(&loc);
+
+    double endTime = CkWallTimer();
+    double timeElapsed = endTime - startTime;
+
+    // writing to csv
+    *locTimeFile << loc.getUniqueId() << "," << day << "," << timeElapsed << "," << sentInteractions << "," << locInters << std::endl;
+
     numInteractions += locInters;
 
     // if (0 < locInters) {
@@ -432,6 +443,7 @@ inline void Locations::sendInteractions(Location *loc,
 
   InteractionMessage interMsg(loc->getUniqueId(), personIdx,
       interactions[personIdx]);
+  sentInteractions += interactions[personIdx].size();
 #ifdef USE_HYPERCOMM
   Aggregator *agg = aggregatorProxy.ckLocalBranch();
   if (agg->interact_aggregator) {
