@@ -30,13 +30,9 @@
 
 // Output types - these are flags that can be or-ed together
 // For now, always write out the default output (daily state transition summaries)
-#define OUTPUT_DEFAULT 0
 #define OUTPUT_TRANSITIONS 1
 #define OUTPUT_EXPOSURES 2
 #define OUTPUT_OVERLAPS 4
-#ifndef OUTPUT_FLAGS
-  #define OUTPUT_FLAGS OUTPUT_DEFAULT
-#endif
 
 // Tracing levels
 #define TRACE_BASIC 1

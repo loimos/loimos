@@ -237,7 +237,7 @@ Main::Main(CkArgMsg* msg) {
       scenarioPath.push_back('/');
     }
   }
-#if OUTPUT_FLAGS != OUTPUT_DEFAULT
+#ifdef OUTPUT_FLAGS
   if (outputPath.back() == '/') {
     outputPath.pop_back();
   }
@@ -479,10 +479,10 @@ void Main::SaveStats(Id *data) {
   DiseaseState numDiseaseStates = diseaseModel->getNumberOfStates();
 
   // Open output csv
-#if OUTPUT_FLAGS == OUTPUT_DEFAULT
-  std::ofstream outFile(outputPath);
-#else
+#ifdef OUTPUT_FLAGS
   std::ofstream outFile(outputPath + "summary.csv");
+#else
+  std::ofstream outFile(outputPath);
 #endif
   if (!outFile) {
     CkAbort("Error: invalid output path, %s\n", outputPath.c_str());
