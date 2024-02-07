@@ -192,11 +192,10 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 
   // ...and queue it up at the appropriate location
   Location &loc = locations[localLocIdx];
-  bool isInfectious = diseaseModel->isInfectious(visitMsg.personState);
-  bool isSusceptible = diseaseModel->isInfectious(visitMsg.personState);
 #ifdef ENABLE_SC
-  if (!loc.anyInfectious && isInfectious) {
-    loc.anyInfectious = true;
+  bool isInfectious = diseaseModel->isInfectious(visitMsg.personState);
+  if (isInfectious) {
+    loc.numInfectious++;
   }
 #endif
 
@@ -214,6 +213,9 @@ void Locations::ComputeInteractions() {
     numVisits += locVisits;
 
     sentInteractions = 0;
+#ifdef ENABLE_SC
+    Id numInfectious = loc.numInfectious;
+#endif
     double startTime = CkWallTimer();
 
     Counter locInters = processEvents(&loc);
@@ -222,7 +224,13 @@ void Locations::ComputeInteractions() {
     double timeElapsed = endTime - startTime;
 
     // writing to csv
-    *locTimeFile << loc.getUniqueId() << "," << day << "," << timeElapsed << "," << sentInteractions << "," << locInters << std::endl;
+    *locTimeFile << loc.getUniqueId() << "," << day << "," << timeElapsed << "," << sentInteractions << "," << locInters;
+
+#ifdef ENABLE_SC
+    *locTimeFile << "," << numInfectious;
+#endif
+
+    *locTimeFile<< std::endl;
 
     numInteractions += locInters;
 
@@ -258,7 +266,7 @@ Counter Locations::processEvents(Location *loc) {
   Counter duration = 0;
   double startTime = CkWallTimer();
 #elif ENABLE_SC
-  if (!loc->anyInfectious) {
+  if (0 == loc->numInfectious) {
     loc->reset();
     return 0;
   }

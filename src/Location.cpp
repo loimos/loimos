@@ -42,7 +42,7 @@ void Location::pup(PUP::er &p) {
 
 void Location::reset() {
 #ifdef ENABLE_SC
-  anyInfectious = false;
+  numInfectious = 0;
 #endif
   events.clear();
 }

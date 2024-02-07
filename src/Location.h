@@ -31,7 +31,7 @@ class Location : public DataInterface {
   std::vector<Event> events;
   std::unordered_map<const void *, VisitTest> visitFilters;
 #ifdef ENABLE_SC
-  bool anyInfectious;
+  Id numInfectious;
 #endif
 
   // This distribution should always be the same - not sure how well
