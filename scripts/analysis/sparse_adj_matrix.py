@@ -18,36 +18,13 @@ try:
 except:
     raise FileNotFoundError("Please provide a valid path to the visits CSV file as a command line argument.\n") 
 
-print("Starting calculation of total visit durations over 7 days. \n", flush=True)
-total_durations = dict()
-for index, row in df.iterrows():
-    if row['pid'] in total_durations:
-        if row['lid'] in total_durations.get(row['pid']):
-            total_durations[row['pid']][row['lid']] += row['duration']
-        else:
-            total_durations[row['pid']][row['lid']] = row['duration']
-    else:
-        total_durations[row['pid']] = dict() 
-        total_durations[row['pid']][row['lid']] = row['duration']
+print("Aggregating dataframe by grouping by pid and lid and adding durations over 7 days. \n", flush=True)
+aggregated_df = df.groupby(['pid', 'lid'])['duration'].sum().reset_index()
 
-print("Finished calculating durations. There are a total of " + str(len(total_durations)) + " unique people who visited at least one location. \n", flush=True)
+print("Finished aggregating, converting to a COO matrix. \n", flush=True)
+coo = coo_matrix((aggregated_df['duration'], (aggregated_df['pid'], aggregated_df['lid'])))
 
-print("Beginning conversion to CSR sparse adjacency matrix. \n", flush=True)
-
-values = []
-columns = []
-rows = []
-
-row_ptr = 0
-for pid in total_durations:
-    rows.append(row_ptr)
-    sorted_lids = sorted(total_durations[pid])
-    for lid in sorted_lids:
-        weight = total_durations[pid][lid]
-        values.append(weight)
-        columns.append(lid)
-        row_ptr += 1
-
-adj_matrix = csr_matrix((values, columns, rows))
-
+print("Converting COO to CSR now. \n", flush=True)
+adj_matrix = coo.tocsr()
 print("Finished converting to CSR. \n", flush=True)
+print(vars(adj_matrix))
