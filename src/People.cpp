@@ -33,7 +33,6 @@
 
 std::uniform_real_distribution<> unitDistrib(0, 1);
 #define ONE_ATTR 1
-#define DEFAULT_
 
 People::People(int seed, std::string scenarioPath) {
   // Must be set to true to make AtSync work
@@ -271,8 +270,7 @@ void People::generateVisitData() {
           + partitionX * numLocationsPerPartition
           + partitionY * locationPartitionGridWidth * numLocationsPerPartition;
 
-        visits.emplace_back(destinationIdx, personIdx, 0, visitStart,
-            visitEnd, 0);
+        visits.emplace_back(destinationIdx, personIdx, visitStart, visitEnd);
 
   #if ENABLE_DEBUG >= DEBUG_PER_OBJECT
         CkPrintf(
@@ -396,13 +394,13 @@ void People::loadVisitData(std::ifstream *activityData) {
         while (visitEnd > nextDaySecs) {
           int endDay = (visitEnd / DAY_LENGTH) % numDaysWithDistinctVisits;
           Time newStart = endDay * DAY_LENGTH;
-          person.visitsByDay[endDay].emplace_back(locationId, personId, -1,
-              endDay * DAY_LENGTH, visitEnd, 1.0);
+          person.visitsByDay[endDay].emplace_back(locationId, personId,
+              endDay * DAY_LENGTH, visitEnd);
           visitEnd = std::max(nextDaySecs, visitEnd - DAY_LENGTH);
         }
 
-        person.visitsByDay[day].emplace_back(locationId, personId, -1,
-            visitStart, visitEnd, 1.0);
+        person.visitsByDay[day].emplace_back(locationId, personId,
+            visitStart, visitEnd);
         #ifdef ENABLE_DEBUG
           numVisits++;
         #endif
@@ -437,6 +435,11 @@ void People::pup(PUP::er &p) {
 }
 
 void People::SendVisitMessages() {
+  if (day > numDaysWithDistinctVisits) {
+    SendStateMessages();
+    return;
+  }
+
   // Send activities for each person.
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
   Id minId = numPeople;
@@ -450,13 +453,10 @@ void People::SendVisitMessages() {
     maxId = std::max(maxId, person.getUniqueId());
 #endif
     for (VisitMessage visitMessage : person.visitsByDay[dayIdx]) {
-      visitMessage.personState = person.state;
-      visitMessage.transmissionModifier = getTransmissionModifier(person);
-
       // Interventions may cancel some visits
-      if (visitMessage.isActive()) {
-        continue;
-      }
+      //if (visitMessage.isActive()) {
+      //  continue;
+      //}
 
       // Find process that owns that location
       PartitionId locationPartition = diseaseModel->getLocationPartitionIndex(
@@ -484,6 +484,7 @@ void People::SendVisitMessages() {
 #endif  // USE_HYPERCOMM
 
       locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
+      visitors[locationPartition].insert(person.getUniqueId());
     }
   }
 
@@ -494,6 +495,8 @@ void People::SendVisitMessages() {
         minId, maxId);
   }
 #endif
+
+  SendStateMessages();
 }
 
 double People::getTransmissionModifier(const Person &person) {
@@ -583,6 +586,27 @@ void People::EndOfDayStateUpdate() {
   day++;
 }
 
+void People::SendStateMessages() {
+  for (auto const &pair : visitors) {
+    auto const &partition = pair.first;
+
+    std::vector<StateMessage> messages;
+    for (Id localPid : pair.second) {
+      if (people[localPid].updated) {
+        const Person &p = people[localPid];
+        messages.emplace_back(p.getUniqueId(), p.state,
+            getTransmissionModifier(p));
+      }
+    }
+
+    locationsArray[partition].ReceiveStateMessages(messages);
+  }
+
+  for (Person &p : people) {
+    p.updated = false;
+  }
+}
+
 void People::SendStats() {
   CkCallback cb(CkReductionTarget(Main, ReceiveStats), mainProxy);
   contribute(stateSummaries, CkReduction::CONCAT(sum_, ID_REDUCTION_TYPE),
@@ -665,6 +689,7 @@ void People::UpdateDiseaseState(Person *person) {
     person->state = person->next_state;
     std::tie(person->next_state, person->secondsLeftInState) =
       diseaseModel->transitionFromState(person->state, generator);
+    person->updated = true;
   }
 }
 

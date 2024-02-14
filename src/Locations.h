@@ -31,6 +31,9 @@ class Locations : public CBase_Locations {
   Counter expectedExposureDuration;
   int day;
 
+  // Last know disease state for all peopel who visit locations on this chare
+  std::unordered_map<Id, StateMessage> peopleStates;
+
   // For random generation.
   static std::uniform_real_distribution<> unitDistrib;
 
@@ -49,7 +52,6 @@ class Locations : public CBase_Locations {
 
   // Helper functions to handle when a person leaves a location
   // onDeparture branches to one of the two other functions
-  inline void onDeparture(Location *loc, const Event& departure);
   void onSusceptibleDeparture(Location *loc, const Event& departure);
   void onInfectiousDeparture(Location *loc, const Event& departure);
 
@@ -73,6 +75,7 @@ class Locations : public CBase_Locations {
   explicit Locations(CkMigrateMessage *msg);
   void pup(PUP::er &p);  // NOLINT(runtime/references)
   void ReceiveVisitMessages(VisitMessage visitMsg);
+  void ReceiveStateMessages(std::vector<StateMessage> messages);
   void ComputeInteractions();  // calls ReceiveInfections
   void ReceiveIntervention(PartitionId interventionIdx);
   // Load location data from CSV.

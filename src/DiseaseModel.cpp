@@ -464,30 +464,6 @@ const char *DiseaseModel::getStateLabel(DiseaseState personState) const {
 }
 
 /**
- * Returns the natural log of the probability of a suspectible person not being
- * infected by an infectious person after a period of time
- */
-double DiseaseModel::getLogProbNotInfected(Event susceptibleEvent,
-    Event infectiousEvent) const {
-
-  // The chance of being infected in a unit of time depends on...
-  double baseProb =
-    1.0 -
-    // ...a scaling factor (normalizes based on the unit of time)...
-    model->transmissibility()
-    // ...the susceptibility of the susceptible person...
-    * model->disease_states(susceptibleEvent.personState).susceptibility()
-    // ...and the infectivity of the infectious person
-    * model->disease_states(infectiousEvent.personState).infectivity();
-
-  // The probability of not being infected in a period of time is decided based
-  // on a geometric probability distribution, with the lenght of time the two
-  // people are in the same location serving as the number of trials
-  Time dt = abs(susceptibleEvent.scheduledTime - infectiousEvent.scheduledTime);
-  return log(baseProb) * dt;
-}
-
-/**
  * Returns the propensity of a person in susceptibleState becoming infected
  * after exposure to a person in infectiousState for the period from startTime
  * to endTime

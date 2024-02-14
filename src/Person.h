@@ -21,6 +21,7 @@ class Person : public DataInterface {
   DiseaseState state;
   DiseaseState next_state;
   Time secondsLeftInState;
+  bool updated;
 
   // If this is a susceptible person, this is a list of all of their
   // interactions with infectious people in the past day

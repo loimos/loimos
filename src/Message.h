@@ -17,21 +17,16 @@
 struct VisitMessage {
   Id locationIdx;
   Id personIdx;
-  DiseaseState personState;
   Time visitStart;
   Time visitEnd;
-  // Susceptibility or infectivity, depending on disease state
-  double transmissionModifier;
   const void *deactivatedBy;
 
   VisitMessage() {}
   explicit VisitMessage(CkMigrateMessage *msg) {}
-  VisitMessage(Id locationIdx_, Id personIdx_, DiseaseState personState_,
-      Time visitStart_, Time visitEnd_, double transmissionModifier_) :
+  VisitMessage(Id locationIdx_, Id personIdx_, Time visitStart_,
+      Time visitEnd_) :
     locationIdx(locationIdx_), personIdx(personIdx_),
-    personState(personState_), visitStart(visitStart_),
-    visitEnd(visitEnd_), transmissionModifier(transmissionModifier_),
-    deactivatedBy(NULL) {}
+    visitStart(visitStart_), deactivatedBy(NULL) {}
 
   bool isActive() {
     return NULL != deactivatedBy;
@@ -40,6 +35,21 @@ struct VisitMessage {
 PUPbytes(VisitMessage);
 
 using VisitTest = std::function<bool(const VisitMessage &)>;
+
+struct StateMessage {
+  Id personIdx;
+  DiseaseState state;
+  // Susceptibility or infectivity, depending on disease state
+  double transmissionModifier;
+
+  StateMessage() {}
+  explicit StateMessage(CkMigrateMessage *msg) {}
+  StateMessage(Id personIdx_, DiseaseState state_,
+      double transmissionModifier_) :
+    personIdx(personIdx_), state(state_),
+    transmissionModifier(transmissionModifier_) {}
+};
+PUPbytes(StateMessage);
 
 struct InteractionMessage {
   Id locationIdx;

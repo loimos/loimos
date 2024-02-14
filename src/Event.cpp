@@ -22,12 +22,7 @@ bool Event::operator<(const Event& rhs) const {
   }
 
   // ...then break ties with the visitor's index...
-  if (personIdx != rhs.personIdx) {
-    return personIdx < rhs.personIdx;
-  }
-
-  // ...then finally break ties with the visitor's state
-  return personState < rhs.personState;
+  return personIdx < rhs.personIdx;
 }
 
 // Compares two events based on the correspodning other event (if one is an
@@ -45,12 +40,7 @@ bool Event::greaterPartner(const Event &e0, const Event &e1) {
   }
 
   // ...then break ties with the visitor's index...
-  if (e0.personIdx != e1.personIdx) {
-    return e0.personIdx > e1.personIdx;
-  }
-
-  // ...and finally breka ties with the vistior's state
-  return e0.personState > e1.personState;
+  return e0.personIdx > e1.personIdx;
 }
 
 bool Event::overlap(const Event &e0, const Event &e1) {

@@ -18,10 +18,6 @@ struct Event {
   EventType type;
   // the index of the person arriving or leaving
   Id personIdx;
-  // the person's curent state in the disease model
-  DiseaseState personState;
-  // Susceptibility or infectivity, depending on disease state
-  double transmissionModifier;
   // the time when this event is scheduled to occur, in seconds from the
   // start of the day
   Time scheduledTime;

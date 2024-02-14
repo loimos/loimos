@@ -28,11 +28,10 @@ class Location : public DataInterface {
  public:
   // Represents all of the arrivals and departures of people
   // from this location on a given day
-  std::vector<Event> events;
+  std::vector<std::vector<Event> > eventsByDay;
   std::unordered_map<const void *, VisitTest> visitFilters;
-#ifdef ENABLE_SC
-  bool anyInfectious;
-#endif
+
+  bool updated;
 
   // This distribution should always be the same - not sure how well
   // static variables work with Charm++, so this may need to be put
@@ -42,7 +41,7 @@ class Location : public DataInterface {
   Location() = default;
   explicit Location(CkMigrateMessage *msg);
   Location(const AttributeTable &attributes, int numInterventions,
-    int uniqueId);
+    int uniqueId, int numDaysWithDistinctVisits);
   Location(const Location&) = default;
   Location(Location&&) = default;
   ~Location() = default;
@@ -59,7 +58,7 @@ class Location : public DataInterface {
 
   // Adds an event representing a person either arriving or departing
   // from this location
-  void addEvent(const Event &e);
+  void addEvent(int day, const Event &e);
   void filterVisits(const void *cause, VisitTest keepVisit) override;
   void restoreVisits(const void *cause) override;
   bool acceptsVisit(const VisitMessage &visit);

@@ -35,6 +35,7 @@ class People : public CBase_People {
   std::vector<Id> stateSummaries;
   std::ofstream *exposuresFile;
   std::ofstream *transitionsFile;
+  std::unordered_map<PartitionId, std::set<Id> > visitors;
 
   void ProcessInteractions(Person *person);
   void UpdateDiseaseState(Person *person);
@@ -51,6 +52,7 @@ class People : public CBase_People {
   double getTransmissionModifier(const Person &person);
   void ReceiveInteractions(InteractionMessage interMsg);
   void EndOfDayStateUpdate();
+  void SendStateMessages();
   void SendStats();
   void ReceiveIntervention(int interventionIdx);
   #ifdef ENABLE_LB

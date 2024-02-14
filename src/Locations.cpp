@@ -64,7 +64,7 @@ Locations::Locations(int seed, std::string scenarioPath) {
   for (int i = 0; i < numLocalLocations; i++) {
     // Seed random number generator via branch ID for reproducibility
     locations.emplace_back(diseaseModel->locationAttributes,
-      numInterventions, firstLocalLocationIdx + i);
+      numInterventions, firstLocalLocationIdx + i, numDaysWithDistinctVisits);
   }
 
   // Load application data
@@ -174,10 +174,8 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   //   visitMsg.visitStart, visitMsg.visitEnd);
 
   // Wrap visit info...
-  Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.personState,
-    visitMsg.transmissionModifier, visitMsg.visitStart };
-  Event departure { DEPARTURE, visitMsg.personIdx, visitMsg.personState,
-    visitMsg.transmissionModifier, visitMsg.visitEnd };
+  Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.visitStart };
+  Event departure { DEPARTURE, visitMsg.personIdx, visitMsg.visitEnd };
   Event::pair(&arrival, &departure);
 
 #ifdef ENABLE_DEBUG
@@ -191,16 +189,18 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 
   // ...and queue it up at the appropriate location
   Location &loc = locations[localLocIdx];
-  bool isInfectious = diseaseModel->isInfectious(visitMsg.personState);
-  bool isSusceptible = diseaseModel->isInfectious(visitMsg.personState);
-#ifdef ENABLE_SC
-  if (!loc.anyInfectious && isInfectious) {
-    loc.anyInfectious = true;
-  }
-#endif
 
-  loc.addEvent(arrival);
-  loc.addEvent(departure);
+  int weekDay = day % numDaysWithDistinctVisits;
+  loc.addEvent(weekDay, arrival);
+  loc.addEvent(weekDay, departure);
+}
+
+void Locations::ReceiveStateMessages(std::vector<StateMessage> messages) {
+  for (const StateMessage &update : messages) {
+    StateMessage *cur = &peopleStates[update.personIdx];
+    cur->state = update.state;
+    cur->transmissionModifier = update.transmissionModifier;
+  }
 }
 
 void Locations::ComputeInteractions() {
@@ -208,8 +208,9 @@ void Locations::ComputeInteractions() {
   Counter numInteractions = 0;
   exposureDuration = 0;
   expectedExposureDuration = 0;
+  int weekDay = day % numDaysWithDistinctVisits;
   for (Location &loc : locations) {
-    Counter locVisits = loc.events.size() / 2;
+    Counter locVisits = loc.eventsByDay[weekDay].size() / 2;
     numVisits += locVisits;
 
     Counter locInters = processEvents(&loc);
@@ -239,22 +240,34 @@ void Locations::ComputeInteractions() {
 }
 
 Counter Locations::processEvents(Location *loc) {
+  int weekDay = day % numDaysWithDistinctVisits;
+  std::vector<Event> *events = &loc->eventsByDay[weekDay];
   std::vector<Event> *arrivals;
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   Counter numInteractions = 0;
   Counter numPresent = 0;
-  Counter numVisits = loc->events.size() / 2;
+  Counter numVisits = events->size() / 2;
   Counter duration = 0;
   double startTime = CkWallTimer();
 #elif ENABLE_SC
-  if (!loc->anyInfectious) {
-    loc->reset();
+  bool anyInfectious = false;
+  for (const Event &e : *events) {
+    const DiseaseState state = peopleStates[e.personIdx];
+    if (ARRIVAL == e.type && diseaseModel->isInfectious(state)) {
+      anyInfectious = true;
+      break;
+    }
+  }
+
+  if (!anyInfectious) {
     return 0;
   }
 #endif
 
-  std::sort(loc->events.begin(), loc->events.end());
-  for (const Event &event : loc->events) {
+  if (loc->updated) {
+    std::sort(events->begin(), events->end());
+  }
+  for (const Event &event : *events) {
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
     if (ARRIVAL == event.type) {
       numPresent++;
@@ -264,10 +277,11 @@ Counter Locations::processEvents(Location *loc) {
     }
 #endif
 
-    if (diseaseModel->isSusceptible(event.personState)) {
+    const DiseaseState state = peopleStates[event.personIdx].state;
+    if (diseaseModel->isSusceptible(state)) {
       arrivals = &susceptibleArrivals;
 
-    } else if (diseaseModel->isInfectious(event.personState)) {
+    } else if (diseaseModel->isInfectious(state)) {
       arrivals = &infectiousArrivals;
 
     // If a person can neither infect other people nor be infected themself,
@@ -295,7 +309,12 @@ Counter Locations::processEvents(Location *loc) {
       saveInteractions(*loc, event, interactionsFile);
 #endif
 
-      onDeparture(loc, event);
+      if (diseaseModel->isSusceptible(state)) {
+        onSusceptibleDeparture(loc, event);
+
+      } else if (diseaseModel->isInfectious(state)) {
+        onInfectiousDeparture(loc, event);
+      }
     }
   }
   loc->reset();
@@ -355,16 +374,6 @@ Counter Locations::saveInteractions(const Location &loc,
 }
 #endif  // OUTPUT_OVERLAPS
 
-// Simple dispatch to the susceptible/infectious depature handlers
-inline void Locations::onDeparture(Location *loc, const Event& departure) {
-  if (diseaseModel->isSusceptible(departure.personState)) {
-    onSusceptibleDeparture(loc, departure);
-
-  } else if (diseaseModel->isInfectious(departure.personState)) {
-    onInfectiousDeparture(loc, departure);
-  }
-}
-
 void Locations::onSusceptibleDeparture(Location *loc,
     const Event& susceptibleDeparture) {
   // Each infectious person at this location might have infected this
@@ -404,14 +413,17 @@ inline void Locations::registerInteraction(Location *loc,
   // CkPrintf("  inf: %ld sus: %ld dt: "COUNTER_PRINT_TYPE"\n",
   //     infectiousEvent.personIdx, susceptibleEvent.personIdx,
   //     endTime - startTime);
-  double propensity = diseaseModel->getPropensity(susceptibleEvent.personState,
-    infectiousEvent.personState, startTime, endTime,
-    susceptibleEvent.transmissionModifier, infectiousEvent.transmissionModifier);
+  const StateMessage &infectiousState = peopleStates[infectiousEvent.personIdx];
+  const StateMessage &susceptibleState = peopleStates[susceptibleEvent.personIdx];
+  double propensity = diseaseModel->getPropensity(susceptibleState.state,
+    infectiousState.state, startTime, endTime,
+    susceptibleState.transmissionModifier,
+    infectiousState.transmissionModifier);
 
   // Note that this will create a new vector if this is the first potential
   // infection for the susceptible person in question
   Interaction inter { propensity, infectiousEvent.personIdx,
-    infectiousEvent.personState, startTime, endTime };
+    infectiousState.state, startTime, endTime };
   interactions[susceptibleEvent.personIdx].emplace_back(inter);
 }
 

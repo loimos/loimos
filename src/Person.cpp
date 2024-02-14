@@ -24,6 +24,7 @@ Person::Person(const AttributeTable &attributes, int numInterventions,
   // Create an entry for each day we have data for
   visitsByDay.resize(numDays);
   visitOffsetByDay.reserve(numDays);
+  updated = true;
 }
 
 void Person::filterVisits(const void *cause, VisitTest keepVisit) {

@@ -22,9 +22,10 @@
 #include <algorithm>
 
 Location::Location(const AttributeTable &attributes,
-    int numInterventions, int uniqueId_) :
+    int numInterventions, int uniqueId_, int numDaysWithDistinctVisits) :
     DataInterface(attributes, numInterventions) {
   setUniqueId(uniqueId_);
+  eventsByDay.reserve(numDaysWithDistinctVisits);
   reset();
 }
 
@@ -33,23 +34,19 @@ Location::Location(CkMigrateMessage *msg) {}
 void Location::pup(PUP::er &p) {
   p | data;
   p | uniqueId;
-  p | events;
+  p | eventsByDay;
   p | generator;
-#ifdef ENABLE_SC
-  p | anyInfectious;
-#endif
+  p | updated;
 }
 
 void Location::reset() {
-#ifdef ENABLE_SC
-  anyInfectious = false;
-#endif
-  events.clear();
+  updated = false;
 }
 
 // Event processing.
-void Location::addEvent(const Event &e) {
-  events.push_back(e);
+void Location::addEvent(int day, const Event &e) {
+  eventsByDay[day].push_back(e);
+  updated = true;
 }
 
 void Location::filterVisits(const void *cause, VisitTest keepVisit) {
