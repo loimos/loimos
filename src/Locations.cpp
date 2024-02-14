@@ -168,6 +168,10 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
     return;
   }
 
+#ifdef ENABLE_DEBUG
+  visitMsg.checkTimes(thisIndex);
+#endif
+
   // CkPrintf("    Chare %d: Person %d visiting loc %d from %d to %d\n",
   //   thisIndex, visitMsg.personIdx, visitMsg.locationIdx,
   //   //localLocIdx, numLocalLocations,
@@ -177,15 +181,6 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   Event arrival { ARRIVAL, visitMsg.personIdx, visitMsg.visitStart };
   Event departure { DEPARTURE, visitMsg.personIdx, visitMsg.visitEnd };
   Event::pair(&arrival, &departure);
-
-#ifdef ENABLE_DEBUG
-  if (arrival.scheduledTime > departure.scheduledTime) {
-    CkAbort("Error on chare %d: visit by " ID_PRINT_TYPE " to loc " ID_PRINT_TYPE "\n"
-      "has departure (%d) before arrival (%d)\n",
-      thisIndex, visitMsg.personIdx, trueIdx, departure.scheduledTime,
-      arrival.scheduledTime);
-  }
-#endif
 
   // ...and queue it up at the appropriate location
   Location &loc = locations[localLocIdx];

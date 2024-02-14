@@ -26,10 +26,19 @@ struct VisitMessage {
   VisitMessage(Id locationIdx_, Id personIdx_, Time visitStart_,
       Time visitEnd_) :
     locationIdx(locationIdx_), personIdx(personIdx_),
-    visitStart(visitStart_), deactivatedBy(NULL) {}
+    visitStart(visitStart_), visitEnd(visitEnd_), deactivatedBy(NULL) {}
 
   bool isActive() {
     return NULL != deactivatedBy;
+  }
+
+  void checkTimes(PartitionId partition) {
+    if (visitStart > visitEnd) {
+      CkAbort("Error on chare %d: visit by " ID_PRINT_TYPE " to loc " ID_PRINT_TYPE "\n"
+        "has departure (%d) before arrival (%d)\n",
+        partition, personIdx, locationIdx, visitEnd,
+        visitStart);
+    }
   }
 };
 PUPbytes(VisitMessage);

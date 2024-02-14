@@ -271,15 +271,18 @@ void People::generateVisitData() {
           + partitionY * locationPartitionGridWidth * numLocationsPerPartition;
 
         visits.emplace_back(destinationIdx, personIdx, visitStart, visitEnd);
+#ifdef ENABLE_DEBUG
+        visits.back().checkTimes(thisIndex);
+#endif
 
-  #if ENABLE_DEBUG >= DEBUG_PER_OBJECT
+#if ENABLE_DEBUG >= DEBUG_PER_OBJECT
         CkPrintf(
             "person %d will visit location (%d, %d) with offset (%d,%d)\r\n",
             personIdx, destinationX, destinationY, destinationOffsetX,
             destinationOffsetY);
         CkPrintf("(%d, %d) -> %d in partition (%d, %d)\r\n",
             destinationX, destinationY, destinationIdx, partitionX, partitionY);
-  #endif
+#endif
       }
     }
   }
@@ -397,13 +400,17 @@ void People::loadVisitData(std::ifstream *activityData) {
           person.visitsByDay[endDay].emplace_back(locationId, personId,
               endDay * DAY_LENGTH, visitEnd);
           visitEnd = std::max(nextDaySecs, visitEnd - DAY_LENGTH);
+#ifdef ENABLE_DEBUG
+          person.visitsByDay[endDay].back().checkTimes(thisIndex);
+#endif
         }
 
         person.visitsByDay[day].emplace_back(locationId, personId,
             visitStart, visitEnd);
-        #ifdef ENABLE_DEBUG
-          numVisits++;
-        #endif
+#ifdef ENABLE_DEBUG
+        numVisits++;
+        person.visitsByDay[day].back().checkTimes(thisIndex);
+#endif
 
         std::tie(personId, locationId, visitStart, visitDuration) =
           parseActivityStream(activityData,
@@ -415,11 +422,11 @@ void People::loadVisitData(std::ifstream *activityData) {
       //     day, seekPos);
     }
   }
-  #if ENABLE_DEBUG >= DEBUG_VERBOSE
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
     CkCallback cb(CkReductionTarget(Main, ReceiveVisitsLoadedCount), mainProxy);
     contribute(sizeof(Id), &numVisits, CkReduction::CONCAT(sum_, ID_REDUCTION_TYPE),
       cb);
-  #endif
+#endif
 }
 
 void People::pup(PUP::er &p) {
