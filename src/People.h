@@ -17,6 +17,7 @@
 #include <functional>
 #include <random>
 #include <vector>
+#include <set>
 #include <tuple>
 #include <string>
 #include <iostream>
@@ -49,10 +50,10 @@ class People : public CBase_People {
   void generatePeopleData(Id firstLocalPersonIndex, int seed);
   void generateVisitData();
   void SendVisitMessages();
+  void SendStateMessages(bool sendAll);
   double getTransmissionModifier(const Person &person);
   void ReceiveInteractions(InteractionMessage interMsg);
   void EndOfDayStateUpdate();
-  void SendStateMessages();
   void SendStats();
   void ReceiveIntervention(int interventionIdx);
   #ifdef ENABLE_LB

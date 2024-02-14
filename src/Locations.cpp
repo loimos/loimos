@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <queue>
+#include <set>
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
@@ -271,8 +272,17 @@ Counter Locations::processEvents(Location *loc) {
       numInteractions += numPresent;
     }
 #endif
+#ifdef ENABLE_DEBUG
+    if (0 == peopleStates.count(event.personIdx)) {
+      CkAbort("  Error on chare " PARTITION_ID_PRINT_TYPE
+          ": disease state data not available for visitor " ID_PRINT_TYPE
+          " to loc " ID_PRINT_TYPE "\n",
+          thisIndex, event.personIdx, loc->getUniqueId());
+    }
+#endif
 
     const DiseaseState state = peopleStates[event.personIdx].state;
+
     if (diseaseModel->isSusceptible(state)) {
       arrivals = &susceptibleArrivals;
 

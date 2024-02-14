@@ -57,6 +57,19 @@ struct StateMessage {
       double transmissionModifier_) :
     personIdx(personIdx_), state(state_),
     transmissionModifier(transmissionModifier_) {}
+
+  // Lets us order events in a set
+  bool operator<(const StateMessage& rhs) const {
+    if (personIdx != rhs.personIdx) {
+      return personIdx < rhs.personIdx;
+    }
+
+    if (state != rhs.state) {
+      return state < rhs.state;
+    }
+
+    return transmissionModifier < rhs.transmissionModifier;
+  }
 };
 PUPbytes(StateMessage);
 

@@ -443,7 +443,7 @@ void People::pup(PUP::er &p) {
 
 void People::SendVisitMessages() {
   if (day > numDaysWithDistinctVisits) {
-    SendStateMessages();
+    SendStateMessages(false);
     return;
   }
 
@@ -454,6 +454,7 @@ void People::SendVisitMessages() {
   totalVisitsForDay = 0;
 #endif
   int dayIdx = day % numDaysWithDistinctVisits;
+  Id localIdx = 0;
   for (const Person &person : people) {
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
     minId = std::min(minId, person.getUniqueId());
@@ -461,9 +462,9 @@ void People::SendVisitMessages() {
 #endif
     for (VisitMessage visitMessage : person.visitsByDay[dayIdx]) {
       // Interventions may cancel some visits
-      //if (visitMessage.isActive()) {
-      //  continue;
-      //}
+      // if (visitMessage.isActive()) {
+      //   continue;
+      // }
 
       // Find process that owns that location
       PartitionId locationPartition = diseaseModel->getLocationPartitionIndex(
@@ -491,8 +492,9 @@ void People::SendVisitMessages() {
 #endif  // USE_HYPERCOMM
 
       locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
-      visitors[locationPartition].insert(person.getUniqueId());
+      visitors[locationPartition].insert(localIdx);
     }
+    localIdx++;
   }
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
@@ -503,7 +505,7 @@ void People::SendVisitMessages() {
   }
 #endif
 
-  SendStateMessages();
+  SendStateMessages(true);
 }
 
 double People::getTransmissionModifier(const Person &person) {
@@ -551,6 +553,7 @@ void People::ReceiveIntervention(int interventionIdx) {
     if (person.willComply(interventionIdx)
         && inter.test(person, person.getGenerator())) {
       inter.apply(&person);
+      person.updated = true;
     }
   }
 }
@@ -593,13 +596,13 @@ void People::EndOfDayStateUpdate() {
   day++;
 }
 
-void People::SendStateMessages() {
+void People::SendStateMessages(bool sendAll) {
   for (auto const &pair : visitors) {
-    auto const &partition = pair.first;
+    const PartitionId partition = pair.first;
 
     std::vector<StateMessage> messages;
     for (Id localPid : pair.second) {
-      if (people[localPid].updated) {
+      if (sendAll || people[localPid].updated) {
         const Person &p = people[localPid];
         messages.emplace_back(p.getUniqueId(), p.state,
             getTransmissionModifier(p));
