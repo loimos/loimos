@@ -25,7 +25,7 @@ Location::Location(const AttributeTable &attributes,
     int numInterventions, int uniqueId_, int numDaysWithDistinctVisits) :
     DataInterface(attributes, numInterventions) {
   setUniqueId(uniqueId_);
-  eventsByDay.reserve(numDaysWithDistinctVisits);
+  eventsByDay.resize(numDaysWithDistinctVisits);
   reset();
 }
 
