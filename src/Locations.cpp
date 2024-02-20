@@ -208,6 +208,7 @@ void Locations::ComputeInteractions() {
   Counter numInteractions = 0;
   exposureDuration = 0;
   expectedExposureDuration = 0;
+  double startTime = CkWallTimer();
   for (Location &loc : locations) {
     Counter locVisits = loc.events.size() / 2;
     numVisits += locVisits;
@@ -220,6 +221,18 @@ void Locations::ComputeInteractions() {
     //       thisIndex, loc.getUniqueId(), locInters, locVisits);
     // }
   }
+
+  double totalTime = CkWallTimer() - startTime;
+  CkReduction::tupleElement times[] = {
+    CkReduction::tupleElement(sizeof(double), &totalTime, CkReduction::min_double),
+    CkReduction::tupleElement(sizeof(double), &totalTime, CkReduction::sum_double),
+    CkReduction::tupleElement(sizeof(double), &totalTime, CkReduction::max_double),
+  };
+  CkReductionMsg *msg = CkReductionMsg::buildFromTuple(times,
+      sizeof(times) / sizeof(CkReduction::tupleElement));
+  CkCallback timingCb(CkReductionTarget(Main, ComputedInteractions), mainProxy);
+  msg->setCallback(timingCb);
+  contribute(msg);
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   CkCallback cb(CkReductionTarget(Main, ReceiveInteractionsCount), mainProxy);
   contribute(sizeof(Counter), &numInteractions,

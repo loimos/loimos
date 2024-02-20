@@ -153,19 +153,22 @@ mainmodule loimos {
             if (DAYS_TO_SEED_INFECTION > day) {
               SeedInfections();
             }
-
-            CkStartQD(CkCallback(
-              CkIndex_Main::ComputedInteractions(),
-              mainProxy
-            ));
           }
         }
-        when ComputedInteractions() {
+        when ComputedInteractions(CkReductionMsg *msg) {
           serial {
-            double diff = CkWallTimer() - stepStartTime;
-            CkPrintf("  Interaction DES took %fs\n",
-              diff);
-            totalTime[TOTAL_DES_TIME_INDEX] += diff;
+            int numReductions;
+            CkReduction::tupleElement *results;
+            msg->toTuple(&results, &numReductions);
+            double min = *reinterpret_cast<double *>(results[0].data);
+            double mean = *reinterpret_cast<double *>(results[1].data);
+            double max = *reinterpret_cast<double *>(results[2].data);
+
+            CkPrintf("  Interaction messages took %fs (min %fs, max %fs)\n",
+              mean, min, max);
+            totalTime[TOTAL_INTERACTIONS_TIME_INDEX] += mean;
+
+            delete [] results;
 
             // CkPrintf("  Sending Interaction Messages\n");
             stepStartTime = CkWallTimer();
@@ -207,11 +210,6 @@ mainmodule loimos {
               ID_PRINT_TYPE ".\n",
               day, CkWallTimer() - iterationStartTime, infectiousCount
             );
-
-            // Trigger intervention updates.
-            if (interventionStategy) {
-              globDiseaseModel.applyInterventions(day, infectiousCount);
-            }
           }
         }
 
@@ -287,7 +285,7 @@ mainmodule loimos {
 
     entry void SeedInfections();
     entry void StartComputingInteractions();
-    entry void ComputedInteractions();
+    entry [reductiontarget] void ComputedInteractions(CkReductionMsg *msg);
     entry void StartComputingEndOfDay();
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
     entry [reductiontarget] void ReceiveVisitsLoadedCount(Id visitsCount) {

@@ -106,33 +106,33 @@ test-style:
 	cpplint --extensions=C,h,ci --root=loimos/src --recursive . &> linter-errors.log
 
 test-utopia: all
-	./charmrun +p4 ./loimos 0 19 12 2 2 1 1 test-utopia.csv ../data/disease_models/covid19.textproto ../data/populations/utopia/ --min-max-alpha ++local
+	./charmrun +p4 ./$(BIN) 0 19 12 2 2 1 1 test-utopia.csv ../data/disease_models/covid19.textproto ../data/populations/utopia/ --min-max-alpha ++local
 
 test-small: all
-	./charmrun +p4 ./loimos 0 100 735 2 2 30 7 test-small.csv ../data/disease_models/covid19.textproto ../data/populations/synthetic_small_city/ --min-max-alpha ++local
+	./charmrun +p4 ./$(BIN) 0 100 735 2 2 30 7 test-small.csv ../data/disease_models/covid19.textproto ../data/populations/synthetic_small_city/ --min-max-alpha ++local
 
 test-syn: all
-	./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 test-syn.csv ../data/disease_models/covid19_onepath.textproto ++local
+	./charmrun +p4 ./$(BIN) 1 100 100 50 50 5 5 5 32 30 test-syn.csv ../data/disease_models/covid19_onepath.textproto ++local
 
 test-large: all
 	if [ -f ../data/populations/coc/visits.csv ]; then \
-		./charmrun +p4 ./loimos 0 41119 19203 60 40 30 7 test-large.csv ../data/disease_models/covid19.textproto ../data/populations/coc/ --min-max-alpha ++local;\
+		./charmrun +p4 ./$(BIN) 0 41119 19203 60 40 30 7 test-large.csv ../data/disease_models/covid19.textproto ../data/populations/coc/ --min-max-alpha ++local;\
 	else\
 		echo CoC data not available;\
 	fi
 
 test-safe-risky: all
-	./charmrun +p4 ./loimos 0 25000 5001 60 40 30 1 test-validation.csv ../data/disease_models/safe_risky.textproto ../data/populations/safe_risky_population/ ++local
+	./charmrun +p4 ./$(BIN) 0 25000 5001 60 40 30 1 test-validation.csv ../data/disease_models/safe_risky.textproto ../data/populations/safe_risky_population/ ++local
 
 test-intervention: all
 	if [ -f ../data/populations/coc/visits.csv ]; then \
-		./charmrun +p4 ./loimos 0 41119 19203 60 40 180 7 test-intervention.csv ../data/disease_models/covid19_onepath.textproto ../data/populations/coc/ -i ../data/interventions/isolation_and_school_closures.textproto ++local\
+		./charmrun +p4 ./$(BIN) 0 41119 19203 60 40 180 7 test-intervention.csv ../data/disease_models/covid19_onepath.textproto ../data/populations/coc/ -i ../data/interventions/isolation_and_school_closures.textproto ++local\
 	else\
 		echo CoC data not available;\
 	fi
 
 test-intervention-syn: all
-	./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 test-intervention-syn.csv ../data/disease_models/covid19_onepath.textproto -i ../data/interventions/vaccination.textproto ++local
+	./charmrun +p4 ./$(BIN) 1 100 100 50 50 5 5 5 32 30 test-intervention-syn.csv ../data/disease_models/covid19_onepath.textproto -i ../data/interventions/vaccination.textproto ++local
 
 clean-cache:
 	rm ../data/populations/coc/*.cache ../data/populations/synthetic_small_city/*.cache
