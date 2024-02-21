@@ -12,7 +12,6 @@ import os
 import time
 
 from multiprocessing import Pool, set_start_method
-from multiprocessing.shared_memory import SharedMemory
 
 """
 Given a visit schedule, this script calculates the total visits and maximum
@@ -24,26 +23,20 @@ LID_COL = "lid"
 # Any other column in the dataset that is fully populated.
 START_COL = "start_time"
 
-def find_max_simultaneous_visits(lid):
+def find_max_simultaneous_visits(lid, visits):
     max_in_visit = 0
-    visits = visits_by_location[lid]
     events = visits.melt(value_vars=["start_time", "end_time"],
             value_name="time", var_name="type")
     events.sort_values(["time", "type"], inplace=True)
-    #if lid % 1000000 == 0:
-    #    print("location {} has {} visits".format(lid, len(visits)))
-    #    # print(visits.memory_usage())
+    if lid % 1000000 == 0:
+        print("location {} has {} visits".format(lid, len(visits)))
+        # print(visits.memory_usage())
     events["occupancy"] = -1
     events.loc[events["type"] == "start_time", "occupancy"] = 1
-    if lid % 1000000 == 0:
-        print(f"location {lid}:")
-        print(events)
-    #    # print(visits.memory_usage())
     return events["occupancy"].cumsum().max()
 
 
 if __name__ == "__main__":
-    global visits_by_location
     parser = argparse.ArgumentParser(
         description="Calculates summary statistics for a given visit file."
     )
@@ -116,11 +109,10 @@ if __name__ == "__main__":
     # Calculate total visits to a location.
     start_time = time.perf_counter()
     visits_by_location = visits[[LID_COL, "start_time", "end_time"]]\
-            .groupby(LID_COL).groups
+            .groupby(LID_COL)
     #print(list(visits_by_location))
     max_visits = (
-        visits[[LID_COL, "start_time"]]
-        .groupby(LID_COL)
+        visits_by_location[["start_time"]]
         .count()
         .rename({"start_time": "total_visits"}, axis=1)
     )
@@ -169,12 +161,12 @@ if __name__ == "__main__":
         set_start_method("spawn")
 
         with Pool(args.n_tasks) as pool:
-            max_visits["max_simultaneous_visits"] = pool.map(
-                find_max_simultaneous_visits, visits_by_location.keys()
+            max_visits["max_simultaneous_visits"] = pool.starmap(
+                find_max_simultaneous_visits, visits_by_location
             )
     else:
         max_visits["max_simultaneous_visits"] = [
-            find_max_simultaneous_visits(lid)
+            find_max_simultaneous_visits(lid, group)
             for lid, group in visits_by_location
         ]
 

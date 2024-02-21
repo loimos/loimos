@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -q normal
-#SBATCH -N 1
+#SBATCH -N 4
 #SBATCH --ntasks-per-node=37
 #SBATCH --mem=375000
 #SBATCH -p bii
@@ -12,7 +12,8 @@ module load python
 SCRIPTS_DIR="${HOME}/biocomplexity/loimos/loimos/scripts/preprocessing"
 OUT_DIR="/scratch/${USER}/loimos/data/populations/$1"
 TASKS_PER_NODE=37
+NODES=4
 
-echo ${SCRIPTS_DIR}/location_heuristics.py ${OUT_DIR} -n ${TASKS_PER_NODE}
+echo ${SCRIPTS_DIR}/location_heuristics.py ${OUT_DIR} -n $((${NODES}*${TASKS_PER_NODE}))
 echo -------------------------------------------------------------------------
-time ${SCRIPTS_DIR}/location_heuristics.py ${OUT_DIR} -n ${TASKS_PER_NODE}
+time ${SCRIPTS_DIR}/location_heuristics.py ${OUT_DIR} -n $((${NODES}*${TASKS_PER_NODE}))
