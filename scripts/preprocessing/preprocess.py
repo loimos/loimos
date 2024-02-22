@@ -100,8 +100,9 @@ def parse_args():
         "--activity-loc-adult-assignments-in-file",
         default=os.path.join(
             "location_assignment",
-            "weekly",
-            "{region}_adult_activity_location_assignment_week.csv",
+            "daily",
+            "adult",
+            "{region}_adult_activity_location_assignment_day.csv",
         ),
         help="The name of the file containing adult visit data within the "
         + "population dir",
@@ -111,8 +112,9 @@ def parse_args():
         "--activity-loc-child-assignments-in-file",
         default=os.path.join(
             "location_assignment",
-            "weekly",
-            "{region}_child_activity_location_assignment_week.csv",
+            "daily",
+            "child",
+            "{region}_child_activity_location_assignment_day.csv",
         ),
         help="The name of the file containing adult visit data within the "
         + "population dir",
