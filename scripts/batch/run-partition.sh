@@ -6,7 +6,7 @@
 #SBATCH --mem 375000
 #SBATCH -t 180
 
-cd /home/arr2vg/biocomplexity/loimos/loimos/scripts/preprocessing
+cd /home/arr2vg/loimos/loimos/scripts/preprocessing
 
 module load python
 DATASET=${1}
