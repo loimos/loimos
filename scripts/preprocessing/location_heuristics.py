@@ -25,19 +25,21 @@ LID_COL = "lid"
 # Any other column in the dataset that is fully populated.
 START_COL = "start_time"
 
+
 def find_max_simultaneous_visits(visit_ids, visits=None, shared=False):
     max_in_visit = 0
     if shared:
         visits = visits.read()
-    events = visits.iloc[visit_ids].melt(value_vars=["start_time", "end_time"],
-                value_name="time", var_name="type")
+    events = visits.iloc[visit_ids].melt(
+        value_vars=["start_time", "end_time"], value_name="time", var_name="type"
+    )
     events.sort_values(["time", "type"], inplace=True)
-    #if lid % 1000000 == 0:
+    # if lid % 1000000 == 0:
     #    print("location {} has {} visits".format(lid, len(visits)))
     #    # print(visits.memory_usage())
     events["occupancy"] = -1
     events.loc[events["type"] == "start_time", "occupancy"] = 1
-    #if lid % 1000000 == 0:
+    # if lid % 1000000 == 0:
     #    print(f"location {lid}:")
     #    print(events)
     #    # print(visits.memory_usage())
@@ -117,18 +119,15 @@ if __name__ == "__main__":
 
     # Calculate total visits to a location.
     start_time = time.perf_counter()
-    visits_by_location = visits[[LID_COL, "start_time", "end_time"]]\
-            .groupby(LID_COL)
+    visits_by_location = visits[[LID_COL, "start_time", "end_time"]].groupby(LID_COL)
     max_visits = pd.DataFrame(
-        visits_by_location["start_time"]
-        .count()
-        .rename("total_visits")
+        visits_by_location["start_time"].count().rename("total_visits")
     )
     end_time = time.perf_counter()
     print("Calculating total visits:", end_time - start_time)
 
     renaming = []
-    #if "daynum" in visits:
+    # if "daynum" in visits:
     #    # Calculate total visits for each day per location.
     #    start_time = time.perf_counter()
     #    daily_summaries = (
@@ -166,16 +165,17 @@ if __name__ == "__main__":
         # another method (see https://stackoverflow.com/questions/42584525/
         # python-multiprocessing-debugging-oserror-errno-12-cannot-allocate-memory
         set_start_method("spawn")
-        #print(visits_by_location.groups, flush=True)
+        # print(visits_by_location.groups, flush=True)
         shared_visits = SharedPandasDataFrame(visits)
 
         with Pool(args.n_tasks) as pool:
-            #visits_by_location = {k: SharedPandasDataFrame(df) \
+            # visits_by_location = {k: SharedPandasDataFrame(df) \
             #        for k, df in visits_by_location.groups.items()}
             max_visits["max_simultaneous_visits"] = pool.map(
-                functools.partial(find_max_simultaneous_visits,
-                    visits=shared_visits, shared=True),
-                visits_by_location.groups.values()
+                functools.partial(
+                    find_max_simultaneous_visits, visits=shared_visits, shared=True
+                ),
+                visits_by_location.groups.values(),
             )
 
         shared_visits.unlink()

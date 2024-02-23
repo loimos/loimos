@@ -65,7 +65,7 @@ def parse_args():
         "-pi",
         "--people-in-file",
         default=os.path.join("base_population", "{region}_person.csv"),
-        #default="{region}_person.csv",
+        # default="{region}_person.csv",
         help="The name of the file containing person data within the "
         + "population dir",
     )
@@ -73,7 +73,7 @@ def parse_args():
         "-ri",
         "--residences-in-file",
         default=os.path.join("locations", "{region}_residence_locations.csv"),
-        #default="{region}_residence_locations.csv",
+        # default="{region}_residence_locations.csv",
         help="The name of the file containing home location data within the "
         + "population dir",
     )
@@ -81,7 +81,7 @@ def parse_args():
         "-ai",
         "--activity-locs-in-file",
         default=os.path.join("locations", "{region}_activity_locations.csv"),
-        #default="{region}_activity_locations.csv",
+        # default="{region}_activity_locations.csv",
         help="The name of the file containing home location data within the "
         + "population dir",
     )
@@ -89,9 +89,9 @@ def parse_args():
         "-rai",
         "--residences-assignments-in-file",
         default=os.path.join(
-           "home_location_assignment", "{region}_household_residence_assignment.csv"
+            "home_location_assignment", "{region}_household_residence_assignment.csv"
         ),
-        #default="{region}_household_residence_assignment.csv",
+        # default="{region}_household_residence_assignment.csv",
         help="The name of the file asigning households to home locations "
         + "within the population dir",
     )
