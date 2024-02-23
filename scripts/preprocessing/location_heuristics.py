@@ -6,7 +6,6 @@
 
 import pandas as pd
 import numpy as np
-import heapq
 import argparse
 import os
 import sys
@@ -33,7 +32,6 @@ START_COL = "start_time"
 
 
 def find_max_simultaneous_visits(visit_ids, visits=None, shared=False):
-    max_in_visit = 0
     if shared:
         visits = visits.read()
     events = visits.iloc[visit_ids].melt(
