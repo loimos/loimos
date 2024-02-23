@@ -9,11 +9,17 @@ import numpy as np
 import heapq
 import argparse
 import os
+import sys
 import time
 import functools
 
 from multiprocessing import Pool, set_start_method
-from shared import SharedPandasDataFrame
+
+# Python modules need to either be in/below this dir or in the path
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.append(parentdir)
+from utils.shared import SharedPandasDataFrame  # noqa
 
 """
 Given a visit schedule, this script calculates the total visits and maximum
