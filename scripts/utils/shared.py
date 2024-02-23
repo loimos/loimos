@@ -3,7 +3,8 @@ import numpy as np
 from multiprocessing.shared_memory import SharedMemory
 
 
-# Taken from https://e-dorigatti.github.io/python/2020/06/19/multiprocessing-large-objects.html
+# Taken from
+# https://e-dorigatti.github.io/python/2020/06/19/multiprocessing-large-objects.html
 class SharedNumpyArray:
     """
     Wraps a numpy array so that it can be shared quickly among processes,
