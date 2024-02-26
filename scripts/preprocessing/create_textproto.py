@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import sys
 
 import pandas as pd
 from subprocess import check_output
@@ -77,6 +78,13 @@ def parse_args():
         action="store_true",
         help="Set this flag to compute detailed metadata for visits"
     )
+    parser.add_argument(
+        "-P",
+        "--print-only",
+        action="store_true",
+        help="Set this flag to write textproto files to stdout rather than "
+        + "override the existing files"
+    )
 
     return parser.parse_args()
 
@@ -117,16 +125,16 @@ GET_METADATA = {
     "visits": get_visits_metadata,
 }
 def create_textproto(pop_dir, csv_filename, dtypes, partition_offsets=None,
-        metadata_type="basic"):
+        metadata_type="basic", print_only=False):
     csv_path = os.path.join(pop_dir, csv_filename)
     tmp, _ = os.path.splitext(csv_path)
     textproto_path = tmp + ".textproto"
     name = os.path.basename(tmp)
 
     metadata = GET_METADATA[metadata_type](csv_path)
-
     df = pd.read_csv(csv_path, nrows=1)
-    with open(textproto_path, "w") as f:
+
+    def write_entries(f):
         for entry in metadata:
             f.write(entry)
         if name in LOAD_COLUMNS:
@@ -146,6 +154,15 @@ def create_textproto(pop_dir, csv_filename, dtypes, partition_offsets=None,
             dtype = dtypes.get(c, DEFAULT_TYPE)
             f.write(COLUMN_METADATA_ENTRY.format(name=c, dtype=dtype))
 
+    if print_only:
+        print(f"{name}.textproto:")
+        write_entries(sys.stdout)
+        print("")
+        print("")
+    else:
+        with open(textproto_path, "w") as f:
+            write_entries(f)
+
 
 def main():
     args = parse_args()
@@ -154,10 +171,12 @@ def main():
     if args.visits_metadata:
         visits_metadata_type = "visits"
 
-    create_textproto(args.pop_dir, args.people_file, PEOPLE_TYPES)
-    create_textproto(args.pop_dir, args.locations_file, LOCATIONS_TYPES)
+    create_textproto(args.pop_dir, args.people_file, PEOPLE_TYPES,
+            print_only=args.print_only)
+    create_textproto(args.pop_dir, args.locations_file, LOCATIONS_TYPES,
+            print_only=args.print_only)
     create_textproto(args.pop_dir, args.visits_file, VISITS_TYPES,
-            metadata_type=visits_metadata_type)
+            metadata_type=visits_metadata_type, print_only=args.print_only)
 
 
 if __name__ == "__main__":
