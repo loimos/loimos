@@ -28,8 +28,7 @@ Arguments * parse(int argc, char **argv) {
   args->isOnTheFlyRun = atoi(argv[++argNum]) == 1;
 
   if (args->isOnTheFlyRun) {
-    args->onTheFly = new OnTheFlyArguments();
-    OnTheFlyArguments *onTheFly = args->onTheFly;
+    OnTheFlyArguments *onTheFly = &args->onTheFly;
 
     // Get number of people.
     onTheFly->peopleGrid.width = atol(argv[++argNum]);
@@ -134,4 +133,6 @@ Arguments * parse(int argc, char **argv) {
     CkPrintf("Loading people and locations from %s.\n", scenarioPath.c_str());
   }
 #endif
+
+  return args;
 }

@@ -7,6 +7,8 @@
 #ifndef TYPES_H_
 #define TYPES_H_
 
+#include "charm++.h"
+
 #include <cstdint>
 #include <string>
 
@@ -85,31 +87,10 @@ struct Arguments {
   std::string outputPath;
 
   bool isOnTheFlyRun;
-  struct OnTheFlyArguments *onTheFly;
+  struct OnTheFlyArguments onTheFly;
   std::string scenarioPath;
 };
-
-struct Scenario {
-  int numDays;
-  int numDaysWithDistinctVisits;
-  Id numPeople;
-  Id numLocations;
-
-  Time daysToSeed;
-  Id seededInfectionsPerDay;
-
-  bool syntheticRun;
-  struct SyntheticGrid *syntheticGrid;
-  int contactModelType;
-  int maxSimVisitsIdx;
-  int ageIdx;
-  bool interventionStrategy;
-
-  std::string diseasePath;
-  std::string scenarioPath;
-  std::string interventionPath;
-  std::string outputPath;
-};
+PUPbytes(Arguments);
 
 struct Profile {
   Counter totalVisits;
