@@ -38,7 +38,7 @@ double ContactModel::getContactProbability(const Location &location) const {
   return DEFAULT_CONTACT_PROBABILITY;
 }
 
-ContactModel *createContactModel() {
+ContactModel *createContactModel(int contactModelType) {
   if (static_cast<int>(ContactModelType::constant_probability) == contactModelType) {
     return new ContactModel();
 

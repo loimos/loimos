@@ -30,38 +30,18 @@ using NameIndexLookupType = std::unordered_map<std::string, int>;
 
 class DiseaseModel : public CBase_DiseaseModel {
  private:
-  loimos::proto::DiseaseModel *model;
   Time getTimeInNextState(const
     loimos::proto::DiseaseModel_DiseaseState_TimedTransitionSet_StateTransition
-      *transitionSet, std::default_random_engine *generator) const;
+      *transitionSet, std::default_random_engine *generator, Id *numPeople,
+      Id *numLocations) const;
   Time timeDefToSeconds(TimeDef time) const;
   Time timeDefToDays(TimeDef time) const;
 
-  // Offset-based index lookup
-  std::vector<Id> locationPartitionOffsets;
-  std::vector<Id> personPartitionOffsets;
-  void setPartitionOffsets(PartitionId numPartitions, Id numObjects,
-    Id firstIndex, loimos::proto::CSVDefinition *metadata,
-    std::vector<Id> *partitionOffsets);
-
-  // Intervention related.
-  std::vector<bool> triggerFlags;
-  std::vector<std::shared_ptr<Intervention<Person>>> personInterventions;
-  std::vector<std::shared_ptr<Intervention<Location>>> locationInterventions;
-
-  void intitialisePersonInterventions(
-    const InterventionList &interventionSpecs,
-    const AttributeTable &attributes);
-  void intitialiseLocationInterventions(
-    const InterventionList &interventionSpecs,
-    const AttributeTable &attributes);
-
  public:
-  // move back to private later
-  DiseaseModel(std::string pathToModel, std::string scenarioPath,
-      std::string pathToIntervention);
+  loimos::proto::DiseaseModel *model;
+
+  DiseaseModel(std::string diseasePath);
   DiseaseState getIndexOfState(std::string stateLabel) const;
-  // TODO(iancostello): Change interventionStategies to index based.
   std::tuple<DiseaseState, Time> transitionFromState(DiseaseState fromState,
     std::default_random_engine *generator) const;
   std::string lookupStateName(DiseaseState state) const;
@@ -78,39 +58,6 @@ class DiseaseModel : public CBase_DiseaseModel {
       Time endTime,
       double susceptibility,
       double infectivity) const;
-
-  // These objects are not related to the disease model but are
-  // per PE definitions so it makes sense to share them.
-  loimos::proto::CSVDefinition *personDef;
-  loimos::proto::CSVDefinition *locationDef;
-  loimos::proto::CSVDefinition *activityDef;
-  loimos::proto::InterventionModel *interventionDef;
-
-  // Intervention methods
-  int susceptibilityIndex;
-  int infectivityIndex;
-  AttributeTable personAttributes;
-  AttributeTable locationAttributes;
-
-  // Offset-based index interface - each calls the corresponding function
-  // with the corresponding offset vector
-  Id getLocalLocationIndex(Id globalIndex, PartitionId PartitionId) const;
-  Id getGlobalLocationIndex(Id localIndex, PartitionId PartitionId) const;
-  CacheOffset getLocationCacheIndex(Id globalIndex) const;
-  PartitionId getLocationPartitionIndex(Id globalIndex) const;
-  Id getLocationPartitionSize(PartitionId partitionIndex) const;
-  Id getLocalPersonIndex(Id globalIndex, PartitionId PartitionId) const;
-  Id getGlobalPersonIndex(Id localIndex, PartitionId PartitionId) const;
-  CacheOffset getPersonCacheIndex(Id globalIndex) const;
-  PartitionId getPersonPartitionIndex(Id globalIndex) const;
-  Id getPersonPartitionSize(PartitionId partitionIndex) const;
-
-  const Intervention<Person> &getPersonIntervention(int index) const;
-  const Intervention<Location> &getLocationIntervention(int index) const;
-  int getNumPersonInterventions() const;
-  int getNumLocationInterventions() const;
-  void applyInterventions(int day, Id newDailyInfections);
-  void toggleInterventions(int day, Id newDailyInfections);
 };
 
 #endif  // DISEASEMODEL_H_
