@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_matrix, coo_matrix
 import sys
 
 # Usage - sparse_adj_matrix.py (visits.csv file path)
@@ -26,5 +26,17 @@ coo = coo_matrix((aggregated_df['duration'], (aggregated_df['pid'], aggregated_d
 
 print("Converting COO to CSR now. \n", flush=True)
 adj_matrix = coo.tocsr()
-print("Finished converting to CSR. \n", flush=True)
-print(vars(adj_matrix))
+print("Finished converting to CSR.", flush=True)
+print("Size of matrix: " + str(adj_matrix.shape) + "\n", flush=True)
+
+# number of non-zeros
+print("Number of non-zeros: " + str(adj_matrix.count_nonzero()), flush=True)
+
+# average number of non zeros per row
+print("Average number of non-zeros per row: " + str(adj_matrix.getnnz(axis=1).mean()), flush=True)
+
+# 1-norm
+print("1-norm: " + str(np.max(adj_matrix.sum(axis=0))), flush=True)
+
+# Frobenius norm
+print("Frobenius norm: " + str(np.sqrt(np.sum(np.square(adj_matrix.data)))), flush=True)
