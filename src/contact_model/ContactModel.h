@@ -49,6 +49,6 @@ enum class ContactModelType { constant_probability, min_max_alpha };
 
 // This creates a new instance of the contact model class indicated by
 // the global variable contactModelType
-ContactModel *createContactModel();
+ContactModel *createContactModel(int contactModelType);
 
 #endif  // CONTACT_MODEL_CONTACTMODEL_H_

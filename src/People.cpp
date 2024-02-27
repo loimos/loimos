@@ -383,7 +383,7 @@ void People::loadVisitData(std::ifstream *activityData) {
       Time visitEnd = -1;
       std::tie(personId, locationId, visitStart, visitDuration) =
         parseActivityStream(activityData,
-            diseaseModel->activityDef, NULL);
+            diseaseModel->visitDef, NULL);
 
 #if ENABLE_DEBUG >= DEBUG_PER_OBJECT
       if (0 == personId % 10000) {
@@ -415,7 +415,7 @@ void People::loadVisitData(std::ifstream *activityData) {
 
         std::tie(personId, locationId, visitStart, visitDuration) =
           parseActivityStream(activityData,
-              diseaseModel->activityDef, NULL);
+              diseaseModel->visitDef, NULL);
       }
 
       // CkPrintf("  Chare %d: person %d has %u visits on day %d (offset %u)\n",

@@ -66,7 +66,6 @@
 /* readonly */ std::vector<double> totalTime;
 /* readonly */ std::string outputPath;  // NOLINT(runtime/string)
 
-
 // For synthetic run.
 /* readonly */ Id synPeopleGridWidth;
 /* readonly */ Id synPeopleGridHeight;
@@ -77,7 +76,7 @@
 /* readonly */ PartitionId synLocationPartitionGridWidth;
 /* readonly */ PartitionId synLocationPartitionGridHeight;
 /* readonly */ int averageDegreeOfVisit;
-/* readonly */ bool interventionStategy;
+/* readonly */ bool interventionStrategy;
 
 class TraceSwitcher : public CBase_TraceSwitcher {
  public:
@@ -131,147 +130,44 @@ class TraceSwitcher : public CBase_TraceSwitcher {
 };
 
 Main::Main(CkArgMsg* msg) {
-  // parsing command line arguments
-  if (msg->argc < 7) {
-    CkAbort("Error, usage %s <people> <locations> <people subsets> <location subsets>"
-    " <days> <disease_model_path> <scenario_folder (optional)>\n", msg->argv[0]);
-  }
+  mainProxy = thisProxy;
+
 #ifdef ENABLE_DEBUG
   CkPrintf("Debug printing enabled (verbosity at level %d)\n", ENABLE_DEBUG);
 #endif
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
-  for (int i = 0; i < msg->argc; ++i) {
-    CkPrintf("argv[%d]: %s\n", i, msg->argv[i]);
-  }
-#endif
+
+  Arguments *args = parse(msg->argc, msg->argv);
+  delete msg;
 
   dataLoadingStartTime = CkWallTimer();
 
-  int argNum = 0;
-  syntheticRun = atoi(msg->argv[++argNum]) == 1;
+  globDiseaseModel = CProxy_DiseaseModel::ckNew(args);
+  diseaseModel = globDiseaseModel.ckLocalBranch();
+  accumulated.resize(diseaseModel->getNumberOfStates(), 0);
 
-  if (syntheticRun) {
-    // Get number of people.
-    synPeopleGridWidth = atol(msg->argv[++argNum]);
-    synPeopleGridHeight = atol(msg->argv[++argNum]);
-    numPeople = synPeopleGridWidth * synPeopleGridHeight;
-
-    // Location data
-    synLocationGridWidth = atoi(msg->argv[++argNum]);
-    synLocationGridHeight = atoi(msg->argv[++argNum]);
-    numLocations = synLocationGridWidth * synLocationGridHeight;
-    assert(synPeopleGridWidth >= synLocationGridWidth);
-    assert(synPeopleGridHeight >= synLocationGridHeight);
-
-    // Edge degree.
-    averageDegreeOfVisit = atoi(msg->argv[++argNum]);
-
-    // Chare data
-    synLocationPartitionGridWidth = atoi(msg->argv[++argNum]);
-    synLocationPartitionGridHeight = atoi(msg->argv[++argNum]);
-    numLocationPartitions =
-      synLocationPartitionGridWidth * synLocationPartitionGridHeight;
-    numPersonPartitions = atoi(msg->argv[++argNum]);
-
-    // Calculate the dimensions of the block of locations stored by each
-    // location chare
-    synLocalLocationGridWidth = -1;
-    if (0 == synLocationGridWidth % synLocationPartitionGridWidth) {
-      synLocalLocationGridWidth =
-        synLocationGridWidth / synLocationPartitionGridWidth;
-    }
-    synLocalLocationGridHeight = -1;
-    if (0 == synLocationGridHeight % synLocationPartitionGridHeight) {
-      synLocalLocationGridHeight =
-        synLocationGridHeight / synLocationPartitionGridHeight;
-    }
-
-    if (-1 == synLocalLocationGridWidth || -1 == synLocalLocationGridHeight) {
-      CkAbort("Error: dimensions of location chare grid must divide those "
-          "of location grid:\r\nchare grid is %d by %d, location grid is %d by %d\r\n",
-        synLocationPartitionGridWidth, synLocationPartitionGridHeight,
-        synLocationGridWidth, synLocationGridHeight);
-    }
-
-    numDays = atoi(msg->argv[++argNum]);
-    numDaysWithDistinctVisits = 7;
-
-  } else {
-    numPeople = atoi(msg->argv[++argNum]);
-    numLocations = atoi(msg->argv[++argNum]);
-    numPersonPartitions = atoi(msg->argv[++argNum]);
-    numLocationPartitions = atoi(msg->argv[++argNum]);
-    numDays = atoi(msg->argv[++argNum]);
-    numDaysWithDistinctVisits = atoi(msg->argv[++argNum]);
-  }
-
+  CkPrintf("\nFinished loading shared/global data in %lf seconds.\n",
+      CkWallTimer() - dataLoadingStartTime);
+  
   if (numPeople < numPersonPartitions) {
-    CkAbort("Error: running on more people chares (%d) than people (%d)",
-        numPersonPartitions, numPeople);
-  }
-  if (numLocations < numLocationPartitions) {
-    CkAbort("Error: running on more location chares (%d) than locations (%d)",
+    CkAbort("Error: running on more people chares (" PARTITION_ID_PRINT_TYPE
+        ") than people (" ID_PRINT_TYPE ")",
+    CkAbort("Error: running on more location chares (" PARTITION_ID_PRINT_TYPE
+        ") than locations (" ID_PRINT_TYPE ")",
         numLocationPartitions, numLocations);
   }
 
-  outputPath = std::string(msg->argv[++argNum]);
-
-#if ENABLE_DEBUG >= DEBUG_BASIC
-  CkPrintf("Saving simulation output to %s\n", msg->argv[argNum]);
-#endif
-  std::string pathToDiseaseModel = std::string(msg->argv[++argNum]);
-#if ENABLE_DEBUG >= DEBUG_BASIC
-  CkPrintf("Reading disease model from %s\n", msg->argv[argNum]);
+#ifdef ENABLE_UNIT_TESTING
+  CkPrintf("Executing unit testing.");
+  testing::InitGoogleTest(&msg->argc, msg->argv);
+  RUN_ALL_TESTS();
 #endif
 
-  // Handle both real data runs or runs using synthetic populations.
-  std::string scenarioPath;
-  std::string scenarioId;
-  if (!syntheticRun) {
-    // Create data caches.
-    scenarioPath = std::string(msg->argv[++argNum]);
-
-    // This allows users to omit the trailing "/" from the scenario path
-    // while still allowing us to find the files properly
-    if (scenarioPath.back() != '/') {
-      scenarioPath.push_back('/');
-    }
-  }
-#ifdef OUTPUT_FLAGS
-  if (outputPath.back() == '/') {
-    outputPath.pop_back();
-  }
-  create_directory(outputPath, syntheticRun ? "." : scenarioPath);
-  outputPath.push_back('/');
-#endif
-
-  // Determine which contact model to use
-  contactModelType = static_cast<int>(ContactModelType::constant_probability);
-  interventionStategy = false;
-  int interventionStategyLocation = -1;
-  for (; argNum < msg->argc; ++argNum) {
-    std::string tmp = std::string(msg->argv[argNum]);
-
-    // We can just use a flag for now in the CLI, since we only have two
-    // models and that's easier to parse, but we may eventually have more,
-    // which is why we use an enum to actually hold the model value
-    if ("-m" == tmp || "--min-max-alpha" == tmp) {
-      contactModelType = static_cast<int>(ContactModelType::min_max_alpha);
-
-    } else if ("-i" == tmp && argNum + 1 < msg->argc) {
-      interventionStategyLocation = ++argNum;
-      interventionStategy = true;
-    }
-  }
-
-  // setup main proxy
   CkPrintf("\nRunning Loimos on %d PEs with "
       ID_PRINT_TYPE " people, " ID_PRINT_TYPE " locations, "
       PARTITION_ID_PRINT_TYPE " people chares, " PARTITION_ID_PRINT_TYPE
       " location chares, and %d days\n",
     CkNumPes(), numPeople, numLocations, numPersonPartitions,
     numLocationPartitions, numDays);
-  mainProxy = thisProxy;
 
   if (syntheticRun) {
     CkPrintf("Synthetic run with (" ID_PRINT_TYPE ", " ID_PRINT_TYPE
@@ -282,75 +178,15 @@ Main::Main(CkArgMsg* msg) {
       synLocationGridHeight, averageDegreeOfVisit);
   }
 
-#ifdef ENABLE_UNIT_TESTING
-  CkPrintf("Executing unit testing.");
-  testing::InitGoogleTest(&msg->argc, msg->argv);
-  RUN_ALL_TESTS();
-#endif
-
-  // Instantiate DiseaseModel nodegroup (One for each physical processor).
-#if ENABLE_DEBUG >= DEBUG_BASIC
-  CkPrintf("Loading diseaseModel at %s.\n", pathToDiseaseModel.c_str());
-#endif
-  if (interventionStategy) {
-#if ENABLE_DEBUG >= DEBUG_BASIC
-    CkPrintf("intervention stategy index: %d\n", interventionStategyLocation);
-#endif
-    globDiseaseModel = CProxy_DiseaseModel::ckNew(pathToDiseaseModel,
-        scenarioPath, msg->argv[interventionStategyLocation]);
-#if ENABLE_DEBUG >= DEBUG_BASIC
-    CkPrintf("Loading intervention at %s.\n",
-        msg->argv[interventionStategyLocation]);
-#endif
-
-  } else {
-    globDiseaseModel = CProxy_DiseaseModel::ckNew(pathToDiseaseModel,
-        scenarioPath, "");
-    CkPrintf("Running with no intervention.\n");
-  }
-
-  diseaseModel = globDiseaseModel.ckLocalBranch();
-  accumulated.resize(diseaseModel->getNumberOfStates(), 0);
-  delete msg;
-
-#if ENABLE_DEBUG >= DEBUG_BASIC
-  CkPrintf("Person Attributes:\n");
-  for (int i = 0; i < diseaseModel->personAttributes.size(); i++) {
-    CkPrintf("(%d) %s: default: %lf, type: %d\n",
-        i, diseaseModel->personAttributes.getName(i).c_str(),
-        diseaseModel->personAttributes.getDefaultValueAsDouble(i),
-        diseaseModel->personAttributes.getDataType(i));
-  }
-
-  CkPrintf("Locations Attributes:\n");
-  for (int i = 0; i < diseaseModel->locationAttributes.size(); i++) {
-    CkPrintf("(%d) %s: default: %lf, type: %d\n",
-        i, diseaseModel->locationAttributes.getName(i).c_str(),
-        diseaseModel->locationAttributes.getDefaultValueAsDouble(i),
-        diseaseModel->locationAttributes.getDataType(i));
-  }
-#endif
-
-  CkPrintf("\nFinished loading shared/global data in %lf seconds.\n",
-      CkWallTimer() - dataLoadingStartTime);
-
-  // creating chare arrays
-  if (!syntheticRun) {
-#if ENABLE_DEBUG >= DEBUG_BASIC
-    CkPrintf("Loading people and locations from %s.\n", scenarioPath.c_str());
-#endif
-  }
-
-  chareCount = numPersonPartitions;  // Number of chare arrays/groups
-  createdCount = 0;
-
-  dataLoadingStartTime = CkWallTimer();
-
 #ifdef ENABLE_RANDOM_SEED
   seed = time(NULL);
 #else
   seed = 0;
 #endif
+
+  chareCount = numPersonPartitions;  // Number of chare arrays/groups
+  createdCount = 0;
+  dataLoadingStartTime = CkWallTimer();
 
   peopleArray = CProxy_People::ckNew(seed, scenarioPath, numPersonPartitions);
   locationsArray = CProxy_Locations::ckNew(seed, scenarioPath,
