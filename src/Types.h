@@ -23,6 +23,7 @@ using Id = int64_t;
 
 using PartitionId = int;
 #define PARTITION_ID_PRINT_TYPE "%d"
+#define PARTITION_ID_PARSE std::stoi
 
 // Disease states
 using DiseaseState = int;
@@ -39,5 +40,89 @@ using Time = int32_t;
 using Counter = double;
 #define COUNTER_PRINT_TYPE "%0.0f"
 #define COUNTER_REDUCTION_TYPE double
+
+template <class T>
+struct Grid {
+  T width;
+  T height;
+
+  T area() {
+    return width * height;
+  }
+
+  template <class S>
+  bool operator>=(const Grid<S> &rhs) {
+    return width >= rhs.width && height <= rhs.height;
+  }
+
+  template <class S>
+  bool isDivisible(const Grid<S> &rhs) {
+    return (width % rhs.width == 0)
+      && (height % rhs.height == 0);
+  }
+};
+
+struct OnTheFlyArguments {
+  Grid<Id> peopleGrid;
+  Grid<Id> locationGrid;
+  Grid<PartitionId> locationPartitionGrid;
+  Grid<Id> localLocationGrid;
+
+  Id averageVisitsPerDay;
+};
+
+struct Arguments {
+  // Arguments needed for all runs
+  PartitionId numPersonPartitions;
+  PartitionId numLocationPartitions;
+  Id numDays;
+  Id numDaysWithDistinctVisits;
+  bool hasIntervention;
+  int contactModelType;
+
+  std::string diseasePath;
+  std::string interventionPath;
+  std::string outputPath;
+
+  bool isOnTheFlyRun;
+  struct OnTheFlyArguments *onTheFly;
+  std::string scenarioPath;
+};
+
+struct Scenario {
+  int numDays;
+  int numDaysWithDistinctVisits;
+  Id numPeople;
+  Id numLocations;
+
+  Time daysToSeed;
+  Id seededInfectionsPerDay;
+
+  bool syntheticRun;
+  struct SyntheticGrid *syntheticGrid;
+  int contactModelType;
+  int maxSimVisitsIdx;
+  int ageIdx;
+  bool interventionStrategy;
+
+  std::string diseasePath;
+  std::string scenarioPath;
+  std::string interventionPath;
+  std::string outputPath;
+};
+
+struct Profile {
+  Counter totalVisits;
+  Counter totalInteractions;
+  Counter totalExposures;
+  Counter totalExposureDuration;
+  double simulationStartTime;
+  double iterationStartTime;
+  double stepStartTime;
+
+  double visitsTime;
+  double interactionsTime;
+  double eodTime;
+};
 
 #endif  // TYPES_H_
