@@ -10,6 +10,7 @@
 #include "../Defs.h"
 #include "../Extern.h"
 #include "../readers/DataReader.h"
+#include "../readers/AttributeTable.h"
 #include "ContactModel.h"
 #include "MinMaxAlphaModel.h"
 
@@ -21,10 +22,12 @@ const unsigned int MIN = 5;
 const unsigned int MAX = 40;
 const unsigned int ALPHA = 1000;
 
-MinMaxAlphaModel::MinMaxAlphaModel() {
+MinMaxAlphaModel::MinMaxAlphaModel(const AttributeTable &attrs) :
+    ContactModel(attrs) {
   contactProbabilityIndex = -1;
+  maxSimVisitsIndex = attrs.getAttributeIndex("max_simultaneous_visits");
 
-  if (-1 == maxSimVisitsIdx) {
+  if (-1 == maxSimVisitsIndex) {
     CkAbort("Error: required attribute \"max_simultaneous_visits\" not present\n");
   } else {
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
@@ -50,7 +53,7 @@ void MinMaxAlphaModel::computeLocationValues(Location *location) {
   // varies by location
   union Data contactProbability;
   double max_visits =
-    static_cast<double>(data[maxSimVisitsIdx].int32_val);
+    static_cast<double>(data[maxSimVisitsIndex].int32_val);
   contactProbability.double_val = fmin(1,
     (MIN + (MAX - MIN) * (1.0 - exp(-max_visits / ALPHA))) / (max_visits - 1));
 

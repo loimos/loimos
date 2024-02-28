@@ -150,8 +150,7 @@ void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
   readProtobuf(metadataPath, &csvDefinition);
 
   // Create position vector for each person.
-  std::size_t totalDataSize = numPeople * numDaysWithDistinctVisits
-    * sizeof(CacheOffset);
+  std::size_t totalDataSize = numPeople * numDays * sizeof(CacheOffset);
   CacheOffset *elements = reinterpret_cast<CacheOffset *>(malloc(totalDataSize));
   if (NULL == elements) {
     CkAbort("Failed to malloc enough memory for preprocessing.\n");
@@ -193,9 +192,8 @@ void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
     lastTime = nextTime;
     numVisits = 0;
 
-    CacheOffset index =
-      numDaysWithDistinctVisits * (lastPerson - firstPersonIdx) + lastTime;
-    if (numPeople * numDaysWithDistinctVisits > index) {
+    CacheOffset index = numDays * (lastPerson - firstPersonIdx) + lastTime;
+    if (numPeople * numDays > index) {
       elements[index] = current_position;
     } else {
       CkAbort("    Failed to write %lu bytes at %lu\n", current_position, index);

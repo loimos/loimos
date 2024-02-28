@@ -58,20 +58,9 @@ const Time HOUR_LENGTH = 3600;
 const Time MINUTE_LENGTH = 60;
 #define DAYS_IN_WEEK 7
 
-// Indices of attribute columns in the appropriate csvs
-#define AGE_CSV_INDEX 0
-
 // Data loading
 #define EMPTY_VISIT_SCHEDULE std::numeric_limits<CacheOffset>::max()
 #define CSV_DELIM ','
-
-#define DAYS_TO_SEED_INFECTION 10
-#if OUTPUT_FLAGS & OUTPUT_OVERLAPS
-  #define INITIAL_INFECTIONS_PER_DAY 0
-#else
-  #define INITIAL_INFECTIONS_PER_DAY 2
-#endif
-#define INITIAL_INFECTIONS (INITIAL_INFECTIONS_PER_DAY * DAYS_TO_SEED_INFECTION)
 
 // Previous, completely algebraic, paritioning scheme:
 // Some functions are still in use in the new scheme but most should be

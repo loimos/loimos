@@ -28,19 +28,22 @@
 
 using NameIndexLookupType = std::unordered_map<std::string, int>;
 
-class DiseaseModel : public CBase_DiseaseModel {
+class DiseaseModel {
  private:
   Time getTimeInNextState(const
     loimos::proto::DiseaseModel_DiseaseState_TimedTransitionSet_StateTransition
-      *transitionSet, std::default_random_engine *generator, Id *numPeople,
-      Id *numLocations) const;
+      *transitionSet, std::default_random_engine *generator) const;
   Time timeDefToSeconds(TimeDef time) const;
   Time timeDefToDays(TimeDef time) const;
 
  public:
   loimos::proto::DiseaseModel *model;
 
-  DiseaseModel(std::string diseasePath);
+  int ageIndex;
+  int susceptibilityIndex;
+  int infectivityIndex;
+
+  DiseaseModel(std::string diseasePath, const AttributeTable &attrs);
   DiseaseState getIndexOfState(std::string stateLabel) const;
   std::tuple<DiseaseState, Time> transitionFromState(DiseaseState fromState,
     std::default_random_engine *generator) const;

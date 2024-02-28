@@ -11,6 +11,7 @@
 #include <vector>
 #include <string>
 #include <cstdlib>
+#include <sys/time.h>
 
 Arguments * parse(int argc, char **argv) {
   if (argc < 7) {
@@ -31,18 +32,18 @@ Arguments * parse(int argc, char **argv) {
     OnTheFlyArguments *onTheFly = &args->onTheFly;
 
     // Get number of people.
-    onTheFly->peopleGrid.width = atol(argv[++argNum]);
-    onTheFly->peopleGrid.height = atol(argv[++argNum]);
+    onTheFly->personGrid.width = atol(argv[++argNum]);
+    onTheFly->personGrid.height = atol(argv[++argNum]);
 
     // Location data
     onTheFly->locationGrid.width = atoi(argv[++argNum]);
     onTheFly->locationGrid.height = atoi(argv[++argNum]);
 
-    if (!(onTheFly->peopleGrid >= onTheFly->locationGrid)) {
+    if (!(onTheFly->personGrid >= onTheFly->locationGrid)) {
       CkAbort("Error: dimensions of people grid ("
         ID_PRINT_TYPE " by " ID_PRINT_TYPE ")\n exceed those of location grid ("
         ID_PRINT_TYPE " by " ID_PRINT_TYPE ") in at least one dimension\n",
-        onTheFly->peopleGrid.width, onTheFly->peopleGrid.height,
+        onTheFly->personGrid.width, onTheFly->personGrid.height,
         onTheFly->locationGrid.width, onTheFly->locationGrid.height
       );
     }
@@ -75,6 +76,7 @@ Arguments * parse(int argc, char **argv) {
 
     args->numDays = atoi(argv[++argNum]);
     args->numDaysWithDistinctVisits = 7;
+    args->scenarioPath = "";
 
   } else {
     args->numPersonPartitions = atoi(argv[++argNum]);
@@ -132,6 +134,19 @@ Arguments * parse(int argc, char **argv) {
   if (!args->isOnTheFlyRun) {
     CkPrintf("Loading people and locations from %s.\n", scenarioPath.c_str());
   }
+#endif
+  
+#ifdef ENABLE_RANDOM_SEED
+  args->seed = time(NULL);
+#else
+  args->seed = 0;
+#endif
+
+  args->numDaysToSeedOutbreak = 10;
+#if OUTPUT_FLAGS & OUTPUT_OVERLAPS
+  args->numInitialInfectionsPerDay = 0;
+#else
+  args->numInitialInfectionsPerDay = 2;
 #endif
 
   return args;

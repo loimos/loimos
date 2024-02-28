@@ -12,10 +12,11 @@ class ContactModel;
 
 #include "../Location.h"
 #include "../Event.h"
+#include "../readers/AttributeTable.h"
 
 #include <random>
 
-// This is the default implmenetation, which uses a constant contact
+// This is the default implementation, which uses a constant contact
 // probability for every pair of people at every location. Other implmentations
 // should extend this class. Note that this is NOT an abstract class because
 // we want to use it for variables and return types
@@ -26,7 +27,7 @@ class ContactModel {
   int contactProbabilityIndex;
 
  public:
-  ContactModel();
+  ContactModel(const AttributeTable &attrs);
   // Explicitly create other default constructors and assignment operators
   ContactModel(const ContactModel &other) = default;
   ContactModel& operator=(const ContactModel &other) = default;
@@ -49,6 +50,7 @@ enum class ContactModelType { constant_probability, min_max_alpha };
 
 // This creates a new instance of the contact model class indicated by
 // the global variable contactModelType
-ContactModel *createContactModel(int contactModelType);
+ContactModel *createContactModel(int contactModelType,
+  const AttributeTable &attrs);
 
 #endif  // CONTACT_MODEL_CONTACTMODEL_H_

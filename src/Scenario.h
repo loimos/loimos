@@ -28,16 +28,6 @@
 #include <vector>
 #include <memory>
 
-struct SpecialAttributes {
-  int ageIndex;
-  int susceptibilityIndex;
-  int infectivityIndex;
-  int maxSimVisitsIndex;
-
-  void init(const AttributeTable &personAttributes,
-    const AttributeTable &locationAttributes);
-};
-
 struct Partitioner {
   Id numPeople;
   Id numLocations;
@@ -66,11 +56,14 @@ struct Partitioner {
   CacheOffset getLocationCacheIndex(Id globalIndex) const;
   PartitionId getLocationPartitionIndex(Id globalIndex) const;
   Id getLocationPartitionSize(PartitionId partitionIndex) const;
+  PartitionId getNumLocationPartitions();
+
   Id getLocalPersonIndex(Id globalIndex, PartitionId PartitionId) const;
   Id getGlobalPersonIndex(Id localIndex, PartitionId PartitionId) const;
   CacheOffset getPersonCacheIndex(Id globalIndex) const;
   PartitionId getPersonPartitionIndex(Id globalIndex) const;
   Id getPersonPartitionSize(PartitionId partitionIndex) const;
+  PartitionId getNumPersonPartitions();
 };
 
 struct InterventionModel {
@@ -93,18 +86,23 @@ struct InterventionModel {
   const Intervention<Location> &getLocationIntervention(int index) const;
   int getNumPersonInterventions() const;
   int getNumLocationInterventions() const;
-  void applyInterventions(int day, Id newDailyInfections);
-  void toggleInterventions(int day, Id newDailyInfections);
+  void applyInterventions(int day, Id newDailyInfections, Id numPeople);
+  void toggleInterventions(int day, Id newDailyInfections, Id numPeople);
 };
 
-struct Scenario {
-  int numDays;
-  int numDaysWithDistinctVisits;
+class Scenario : public CBase_Scenario {
+ public:
+  int seed;
+  const Time numDays;
+  const Time numDaysWithDistinctVisits;
+  const Time numDaysToSeedOutbreak;
+  const Id numInitialInfectionsPerDay;
   Id numPeople;
   Id numLocations;
 
-  Time daysToSeed;
-  Id seededInfectionsPerDay;
+  const std::string scenarioPath;
+  const std::string outputPath;
+  std::string scenarioId;
 
   loimos::proto::CSVDefinition *personDef;
   loimos::proto::CSVDefinition *locationDef;
@@ -113,7 +111,6 @@ struct Scenario {
 
   AttributeTable personAttributes;
   AttributeTable locationAttributes;
-  SpecialAttributes specialAttributes;
 
   OnTheFlyArguments *onTheFly;
   Partitioner *partitioner;
@@ -121,7 +118,10 @@ struct Scenario {
   ContactModel *contactModel;
   InterventionModel *interventionModel;
 
-  Scenario(Arguments *args);
+  Scenario(Arguments args);
+  void applyInterventions(int day, Id newDailyInfections);
+  bool isOnTheFly();
+  bool hasInterventions();
 };
 
 #endif  // SCENARIO_H__

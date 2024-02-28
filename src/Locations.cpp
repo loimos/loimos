@@ -9,6 +9,7 @@
 #include "Locations.h"
 #include "Location.h"
 #include "Event.h"
+#include "Scenario.h"
 #include "DiseaseModel.h"
 #include "Location.h"
 #include "Person.h"
@@ -31,18 +32,19 @@
 std::uniform_real_distribution<> Locations::unitDistrib(0.0, 1.0);
 
 Locations::Locations(int seed, std::string scenarioPath) {
-  diseaseModel = globDiseaseModel.ckLocalBranch();
+  scenario = globScenario.ckLocalBranch();
   day = 0;
 
   // Must be set to true to make AtSync work
   usesAtSync = true;
 
   // Getting number of locations assigned to this chare
-  numLocalLocations = diseaseModel->getLocationPartitionSize(thisIndex);
-  firstLocalLocationIdx = diseaseModel->getGlobalLocationIndex(0, thisIndex);
+  Partitioner *partitioner = scenario->partitioner;
+  numLocalLocations = partitioner->getLocationPartitionSize(thisIndex);
+  firstLocalLocationIdx = partitioner->getGlobalLocationIndex(0, thisIndex);
 
 #ifdef ENABLE_DEBUG
-  Id firstLocationIdx = diseaseModel->getGlobalLocationIndex(0, 0);
+  Id firstLocationIdx = partitioner->getGlobalLocationIndex(0, 0);
   Id lastLocationIdx = firstLocationIdx + numLocations;
   if (outOfBounds(firstLocationIdx, lastLocationIdx, firstLocalLocationIdx)) {
     CkAbort("Error on chare %d: first location index ("
@@ -56,32 +58,30 @@ Locations::Locations(int seed, std::string scenarioPath) {
       firstLocalLocationIdx + numLocalLocations - 1);
 #endif
 
-  // Init contact model
-  contactModel = createContactModel();
-
-  int numInterventions = diseaseModel->getNumLocationInterventions();
+  InterventionModel *interventions = scenario->interventionModel;
+  int numInterventions = interventions->getNumLocationInterventions();
   locations.reserve(numLocalLocations);
   for (int i = 0; i < numLocalLocations; i++) {
     // Seed random number generator via branch ID for reproducibility
-    locations.emplace_back(diseaseModel->locationAttributes,
+    locations.emplace_back(scenario->locationAttributes,
       numInterventions, firstLocalLocationIdx + i);
   }
 
   // Load application data
-  if (!syntheticRun) {
+  if (!scenario->isOnTheFly()) {
     loadLocationData(scenarioPath);
   }
 
   for (Location &l : locations) {
     l.setSeed(seed);
     for (int i = 0; i < numInterventions; ++i) {
-      const Intervention<Location> &inter = diseaseModel->getLocationIntervention(i);
+      const Intervention<Location> &inter = interventions->getLocationIntervention(i);
       l.toggleCompliance(i, inter.willComply(l, l.getGenerator()));
     }
   }
 
 #if OUTPUT_FLAGS & OUTPUT_OVERLAPS
-  interactionsFile = new std::ofstream(outputPath + "interactions_chare_"
+  interactionsFile = new std::ofstream(scenario->outputPath + "interactions_chare_"
       + std::to_string(thisIndex) + ".csv");
 #else
   interactionsFile = NULL;
@@ -98,10 +98,9 @@ Locations::Locations(CkMigrateMessage *msg) {}
 void Locations::loadLocationData(std::string scenarioPath) {
   double startTime = CkWallTimer();
 
-  std::string scenarioId = getScenarioId(numPeople, numPersonPartitions,
-    numLocations, numLocationPartitions);
-  std::ifstream locationData(scenarioPath + "locations.csv");
-  std::ifstream locationCache(scenarioPath + scenarioId
+  std::string scenarioId = scenario->scenarioId;
+  std::ifstream locationData(scenario->scenarioPath + "locations.csv");
+  std::ifstream locationCache(scenario->scenarioPath + scenarioId
     + "_locations.cache", std::ios_base::binary);
   if (!locationData || !locationCache) {
     CkAbort("Could not open person data input.");
@@ -114,12 +113,13 @@ void Locations::loadLocationData(std::string scenarioPath) {
   locationData.seekg(locationOffset);
 
   // Read in our location data.
-  readData(&locationData, diseaseModel->locationDef,
-      &locations, numLocations);
+  readData(&locationData, scenario->locationDef,
+      &locations, scenario->numLocations);
   locationData.close();
   locationCache.close();
 
   // Let contact model add any attributes it needs to the locations
+  ContactModel *contactModel = scenario->contactModel;
   for (Location &location : locations) {
     contactModel->computeLocationValues(&location);
   }
@@ -136,14 +136,13 @@ void Locations::pup(PUP::er &p) {
   p | day;
 
   if (p.isUnpacking()) {
-    diseaseModel = globDiseaseModel.ckLocalBranch();
-    contactModel = createContactModel();
+    scenario = globScenario.ckLocalBranch();
   }
 }
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   // adding person to location visit list
-  Id localLocIdx = diseaseModel->getLocalLocationIndex(
+  Id localLocIdx = scenario->partitioner->getLocalLocationIndex(
     visitMsg.locationIdx, thisIndex);
 
 #ifdef ENABLE_DEBUG
@@ -191,9 +190,9 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 
   // ...and queue it up at the appropriate location
   Location &loc = locations[localLocIdx];
-  bool isInfectious = diseaseModel->isInfectious(visitMsg.personState);
-  bool isSusceptible = diseaseModel->isInfectious(visitMsg.personState);
 #ifdef ENABLE_SC
+  bool isInfectious = scenario->isInfectious(visitMsg.personState);
+  bool isSusceptible = scenario->isInfectious(visitMsg.personState);
   if (!loc.anyInfectious && isInfectious) {
     loc.anyInfectious = true;
   }
@@ -263,6 +262,7 @@ Counter Locations::processEvents(Location *loc) {
     }
 #endif
 
+    DiseaseModel *diseaseModel = scenario->diseaseModel;
     if (diseaseModel->isSusceptible(event.personState)) {
       arrivals = &susceptibleArrivals;
 
@@ -356,6 +356,7 @@ Counter Locations::saveInteractions(const Location &loc,
 
 // Simple dispatch to the susceptible/infectious depature handlers
 inline void Locations::onDeparture(Location *loc, const Event& departure) {
+  DiseaseModel *diseaseModel = scenario->diseaseModel;
   if (diseaseModel->isSusceptible(departure.personState)) {
     onSusceptibleDeparture(loc, departure);
 
@@ -395,7 +396,7 @@ void Locations::onInfectiousDeparture(Location *loc,
 inline void Locations::registerInteraction(Location *loc,
     const Event &susceptibleEvent, const Event &infectiousEvent,
     Time startTime, Time endTime) {
-  if (!contactModel->madeContact(susceptibleEvent, infectiousEvent, loc)) {
+  if (!scenario->contactModel->madeContact(susceptibleEvent, infectiousEvent, loc)) {
     return;
   }
 
@@ -403,8 +404,8 @@ inline void Locations::registerInteraction(Location *loc,
   // CkPrintf("  inf: %ld sus: %ld dt: "COUNTER_PRINT_TYPE"\n",
   //     infectiousEvent.personIdx, susceptibleEvent.personIdx,
   //     endTime - startTime);
-  double propensity = diseaseModel->getPropensity(susceptibleEvent.personState,
-    infectiousEvent.personState, startTime, endTime,
+  double propensity = scenario->diseaseModel->getPropensity(
+    susceptibleEvent.personState, infectiousEvent.personState, startTime, endTime,
     susceptibleEvent.transmissionModifier, infectiousEvent.transmissionModifier);
 
   // Note that this will create a new vector if this is the first potential
@@ -418,7 +419,7 @@ inline void Locations::registerInteraction(Location *loc,
 // specified person to the appropriate People chare
 inline void Locations::sendInteractions(Location *loc,
     Id personIdx) {
-  PartitionId personPartition = diseaseModel->getPersonPartitionIndex(personIdx);
+  PartitionId personPartition = scenario->partitioner->getPersonPartitionIndex(personIdx);
 #ifdef ENABLE_DEBUG
   if (outOfBounds(0, numPersonPartitions, personPartition)) {
     CkAbort("Error on chare %d: sending exposures at "
@@ -455,9 +456,10 @@ inline void Locations::sendInteractions(Location *loc,
 }
 
 void Locations::ReceiveIntervention(PartitionId interventionIdx) {
+  InterventionModel *interventions = scenario->interventionModel;
+  const Intervention<Location> &inter =
+    interventions->getLocationIntervention(interventionIdx);
   for (Location &location : locations) {
-    const Intervention<Location> &inter =
-      diseaseModel->getLocationIntervention(interventionIdx);
     if (location.willComply(interventionIdx)
         && inter.test(location, location.getGenerator())) {
       inter.apply(&location);

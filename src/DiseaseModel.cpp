@@ -13,7 +13,6 @@
  * .transition
  */
 
-#include "loimos.decl.h"
 #include "DiseaseModel.h"
 #include "Defs.h"
 #include "Event.h"
@@ -53,10 +52,14 @@
  * Constructor which loads in disease file from text proto file.
  * On failure, aborts the entire simulation.
  */
-DiseaseModel::DiseaseModel(std::string diseasePath) {
+DiseaseModel::DiseaseModel(std::string diseasePath, const AttributeTable &attrs) {
   model = new loimos::proto::DiseaseModel();
-  readProtobuf(pathToModel, model);
+  readProtobuf(diseasePath, model);
   assert(model->disease_states_size() != 0);
+
+  ageIndex = attrs.getAttributeIndex("age");
+  susceptibilityIndex = attrs.getAttributeIndex("susceptibility");
+  infectivityIndex = attrs.getAttributeIndex("infectivity");
 
   // if (0 == CkMyNode()) {
   //   for (int i = 0; i < model->disease_states_size(); ++i) {
@@ -221,12 +224,12 @@ DiseaseState DiseaseModel::getHealthyState(const std::vector<Data> &dataField) c
       model->starting_states(0);
     return static_cast<DiseaseState>(state.starting_state());
 
-  } else if (-1 == ageIdx) {
+  } else if (-1 == ageIndex) {
     CkAbort("No age data (needed for determinign healthy disease state)\n");
   }
 
   // Age based transition.
-  int personAge = dataField[ageIdx].int32_val;
+  int personAge = dataField[ageIndex].int32_val;
   for (uint stateNum = 0; stateNum < numStartingStates; stateNum++) {
     const loimos::proto::DiseaseModel_StartingCondition state =
       model->starting_states(stateNum);
@@ -295,65 +298,4 @@ double DiseaseModel::getPropensity(DiseaseState susceptibleState,
   return model->transmissibility() * dt * susceptibility * infectivity
     * model->disease_states(susceptibleState).susceptibility()
     * model->disease_states(infectiousState).infectivity() / DAY_LENGTH;
-}
-
-/**
- * Intervention Methods
- * TODO: Move to own chare as these become more complex.
- */
-
-const Intervention<Person> & DiseaseModel::getPersonIntervention(int index)
-  const {
-  return *personInterventions[index];
-}
-
-const Intervention<Location> & DiseaseModel::getLocationIntervention(int index)
-  const {
-  return *locationInterventions[index];
-}
-
-int DiseaseModel::getNumPersonInterventions() const {
-  return static_cast<int>(personInterventions.size());
-}
-
-int DiseaseModel::getNumLocationInterventions() const {
-  return static_cast<int>(locationInterventions.size());
-}
-
-void DiseaseModel::applyInterventions(int day, Id newDailyInfections) {
-  toggleInterventions(day, newDailyInfections);
-
-  for (uint i = 0; i < personInterventions.size(); ++i) {
-    if (triggerFlags[personInterventions[i]->getTriggerIndex()]) {
-      peopleArray.ReceiveIntervention(i);
-    }
-  }
-  for (uint i = 0; i < locationInterventions.size(); ++i) {
-    if (triggerFlags[locationInterventions[i]->getTriggerIndex()]) {
-      locationsArray.ReceiveIntervention(i);
-    }
-  }
-}
-
-void DiseaseModel::toggleInterventions(int day, Id newDailyInfections) {
-  for (uint i = 0; i < interventionDef->triggers_size(); ++i) {
-    const loimos::proto::InterventionModel::Trigger &trigger =
-      interventionDef->triggers(i);
-
-    // Trigger uses simulation day
-    if (trigger.has_day()) {
-      const auto &tmp = trigger.day();
-      triggerFlags[i] = (!triggerFlags[i] && tmp.trigger_on() <= day)
-        || (triggerFlags[i] && tmp.trigger_off() <= day);
-
-    // Trigger uses number of new cases
-    } else if (trigger.has_new_daily_cases()) {
-      double infectionRate = static_cast<double>(newDailyInfections)
-        / numPeople;
-      const auto &tmp = trigger.new_daily_cases();
-      triggerFlags[i] =
-        (!triggerFlags[i] && tmp.trigger_on() <= infectionRate)
-        || (triggerFlags[i] && tmp.trigger_off() <= infectionRate);
-    }
-  }
 }

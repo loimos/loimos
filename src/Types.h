@@ -8,6 +8,7 @@
 #define TYPES_H_
 
 #include "charm++.h"
+#include "pup_stl.h"
 
 #include <cstdint>
 #include <string>
@@ -65,7 +66,7 @@ struct Grid {
 };
 
 struct OnTheFlyArguments {
-  Grid<Id> peopleGrid;
+  Grid<Id> personGrid;
   Grid<Id> locationGrid;
   Grid<PartitionId> locationPartitionGrid;
   Grid<Id> localLocationGrid;
@@ -77,8 +78,12 @@ struct Arguments {
   // Arguments needed for all runs
   PartitionId numPersonPartitions;
   PartitionId numLocationPartitions;
-  Id numDays;
-  Id numDaysWithDistinctVisits;
+  Time numDays;
+  Time numDaysWithDistinctVisits;
+  Time numDaysToSeedOutbreak;
+  Id numInitialInfectionsPerDay;
+  int seed;
+
   bool hasIntervention;
   int contactModelType;
 
@@ -89,6 +94,9 @@ struct Arguments {
   bool isOnTheFlyRun;
   struct OnTheFlyArguments onTheFly;
   std::string scenarioPath;
+
+  Arguments() {}
+  explicit Arguments(CkMigrateMessage *msg) {}
 };
 PUPbytes(Arguments);
 
