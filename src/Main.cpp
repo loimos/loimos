@@ -114,18 +114,18 @@ Main::Main(CkArgMsg* msg) {
   CkPrintf("Debug printing enabled (verbosity at level %d)\n", ENABLE_DEBUG);
 #endif
 
-  Arguments *args = parse(msg->argc, msg->argv);
-  delete msg;
+  Arguments args;
+  parse(msg->argc, msg->argv, &args);
+  //delete msg;
 
   dataLoadingStartTime = CkWallTimer();
 
-  globScenario = CProxy_Scenario::ckNew(*args);
+  globScenario = CProxy_Scenario::ckNew(args);
   scenario = globScenario.ckLocalBranch();
   accumulated.resize(scenario->diseaseModel->getNumberOfStates(), 0);
 
   CkPrintf("\nFinished loading shared/global data in %lf seconds.\n",
       CkWallTimer() - dataLoadingStartTime);
-  delete args;
   
   PartitionId numPersonPartitions = scenario->partitioner->getNumPersonPartitions();
   PartitionId numLocationPartitions = scenario->partitioner->getNumLocationPartitions();

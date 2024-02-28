@@ -13,7 +13,7 @@
 #include <cstdlib>
 #include <sys/time.h>
 
-Arguments * parse(int argc, char **argv) {
+void parse(int argc, char **argv, Arguments *args) {
   if (argc < 7) {
     CkAbort("Error, usage %s <people> <locations> <people subsets> <location subsets>"
     " <days> <disease_model_path> <scenario_folder (optional)>\n", argv[0]);
@@ -23,8 +23,6 @@ Arguments * parse(int argc, char **argv) {
     CkPrintf("argv[%d]: %s\n", i, argv[i]);
   }
 #endif
-  Arguments *args = new Arguments();
-
   int argNum = 0;
   args->isOnTheFlyRun = atoi(argv[++argNum]) == 1;
 
@@ -76,7 +74,7 @@ Arguments * parse(int argc, char **argv) {
 
     args->numDays = atoi(argv[++argNum]);
     args->numDaysWithDistinctVisits = 7;
-    args->scenarioPath = "";
+    args->scenarioPath = std::string("");
 
   } else {
     args->numPersonPartitions = atoi(argv[++argNum]);
@@ -126,13 +124,13 @@ Arguments * parse(int argc, char **argv) {
   }
 
 #if ENABLE_DEBUG
-  CkPrintf("Saving simulation output to %s\n", args->outPath);
+  CkPrintf("Saving simulation output to %s\n", args->outputPath);
   CkPrintf("Reading disease model from %s\n", args->diseasePath);
   if (args->hasIntervention) {
     CkPrintf("Reading intervention model from %s\n", args->interventionPath);
   }
   if (!args->isOnTheFlyRun) {
-    CkPrintf("Loading people and locations from %s.\n", scenarioPath.c_str());
+    CkPrintf("Loading people and locations from %s.\n", args->scenarioPath.c_str());
   }
 #endif
   
@@ -148,6 +146,4 @@ Arguments * parse(int argc, char **argv) {
 #else
   args->numInitialInfectionsPerDay = 2;
 #endif
-
-  return args;
 }

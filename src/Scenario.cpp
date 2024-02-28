@@ -111,8 +111,8 @@ void Partitioner::setPartitionOffsets(PartitionId numPartitions,
     partitionOffsets->emplace_back(offset);
 
 #ifdef ENABLE_DEBUG
-    if (outOfBounds(firstIndex, lastIndex, offset)) {
-    CkAbort("Error: Offset " ID_PRINT_TYPE " outside of valid range [0,"
+    if (outOfBounds(firstIndex, numObjects, offset)) {
+      CkAbort("Error: Offset " ID_PRINT_TYPE " outside of valid range [0,"
         ID_PRINT_TYPE")\n", offset, numObjects);
     }
     // else if (0 == CkMyNode()) {
@@ -297,7 +297,7 @@ Scenario::Scenario(Arguments args) : numDays(args.numDays),
 
     partitioner = new Partitioner(args.numPersonPartitions,
         args.numLocationPartitions, numPeople, numLocations);
-    scenarioId = "";
+    scenarioId = std::string("");
 
   } else {
     // Handle people...
@@ -339,19 +339,19 @@ Scenario::Scenario(Arguments args) : numDays(args.numDays),
 
 #if ENABLE_DEBUG >= DEBUG_BASIC
   CkPrintf("Person Attributes:\n");
-  for (int i = 0; i < diseaseModel->personAttributes.size(); i++) {
+  for (int i = 0; i < personAttributes.size(); i++) {
     CkPrintf("(%d) %s: default: %lf, type: %d\n",
-        i, diseaseModel->personAttributes.getName(i).c_str(),
-        diseaseModel->personAttributes.getDefaultValueAsDouble(i),
-        diseaseModel->personAttributes.getDataType(i));
+        i, personAttributes.getName(i).c_str(),
+        personAttributes.getDefaultValueAsDouble(i),
+        personAttributes.getDataType(i));
   }
 
   CkPrintf("Locations Attributes:\n");
-  for (int i = 0; i < diseaseModel->locationAttributes.size(); i++) {
+  for (int i = 0; i < locationAttributes.size(); i++) {
     CkPrintf("(%d) %s: default: %lf, type: %d\n",
-        i, diseaseModel->locationAttributes.getName(i).c_str(),
-        diseaseModel->locationAttributes.getDefaultValueAsDouble(i),
-        diseaseModel->locationAttributes.getDataType(i));
+        i, locationAttributes.getName(i).c_str(),
+        locationAttributes.getDefaultValueAsDouble(i),
+        locationAttributes.getDataType(i));
   }
 #endif
 }

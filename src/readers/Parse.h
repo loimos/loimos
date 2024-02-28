@@ -8,6 +8,6 @@
 
 #include "../Types.h"
 
-Arguments * parse(int argc, char **argv);
+void parse(int argc, char **argv, Arguments *args);
 
 #endif  // ARGUMENTS_H__

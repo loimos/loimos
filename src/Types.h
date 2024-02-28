@@ -73,6 +73,7 @@ struct OnTheFlyArguments {
 
   Id averageVisitsPerDay;
 };
+PUPbytes(OnTheFlyArguments);
 
 struct Arguments {
   // Arguments needed for all runs
@@ -97,8 +98,24 @@ struct Arguments {
 
   Arguments() {}
   explicit Arguments(CkMigrateMessage *msg) {}
+
+  void pup(PUP::er &p) {
+    p | numPersonPartitions;
+    p | numLocationPartitions;
+    p | numDays;
+    p | numDaysWithDistinctVisits;
+    p | numDaysToSeedOutbreak;
+    p | numInitialInfectionsPerDay;
+    p | seed;
+    p | hasIntervention;
+    p | contactModelType;
+    p | diseasePath;
+    p | interventionPath;
+    p | outputPath;
+    p | isOnTheFlyRun;
+    p | scenarioPath;
+  }
 };
-PUPbytes(Arguments);
 
 struct Profile {
   Counter totalVisits;
