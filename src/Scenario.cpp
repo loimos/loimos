@@ -171,6 +171,8 @@ PartitionId Partitioner::getNumPersonPartitions() {
     return personPartitionOffsets.size();
 }
 
+InterventionModel::InterventionModel() {}
+
 InterventionModel::InterventionModel(std::string interventionPath,
     AttributeTable *personAttributes, AttributeTable *locationAttributes,
     const DiseaseModel &diseaseModel) {
@@ -329,10 +331,11 @@ Scenario::Scenario(Arguments args) : numDays(args.numDays),
   }
   
   diseaseModel = new DiseaseModel(args.diseasePath, personAttributes);
-  interventionModel = NULL;
   if (args.hasIntervention) {
     interventionModel = new InterventionModel(args.interventionPath,
       &personAttributes, &locationAttributes, *diseaseModel);
+  } else {
+    interventionModel = new InterventionModel();
   }
 
   contactModel = createContactModel(args.contactModelType, locationAttributes);
