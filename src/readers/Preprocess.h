@@ -25,7 +25,8 @@ void buildObjectLookupCache(Id numObjs, const std::vector<Id> &offsets,
   std::string metadataPath, std::string inputPath, std::string outputPath);
 void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
   std::string metadataPath, std::string inputPath, std::string outputPath);
-int getDay(Time timeInSeconds);
+int getDay(Time timeInSeconds, Time firstDay);
+int getSeconds(Time day, Time firstDay);
 std::string getScenarioId(Id numPeople, PartitionId numPeopleChares, Id numLocations,
   PartitionId numLocationChares);
 Id getFirstIndex(const loimos::proto::CSVDefinition *metadata, std::string inputPath);

@@ -35,6 +35,7 @@ class DiseaseModel : public CBase_DiseaseModel {
     loimos::proto::DiseaseModel_DiseaseState_TimedTransitionSet_StateTransition
       *transitionSet, std::default_random_engine *generator) const;
   Time timeDefToSeconds(TimeDef time) const;
+  Time timeDefToDays(TimeDef time) const;
 
   // Offset-based index lookup
   std::vector<Id> locationPartitionOffsets;

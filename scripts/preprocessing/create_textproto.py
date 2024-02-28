@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import sys
 
 import pandas as pd
 from subprocess import check_output
@@ -27,6 +28,10 @@ DEFAULT_TYPE = "ignore"
 COLUMN_METADATA_ENTRY = """fields {{
     field_name: \"{name}\"
     {dtype}: {{}}
+}}
+"""
+TIMEDEF_ENTRY = """{name}: {{
+    {unit}: {value}
 }}
 """
 SINGLETON_ENTRY = "{name}: {value}\n"
@@ -67,6 +72,19 @@ def parse_args():
         help="The name of the file containing visit data within the "
         + "population dir",
     )
+    parser.add_argument(
+        "-m",
+        "--visits-metadata",
+        action="store_true",
+        help="Set this flag to compute detailed metadata for visits",
+    )
+    parser.add_argument(
+        "-P",
+        "--print-only",
+        action="store_true",
+        help="Set this flag to write textproto files to stdout rather than "
+        + "override the existing files",
+    )
 
     return parser.parse_args()
 
@@ -78,18 +96,53 @@ def wc(path):
     return int(result.split()[0])
 
 
-def create_textproto(pop_dir, csv_filename, dtypes, partition_offsets=None):
+def get_basic_metadata(csv_path):
+    # Ignore header row
+    num_rows = wc(csv_path) - 1
+    return [SINGLETON_ENTRY.format(name="num_rows", value=num_rows)]
+
+
+def get_visits_metadata(csv_path, day_length=86400):
+    visits = pd.read_csv(csv_path)
+
+    start_time = visits["start_time"].min()
+    end_time = (visits["start_time"] + visits["duration"]).max()
+
+    start_day = start_time // day_length
+    end_day = end_time // day_length
+
+    return [
+        SINGLETON_ENTRY.format(name="num_rows", value=visits.shape[0]),
+        TIMEDEF_ENTRY.format(name="start_time", unit="days", value=start_day),
+        TIMEDEF_ENTRY.format(name="duration", unit="days", value=end_day - start_day),
+    ]
+
+
+GET_METADATA = {
+    "basic": get_basic_metadata,
+    "visits": get_visits_metadata,
+}
+
+
+def create_textproto(
+    pop_dir,
+    csv_filename,
+    dtypes,
+    partition_offsets=None,
+    metadata_type="basic",
+    print_only=False,
+):
     csv_path = os.path.join(pop_dir, csv_filename)
     tmp, _ = os.path.splitext(csv_path)
     textproto_path = tmp + ".textproto"
     name = os.path.basename(tmp)
 
-    # Ignore header row
-    num_rows = wc(csv_path) - 1
-
+    metadata = GET_METADATA[metadata_type](csv_path)
     df = pd.read_csv(csv_path, nrows=1)
-    with open(textproto_path, "w") as f:
-        f.write(SINGLETON_ENTRY.format(name="num_rows", value=num_rows))
+
+    def write_entries(f):
+        for entry in metadata:
+            f.write(entry)
         if name in LOAD_COLUMNS:
             f.write(
                 SINGLETON_ENTRY.format(
@@ -107,13 +160,36 @@ def create_textproto(pop_dir, csv_filename, dtypes, partition_offsets=None):
             dtype = dtypes.get(c, DEFAULT_TYPE)
             f.write(COLUMN_METADATA_ENTRY.format(name=c, dtype=dtype))
 
+    if print_only:
+        print(f"{name}.textproto:")
+        write_entries(sys.stdout)
+        print("")
+        print("")
+    else:
+        with open(textproto_path, "w") as f:
+            write_entries(f)
+
 
 def main():
     args = parse_args()
 
-    create_textproto(args.pop_dir, args.people_file, PEOPLE_TYPES)
-    create_textproto(args.pop_dir, args.locations_file, LOCATIONS_TYPES)
-    create_textproto(args.pop_dir, args.visits_file, VISITS_TYPES)
+    visits_metadata_type = "basic"
+    if args.visits_metadata:
+        visits_metadata_type = "visits"
+
+    create_textproto(
+        args.pop_dir, args.people_file, PEOPLE_TYPES, print_only=args.print_only
+    )
+    create_textproto(
+        args.pop_dir, args.locations_file, LOCATIONS_TYPES, print_only=args.print_only
+    )
+    create_textproto(
+        args.pop_dir,
+        args.visits_file,
+        VISITS_TYPES,
+        metadata_type=visits_metadata_type,
+        print_only=args.print_only,
+    )
 
 
 if __name__ == "__main__":
