@@ -516,8 +516,9 @@ def main():
 
     create_textproto(args.out_dir, args.people_out_file, PEOPLE_TYPES)
     create_textproto(args.out_dir, args.locations_out_file, LOCATIONS_TYPES)
-    create_textproto(args.out_dir, args.visits_out_file, VISITS_TYPES,
-            metadata_type="visits")
+    create_textproto(
+        args.out_dir, args.visits_out_file, VISITS_TYPES, metadata_type="visits"
+    )
 
 
 if __name__ == "__main__":
