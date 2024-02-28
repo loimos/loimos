@@ -45,7 +45,7 @@ Locations::Locations(int seed, std::string scenarioPath) {
 
 #ifdef ENABLE_DEBUG
   Id firstLocationIdx = partitioner->getGlobalLocationIndex(0, 0);
-  Id lastLocationIdx = firstLocationIdx + numLocations;
+  Id lastLocationIdx = firstLocationIdx + scenario->numLocations;
   if (outOfBounds(firstLocationIdx, lastLocationIdx, firstLocalLocationIdx)) {
     CkAbort("Error on chare %d: first location index ("
       ID_PRINT_TYPE") out of bounds [" ID_PRINT_TYPE ", " ID_PRINT_TYPE ")",
@@ -419,14 +419,15 @@ inline void Locations::registerInteraction(Location *loc,
 // specified person to the appropriate People chare
 inline void Locations::sendInteractions(Location *loc,
     Id personIdx) {
-  PartitionId personPartition = scenario->partitioner->getPersonPartitionIndex(personIdx);
+  Partitioner *partitioner = scenario->partitioner;
+  PartitionId personPartition = partitioner->getPersonPartitionIndex(personIdx);
 #ifdef ENABLE_DEBUG
-  if (outOfBounds(0, numPersonPartitions, personPartition)) {
+  if (outOfBounds(0, partitioner->getNumPersonPartitions(), personPartition)) {
     CkAbort("Error on chare %d: sending exposures at "
       ID_PRINT_TYPE" to person " ID_PRINT_TYPE " on chare "
       PARTITION_ID_PRINT_TYPE" outside of valid range [0, "
       PARTITION_ID_PRINT_TYPE")\n", thisIndex, loc->getUniqueId(),
-      personIdx, personPartition, numPersonPartitions);
+      personIdx, personPartition, partitioner->getNumPersonPartitions());
   }
 #endif
 

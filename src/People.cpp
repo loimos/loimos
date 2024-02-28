@@ -58,7 +58,7 @@ People::People(int seed, std::string scenarioPath) {
 #endif
 #ifdef ENABLE_DEBUG
   Id firstPersonIdx = partitioner->getGlobalPersonIndex(0, 0);
-  Id lastPersonIdx = numPeople + firstPersonIdx;
+  Id lastPersonIdx = scenario->numPeople + firstPersonIdx;
   if (outOfBounds(firstPersonIdx, lastPersonIdx,
       firstLocalPersonIdx)) {
     CkAbort("Error on chare %d: first person index ("
@@ -175,7 +175,8 @@ void People::generateVisitData() {
 
 #if ENABLE_DEBUG >= DEBUG_BASIC
   if (0 == thisIndex) {
-    CkPrintf("location grid at each chare is %d by %d\r\n",
+    CkPrintf("location grid at each chare is "
+      ID_PRINT_TYPE " by " ID_PRINT_TYPE "\n",
       onTheFly->localLocationGrid.width, onTheFly->localLocationGrid.height);
   }
 #endif
@@ -471,12 +472,13 @@ void People::SendVisitMessages() {
       PartitionId locationPartition = partitioner->getLocationPartitionIndex(
         visitMessage.locationIdx);
 #ifdef ENABLE_DEBUG
-      if (outOfBounds(0, numLocationPartitions, locationPartition)) {
+      if (outOfBounds(0, partitioner->getNumLocationPartitions(), locationPartition)) {
         CkAbort("Error on chare %d: sending visit by "
           ID_PRINT_TYPE" to location " ID_PRINT_TYPE " on chare "
           PARTITION_ID_PRINT_TYPE " outside of valid range [0, "
           PARTITION_ID_PRINT_TYPE ")\n", thisIndex, person.getUniqueId(),
-          visitMessage.locationIdx, locationPartition, numLocationPartitions);
+          visitMessage.locationIdx, locationPartition,
+          partitioner->getNumLocationPartitions());
       }
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
       totalVisitsForDay++;
