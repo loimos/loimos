@@ -282,7 +282,7 @@ void InterventionModel::toggleInterventions(int day, Id newDailyInfections,
   }
 }
 
-Scenario::Scenario(Arguments args) : numDays(args.numDays),
+Scenario::Scenario(Arguments args) : seed(args.seed), numDays(args.numDays),
     numDaysWithDistinctVisits(args.numDaysWithDistinctVisits),
     numDaysToSeedOutbreak(args.numDaysToSeedOutbreak),
     numInitialInfectionsPerDay(args.numInitialInfectionsPerDay),
