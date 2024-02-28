@@ -4,8 +4,10 @@
  * SPDX-License-Identifier: MIT
  */
 
+#include "loimos.decl.h"
 #include "Scenario.h"
 #include "Types.h"
+#include "Extern.h"
 #include "Defs.h"
 #include "DiseaseModel.h"
 #include "contact_model/ContactModel.h"
@@ -140,6 +142,10 @@ PartitionId Partitioner::getLocationPartitionIndex(Id globalIndex) const {
 Id Partitioner::getLocationPartitionSize(PartitionId partitionIndex) const {
   return getPartitionSize(partitionIndex, numLocations, locationPartitionOffsets);
 }
+  
+PartitionId Partitioner::getNumLocationPartitions() {
+    return locationPartitionOffsets.size();
+}
 
 Id Partitioner::getLocalPersonIndex(Id globalIndex, PartitionId partitionIndex) const {
   return getLocalIndex(globalIndex, partitionIndex, personPartitionOffsets);
@@ -159,6 +165,10 @@ PartitionId Partitioner::getPersonPartitionIndex(Id globalIndex) const {
 
 Id Partitioner::getPersonPartitionSize(PartitionId partitionIndex) const {
   return getPartitionSize(partitionIndex, numPeople, personPartitionOffsets);
+}
+
+PartitionId Partitioner::getNumPersonPartitions() {
+    return personPartitionOffsets.size();
 }
 
 InterventionModel::InterventionModel(std::string interventionPath,
@@ -211,64 +221,121 @@ void InterventionModel::initLocationInterventions(
     }
   }
 }
-  
-void SpecialAttributes::init(const AttributeTable &personAttributes,
-    const AttributeTable &locationAttributes) {
-  ageIndex = personAttributes.getAttributeIndex("age");
-  susceptibilityIndex = personAttributes.getAttributeIndex("susceptibility");
-  infectivityIndex = personAttributes.getAttributeIndex("infectivity");
 
-  maxSimVisitsIndex = locationAttributes.getAttributeIndex("max_simultaneous_visits");
+const Intervention<Person> & InterventionModel::getPersonIntervention(int index)
+  const {
+  return *personInterventions[index];
 }
 
-Scenario::Scenario(Arguments *args) : numDays(args->numDays),
-    numDaysWithDistinctVisits(args->numDaysWithDistinctVisits) {
-  diseaseModel = new DiseaseModel(args->diseasePath);
+const Intervention<Location> & InterventionModel::getLocationIntervention(int index)
+  const {
+  return *locationInterventions[index];
+}
+
+int InterventionModel::getNumPersonInterventions() const {
+  return static_cast<int>(personInterventions.size());
+}
+
+int InterventionModel::getNumLocationInterventions() const {
+  return static_cast<int>(locationInterventions.size());
+}
+
+void InterventionModel::applyInterventions(int day, Id newDailyInfections,
+    Id numPeople) {
+  toggleInterventions(day, newDailyInfections, numPeople);
+
+  for (uint i = 0; i < personInterventions.size(); ++i) {
+    if (triggerFlags[personInterventions[i]->getTriggerIndex()]) {
+      peopleArray.ReceiveIntervention(i);
+    }
+  }
+  for (uint i = 0; i < locationInterventions.size(); ++i) {
+    if (triggerFlags[locationInterventions[i]->getTriggerIndex()]) {
+      locationsArray.ReceiveIntervention(i);
+    }
+  }
+}
+
+void InterventionModel::toggleInterventions(int day, Id newDailyInfections,
+    Id numPeople) {
+  for (uint i = 0; i < interventionDef->triggers_size(); ++i) {
+    const loimos::proto::InterventionModel::Trigger &trigger =
+      interventionDef->triggers(i);
+
+    // Trigger uses simulation day
+    if (trigger.has_day()) {
+      const auto &tmp = trigger.day();
+      triggerFlags[i] = (!triggerFlags[i] && tmp.trigger_on() <= day)
+        || (triggerFlags[i] && tmp.trigger_off() <= day);
+
+    // Trigger uses number of new cases
+    } else if (trigger.has_new_daily_cases()) {
+      double infectionRate = static_cast<double>(newDailyInfections)
+        / numPeople;
+      const auto &tmp = trigger.new_daily_cases();
+      triggerFlags[i] =
+        (!triggerFlags[i] && tmp.trigger_on() <= infectionRate)
+        || (triggerFlags[i] && tmp.trigger_off() <= infectionRate);
+    }
+  }
+}
+
+Scenario::Scenario(Arguments args) : numDays(args.numDays),
+    numDaysWithDistinctVisits(args.numDaysWithDistinctVisits),
+    numDaysToSeedOutbreak(args.numDaysToSeedOutbreak),
+    numInitialInfectionsPerDay(args.numInitialInfectionsPerDay),
+    scenarioPath(args.scenarioPath), outputPath(args.outputPath) {
 
   personDef = NULL;
   locationDef = NULL;
-  if (!args->isOnTheFlyRun) {
+  onTheFly = NULL;
+  if (args.isOnTheFlyRun) {
+    onTheFly = new OnTheFlyArguments();
+    onTheFly->locationGrid = args.onTheFly.locationGrid;
+    numPeople = onTheFly->personGrid.area();
+    numLocations = onTheFly->locationGrid.area();
+
+    partitioner = new Partitioner(args.numPersonPartitions,
+        args.numLocationPartitions, numPeople, numLocations);
+    scenarioId = "";
+
+  } else {
     // Handle people...
     personDef = new loimos::proto::CSVDefinition;
-    readProtobuf(args->scenarioPath + "people.textproto", personDef);
+    readProtobuf(args.scenarioPath + "people.textproto", personDef);
     numPeople = personDef->num_rows();
 
     // ...locations...
     locationDef = new loimos::proto::CSVDefinition;
-    readProtobuf(args->scenarioPath + "locations.textproto", locationDef);
+    readProtobuf(args.scenarioPath + "locations.textproto", locationDef);
     numLocations = locationDef->num_rows();
 
     // ...and visits
     visitDef = new loimos::proto::CSVDefinition;
-    readProtobuf(args->scenarioPath + "visits.textproto", visitDef);
+    readProtobuf(args.scenarioPath + "visits.textproto", visitDef);
 
     personAttributes.readAttributes(personDef->fields());
     locationAttributes.readAttributes(locationDef->fields());
 
-    partitioner = new Partitioner(args->scenarioPath, args->numPersonPartitions,
-      args->numLocationPartitions, personDef, locationDef);
+    partitioner = new Partitioner(args.scenarioPath, args.numPersonPartitions,
+      args.numLocationPartitions, personDef, locationDef);
 
     if (0 == CkMyNode()) {
-      buildCache(args->scenarioPath, numPeople, partitioner->personPartitionOffsets,
+      buildCache(args.scenarioPath, numPeople, partitioner->personPartitionOffsets,
         numLocations, partitioner->locationPartitionOffsets, numDaysWithDistinctVisits);
     }   
-
-  } else {
-    onTheFly = &args->onTheFly;
-    numPeople = onTheFly->peopleGrid.area();
-    numLocations = onTheFly->locationGrid.area();
-
-    partitioner = new Partitioner(args->numPersonPartitions,
-        args->numLocationPartitions, numPeople, numLocations);
+    scenarioId = getScenarioId(numPeople, args.numPersonPartitions,
+      numLocations, args.numLocationPartitions);
   }
-
-  if (args->hasIntervention) {
-    interventionModel = new InterventionModel(args->interventionPath,
+  
+  diseaseModel = new DiseaseModel(args.diseasePath, personAttributes);
+  interventionModel = NULL;
+  if (args.hasIntervention) {
+    interventionModel = new InterventionModel(args.interventionPath,
       &personAttributes, &locationAttributes, *diseaseModel);
   }
 
-  specialAttributes.init(personAttributes, locationAttributes);
-  contactModel = createContactModel(args->contactModelType);
+  contactModel = createContactModel(args.contactModelType, locationAttributes);
 
 #if ENABLE_DEBUG >= DEBUG_BASIC
   CkPrintf("Person Attributes:\n");
@@ -287,4 +354,16 @@ Scenario::Scenario(Arguments *args) : numDays(args->numDays),
         diseaseModel->locationAttributes.getDataType(i));
   }
 #endif
+}
+
+void Scenario::applyInterventions(int day, Id newDailyInfections) {
+  interventionModel->applyInterventions(day, newDailyInfections, numPeople);
+}
+
+bool Scenario::isOnTheFly() {
+  return NULL != onTheFly;
+}
+
+bool Scenario::hasInterventions() {
+  return NULL != interventionModel;
 }

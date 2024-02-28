@@ -50,20 +50,8 @@ mainmodule loimos {
 #ifdef USE_HYPERCOMM
   readonly CProxy_Aggregator aggregatorProxy;
 #endif // USE_HYPERCOMM
-  readonly CProxy_DiseaseModel globDiseaseModel;
+  readonly CProxy_Scenario globScenario;
   readonly CProxy_TraceSwitcher traceArray;
-  readonly Id numPeople;
-  readonly Id numLocations;
-  readonly PartitionId numPersonPartitions;
-  readonly PartitionId numLocationPartitions;
-  readonly int numDays;
-  readonly int numDaysWithDistinctVisits;
-
-  readonly bool syntheticRun;
-  readonly int contactModelType;
-  readonly int maxSimVisitsIdx;
-  readonly int ageIdx;
-  readonly std::string outputPath;
 
   readonly Counter totalVisits;
   readonly Counter totalInteractions;
@@ -79,18 +67,6 @@ mainmodule loimos {
   #define TOTAL_INTERACTIONS_TIME_INDEX 2
   #define TOTAL_EOD_UPDATE_TIME_INDEX 3
   #define TOTAL_TIME_SIZE 4
-
-  readonly Id synPeopleGridWidth;
-  readonly Id synPeopleGridHeight;
-  readonly Id synLocationGridWidth;
-  readonly Id synLocationGridHeight;
-  readonly Id synLocalLocationGridWidth;
-  readonly Id synLocalLocationGridHeight;
-  readonly PartitionId synLocationPartitionGridWidth;
-  readonly PartitionId synLocationPartitionGridHeight;
-  readonly int averageDegreeOfVisit;
-
-  readonly bool interventionStategy;
 
   mainchare Main {
     entry Main(CkArgMsg*);
@@ -114,12 +90,12 @@ mainmodule loimos {
       }
 
 #ifdef ENABLE_FORCE_FULL_RUN
-      for (day = 0; day < numDays; day++) {
+      for (day = 0; day < scenario->numDays; day++) {
 #else
       // It's usually not helpful to keep running the simulation after the
       // outbreak has died out
-      for (day = 0; day < numDays \
-        && (day < DAYS_TO_SEED_INFECTION || 0 != lastInfectiousCount); day++) {
+      for (day = 0; day < scenario->numDays \
+        && (day < scenario->numDaysToSeedOutbreak || 0 != lastInfectiousCount); day++) {
 #endif  // ENABLE_FORCE_FULL_RUN
         // serial{CkPrintf("  Starting iteration\n");}
 #ifdef ENABLE_TRACING
@@ -149,7 +125,7 @@ mainmodule loimos {
             // CkPrintf("  Compute Interactions\n");
             stepStartTime = CkWallTimer();
             locationsArray.ComputeInteractions();
-            if (DAYS_TO_SEED_INFECTION > day) {
+            if (scenario->numDaysToSeedOutbreak > day) {
               SeedInfections();
             }
 
@@ -180,8 +156,8 @@ mainmodule loimos {
 
             // Use this count as desired here
             lastInfectiousCount = infectiousCount;
-            if (interventionStategy) {
-              globDiseaseModel.applyInterventions(day, infectiousCount);
+            if (scenario->hasInterventions()) {
+              globScenario.applyInterventions(day, infectiousCount);
             }
 
             // Print how long this iteration took to run
@@ -192,8 +168,8 @@ mainmodule loimos {
             );
 
             // Trigger intervention updates.
-            if (interventionStategy) {
-              globDiseaseModel.applyInterventions(day, infectiousCount);
+            if (scenario->hasInterventions()) {
+              globScenario.applyInterventions(day, infectiousCount);
             }
           }
         }
@@ -348,10 +324,9 @@ mainmodule loimos {
     entry void AtSync();
   };
 
-  nodegroup DiseaseModel {
-    entry DiseaseModel(std::string pathToModel, std::string scenarioPath,
-        std::string pathToIntervention);
-    entry void applyInterventions(int day, int newDailyInfections);
+  nodegroup Scenario {
+    entry Scenario(Arguments args);
+    entry void applyInterventions(int day, Id newDailyInfections);
   };
 
 #ifdef USE_HYPERCOMM

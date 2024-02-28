@@ -8,6 +8,7 @@
 #define MAIN_H_
 
 #include "charm++.h"
+#include "Scenario.h"
 
 #include <vector>
 #include <string>
@@ -16,10 +17,9 @@
 class Main : public CBase_Main {
   Main_SDAG_CODE
   int day;
-  int seed;
   std::vector<int> accumulated;
   std::vector<int> initialInfections;
-  DiseaseModel* diseaseModel;
+  Scenario* scenario;
   PartitionId chareCount;
   PartitionId createdCount;
   Id lastInfectiousCount;

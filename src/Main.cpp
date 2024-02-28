@@ -11,6 +11,7 @@
 #include "Locations.h"
 #include "DiseaseModel.h"
 #include "contact_model/ContactModel.h"
+#include "readers/Parse.h"
 #include "readers/Preprocess.h"
 
 #include <string>
@@ -25,7 +26,6 @@
 #include <memory>
 #include <unordered_set>
 #include <unordered_map>
-#include <sys/time.h>
 #include <sys/resource.h>
 
 #ifdef USE_HYPERCOMM
@@ -43,18 +43,9 @@
 #ifdef USE_HYPERCOMM
 /* readonly */ CProxy_Aggregator aggregatorProxy;
 #endif
-/* readonly */ CProxy_DiseaseModel globDiseaseModel;
+/* readonly */ CProxy_Scenario globScenario;
 /* readonly */ CProxy_TraceSwitcher traceArray;
-/* readonly */ Id numPeople;
-/* readonly */ Id numLocations;
-/* readonly */ PartitionId numPersonPartitions;
-/* readonly */ PartitionId numLocationPartitions;
-/* readonly */ int numDays;
-/* readonly */ int numDaysWithDistinctVisits;
-/* readonly */ bool syntheticRun;
-/* readonly */ int contactModelType;
-/* readonly */ int maxSimVisitsIdx;
-/* readonly */ int ageIdx;
+
 /* readonly */ Counter totalVisits;
 /* readonly */ Counter totalInteractions;
 /* readonly */ Counter totalExposures;
@@ -64,19 +55,6 @@
 /* readonly */ double stepStartTime;
 /* readonly */ double dataLoadingStartTime;
 /* readonly */ std::vector<double> totalTime;
-/* readonly */ std::string outputPath;  // NOLINT(runtime/string)
-
-// For synthetic run.
-/* readonly */ Id synPeopleGridWidth;
-/* readonly */ Id synPeopleGridHeight;
-/* readonly */ Id synLocationGridWidth;
-/* readonly */ Id synLocationGridHeight;
-/* readonly */ Id synLocalLocationGridWidth;
-/* readonly */ Id synLocalLocationGridHeight;
-/* readonly */ PartitionId synLocationPartitionGridWidth;
-/* readonly */ PartitionId synLocationPartitionGridHeight;
-/* readonly */ int averageDegreeOfVisit;
-/* readonly */ bool interventionStrategy;
 
 class TraceSwitcher : public CBase_TraceSwitcher {
  public:
@@ -141,19 +119,25 @@ Main::Main(CkArgMsg* msg) {
 
   dataLoadingStartTime = CkWallTimer();
 
-  globDiseaseModel = CProxy_DiseaseModel::ckNew(args);
-  diseaseModel = globDiseaseModel.ckLocalBranch();
-  accumulated.resize(diseaseModel->getNumberOfStates(), 0);
+  globScenario = CProxy_Scenario::ckNew(*args);
+  scenario = globScenario.ckLocalBranch();
+  accumulated.resize(scenario->diseaseModel->getNumberOfStates(), 0);
 
   CkPrintf("\nFinished loading shared/global data in %lf seconds.\n",
       CkWallTimer() - dataLoadingStartTime);
+  delete args;
   
-  if (numPeople < numPersonPartitions) {
+  PartitionId numPersonPartitions = scenario->partitioner->getNumPersonPartitions();
+  PartitionId numLocationPartitions = scenario->partitioner->getNumLocationPartitions();
+  if (scenario->numPeople < numPersonPartitions) {
     CkAbort("Error: running on more people chares (" PARTITION_ID_PRINT_TYPE
         ") than people (" ID_PRINT_TYPE ")",
+        numPersonPartitions, scenario->numPeople);
+  }
+  if (scenario->numLocations < numLocationPartitions) {
     CkAbort("Error: running on more location chares (" PARTITION_ID_PRINT_TYPE
         ") than locations (" ID_PRINT_TYPE ")",
-        numLocationPartitions, numLocations);
+        numLocationPartitions, scenario->numLocations);
   }
 
 #ifdef ENABLE_UNIT_TESTING
@@ -161,36 +145,32 @@ Main::Main(CkArgMsg* msg) {
   testing::InitGoogleTest(&msg->argc, msg->argv);
   RUN_ALL_TESTS();
 #endif
-
   CkPrintf("\nRunning Loimos on %d PEs with "
       ID_PRINT_TYPE " people, " ID_PRINT_TYPE " locations, "
       PARTITION_ID_PRINT_TYPE " people chares, " PARTITION_ID_PRINT_TYPE
       " location chares, and %d days\n",
-    CkNumPes(), numPeople, numLocations, numPersonPartitions,
-    numLocationPartitions, numDays);
+    CkNumPes(), scenario->numPeople, scenario->numLocations,
+    numPersonPartitions, numLocationPartitions, scenario->numDays);
 
-  if (syntheticRun) {
+  if (scenario->isOnTheFly()) {
+    OnTheFlyArguments *onTheFly = scenario->onTheFly;
     CkPrintf("Synthetic run with (" ID_PRINT_TYPE ", " ID_PRINT_TYPE
         ") person grid and "
-        "(" PARTITION_ID_PRINT_TYPE ", " PARTITION_ID_PRINT_TYPE
-        ") location grid. Average degree of %d\n\n",
-      synPeopleGridWidth, synPeopleGridHeight, synLocationGridWidth,
-      synLocationGridHeight, averageDegreeOfVisit);
+        "(" ID_PRINT_TYPE ", " ID_PRINT_TYPE
+        ") location grid. Average degree of " ID_PRINT_TYPE "\n\n",
+      onTheFly->personGrid.width, onTheFly->personGrid.height,
+      onTheFly->locationGrid.width, onTheFly->locationGrid.height,
+      onTheFly->averageVisitsPerDay);
   }
-
-#ifdef ENABLE_RANDOM_SEED
-  seed = time(NULL);
-#else
-  seed = 0;
-#endif
 
   chareCount = numPersonPartitions;  // Number of chare arrays/groups
   createdCount = 0;
   dataLoadingStartTime = CkWallTimer();
 
-  peopleArray = CProxy_People::ckNew(seed, scenarioPath, numPersonPartitions);
-  locationsArray = CProxy_Locations::ckNew(seed, scenarioPath,
-      numLocationPartitions);
+  peopleArray = CProxy_People::ckNew(scenario->seed, scenario->scenarioPath,
+    numPersonPartitions);
+  locationsArray = CProxy_Locations::ckNew(scenario->seed, scenario->scenarioPath,
+    numLocationPartitions);
 
 #ifdef ENABLE_TRACING
   traceArray = CProxy_TraceSwitcher::ckNew();
@@ -257,24 +237,27 @@ void Main::CharesCreated() {
 }
 
 void Main::SeedInfections() {
-  std::default_random_engine generator(seed);
+  std::default_random_engine generator(scenario->seed);
 
   // Determine all of the intitial infections on the first day so we can
   // guarentee they are unique (not checking this quickly runs into birthday
   // problem issues, even for sizable datasets)
   if (0 == day) {
-    Id firstPersonIdx = diseaseModel->getGlobalLocationIndex(0, 0);
+    Id firstPersonIdx = scenario->partitioner->getGlobalPersonIndex(0, 0);
     std::uniform_int_distribution<Id> personDistrib(firstPersonIdx,
-        firstPersonIdx + numPeople - 1);
+        firstPersonIdx + scenario->numPeople - 1);
+    
+    // The while loop will go forever on small test populations if we don't cap
+    // this off
+    Id totalInitialInfections = std::min(scenario->numInitialInfectionsPerDay
+      * scenario->numDaysToSeedOutbreak, scenario->numPeople);
     std::unordered_set<Id> initialInfectionsSet;
-    initialInfections.reserve(INITIAL_INFECTIONS);
-    // Use set to check membership becuase it's faster and we can spare the
-    // memory; INITIAL_INFECTIONS should be fairly small
-    initialInfectionsSet.reserve(INITIAL_INFECTIONS);
-    while (initialInfectionsSet.size() < INITIAL_INFECTIONS
-        // This loop will go forever on small test populations without
-        // this check
-        && initialInfectionsSet.size() < numPeople) {
+    initialInfections.reserve(totalInitialInfections);
+
+    // Use set to check membership because it's faster and we can spare the
+    // memory; totalInitialInfections should be fairly small
+    initialInfectionsSet.reserve(totalInitialInfections);
+    while (initialInfectionsSet.size() < totalInitialInfections) {
       Id personIdx = personDistrib(generator);
       if (initialInfectionsSet.count(personIdx) == 0) {
         initialInfections.emplace_back(personIdx);
@@ -284,12 +267,12 @@ void Main::SeedInfections() {
   }
 
   // Check for empty is to avoid issues with small test populations
-  for (int i = 0; i < INITIAL_INFECTIONS_PER_DAY && !initialInfections.empty();
+  for (int i = 0; i < scenario->numInitialInfectionsPerDay && !initialInfections.empty();
       ++i) {
     Id personIdx = initialInfections.back();
     initialInfections.pop_back();
 
-    PartitionId peoplePartitionIdx = diseaseModel->getPersonPartitionIndex(personIdx);
+    PartitionId peoplePartitionIdx = scenario->partitioner->getPersonPartitionIndex(personIdx);
 
     // Make a super contagious visit for that person.
     std::vector<Interaction> interactions;
@@ -311,23 +294,23 @@ void Main::SeedInfections() {
 }
 
 void Main::SaveStats(Id *data) {
-  DiseaseModel* diseaseModel = globDiseaseModel.ckLocalBranch();
+  DiseaseModel *diseaseModel = scenario->diseaseModel;
   DiseaseState numDiseaseStates = diseaseModel->getNumberOfStates();
 
   // Open output csv
 #ifdef OUTPUT_FLAGS
-  std::ofstream outFile(outputPath + "summary.csv");
+  std::ofstream outFile(scenario->outputPath + "summary.csv");
 #else
-  std::ofstream outFile(outputPath);
+  std::ofstream outFile(scenario->outputPath);
 #endif
   if (!outFile) {
-    CkAbort("Error: invalid output path, %s\n", outputPath.c_str());
+    CkAbort("Error: invalid output path, %s\n", scenario->outputPath.c_str());
   }
 
   // Write header row
   outFile << "day,state,total_in_state,change_in_state" << std::endl;
 
-  for (day = 0; day < numDays; ++day, data += numDiseaseStates) {
+  for (day = 0; day < scenario->numDays; ++day, data += numDiseaseStates) {
     // Get number of disease state changes.
     for (DiseaseState i = 0; i < numDiseaseStates; i++) {
       Id num_in_state = data[i];

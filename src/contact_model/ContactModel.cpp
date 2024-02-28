@@ -7,6 +7,7 @@
 #include "../loimos.decl.h"
 #include "../Location.h"
 #include "../Event.h"
+#include "../readers/AttributeTable.h"
 #include "ContactModel.h"
 #include "MinMaxAlphaModel.h"
 
@@ -19,7 +20,7 @@ extern int contactModelType;
 
 const double DEFAULT_CONTACT_PROBABILITY = 0.5;
 
-ContactModel::ContactModel() {
+ContactModel::ContactModel(const AttributeTable &attrs) {
   unitDistrib = std::uniform_real_distribution<>(0.0, 1.0);
   contactProbabilityIndex = -1;
 }
@@ -38,11 +39,11 @@ double ContactModel::getContactProbability(const Location &location) const {
   return DEFAULT_CONTACT_PROBABILITY;
 }
 
-ContactModel *createContactModel(int contactModelType) {
+ContactModel *createContactModel(int contactModelType, const AttributeTable &attrs) {
   if (static_cast<int>(ContactModelType::constant_probability) == contactModelType) {
-    return new ContactModel();
+    return new ContactModel(attrs);
 
   } else if (static_cast<int>(ContactModelType::min_max_alpha) == contactModelType) {
-    return new MinMaxAlphaModel();
+    return new MinMaxAlphaModel(attrs);
   }
 }
