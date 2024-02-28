@@ -1,3 +1,5 @@
+num_rows: 735
+load_column: "total_visits"
 fields {
     field_name: "lid"
     unique_id: {}
@@ -60,7 +62,7 @@ fields {
 }
 fields {
     field_name: "home"
-    ignore: {}
+    bool: {}
 }
 fields {
     field_name: "total_visits"
