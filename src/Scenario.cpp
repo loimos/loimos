@@ -23,12 +23,11 @@ Partitioner::Partitioner(std::string scenarioPath,
     PartitionId numPersonPartitions,
     PartitionId numLocationPartitions,
     loimos::proto::CSVDefinition *personMetadata,
-    loimos::proto::CSVDefinition *locationMetadata) {
+    loimos::proto::CSVDefinition *locationMetadata) :
+    numPeople(personMetadata->num_rows()),
+    numLocations(locationMetadata->num_rows()) {
   Id firstLocationIdx = getFirstIndex(locationMetadata, scenarioPath + "locations.csv");
   Id firstPersonIdx = getFirstIndex(personMetadata, scenarioPath + "people.csv");
-
-  Id numPeople = personMetadata->num_rows();
-  Id numLocations = locationMetadata->num_rows();
 
   //if (0 == CkMyNode()) {
   //  CkPrintf("People offsets:\n");
