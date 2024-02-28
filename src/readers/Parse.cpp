@@ -124,10 +124,10 @@ void parse(int argc, char **argv, Arguments *args) {
   }
 
 #if ENABLE_DEBUG
-  CkPrintf("Saving simulation output to %s\n", args->outputPath);
-  CkPrintf("Reading disease model from %s\n", args->diseasePath);
+  CkPrintf("Saving simulation output to %s\n", args->outputPath.c_str());
+  CkPrintf("Reading disease model from %s\n", args->diseasePath.c_str());
   if (args->hasIntervention) {
-    CkPrintf("Reading intervention model from %s\n", args->interventionPath);
+    CkPrintf("Reading intervention model from %s\n", args->interventionPath.c_str());
   }
   if (!args->isOnTheFlyRun) {
     CkPrintf("Loading people and locations from %s.\n", args->scenarioPath.c_str());
