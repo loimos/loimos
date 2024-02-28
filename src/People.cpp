@@ -348,13 +348,19 @@ void People::loadPeopleData(std::string scenarioPath) {
 }
 
 void People::loadVisitData(std::ifstream *activityData) {
+  loimos::proto::CSVDefinition *visitsDef = diseaseModel->activityDef;
+  Time firstDay = 0;
+  if (visitsDef->has_start_time()) {
+    firstDay = visitsDef->start_time().days();
+  }
+
   #ifdef ENABLE_DEBUG
     Id numVisits = 0;
   #endif
   for (Person &person : people) {
     person.visitsByDay.reserve(numDaysWithDistinctVisits);
     for (int day = 0; day < numDaysWithDistinctVisits; ++day) {
-      Time nextDaySecs = (day + 1) * DAY_LENGTH;
+      Time nextDaySecs = getSeconds(day + 1, firstDay);
 
       // Seek to correct position in file.
       CacheOffset seekPos = person
@@ -394,10 +400,10 @@ void People::loadVisitData(std::ifstream *activityData) {
         // Save visit info
         visitEnd = visitStart + visitDuration;
         while (visitEnd > nextDaySecs) {
-          int endDay = (visitEnd / DAY_LENGTH) % numDaysWithDistinctVisits;
-          Time newStart = endDay * DAY_LENGTH;
+          int endDay = getDay(visitEnd, firstDay) % numDaysWithDistinctVisits;
+          Time newStart = getSeconds(endDay, firstDay);
           person.visitsByDay[endDay].emplace_back(locationId, personId, -1,
-              endDay * DAY_LENGTH, visitEnd, 1.0);
+              newStart, visitEnd, 1.0);
           visitEnd = std::max(nextDaySecs, visitEnd - DAY_LENGTH);
         }
 

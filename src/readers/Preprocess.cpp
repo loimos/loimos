@@ -154,9 +154,14 @@ void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
     * sizeof(CacheOffset);
   CacheOffset *elements = reinterpret_cast<CacheOffset *>(malloc(totalDataSize));
   if (NULL == elements) {
-    CkAbort("Failed to malloc enoough memory for preprocessing.\n");
+    CkAbort("Failed to malloc enough memory for preprocessing.\n");
   }
   memset(elements, 0xFF, totalDataSize);
+
+  Time firstDay = 0;
+  if (csvDefinition.has_start_time()) {
+    firstDay = csvDefinition.start_time().days();
+  }
 
   // Various initialization.
   std::string line;
@@ -175,7 +180,7 @@ void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
   std::tie(nextPerson, locationId, nextTime, duration) =
     parseActivityStream(&activityStream, &csvDefinition, NULL);
   nextTimeSec = nextTime;
-  nextTime = getDay(nextTime);
+  nextTime = getDay(nextTime, firstDay);
 
   // Loop over the entire activity file and note boundaries on people and days
   Id numVisits = 0;
@@ -212,7 +217,7 @@ void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
         parseActivityStream(&activityStream,
             &csvDefinition, NULL);
 
-      nextTime = getDay(nextTime);
+      nextTime = getDay(nextTime, firstDay);
       numVisits++;
       totalVisits++;
     }
@@ -225,8 +230,12 @@ void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
   outputStream.close();
 }
 
-int getDay(Time timeInSeconds) {
-  return timeInSeconds / DAY_LENGTH;
+int getDay(Time timeInSeconds, Time firstDay) {
+  return timeInSeconds / DAY_LENGTH - firstDay;
+}
+
+int getSeconds(Time day, Time firstDay) {
+  return (day + firstDay) * DAY_LENGTH;
 }
 
 std::string getScenarioId(Id numPeople, PartitionId numPeopleChares, Id numLocations,
