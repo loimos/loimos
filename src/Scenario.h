@@ -72,6 +72,7 @@ struct InterventionModel {
   std::vector<std::shared_ptr<Intervention<Location>>> locationInterventions;
   loimos::proto::InterventionModel *interventionDef;
 
+  InterventionModel();
   InterventionModel(std::string interventionPath,
     AttributeTable *personAttributes, AttributeTable *locationAttributes,
     const DiseaseModel &diseaseModel);
