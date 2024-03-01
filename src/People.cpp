@@ -460,7 +460,7 @@ void People::SendVisitMessages() {
       visitMessage.transmissionModifier = getTransmissionModifier(person);
 
       // Interventions may cancel some visits
-      if (visitMessage.isActive()) {
+      if (!visitMessage.isActive() || 1 == inactiveDestinations.count(visitMessage.locationIdx)) {
         continue;
       }
 
@@ -538,6 +538,13 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
   Person &person = people[localIdx];
   person.interactions.insert(person.interactions.end(),
     interMsg.interactions.cbegin(), interMsg.interactions.cend());
+}
+  
+void People::DeactivateDestination(Id locationIndex) {
+  inactiveDestinations.insert(locationIndex);
+}
+void People::ActivateDestination(Id locationIndex) {
+  inactiveDestinations.erase(locationIndex);
 }
 
 void People::ReceiveIntervention(int interventionIdx) {
