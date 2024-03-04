@@ -34,11 +34,11 @@ num_visits = len(df)
 n = int(p * num_visits)
 
 random_rows = df.sample(n)
+print(random_rows)
 unique_lids = df['lid'].nunique()
 random_values = random.choices(range(unique_lids), k=n)
 
-random_rows['lid'] = random_values
-df.update(random_rows)
+df.loc[random_rows.index, 'lid'] = random_values
 
 print(f"Successfully perturbed {p} proportion of graph.", flush=True)
 
