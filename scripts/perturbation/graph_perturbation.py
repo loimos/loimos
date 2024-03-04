@@ -53,7 +53,8 @@ soft_link_files = ['locations.csv', 'locations.textproto', 'people.csv', 'people
 
 for file in soft_link_files:
     destination_path = os.path.join(out_dir, file)
+    source_path = os.path.realpath(os.path.join(in_dir, file))
 
-    os.symlink(os.path.join(in_dir, file), destination_path)
+    os.symlink(source_path, destination_path)
 
 print(f"Successfully created new population in directory {out_dir}", flush=True)
