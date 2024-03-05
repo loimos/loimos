@@ -532,14 +532,16 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
 #ifdef ENABLE_DEBUG
   Id trueIdx = people[localIdx].getUniqueId();
   if (interMsg.personIdx != trueIdx) {
-    CkAbort("Error on chare %d: Person %d's exposure at loc %d recieved by "
-        "person %d (local %d)\n",
+    CkAbort("Error on chare " PARTITION_ID_PRINT_TYPE
+    ": Person " ID_PRINT_TYPE "'s exposure at loc " ID_PRINT_TYPE
+    " received by person " ID_PRINT_TYPE " (local " ID_PRINT_TYPE ")\n",
         thisIndex, interMsg.personIdx, interMsg.locationIdx, trueIdx,
         localIdx);
   }
 
   if (outOfBounds(0l, numLocalPeople, localIdx)) {
-    CkAbort("Error on chare %d: visit to location ("
+    CkAbort("Error on chare " PARTITION_ID_PRINT_TYPE
+      ": visit to location ("
       ID_PRINT_TYPE "/" ID_PRINT_TYPE") outside of valid range [0, "
       ID_PRINT_TYPE ")\n", thisIndex, localIdx, interMsg.personIdx,
       numLocalPeople);
