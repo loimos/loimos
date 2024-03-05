@@ -259,7 +259,6 @@ void InterventionModel::applyInterventions(int day, Id newDailyInfections,
 
 void InterventionModel::toggleInterventions(int day, Id newDailyInfections,
     Id numPeople) {
-  CkPrintf("Num triggers %d\n", interventionDef->triggers_size());
   for (uint i = 0; i < interventionDef->triggers_size(); ++i) {
     const loimos::proto::InterventionModel::Trigger &trigger =
       interventionDef->triggers(i);
@@ -297,13 +296,6 @@ Scenario::Scenario(Arguments args) : seed(args.seed), numDays(args.numDays),
 
     numPeople = onTheFly->personGrid.area();
     numLocations = onTheFly->locationGrid.area();
-    CkPrintf("person grid: %ld (%ld x %ld), loc grid %ld (%ld x %ld)\n",
-      numPeople, onTheFly->personGrid.width, onTheFly->personGrid.height,
-      numLocations, onTheFly->locationGrid.width, onTheFly->locationGrid.height);
-    int tmp = 3*sizeof(Grid<Id>) + sizeof(Grid<PartitionId>)
-      + sizeof(Id);
-    CkPrintf("Expected size: %d actual size: %d\n", tmp,
-      sizeof(OnTheFlyArguments));
   
     partitioner = new Partitioner(args.numPersonPartitions,
         args.numLocationPartitions, numPeople, numLocations);
