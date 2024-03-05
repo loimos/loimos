@@ -34,8 +34,13 @@ void parse(int argc, char **argv, Arguments *args) {
     onTheFly->personGrid.height = atol(argv[++argNum]);
 
     // Location data
-    onTheFly->locationGrid.width = atoi(argv[++argNum]);
-    onTheFly->locationGrid.height = atoi(argv[++argNum]);
+    onTheFly->locationGrid.width = atol(argv[++argNum]);
+    onTheFly->locationGrid.height = atol(argv[++argNum]);
+
+    CkPrintf("person grid: %ld (%ld x %ld), loc grid %ld (%ld x %ld)\n",
+      onTheFly->personGrid.area(), onTheFly->personGrid.width,
+      onTheFly->personGrid.height, onTheFly->locationGrid.area(),
+      onTheFly->locationGrid.width, onTheFly->locationGrid.height);
 
     if (!(onTheFly->personGrid >= onTheFly->locationGrid)) {
       CkAbort("Error: dimensions of location grid ("
@@ -61,7 +66,7 @@ void parse(int argc, char **argv, Arguments *args) {
       onTheFly->localLocationGrid.width = onTheFly->locationGrid.width
         / onTheFly->locationPartitionGrid.width;
       onTheFly->localLocationGrid.height = onTheFly->locationGrid.height
-        / onTheFly->localLocationGrid.height;
+        / onTheFly->locationPartitionGrid.height;
 
     } else {
       CkAbort("Error: dimensions of location chare grid must divide those "
