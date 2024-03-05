@@ -38,11 +38,11 @@ void parse(int argc, char **argv, Arguments *args) {
     onTheFly->locationGrid.height = atoi(argv[++argNum]);
 
     if (!(onTheFly->personGrid >= onTheFly->locationGrid)) {
-      CkAbort("Error: dimensions of people grid ("
-        ID_PRINT_TYPE " by " ID_PRINT_TYPE ")\n exceed those of location grid ("
+      CkAbort("Error: dimensions of location grid ("
+        ID_PRINT_TYPE " by " ID_PRINT_TYPE ")\n exceed those of person grid ("
         ID_PRINT_TYPE " by " ID_PRINT_TYPE ") in at least one dimension\n",
-        onTheFly->personGrid.width, onTheFly->personGrid.height,
-        onTheFly->locationGrid.width, onTheFly->locationGrid.height
+        onTheFly->locationGrid.width, onTheFly->locationGrid.height,
+        onTheFly->personGrid.width, onTheFly->personGrid.height
       );
     }
 

@@ -55,7 +55,7 @@ struct Grid {
 
   template <class S>
   bool operator>=(const Grid<S> &rhs) {
-    return width >= rhs.width && height <= rhs.height;
+    return width >= rhs.width && height >= rhs.height;
   }
 
   template <class S>
