@@ -33,7 +33,7 @@ MinMaxAlphaModel::MinMaxAlphaModel(const AttributeTable &attrs) :
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
     if (0 == CkMyNode()) {
       CkPrintf("  Max sim visit count to be stored at index %d\n",
-          maxSimVisitsIdx);
+          maxSimVisitsIndex);
     }
 #endif
   }

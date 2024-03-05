@@ -301,7 +301,7 @@ Counter Locations::processEvents(Location *loc) {
   interactions.clear();
 
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
-  double p = contactModel->getContactProbability(*loc);
+  double p = scenario->contactModel->getContactProbability(*loc);
   Counter total = static_cast<Counter>(p * numInteractions);
 
 #if ENABLE_DEBUG == DEBUG_LOCATION_SUMMARY
