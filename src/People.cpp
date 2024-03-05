@@ -127,7 +127,7 @@ People::People(CkMigrateMessage *msg) {}
 void People::generatePeopleData(Id firstLocalPersonIdx, int seed) {
   // Init peoples ids and randomly init ages.
   std::uniform_int_distribution<int> age_dist(0, 100);
-  int ageIndex = ageIndex;
+  int ageIndex = scenario->diseaseModel->ageIndex;
   for (Id i = 0; i < numLocalPeople; i++) {
     Person &p = people[i];
     p.setUniqueId(firstLocalPersonIdx + i);
