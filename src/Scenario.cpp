@@ -170,7 +170,7 @@ PartitionId Partitioner::getNumPersonPartitions() {
     return personPartitionOffsets.size();
 }
 
-InterventionModel::InterventionModel() {}
+InterventionModel::InterventionModel() : interventionDef(NULL) {}
 
 InterventionModel::InterventionModel(std::string interventionPath,
     AttributeTable *personAttributes, AttributeTable *locationAttributes,
@@ -259,6 +259,7 @@ void InterventionModel::applyInterventions(int day, Id newDailyInfections,
 
 void InterventionModel::toggleInterventions(int day, Id newDailyInfections,
     Id numPeople) {
+  CkPrintf("Num triggers %d\n", interventionDef->triggers_size());
   for (uint i = 0; i < interventionDef->triggers_size(); ++i) {
     const loimos::proto::InterventionModel::Trigger &trigger =
       interventionDef->triggers(i);
@@ -287,15 +288,16 @@ Scenario::Scenario(Arguments args) : seed(args.seed), numDays(args.numDays),
     numInitialInfectionsPerDay(args.numInitialInfectionsPerDay),
     scenarioPath(args.scenarioPath), outputPath(args.outputPath) {
 
-  personDef = NULL;
-  locationDef = NULL;
-  onTheFly = NULL;
   if (args.isOnTheFlyRun) {
+    personDef = NULL;
+    locationDef = NULL;
+    onTheFly = NULL;
+
     onTheFly = new OnTheFlyArguments();
     onTheFly->locationGrid = args.onTheFly.locationGrid;
     numPeople = onTheFly->personGrid.area();
     numLocations = onTheFly->locationGrid.area();
-
+  
     partitioner = new Partitioner(args.numPersonPartitions,
         args.numLocationPartitions, numPeople, numLocations);
     scenarioId = std::string("");
@@ -359,7 +361,9 @@ Scenario::Scenario(Arguments args) : seed(args.seed), numDays(args.numDays),
 }
 
 void Scenario::applyInterventions(int day, Id newDailyInfections) {
-  interventionModel->applyInterventions(day, newDailyInfections, numPeople);
+  if (hasInterventions()) {
+    interventionModel->applyInterventions(day, newDailyInfections, numPeople);
+  }
 }
 
 bool Scenario::isOnTheFly() {
@@ -367,5 +371,5 @@ bool Scenario::isOnTheFly() {
 }
 
 bool Scenario::hasInterventions() {
-  return NULL != interventionModel;
+  return NULL != interventionModel->interventionDef;
 }
