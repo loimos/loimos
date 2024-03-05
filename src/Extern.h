@@ -19,11 +19,4 @@ extern /* readonly */ CProxy_Aggregator aggregatorProxy;
 #endif
 extern /* readonly */ CProxy_Scenario globScenario;
 
-extern /* readonly */ Counter totalVisits;
-extern /* readonly */ Counter totalInteractions;
-extern /* readonly */ Counter totalExposures;
-extern /* readonly */ Counter totalExposureDuration;
-extern /* readonly */ double simulationStartTime;
-extern /* readonly */ double iterationStartTime;
-
 #endif  // EXTERN_H_

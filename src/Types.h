@@ -65,10 +65,11 @@ struct Grid {
 };
 
 struct Profile {
-  Counter totalVisits;
-  Counter totalInteractions;
-  Counter totalExposures;
-  Counter totalExposureDuration;
+  Counter totalVisits = 0;
+  Counter totalInteractions = 0;
+  Counter totalExposures = 0;
+  Counter totalExposureDuration = 0;
+
   double simulationStartTime;
   double iterationStartTime;
   double stepStartTime;

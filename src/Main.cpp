@@ -46,16 +46,6 @@
 /* readonly */ CProxy_Scenario globScenario;
 /* readonly */ CProxy_TraceSwitcher traceArray;
 
-/* readonly */ Counter totalVisits;
-/* readonly */ Counter totalInteractions;
-/* readonly */ Counter totalExposures;
-/* readonly */ Counter totalExposureDuration;
-/* readonly */ double simulationStartTime;
-/* readonly */ double iterationStartTime;
-/* readonly */ double stepStartTime;
-/* readonly */ double dataLoadingStartTime;
-/* readonly */ std::vector<double> totalTime;
-
 class TraceSwitcher : public CBase_TraceSwitcher {
  public:
   #ifdef ENABLE_TRACING
@@ -118,14 +108,14 @@ Main::Main(CkArgMsg* msg) {
   parse(msg->argc, msg->argv, &args);
   //delete msg;
 
-  dataLoadingStartTime = CkWallTimer();
+  profile.stepStartTime = CkWallTimer();
 
   globScenario = CProxy_Scenario::ckNew(args);
   scenario = globScenario.ckLocalBranch();
   accumulated.resize(scenario->diseaseModel->getNumberOfStates(), 0);
 
   CkPrintf("\nFinished loading shared/global data in %lf seconds.\n",
-      CkWallTimer() - dataLoadingStartTime);
+      CkWallTimer() - profile.stepStartTime);
   
   PartitionId numPersonPartitions = scenario->partitioner->getNumPersonPartitions();
   PartitionId numLocationPartitions = scenario->partitioner->getNumLocationPartitions();
@@ -165,7 +155,7 @@ Main::Main(CkArgMsg* msg) {
 
   chareCount = numPersonPartitions;  // Number of chare arrays/groups
   createdCount = 0;
-  dataLoadingStartTime = CkWallTimer();
+  profile.stepStartTime = CkWallTimer();
 
   peopleArray = CProxy_People::ckNew(scenario->seed, scenario->scenarioPath,
     numPersonPartitions);
@@ -230,7 +220,7 @@ void Main::CharesCreated() {
   // CkPrintf("  %d of %d chares created\n", createdCount, chareCount);
   if (++createdCount == chareCount) {
     CkPrintf("\nFinished loading people and location data in %lf seconds.\n",
-        CkWallTimer() - dataLoadingStartTime);
+        CkWallTimer() - profile.stepStartTime);
 
     mainProxy.run();
   }
