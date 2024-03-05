@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
+#include "Parse.h"
 #include "../Types.h"
 #include "../contact_model/ContactModel.h"
 #include "charm++.h"
