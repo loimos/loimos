@@ -9,6 +9,7 @@
 
 #include "charm++.h"
 #include "Scenario.h"
+#include "Types.h"
 
 #include <vector>
 #include <string>
@@ -19,10 +20,12 @@ class Main : public CBase_Main {
   int day;
   std::vector<int> accumulated;
   std::vector<int> initialInfections;
-  Scenario* scenario;
   PartitionId chareCount;
   PartitionId createdCount;
   Id lastInfectiousCount;
+
+  Scenario *scenario;
+  Profile profile;
 
  public:
   explicit Main(CkArgMsg* msg);
