@@ -10,6 +10,7 @@
 #include "../readers/AttributeTable.h"
 #include "ContactModel.h"
 #include "MinMaxAlphaModel.h"
+#include "charm++.h"
 
 #include <vector>
 #include <random>
@@ -45,5 +46,8 @@ ContactModel *createContactModel(int contactModelType, const AttributeTable &att
 
   } else if (static_cast<int>(ContactModelType::min_max_alpha) == contactModelType) {
     return new MinMaxAlphaModel(attrs);
+
+  } else {
+    CkAbort("Error: unknown contact model type: %d\n", contactModelType);
   }
 }
