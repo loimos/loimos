@@ -60,8 +60,10 @@ struct Grid {
 
   template <class S>
   bool isDivisible(const Grid<S> &rhs) {
-    return (width % rhs.width == 0)
-      && (height % rhs.height == 0);
+    return 0 != rhs.width
+      && 0 != rhs.height
+      && (0 == width % rhs.width)
+      && (0 == height % rhs.height);
   }
 };
 
@@ -112,8 +114,9 @@ struct Arguments {
     p | diseasePath;
     p | interventionPath;
     p | outputPath;
-    p | isOnTheFlyRun;
     p | scenarioPath;
+    p | isOnTheFlyRun;
+    p | onTheFly;
   }
 };
 

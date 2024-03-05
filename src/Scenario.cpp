@@ -293,10 +293,17 @@ Scenario::Scenario(Arguments args) : seed(args.seed), numDays(args.numDays),
     locationDef = NULL;
     onTheFly = NULL;
 
-    onTheFly = new OnTheFlyArguments();
-    onTheFly->locationGrid = args.onTheFly.locationGrid;
+    onTheFly = new OnTheFlyArguments(args.onTheFly);
+
     numPeople = onTheFly->personGrid.area();
     numLocations = onTheFly->locationGrid.area();
+    CkPrintf("person grid: %ld (%ld x %ld), loc grid %ld (%ld x %ld)\n",
+      numPeople, onTheFly->personGrid.width, onTheFly->personGrid.height,
+      numLocations, onTheFly->locationGrid.width, onTheFly->locationGrid.height);
+    int tmp = 3*sizeof(Grid<Id>) + sizeof(Grid<PartitionId>)
+      + sizeof(Id);
+    CkPrintf("Expected size: %d actual size: %d\n", tmp,
+      sizeof(OnTheFlyArguments));
   
     partitioner = new Partitioner(args.numPersonPartitions,
         args.numLocationPartitions, numPeople, numLocations);
