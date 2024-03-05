@@ -106,7 +106,7 @@ Main::Main(CkArgMsg* msg) {
 
   Arguments args;
   parse(msg->argc, msg->argv, &args);
-  //delete msg;
+  delete msg;
 
   profile.stepStartTime = CkWallTimer();
 
@@ -116,7 +116,7 @@ Main::Main(CkArgMsg* msg) {
 
   CkPrintf("\nFinished loading shared/global data in %lf seconds.\n",
       CkWallTimer() - profile.stepStartTime);
-  
+
   PartitionId numPersonPartitions = scenario->partitioner->getNumPersonPartitions();
   PartitionId numLocationPartitions = scenario->partitioner->getNumLocationPartitions();
   if (scenario->numPeople < numPersonPartitions) {
@@ -236,7 +236,7 @@ void Main::SeedInfections() {
     Id firstPersonIdx = scenario->partitioner->getGlobalPersonIndex(0, 0);
     std::uniform_int_distribution<Id> personDistrib(firstPersonIdx,
         firstPersonIdx + scenario->numPeople - 1);
-    
+
     // The while loop will go forever on small test populations if we don't cap
     // this off
     Id totalInitialInfections = std::min(scenario->numInitialInfectionsPerDay
