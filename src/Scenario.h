@@ -33,7 +33,7 @@ struct Partitioner {
   Id numLocations;
   std::vector<Id> locationPartitionOffsets;
   std::vector<Id> personPartitionOffsets;
-  
+
   Partitioner(std::string scenarioPath,
     PartitionId numPersonPartitions,
     PartitionId numLocationPartitions,
@@ -119,7 +119,7 @@ class Scenario : public CBase_Scenario {
   ContactModel *contactModel;
   InterventionModel *interventionModel;
 
-  Scenario(Arguments args);
+  explicit Scenario(Arguments args);
   void applyInterventions(int day, Id newDailyInfections);
   bool isOnTheFly();
   bool hasInterventions();

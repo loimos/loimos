@@ -3,12 +3,14 @@
  *
  * SPDX-License-Identifier: MIT
  */
-#ifndef ARGUMENTS_H__
-#define ARGUMENTS_H__
+#ifndef READERS_PARSE_H__
+#define READERS_PARSE_H__
 
 #include "../Types.h"
 #include "charm++.h"
 #include "pup_stl.h"
+
+#include <string>
 
 struct OnTheFlyArguments {
   Grid<Id> personGrid;
@@ -44,7 +46,7 @@ struct Arguments {
   Arguments() {}
   explicit Arguments(CkMigrateMessage *msg) {}
 
-  void pup(PUP::er &p) {
+  void pup(PUP::er &p) {  // NOLINT(runtime/references)
     p | numPersonPartitions;
     p | numLocationPartitions;
     p | numDays;
@@ -65,4 +67,4 @@ struct Arguments {
 
 void parse(int argc, char **argv, Arguments *args);
 
-#endif  // ARGUMENTS_H__
+#endif  // READERS_PARSE_H__

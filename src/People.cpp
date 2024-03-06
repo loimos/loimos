@@ -270,9 +270,11 @@ void People::generateVisitData() {
         PartitionId partitionY = destinationY / onTheFly->localLocationGrid.height;
         Id destinationIdx =
             (destinationX % onTheFly->localLocationGrid.width)
-          + (destinationY % onTheFly->localLocationGrid.height) * onTheFly->localLocationGrid.width
+          + (destinationY % onTheFly->localLocationGrid.height)
+            * onTheFly->localLocationGrid.width
           + partitionX * numLocationsPerPartition
-          + partitionY * onTheFly->locationPartitionGrid.width * numLocationsPerPartition;
+          + partitionY * onTheFly->locationPartitionGrid.width
+            * numLocationsPerPartition;
 
         visits.emplace_back(destinationIdx, personIdx, 0, visitStart,
             visitEnd, 0);
