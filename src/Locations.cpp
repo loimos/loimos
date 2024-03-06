@@ -473,7 +473,7 @@ void Locations::activateLocation(Location *loc) {
 }
 
 void Locations::deactivateLocation(Location *loc) {
-  if (!loc->isActive) {
+  if (!loc->isActive && numDaysWithDistinctVisits <= day) {
     return;
   }
 
