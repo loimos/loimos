@@ -42,7 +42,7 @@ class People : public CBase_People {
   void UpdateDiseaseState(Person *person);
   void loadPeopleData(std::string scenarioPath);
   void loadVisitData(std::ifstream *activityData);
-  void SendVisitMessages(VisitTest test);
+  void SendVisitMessages(VisitTest skipInfectious, VisitTest skipOther);
 
  public:
   explicit People(int seed, std::string scenarioPath);
