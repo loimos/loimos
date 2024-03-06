@@ -551,18 +551,19 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
     interMsg.interactions.cbegin(), interMsg.interactions.cend());
 }
   
-void People::DeactivateDestination(Id locationIndex) {
-  inactiveDestinations.insert(locationIndex);
+void People::DeactivateDestination(PartitionId partition) {
+  inactiveDestinations.insert(partition);
 }
 
-void People::ActivateDestination(Id locationIndex) {
-  if (1 == inactiveDestinations.count(locationIndex)) {
-    inactiveDestinations.erase(locationIndex);
+void People::ActivateDestination(PartitionId partition) {
+  if (1 == inactiveDestinations.count(partition)) {
+    inactiveDestinations.erase(partition);
 
     SendVisitMessages([](const VisitMessage & m) -> bool {
       return true;
     }, [=](VisitMessage m) -> bool {
-      return locationIndex != m.locationIdx;
+      PartitionId p = diseaseModel->getLocationPartitionIndex(m.locationIdx);
+      return partition != p;
     });
   }
 }

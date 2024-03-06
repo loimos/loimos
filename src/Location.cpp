@@ -23,7 +23,7 @@
 
 Location::Location(const AttributeTable &attributes,
     int numInterventions, int uniqueId_) :
-    DataInterface(attributes, numInterventions), isActive(true) {
+    DataInterface(attributes, numInterventions) {
   setUniqueId(uniqueId_);
   reset();
 }

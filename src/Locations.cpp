@@ -33,6 +33,8 @@ std::uniform_real_distribution<> Locations::unitDistrib(0.0, 1.0);
 Locations::Locations(int seed, std::string scenarioPath) {
   diseaseModel = globDiseaseModel.ckLocalBranch();
   day = 0;
+  isActive = true;
+  anyInfectious = false;
 
   // Must be set to true to make AtSync work
   usesAtSync = true;
@@ -163,8 +165,10 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   }
 #endif
   Location *loc = &locations[localLocIdx];
-  PartitionId originPartition = diseaseModel->getPersonPartitionIndex(visitMsg.personIdx);
-  loc->visitorPartitions.insert(originPartition);
+  if (numDaysWithDistinctVisits > day) {
+    PartitionId originPartition = diseaseModel->getPersonPartitionIndex(visitMsg.personIdx);
+    visitorPartitions.insert(originPartition);
+  }
 
   // Interventions might cause us to reject some visits
   if (!loc->acceptsVisit(visitMsg)) {
@@ -198,7 +202,10 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 //#ifdef ENABLE_SC
   if (!loc->anyInfectious && isInfectious) {
     loc->anyInfectious = true;
-    activateLocation(loc);
+  }
+  if (!isActive && !anyInfectious && isInfectious) {
+    anyInfectious = true;
+    activate();
   }
 //#endif
 
@@ -207,6 +214,11 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 }
 
 void Locations::ComputeInteractions() {
+  if (!isActive && !anyInfectious) {
+    deactivate();
+    return;
+  }
+
   Counter numVisits = 0;
   Counter numInteractions = 0;
   exposureDuration = 0;
@@ -227,7 +239,6 @@ void Locations::ComputeInteractions() {
   CkCallback cb(CkReductionTarget(Main, ReceiveInteractionsCount), mainProxy);
   contribute(sizeof(Counter), &numInteractions,
       CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), cb);
-
 #endif
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
@@ -239,6 +250,7 @@ void Locations::ComputeInteractions() {
 #endif
 
   day++;
+  anyInfectious = false;
 }
 
 Counter Locations::processEvents(Location *loc) {
@@ -253,7 +265,6 @@ Counter Locations::processEvents(Location *loc) {
 //#elif ENABLE_SC
   if (!loc->anyInfectious) {
     loc->reset();
-    deactivateLocation(loc);
 
     return 0;
   }
@@ -460,27 +471,25 @@ inline void Locations::sendInteractions(Location *loc,
   interactions.erase(personIdx);
 }
 
-void Locations::activateLocation(Location *loc) {
-  if (loc->isActive) {
+void Locations::activate() {
+  if (isActive) {
     return;
   }
 
-  loc->isActive = true;
-  Id index = loc->getUniqueId();
-  for (PartitionId p : loc->visitorPartitions) {
-    peopleArray[p].ActivateDestination(index);
+  isActive = true;
+  for (PartitionId p : visitorPartitions) {
+    peopleArray[p].ActivateDestination(thisIndex);
   }
 }
 
-void Locations::deactivateLocation(Location *loc) {
-  if (!loc->isActive && numDaysWithDistinctVisits <= day) {
+void Locations::deactivate() {
+  if (isActive && numDaysWithDistinctVisits <= day) {
     return;
   }
 
-  loc->isActive = false;
-  Id index = loc->getUniqueId();
-  for (PartitionId p : loc->visitorPartitions) {
-    peopleArray[p].DeactivateDestination(index);
+  isActive = false;
+  for (PartitionId p : visitorPartitions) {
+    peopleArray[p].DeactivateDestination(thisIndex);
   }
 }
 

@@ -32,7 +32,7 @@ class People : public CBase_People {
   Id numLocalPeople;
   Counter totalVisitsForDay;
   std::vector<Person> people;
-  std::unordered_set<Id> inactiveDestinations;
+  std::unordered_set<PartitionId> inactiveDestinations;
   DiseaseModel *diseaseModel;
   std::vector<Id> stateSummaries;
   std::ofstream *exposuresFile;
@@ -51,8 +51,8 @@ class People : public CBase_People {
   void generatePeopleData(Id firstLocalPersonIndex, int seed);
   void generateVisitData();
   void SendVisitMessages();
-  void DeactivateDestination(Id locationIndex);
-  void ActivateDestination(Id locationIndex);
+  void DeactivateDestination(PartitionId partition);
+  void ActivateDestination(PartitionId partition);
   double getTransmissionModifier(const Person &person);
   void ReceiveInteractions(InteractionMessage interMsg);
   void EndOfDayStateUpdate();

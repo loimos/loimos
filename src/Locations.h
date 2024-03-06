@@ -24,12 +24,15 @@ class Locations : public CBase_Locations {
   Id numLocalLocations;
   Id firstLocalLocationIdx;
   std::vector<Location> locations;
+  std::unordered_set<PartitionId> visitorPartitions;
   DiseaseModel *diseaseModel;
   ContactModel *contactModel;
   std::ofstream *interactionsFile;
   Counter exposureDuration;
   Counter expectedExposureDuration;
   int day;
+  bool isActive;
+  bool anyInfectious;
 
   // For random generation.
   static std::uniform_real_distribution<> unitDistrib;
@@ -67,8 +70,8 @@ class Locations : public CBase_Locations {
   // or deactivated. We place them here rather than in the Location class
   // since they require use of global chare arrays which are not visible in
   // Location.cpp
-  void activateLocation(Location *loc);
-  void deactivateLocation(Location *loc);
+  void activate();
+  void deactivate();
 
   #if ENABLE_DEBUG >= DEBUG_VERBOSE
   Counter saveInteractions(const Location &loc, const Event &departure,
