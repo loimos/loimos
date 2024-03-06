@@ -29,29 +29,23 @@ Partitioner::Partitioner(std::string scenarioPath,
   Id firstLocationIdx = getFirstIndex(locationMetadata, scenarioPath + "locations.csv");
   Id firstPersonIdx = getFirstIndex(personMetadata, scenarioPath + "people.csv");
 
-  //if (0 == CkMyNode()) {
-  //  CkPrintf("People offsets:\n");
-  //}
   setPartitionOffsets(numPersonPartitions, firstPersonIdx, numPeople,
     personMetadata, &personPartitionOffsets);
-  //if (0 == CkMyNode()) {
-  //  CkPrintf("Location offsets:\n");
-  //}
   setPartitionOffsets(numLocationPartitions, firstLocationIdx, numLocations,
     locationMetadata, &locationPartitionOffsets);
 
-// #if ENABLE_DEBUG >= DEBUG_PER_CHARE
-//   if (0 == CkMyNode()) {
-//     for (int i = 0; i < personPartitionOffsets.size(); ++i) {
-//       CkPrintf("  Person Offset %d: " ID_PRINT_TYPE "\n",
-//         i, personPartitionOffsets[i]);
-//     }
-//     for (int i = 0; i < locationPartitionOffsets.size(); ++i) {
-//       CkPrintf("  Location Offset %d: " ID_PRINT_TYPE "\n",
-//         i, locationPartitionOffsets[i]);
-//     }
-//   }
-// #endif
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
+  if (0 == CkMyNode()) {
+    for (int i = 0; i < personPartitionOffsets.size(); ++i) {
+      CkPrintf("  Person Offset %d: " ID_PRINT_TYPE "\n",
+        i, personPartitionOffsets[i]);
+    }
+    for (int i = 0; i < locationPartitionOffsets.size(); ++i) {
+      CkPrintf("  Location Offset %d: " ID_PRINT_TYPE "\n",
+        i, locationPartitionOffsets[i]);
+    }
+  }
+#endif
 }
 
 Partitioner::Partitioner(PartitionId numPersonPartitions,
@@ -87,10 +81,6 @@ void Partitioner::setPartitionOffsets(PartitionId numPartitions,
         CkAbort("Error: Offset " ID_PRINT_TYPE " (%d-th offset) for chare "
         PARTITION_ID_PRINT_TYPE" out of order\n", offset, offsetIdx, i);
       }
-      // else if (0 == CkMyNode()) {
-      //   CkPrintf("  Chare %d: offset " ID_PRINT_TYPE " (provided)\n",
-      //       i, offset);
-      // }
 #endif  // ENABLE_DEBUG
     }
 
@@ -99,7 +89,7 @@ void Partitioner::setPartitionOffsets(PartitionId numPartitions,
       partitionOffsets);
   }
 }
-  
+
 // If no offsets are provided, try to put about the same number of objects
 // in each partition (i.e. use the old partitioning scheme)
 void Partitioner::setPartitionOffsets(PartitionId numPartitions,
@@ -114,10 +104,6 @@ void Partitioner::setPartitionOffsets(PartitionId numPartitions,
       CkAbort("Error: Offset " ID_PRINT_TYPE " outside of valid range [0,"
         ID_PRINT_TYPE")\n", offset, numObjects);
     }
-    // else if (0 == CkMyNode()) {
-    //   CkPrintf("  Chare %d: offset " ID_PRINT_TYPE " (default)\n",
-    //       p, offset);
-    // }
 #endif  // ENABLE_DEBUG
   }
 }
@@ -141,7 +127,7 @@ PartitionId Partitioner::getLocationPartitionIndex(Id globalIndex) const {
 Id Partitioner::getLocationPartitionSize(PartitionId partitionIndex) const {
   return getPartitionSize(partitionIndex, numLocations, locationPartitionOffsets);
 }
-  
+
 PartitionId Partitioner::getNumLocationPartitions() {
     return locationPartitionOffsets.size();
 }
@@ -177,12 +163,12 @@ InterventionModel::InterventionModel(std::string interventionPath,
     const DiseaseModel &diseaseModel) {
   interventionDef = new loimos::proto::InterventionModel();
   readProtobuf(interventionPath, interventionDef);
-  
+
   triggerFlags.resize(interventionDef->triggers_size(), false);
-  
+
   personAttributes->readAttributes(interventionDef->person_attributes());
   locationAttributes->readAttributes(interventionDef->location_attributes());
-  
+
   initPersonInterventions(interventionDef->person_interventions(),
       *personAttributes, diseaseModel);
   initLocationInterventions(
@@ -286,7 +272,6 @@ Scenario::Scenario(Arguments args) : seed(args.seed), numDays(args.numDays),
     numDaysToSeedOutbreak(args.numDaysToSeedOutbreak),
     numInitialInfectionsPerDay(args.numInitialInfectionsPerDay),
     scenarioPath(args.scenarioPath), outputPath(args.outputPath) {
-
   if (args.isOnTheFlyRun) {
     personDef = NULL;
     locationDef = NULL;
@@ -296,7 +281,7 @@ Scenario::Scenario(Arguments args) : seed(args.seed), numDays(args.numDays),
 
     numPeople = onTheFly->personGrid.area();
     numLocations = onTheFly->locationGrid.area();
-  
+
     partitioner = new Partitioner(args.numPersonPartitions,
         args.numLocationPartitions, numPeople, numLocations);
     scenarioId = std::string("");
@@ -325,11 +310,11 @@ Scenario::Scenario(Arguments args) : seed(args.seed), numDays(args.numDays),
     if (0 == CkMyNode()) {
       buildCache(args.scenarioPath, numPeople, partitioner->personPartitionOffsets,
         numLocations, partitioner->locationPartitionOffsets, numDaysWithDistinctVisits);
-    }   
+    }
     scenarioId = getScenarioId(numPeople, args.numPersonPartitions,
       numLocations, args.numLocationPartitions);
   }
-  
+
   diseaseModel = new DiseaseModel(args.diseasePath, personAttributes);
   if (args.hasIntervention) {
     interventionModel = new InterventionModel(args.interventionPath,

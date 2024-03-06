@@ -48,8 +48,7 @@ void parse(int argc, char **argv, Arguments *args) {
         ID_PRINT_TYPE " by " ID_PRINT_TYPE ")\n exceed those of person grid ("
         ID_PRINT_TYPE " by " ID_PRINT_TYPE ") in at least one dimension\n",
         onTheFly->locationGrid.width, onTheFly->locationGrid.height,
-        onTheFly->personGrid.width, onTheFly->personGrid.height
-      );
+        onTheFly->personGrid.width, onTheFly->personGrid.height);
     }
 
     // Edge degree.
@@ -139,7 +138,7 @@ void parse(int argc, char **argv, Arguments *args) {
     CkPrintf("Loading people and locations from %s.\n", args->scenarioPath.c_str());
   }
 #endif
-  
+
 #ifdef ENABLE_RANDOM_SEED
   args->seed = time(NULL);
 #else

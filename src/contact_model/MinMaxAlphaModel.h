@@ -26,7 +26,7 @@ class MinMaxAlphaModel : public ContactModel {
  public:
   // We need to re-declare all of these methods from ContactModel so
   // we can override them
-  MinMaxAlphaModel(const AttributeTable &attrs);
+  explicit MinMaxAlphaModel(const AttributeTable &attrs);
   void computeLocationValues(Location *location) override;
   bool madeContact(const Event &susceptibleEvent,
     const Event& infectiousEvent, Location *location) override;

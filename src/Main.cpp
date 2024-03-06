@@ -239,8 +239,10 @@ void Main::SeedInfections() {
 
     // The while loop will go forever on small test populations if we don't cap
     // this off
-    Id totalInitialInfections = std::min(scenario->numInitialInfectionsPerDay
-      * scenario->numDaysToSeedOutbreak, scenario->numPeople);
+    Id totalInitialInfections = std::min(
+      scenario->numInitialInfectionsPerDay
+        * scenario->numDaysToSeedOutbreak,
+      scenario->numPeople);
     std::unordered_set<Id> initialInfectionsSet;
     initialInfections.reserve(totalInitialInfections);
 
@@ -257,12 +259,14 @@ void Main::SeedInfections() {
   }
 
   // Check for empty is to avoid issues with small test populations
-  for (int i = 0; i < scenario->numInitialInfectionsPerDay && !initialInfections.empty();
+  for (int i = 0;
+      i < scenario->numInitialInfectionsPerDay && !initialInfections.empty();
       ++i) {
     Id personIdx = initialInfections.back();
     initialInfections.pop_back();
 
-    PartitionId peoplePartitionIdx = scenario->partitioner->getPersonPartitionIndex(personIdx);
+    PartitionId peoplePartitionIdx =
+      scenario->partitioner->getPersonPartitionIndex(personIdx);
 
     // Make a super contagious visit for that person.
     std::vector<Interaction> interactions;
