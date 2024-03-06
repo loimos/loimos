@@ -214,7 +214,7 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 }
 
 void Locations::ComputeInteractions() {
-  if (!isActive && !anyInfectious) {
+  if (isActive && !anyInfectious) {
     deactivate();
     return;
   }
