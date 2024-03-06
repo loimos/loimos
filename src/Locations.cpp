@@ -480,6 +480,7 @@ void Locations::activate() {
   for (PartitionId p : visitorPartitions) {
     peopleArray[p].ActivateDestination(thisIndex);
   }
+  CkPrintf("    Activating location chare %d\n", thisIndex);
 }
 
 void Locations::deactivate() {
@@ -491,6 +492,7 @@ void Locations::deactivate() {
   for (PartitionId p : visitorPartitions) {
     peopleArray[p].DeactivateDestination(thisIndex);
   }
+  CkPrintf("    Deactivating location chare %d\n", thisIndex);
 }
 
 void Locations::ReceiveIntervention(PartitionId interventionIdx) {
