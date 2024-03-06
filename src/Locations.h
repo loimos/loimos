@@ -63,6 +63,13 @@ class Locations : public CBase_Locations {
   // specified person to the appropriate People chare
   inline void sendInteractions(Location *loc, Id personIdx);
 
+  // Helper functions to inform people chares when a location is activated
+  // or deactivated. We place them here rather than in the Location class
+  // since they require use of global chare arrays which are not visible in
+  // Location.cpp
+  void activateLocation(Location *loc);
+  void deactivateLocation(Location *loc);
+
   #if ENABLE_DEBUG >= DEBUG_VERBOSE
   Counter saveInteractions(const Location &loc, const Event &departure,
     std::ofstream *out);

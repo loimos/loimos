@@ -443,6 +443,12 @@ void People::pup(PUP::er &p) {
 }
 
 void People::SendVisitMessages() {
+  SendVisitMessages([=](VisitMessage m) -> bool {
+    return 1 == inactiveDestinations.count(m.locationIdx);
+  });
+}
+
+void People::SendVisitMessages(VisitTest test) {
   // Send activities for each person.
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
   Id minId = numPeople;
@@ -460,7 +466,7 @@ void People::SendVisitMessages() {
       visitMessage.transmissionModifier = getTransmissionModifier(person);
 
       // Interventions may cancel some visits
-      if (!visitMessage.isActive() || 1 == inactiveDestinations.count(visitMessage.locationIdx)) {
+      if (!visitMessage.isActive() || test(visitMessage)) {
         continue;
       }
 
@@ -543,8 +549,13 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
 void People::DeactivateDestination(Id locationIndex) {
   inactiveDestinations.insert(locationIndex);
 }
+
 void People::ActivateDestination(Id locationIndex) {
   inactiveDestinations.erase(locationIndex);
+
+  SendVisitMessages([=](VisitMessage m) -> bool {
+    return locationIndex == m.locationIdx;
+  });
 }
 
 void People::ReceiveIntervention(int interventionIdx) {

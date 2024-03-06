@@ -30,9 +30,11 @@ class Location : public DataInterface {
   // from this location on a given day
   std::vector<Event> events;
   std::unordered_map<const void *, VisitTest> visitFilters;
-#ifdef ENABLE_SC
+  std::unordered_set<PartitionId> visitorPartitions;
+//#ifdef ENABLE_SC
   bool anyInfectious;
-#endif
+//#endif
+  bool isActive;
 
   // This distribution should always be the same - not sure how well
   // static variables work with Charm++, so this may need to be put

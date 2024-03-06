@@ -162,9 +162,12 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
         localLocIdx);
   }
 #endif
+  Location *loc = &locations[localLocIdx];
+  PartitionId originPartition = diseaseModel->getPersonPartitionIndex(visitMsg.personIdx);
+  loc->visitorPartitions.insert(originPartition);
 
   // Interventions might cause us to reject some visits
-  if (!locations[localLocIdx].acceptsVisit(visitMsg)) {
+  if (!loc->acceptsVisit(visitMsg)) {
     return;
   }
 
@@ -190,17 +193,17 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 #endif
 
   // ...and queue it up at the appropriate location
-  Location &loc = locations[localLocIdx];
   bool isInfectious = diseaseModel->isInfectious(visitMsg.personState);
   bool isSusceptible = diseaseModel->isInfectious(visitMsg.personState);
-#ifdef ENABLE_SC
-  if (!loc.anyInfectious && isInfectious) {
-    loc.anyInfectious = true;
+//#ifdef ENABLE_SC
+  if (!loc->anyInfectious && isInfectious) {
+    loc->anyInfectious = true;
+    activateLocation(loc);
   }
-#endif
+//#endif
 
-  loc.addEvent(arrival);
-  loc.addEvent(departure);
+  loc->addEvent(arrival);
+  loc->addEvent(departure);
 }
 
 void Locations::ComputeInteractions() {
@@ -246,12 +249,14 @@ Counter Locations::processEvents(Location *loc) {
   Counter numVisits = loc->events.size() / 2;
   Counter duration = 0;
   double startTime = CkWallTimer();
-#elif ENABLE_SC
+#endif
+//#elif ENABLE_SC
   if (!loc->anyInfectious) {
     loc->reset();
+    deactivateLocation(loc);
+
     return 0;
   }
-#endif
 
   std::sort(loc->events.begin(), loc->events.end());
   for (const Event &event : loc->events) {
@@ -453,6 +458,30 @@ inline void Locations::sendInteractions(Location *loc,
   // interactions from being sent multiple times if this person has multiple
   // visits to this location
   interactions.erase(personIdx);
+}
+
+void Locations::activateLocation(Location *loc) {
+  if (loc->isActive) {
+    return;
+  }
+
+  loc->isActive = true;
+  Id index = loc->getUniqueId();
+  for (PartitionId p : loc->visitorPartitions) {
+    peopleArray[p].ActivateDestination(index);
+  }
+}
+
+void Locations::deactivateLocation(Location *loc) {
+  if (!loc->isActive) {
+    return;
+  }
+
+  loc->isActive = false;
+  Id index = loc->getUniqueId();
+  for (PartitionId p : loc->visitorPartitions) {
+    peopleArray[p].DeactivateDestination(index);
+  }
 }
 
 void Locations::ReceiveIntervention(PartitionId interventionIdx) {

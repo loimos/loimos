@@ -23,7 +23,7 @@
 
 Location::Location(const AttributeTable &attributes,
     int numInterventions, int uniqueId_) :
-    DataInterface(attributes, numInterventions) {
+    DataInterface(attributes, numInterventions), isActive(true) {
   setUniqueId(uniqueId_);
   reset();
 }
@@ -41,9 +41,9 @@ void Location::pup(PUP::er &p) {
 }
 
 void Location::reset() {
-#ifdef ENABLE_SC
+//#ifdef ENABLE_SC
   anyInfectious = false;
-#endif
+//#endif
   events.clear();
 }
 
