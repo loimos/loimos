@@ -556,13 +556,15 @@ void People::DeactivateDestination(Id locationIndex) {
 }
 
 void People::ActivateDestination(Id locationIndex) {
-  inactiveDestinations.erase(locationIndex);
+  if (1 == inactiveDestinations.count(locationIndex)) {
+    inactiveDestinations.erase(locationIndex);
 
-  SendVisitMessages([](const VisitMessage & m) -> bool {
-    return true;
-  }, [=](VisitMessage m) -> bool {
-    return locationIndex != m.locationIdx;
-  });
+    SendVisitMessages([](const VisitMessage & m) -> bool {
+      return true;
+    }, [=](VisitMessage m) -> bool {
+      return locationIndex != m.locationIdx;
+    });
+  }
 }
 
 void People::ReceiveIntervention(int interventionIdx) {
