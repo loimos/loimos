@@ -396,17 +396,15 @@ void Locations::onInfectiousDeparture(Location *loc,
 inline void Locations::registerInteraction(Location *loc,
     const Event &susceptibleEvent, const Event &infectiousEvent,
     Time startTime, Time endTime) {
-  if (!contactModel->madeContact(susceptibleEvent, infectiousEvent, loc)) {
-    return;
-  }
-
   exposureDuration += endTime - startTime;
   // CkPrintf("  inf: %ld sus: %ld dt: "COUNTER_PRINT_TYPE"\n",
   //     infectiousEvent.personIdx, susceptibleEvent.personIdx,
   //     endTime - startTime);
+  double contactProbability = contactModel->getContactProbability(*loc);
   double propensity = diseaseModel->getPropensity(susceptibleEvent.personState,
     infectiousEvent.personState, startTime, endTime,
-    susceptibleEvent.transmissionModifier, infectiousEvent.transmissionModifier);
+    susceptibleEvent.transmissionModifier, infectiousEvent.transmissionModifier)
+    * contactProbability;
 
   // Note that this will create a new vector if this is the first potential
   // infection for the susceptible person in question
