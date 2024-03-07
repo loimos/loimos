@@ -332,6 +332,8 @@ mainmodule loimos {
   array [1D] People {
     entry People(int seed, std::string scenarioPath);
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
+    entry AGGREGATE void DeactivateDestination(PartitionId partition);
+    entry AGGREGATE void ActivateDestination(PartitionId partition);
     entry AGGREGATE void ReceiveInteractions(InteractionMessage);
     entry void EndOfDayStateUpdate(); // contribute call to ReceiveInfectiousCount
     entry void SendStats(); // contribute call to ReceiveStats

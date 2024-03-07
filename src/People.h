@@ -22,6 +22,7 @@
 #include <iostream>
 #include <fstream>
 #include <memory>
+#include <set>
 
 #define LOCATION_LAMBDA 5.2
 
@@ -31,6 +32,7 @@ class People : public CBase_People {
   Id numLocalPeople;
   Counter totalVisitsForDay;
   std::vector<Person> people;
+  std::unordered_set<PartitionId> inactiveDestinations;
   DiseaseModel *diseaseModel;
   std::vector<Id> stateSummaries;
   std::ofstream *exposuresFile;
@@ -40,6 +42,7 @@ class People : public CBase_People {
   void UpdateDiseaseState(Person *person);
   void loadPeopleData(std::string scenarioPath);
   void loadVisitData(std::ifstream *activityData);
+  void SendVisitMessages(VisitTest skipInfectious, VisitTest skipOther);
 
  public:
   explicit People(int seed, std::string scenarioPath);
@@ -48,6 +51,8 @@ class People : public CBase_People {
   void generatePeopleData(Id firstLocalPersonIndex, int seed);
   void generateVisitData();
   void SendVisitMessages();
+  void DeactivateDestination(PartitionId partition);
+  void ActivateDestination(PartitionId partition);
   double getTransmissionModifier(const Person &person);
   void ReceiveInteractions(InteractionMessage interMsg);
   void EndOfDayStateUpdate();

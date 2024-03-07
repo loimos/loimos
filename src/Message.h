@@ -34,7 +34,7 @@ struct VisitMessage {
     deactivatedBy(NULL) {}
 
   bool isActive() {
-    return NULL != deactivatedBy;
+    return NULL == deactivatedBy;
   }
 };
 PUPbytes(VisitMessage);

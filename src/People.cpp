@@ -443,6 +443,15 @@ void People::pup(PUP::er &p) {
 }
 
 void People::SendVisitMessages() {
+  SendVisitMessages([](const VisitMessage & m) -> bool {
+    return false;
+  },
+  [=](const VisitMessage &m) -> bool {
+    return 1 == inactiveDestinations.count(m.locationIdx);
+  });
+}
+
+void People::SendVisitMessages(VisitTest skipInfectious, VisitTest skipOther) {
   // Send activities for each person.
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
   Id minId = numPeople;
@@ -455,12 +464,14 @@ void People::SendVisitMessages() {
     minId = std::min(minId, person.getUniqueId());
     maxId = std::max(maxId, person.getUniqueId());
 #endif
+    bool isInfectious = diseaseModel->isInfectious(person.state);
     for (VisitMessage visitMessage : person.visitsByDay[dayIdx]) {
       visitMessage.personState = person.state;
       visitMessage.transmissionModifier = getTransmissionModifier(person);
 
-      // Interventions may cancel some visits
-      if (visitMessage.isActive()) {
+      if (!visitMessage.isActive()
+          || (isInfectious && skipInfectious(visitMessage))
+          || (!isInfectious && skipOther(visitMessage))) {
         continue;
       }
 
@@ -538,6 +549,23 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
   Person &person = people[localIdx];
   person.interactions.insert(person.interactions.end(),
     interMsg.interactions.cbegin(), interMsg.interactions.cend());
+}
+  
+void People::DeactivateDestination(PartitionId partition) {
+  inactiveDestinations.insert(partition);
+}
+
+void People::ActivateDestination(PartitionId partition) {
+  if (1 == inactiveDestinations.count(partition)) {
+    inactiveDestinations.erase(partition);
+
+    SendVisitMessages([](const VisitMessage & m) -> bool {
+      return true;
+    }, [=](VisitMessage m) -> bool {
+      PartitionId p = diseaseModel->getLocationPartitionIndex(m.locationIdx);
+      return partition != p;
+    });
+  }
 }
 
 void People::ReceiveIntervention(int interventionIdx) {
