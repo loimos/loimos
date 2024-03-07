@@ -202,9 +202,9 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 //#ifdef ENABLE_SC
   if (!loc->anyInfectious && isInfectious) {
     loc->anyInfectious = true;
-  }
-  if (!isActive && !anyInfectious && isInfectious) {
     anyInfectious = true;
+  }
+  if (!isActive && isInfectious) {
     activate();
   }
 //#endif
