@@ -214,7 +214,7 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 }
 
 void Locations::ComputeInteractions() {
-  if (isActive && !anyInfectious) {
+  if (numDaysWithDistinctVisits < day && isActive && !anyInfectious) {
     deactivate();
     return;
   }
