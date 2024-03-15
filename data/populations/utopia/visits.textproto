@@ -1,3 +1,13 @@
+<<<<<<< Updated upstream
+=======
+num_rows: 64
+start_time: {
+    days: 0
+}
+duration: {
+    days: 1
+}
+>>>>>>> Stashed changes
 fields {
     field_name: "hid"
     ignore: {}
