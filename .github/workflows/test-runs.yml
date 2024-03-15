@@ -94,6 +94,7 @@ jobs:
           export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
           export ENABLE_FORCE_FULL_RUN=1
           # Make debug version of Loimos
+          cat People.cpp
           ENABLE_DEBUG=2 make
           mv loimos loimos-debug
           make clean
