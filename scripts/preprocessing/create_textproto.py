@@ -73,10 +73,10 @@ def parse_args():
         + "population dir",
     )
     parser.add_argument(
-        "-m",
-        "--visits-metadata",
+        "-b",
+        "--basic-metadata",
         action="store_true",
-        help="Set this flag to compute detailed metadata for visits",
+        help="Set this flag to avoid computing detailed metadata for visits",
     )
     parser.add_argument(
         "-P",
@@ -173,9 +173,9 @@ def create_textproto(
 def main():
     args = parse_args()
 
-    visits_metadata_type = "basic"
-    if args.visits_metadata:
-        visits_metadata_type = "visits"
+    visits_metadata_type = "visits"
+    if args.basic_metadata:
+        visits_metadata_type = "basic"
 
     create_textproto(
         args.pop_dir, args.people_file, PEOPLE_TYPES, print_only=args.print_only
