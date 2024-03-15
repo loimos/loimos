@@ -2,7 +2,6 @@
 
 import argparse
 import os
-import shutil
 
 import pandas as pd
 import numpy as np
@@ -352,7 +351,7 @@ def main(args):
         update_visits(args, pid_update, id_col="pid")
         create_textproto(args.out_dir, args.visits_file, VISITS_TYPES)
     create_textproto(
-            args.out_dir, args.people_file, PEOPLE_TYPES, partition_offsets=offsets
+        args.out_dir, args.people_file, PEOPLE_TYPES, partition_offsets=offsets
     )
 
 
