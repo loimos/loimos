@@ -27,7 +27,7 @@ class ContactModel {
   int contactProbabilityIndex;
 
  public:
-  ContactModel(const AttributeTable &attrs);
+  explicit ContactModel(const AttributeTable &attrs);
   // Explicitly create other default constructors and assignment operators
   ContactModel(const ContactModel &other) = default;
   ContactModel& operator=(const ContactModel &other) = default;
