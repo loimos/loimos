@@ -267,6 +267,9 @@ def partition_people(args):
         people["home_lid"] = visits_by_person.head(1)["lid"]
         people["total_visits"] = visits_by_person.count()
 
+        people["home_lid"].fillna(-1, inplace=True)
+        people["total_visits"].fillna(0, inplace=True)
+
     # Reindexing doesn't depend on the partition
     if not args.offsets_only:
         people.sort_values(PEOPLE_SORT_BY, inplace=True)
