@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import shutil
 
 import pandas as pd
 import numpy as np
@@ -95,6 +96,15 @@ def parse_args():
         default=None,
         type=int,
         help="The number of partitions for merge dataframes per task",
+    )
+    PARTITION_OPTIONS = ["locations", "people"]
+    parser.add_argument(
+        "--to-partition",
+        "-t",
+        default=PARTITION_OPTIONS,
+        choices=PARTITION_OPTIONS,
+        nargs="+",
+        help="Specifies which files to partition (defaults to both people and locations)"
     )
 
     # Flags
@@ -339,20 +349,29 @@ def main(args):
     if not os.path.isdir(args.out_dir):
         os.makedirs(args.out_dir)
 
-    offsets, lid_update = partition_locations(args)
-    if not args.offsets_only:
-        update_visits(args, lid_update)
-    create_textproto(
-        args.out_dir, args.locations_file, LOCATIONS_TYPES, partition_offsets=offsets
-    )
+    if "locations" in args.to_partition:
+        offsets, lid_update = partition_locations(args)
+        if not args.offsets_only:
+            update_visits(args, lid_update)
+            if "people" not in args.to_partition:
+                create_textproto(args.out_dir, args.visits_file, VISITS_TYPES)
+        create_textproto(
+            args.out_dir, args.locations_file, LOCATIONS_TYPES, partition_offsets=offsets
+        )
+    elif args.in_dir != args.out_dir:
+        shutil.copy(os.path.join(args.in_dir, args.locations_file), args.out_dir)
 
-    offsets, pid_update = partition_people(args)
-    if not args.offsets_only:
-        update_visits(args, pid_update, id_col="pid")
-        create_textproto(args.out_dir, args.visits_file, VISITS_TYPES)
-    create_textproto(
-        args.out_dir, args.people_file, PEOPLE_TYPES, partition_offsets=offsets
-    )
+    if "people" in args.to_partition:
+        offsets, pid_update = partition_people(args)
+        if not args.offsets_only:
+            update_visits(args, pid_update, id_col="pid")
+            create_textproto(args.out_dir, args.visits_file, VISITS_TYPES)
+        create_textproto(
+            args.out_dir, args.people_file, PEOPLE_TYPES, partition_offsets=offsets
+        )
+    elif args.in_dir != args.out_dir:
+        shutil.copy(os.path.join(args.in_dir, args.people_file), args.out_dir)
+
 
 
 if __name__ == "__main__":
