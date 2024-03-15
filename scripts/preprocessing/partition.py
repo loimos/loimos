@@ -97,6 +97,16 @@ def parse_args():
         type=int,
         help="The number of partitions for merge dataframes per task",
     )
+    PARTITION_OPTIONS = ["locations", "people"]
+    parser.add_argument(
+        "--to-partition",
+        "-t",
+        default=PARTITION_OPTIONS,
+        choices=PARTITION_OPTIONS,
+        nargs="+",
+        help="Specifies which files to partition (defaults to both people"
+        + " and locations)",
+    )
 
     # Flags
     parser.add_argument(
@@ -253,15 +263,55 @@ def partition_locations(args):
     return offsets, lid_update
 
 
-def update_chunk(args, visits_chunk, lid_update):
+PEOPLE_SORT_BY = "home_lid"
+
+
+def partition_people(args):
+    people = read_csv(args.in_dir, args.people_file)
+    print("people loaded:", flush=True)
+    print(people, flush=True)
+
+    if "home_lid" not in people.columns or "total_visits" not in people.columns:
+        visits = read_csv(args.in_dir, args.visits_file)
+        visits_by_person = visits[["lid", "pid"]].groupby("pid")
+        people["home_lid"] = visits_by_person.head(1)["lid"]
+        people["total_visits"] = visits_by_person.count()
+
+        people["home_lid"].fillna(-1, inplace=True)
+        people["total_visits"].fillna(0, inplace=True)
+
+    # Reindexing doesn't depend on the partition
+    if not args.offsets_only:
+        people.sort_values(PEOPLE_SORT_BY, inplace=True)
+        print("people sorted:", flush=True)
+        print(people, flush=True)
+
+    pid_update = make_contiguous(
+        people, name="people", reset_index=True, validate=args.validate, id_col="pid"
+    )
+    print("pids reset:", flush=True)
+    print(pid_update, flush=True)
+
+    offsets = linear_cut_partition(
+        people, load_col=args.location_load_col, num_partitions=args.num_partitions
+    )
+    print(f"partition completed with {len(offsets)} offsets", flush=True)
+
+    if not args.offsets_only:
+        write_csv(args.out_dir, args.people_file, people)
+    return offsets, pid_update
+
+
+def update_chunk(args, visits_chunk, id_update, id_col="lid"):
     if args.num_locations:
         n = visits_chunk.shape[0]
-        visits_chunk = visits_chunk[visits_chunk["lid"].isin(lid_update["lid"])]
+        visits_chunk = visits_chunk[visits_chunk[id_col].isin(id_update[id_col])]
         print(f"  {visits_chunk.shape[0]}/{n} visits kept", flush=True)
 
     visits_chunk = update_ids(
         visits_chunk,
-        lid_update,
+        id_update,
+        id_col=id_col,
         name="visits",
         num_tasks=args.num_tasks,
         num_partitions=args.num_partitions_per_task * args.num_tasks,
@@ -271,14 +321,16 @@ def update_chunk(args, visits_chunk, lid_update):
     return visits_chunk
 
 
-def update_visits(args, lid_update):
+def update_visits(args, id_update, id_col="lid"):
+    if isinstance(id_update, int) and 0 == id_update:
+        return
     if args.num_visits is not None:
         visit_chunks = read_csv(
             args.in_dir, args.visits_file, iterator=True, chunksize=args.num_visits
         )
         for i, chunk in enumerate(visit_chunks):
-            print(f"Updating lids in chunk {i}")
-            chunk = update_chunk(args, chunk, lid_update)
+            print(f"Updating {id_col}s in chunk {i}")
+            chunk = update_chunk(args, chunk, id_update, id_col=id_col)
             if i == 0:
                 write_csv(args.out_dir, args.visits_file, chunk)
             else:
@@ -287,8 +339,8 @@ def update_visits(args, lid_update):
     else:
         visits = read_csv(args.in_dir, args.visits_file, args.num_visits)
 
-        print("Updating visits lids", flush=True)
-        visits = update_chunk(args, visits, lid_update)
+        print(f"Updating visits {id_col}s", flush=True)
+        visits = update_chunk(args, visits, id_update, id_col=id_col)
 
         print("Saving visits", flush=True)
         write_csv(args.out_dir, args.visits_file, visits)
@@ -298,20 +350,31 @@ def main(args):
     if not os.path.isdir(args.out_dir):
         os.makedirs(args.out_dir)
 
-    offsets, lid_update = partition_locations(args)
+    if "locations" in args.to_partition:
+        offsets, lid_update = partition_locations(args)
+        if not args.offsets_only:
+            update_visits(args, lid_update)
+            if "people" not in args.to_partition:
+                create_textproto(args.out_dir, args.visits_file, VISITS_TYPES)
+        create_textproto(
+            args.out_dir,
+            args.locations_file,
+            LOCATIONS_TYPES,
+            partition_offsets=offsets,
+        )
+    elif args.in_dir != args.out_dir:
+        shutil.copy(os.path.join(args.in_dir, args.locations_file), args.out_dir)
 
-    if not args.offsets_only:
-        update_visits(args, lid_update)
-        create_textproto(args.out_dir, args.visits_file, VISITS_TYPES)
-
-        # Not partitioning people yet
-        if args.in_dir != args.out_dir:
-            shutil.copy(os.path.join(args.in_dir, args.people_file), args.out_dir)
-
-    create_textproto(args.out_dir, args.people_file, PEOPLE_TYPES)
-    create_textproto(
-        args.out_dir, args.locations_file, LOCATIONS_TYPES, partition_offsets=offsets
-    )
+    if "people" in args.to_partition:
+        offsets, pid_update = partition_people(args)
+        if not args.offsets_only:
+            update_visits(args, pid_update, id_col="pid")
+            create_textproto(args.out_dir, args.visits_file, VISITS_TYPES)
+        create_textproto(
+            args.out_dir, args.people_file, PEOPLE_TYPES, partition_offsets=offsets
+        )
+    elif args.in_dir != args.out_dir:
+        shutil.copy(os.path.join(args.in_dir, args.people_file), args.out_dir)
 
 
 if __name__ == "__main__":
