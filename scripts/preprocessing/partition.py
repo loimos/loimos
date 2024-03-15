@@ -104,7 +104,8 @@ def parse_args():
         default=PARTITION_OPTIONS,
         choices=PARTITION_OPTIONS,
         nargs="+",
-        help="Specifies which files to partition (defaults to both people and locations)"
+        help="Specifies which files to partition (defaults to both people"
+        + " and locations)",
     )
 
     # Flags
@@ -356,7 +357,10 @@ def main(args):
             if "people" not in args.to_partition:
                 create_textproto(args.out_dir, args.visits_file, VISITS_TYPES)
         create_textproto(
-            args.out_dir, args.locations_file, LOCATIONS_TYPES, partition_offsets=offsets
+            args.out_dir,
+            args.locations_file,
+            LOCATIONS_TYPES,
+            partition_offsets=offsets,
         )
     elif args.in_dir != args.out_dir:
         shutil.copy(os.path.join(args.in_dir, args.locations_file), args.out_dir)
@@ -371,7 +375,6 @@ def main(args):
         )
     elif args.in_dir != args.out_dir:
         shutil.copy(os.path.join(args.in_dir, args.people_file), args.out_dir)
-
 
 
 if __name__ == "__main__":
