@@ -316,10 +316,10 @@ void People::loadPeopleData(std::string scenarioPath) {
   peopleCache.close();
 
   // Open activity data and cache.
-  std::ifstream activityData(scenarioPath + "visits.csv");
+  std::ifstream visitData(scenarioPath + "visits.csv");
   std::ifstream activityCache(scenarioPath + scenarioId
       + "_visits.cache", std::ios_base::binary);
-  if (!activityData || !activityCache) {
+  if (!visitData || !activityCache) {
     CkAbort("Could not open activity input.");
   }
 
@@ -346,16 +346,16 @@ void People::loadPeopleData(std::string scenarioPath) {
     person.state = diseaseModel->getHealthyState(person.getData());
   }
 
-  loadVisitData(&activityData);
+  loadVisitData(&visitData);
 
-  activityData.close();
+  visitData.close();
 }
 
-void People::loadVisitData(std::ifstream *activityData) {
-  loimos::proto::CSVDefinition *visitsDef = diseaseModel->activityDef;
+void People::loadVisitData(std::ifstream *visitData) {
+  loimos::proto::CSVDefinition *visitDef = scenario->visitDef;
   Time firstDay = 0;
-  if (visitsDef->has_start_time()) {
-    firstDay = visitsDef->start_time().days();
+  if (visitDef->has_start_time()) {
+    firstDay = visitDef->start_time().days();
   }
 
   #ifdef ENABLE_DEBUG
@@ -378,7 +378,7 @@ void People::loadVisitData(std::ifstream *activityData) {
         continue;
       }
 
-      activityData->seekg(seekPos, std::ios_base::beg);
+      visitData->seekg(seekPos, std::ios_base::beg);
 
       // Start reading
       Id personId = -1;
@@ -387,7 +387,7 @@ void People::loadVisitData(std::ifstream *activityData) {
       Time visitDuration = -1;
       Time visitEnd = -1;
       std::tie(personId, locationId, visitStart, visitDuration) =
-        parseActivityStream(activityData,
+        parseActivityStream(visitData,
             scenario->visitDef, NULL);
 
 #if ENABLE_DEBUG >= DEBUG_PER_OBJECT
@@ -419,7 +419,7 @@ void People::loadVisitData(std::ifstream *activityData) {
         #endif
 
         std::tie(personId, locationId, visitStart, visitDuration) =
-          parseActivityStream(activityData,
+          parseActivityStream(visitData,
               scenario->visitDef, NULL);
       }
 
