@@ -31,7 +31,7 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can
       # access it
       - name: Build code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # - name: Restore dependencies
       #   id: cache-dependencies-restore
