@@ -444,7 +444,7 @@ void People::pup(PUP::er &p) {
 
 void People::SendVisitMessages() {
   // Send activities for each person.
-#if ENABLE_DEBUG >= DEBUG_PER_CHARE
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
   Id minId = numPeople;
   Id maxId = 0;
   totalVisitsForDay = 0;
@@ -493,6 +493,11 @@ void People::SendVisitMessages() {
     }
   }
 
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
+  CkCallback cb(CkReductionTarget(Main, ReceiveVisitsSentCount), mainProxy);
+  contribute(sizeof(Counter), &totalVisitsForDay,
+      CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), cb);
+#endif
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
   if (0 == day) {
     CkPrintf("    Chare %d (P %d, T %d): %d visits, %lu people (in [%d, %d])\n",
