@@ -37,7 +37,7 @@ endif
 
 CXX       = g++
 INCLUDES  = -I$(PROTOBUF_HOME)/include
-LIBS      = -lpthread -lprotobuf
+LIBS      = -lpthread -lprotobuf -module completion
 
 # Protobuf is installed under lib64 on Rivanna
 HOSTNAME = $(shell hostname -a)

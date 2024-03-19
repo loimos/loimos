@@ -18,6 +18,8 @@ extern /* readonly */ CProxy_Locations locationsArray;
 extern /* readonly */ CProxy_Aggregator aggregatorProxy;
 #endif
 extern /* readonly */ CProxy_DiseaseModel globDiseaseModel;
+extern /* readonly */ CProxy_CompletionDetector visitsDetector;
+extern /* readonly */ CProxy_CompletionDetector interactionsDetector;
 extern /* readonly */ Id numPeople;
 extern /* readonly */ Id numLocations;
 extern /* readonly */ PartitionId numPersonPartitions;

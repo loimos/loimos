@@ -45,6 +45,8 @@
 #endif
 /* readonly */ CProxy_DiseaseModel globDiseaseModel;
 /* readonly */ CProxy_TraceSwitcher traceArray;
+/* readonly */ CProxy_CompletionDetector visitsDetector;
+/* readonly */ CProxy_CompletionDetector interactionsDetector;
 /* readonly */ Id numPeople;
 /* readonly */ Id numLocations;
 /* readonly */ PartitionId numPersonPartitions;
@@ -65,7 +67,6 @@
 /* readonly */ double dataLoadingStartTime;
 /* readonly */ std::vector<double> totalTime;
 /* readonly */ std::string outputPath;  // NOLINT(runtime/string)
-
 
 // For synthetic run.
 /* readonly */ Id synPeopleGridWidth;

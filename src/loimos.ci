@@ -8,6 +8,8 @@ mainmodule loimos {
   include "Interaction.h";
   include "Message.h";
 
+  extern module completion;
+
 #ifdef USE_HYPERCOMM
   include "AggregatorParam.h";
 #endif // USE_HYPERCOMM
@@ -52,6 +54,9 @@ mainmodule loimos {
 #endif // USE_HYPERCOMM
   readonly CProxy_DiseaseModel globDiseaseModel;
   readonly CProxy_TraceSwitcher traceArray;
+  readonly CProxy_CompletionDetector visitsDetector;
+  readonly CProxy_CompletionDetector interactionsDetector;
+
   readonly Id numPeople;
   readonly Id numLocations;
   readonly PartitionId numPersonPartitions;
