@@ -332,6 +332,9 @@ Main::Main(CkArgMsg* msg) {
   }
 #endif
 
+  visitsDetector = CProxy_CompletionDetector::ckNew();
+  interactionsDetector = CProxy_CompletionDetector::ckNew();
+
   CkPrintf("\nFinished loading shared/global data in %lf seconds.\n",
       CkWallTimer() - dataLoadingStartTime);
 

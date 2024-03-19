@@ -137,34 +137,42 @@ mainmodule loimos {
           iterationStartTime = CkWallTimer();
 
           // CkPrintf("  Sending Visit Messages\n");
-          stepStartTime = CkWallTimer();
-          peopleArray.SendVisitMessages();
-          CkStartQD(CkCallback(
-            CkIndex_Main::StartComputingInteractions(),
-            mainProxy
-          ));
+
+          visitsDetector.start_detection(numPersonPartitions,
+            CkCallback(CkIndex_Main::VisitsDetectorReady(), mainProxy),
+            CkCallback(),
+            CkCallback(CkIndex_Main::DoneVisitMessages(), mainProxy),
+            0);
+          interactionsDetector.start_detection(numLocationPartitions,
+            CkCallback(CkIndex_Main::InteractionsDetectorReady(), mainProxy),
+            CkCallback(),
+            CkCallback(CkIndex_Main::DoneInteractionMessages(), mainProxy),
+            0);
         }
-        when StartComputingInteractions() {
+        // Wait for both since visit messages trigger interaction messages
+        when VisitsDetectorReady() {
+          when InteractionsDetectorReady() {
+            serial{
+              stepStartTime = CkWallTimer();
+              peopleArray.SendVisitMessages();
+
+              if (DAYS_TO_SEED_INFECTION > day) {
+                SeedInfections();
+              }
+            }
+          }
+        }
+        when DoneVisitMessages() {
           serial {
             double diff = CkWallTimer() - stepStartTime;
             CkPrintf("  Visit messages took %fs\n",
               diff);
             totalTime[TOTAL_VISITS_TIME_INDEX] += diff;
 
-            // CkPrintf("  Compute Interactions\n");
             stepStartTime = CkWallTimer();
-            locationsArray.ComputeInteractions();
-            if (DAYS_TO_SEED_INFECTION > day) {
-              SeedInfections();
-            }
-
-            CkStartQD(CkCallback(
-              CkIndex_Main::ComputedInteractions(),
-              mainProxy
-            ));
           }
         }
-        when ComputedInteractions() {
+        when DoneInteractionMessages() {
           serial {
             double diff = CkWallTimer() - stepStartTime;
             CkPrintf("  Interaction messages took %fs\n",
@@ -271,9 +279,11 @@ mainmodule loimos {
       }
     };
 
+    entry void VisitsDetectorReady();
+    entry void InteractionsDetectorReady();
     entry void SeedInfections();
-    entry void StartComputingInteractions();
-    entry void ComputedInteractions();
+    entry void DoneVisitMessages();
+    entry void DoneInteractionMessages();
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
     entry [reductiontarget] void ReceiveVisitsLoadedCount(Id visitsCount) {
       serial{CkPrintf("  Loaded a total of " ID_PRINT_TYPE " visits\n", visitsCount);}
