@@ -53,7 +53,7 @@ class People : public CBase_People {
   void SendVisitMessages();
   double getTransmissionModifier(const Person &person);
   void ReceiveInteractions(InteractionMessage interMsg);
-  void EndOfDayStateUpdate();
+  void EndDay();
   void SendStats();
   void ReceiveIntervention(int interventionIdx);
   #ifdef ENABLE_LB

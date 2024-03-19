@@ -144,11 +144,22 @@ mainmodule loimos {
             CkCallback(),
             CkCallback(CkIndex_Main::DoneVisitMessages(), mainProxy),
             0);
+          globInteractionsDetector.start_detection(numLocationPartitions,
+            CkCallback(CkIndex_Main::InteractionsDetectorReady(), mainProxy),
+            CkCallback(),
+            CkCallback(CkIndex_Main::DoneInteractionMessages(), mainProxy),
+            0);
         }
         // Wait for both since visit messages trigger interaction messages
         when VisitsDetectorReady() {
-          serial{
-            peopleArray.SendVisitMessages();
+          when InteractionsDetectorReady() {
+            serial{
+              peopleArray.SendVisitMessages();
+
+              if (DAYS_TO_SEED_INFECTION > day) {
+                SeedInfections();
+              }
+            }
           }
         }
         when DoneVisitMessages() {
@@ -159,20 +170,7 @@ mainmodule loimos {
             totalTime[TOTAL_VISITS_TIME_INDEX] += diff;
 
             stepStartTime = CkWallTimer();
-            globInteractionsDetector.start_detection(numLocationPartitions,
-              CkCallback(CkIndex_Main::InteractionsDetectorReady(), mainProxy),
-              CkCallback(),
-              CkCallback(CkIndex_Main::DoneInteractionMessages(), mainProxy),
-              0);
-          }
-        }
-        when InteractionsDetectorReady() {
-          serial {
-            locationsArray.ComputeInteractions();
-
-            if (DAYS_TO_SEED_INFECTION > day) {
-              SeedInfections();
-            }
+            locationsArray.EndDay();
           }
         }
         when DoneInteractionMessages() {
@@ -184,7 +182,7 @@ mainmodule loimos {
 
             // CkPrintf("  End of day state update starting\n");
             stepStartTime = CkWallTimer();
-            peopleArray.EndOfDayStateUpdate();
+            peopleArray.EndDay();
           }
         }
         when ReceiveInfectiousCount(Id infectiousCount) {
@@ -351,7 +349,7 @@ mainmodule loimos {
     entry People(int seed, std::string scenarioPath);
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
     entry AGGREGATE void ReceiveInteractions(InteractionMessage);
-    entry void EndOfDayStateUpdate(); // contribute call to ReceiveInfectiousCount
+    entry void EndDay(); // contribute call to ReceiveInfectiousCount
     entry void SendStats(); // contribute call to ReceiveStats
     entry void ReceiveIntervention(int interventionIdx);
     //entry void TestCall(std::function<int(int)> func);
@@ -362,6 +360,7 @@ mainmodule loimos {
     entry Locations(int seed, std::string scenarioPath);
     entry AGGREGATE void ReceiveVisitMessages(VisitMessage);
     entry void ComputeInteractions(); // calls ReceiveInteractions
+    entry void EndDay();
     entry void ReceiveIntervention(int interventionIdx);
     entry void AtSync();
   };

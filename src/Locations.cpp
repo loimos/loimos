@@ -35,6 +35,7 @@ Locations::Locations(int seed, std::string scenarioPath) {
   visitsDetector = globVisitsDetector.ckLocalBranch();
   interactionsDetector = globInteractionsDetector.ckLocalBranch();
   day = 0;
+  numInteractions = 0;
 
   // Must be set to true to make AtSync work
   usesAtSync = true;
@@ -184,6 +185,9 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
     visitMsg.transmissionModifier, visitMsg.visitEnd };
   Event::pair(&arrival, &departure);
 
+  // loc.addEvent(arrival);
+  // loc.addEvent(departure);
+
 #ifdef ENABLE_DEBUG
   if (arrival.scheduledTime > departure.scheduledTime) {
     CkAbort("Error on chare %d: visit by " ID_PRINT_TYPE " to loc " ID_PRINT_TYPE "\n"
@@ -194,17 +198,69 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 #endif
 
   // ...and queue it up at the appropriate location
-  Location &loc = locations[localLocIdx];
+  Location *loc = &locations[localLocIdx];
   bool isInfectious = diseaseModel->isInfectious(visitMsg.personState);
   bool isSusceptible = diseaseModel->isInfectious(visitMsg.personState);
 #ifdef ENABLE_SC
-  if (!loc.anyInfectious && isInfectious) {
-    loc.anyInfectious = true;
+  if (!loc->anyInfectious && isInfectious) {
+    loc->anyInfectious = true;
+  }
+#endif
+  if (isSusceptible) {
+    loc->susceptibleArrivals.push_back(arrival);
+    numInteractions += processInfectiousArrival(loc, arrival);
+  } else if (isInfectious) {
+    loc->infectiousArrivals.push_back(arrival);
+    numInteractions += processInfectiousArrival(loc, arrival);
+  }
+}
+
+Counter Locations::processSusceptibleArrival(Location *loc, const Event &susceptibleArrival) {
+  for (const Event &infectiousArrival : loc->infectiousArrivals) {
+    if (Event::overlap(susceptibleArrival, infectiousArrival)) {
+      registerInteraction(loc, susceptibleArrival, infectiousArrival,
+        std::max(infectiousArrival.scheduledTime, susceptibleArrival.scheduledTime),
+        std::min(infectiousArrival.partnerTime, susceptibleArrival.partnerTime));
+      sendInteractions(loc, susceptibleArrival.personIdx);
+    }
+  }
+
+  return 0;
+}
+
+Counter Locations::processInfectiousArrival(Location *loc, const Event &infectiousArrival) {
+  for (const Event &susceptibleArrival : loc->susceptibleArrivals) {
+    if (Event::overlap(infectiousArrival, susceptibleArrival)) {
+      registerInteraction(loc, susceptibleArrival, infectiousArrival,
+        std::max(infectiousArrival.scheduledTime, susceptibleArrival.scheduledTime),
+        std::min(infectiousArrival.partnerTime, susceptibleArrival.partnerTime));
+      sendInteractions(loc, susceptibleArrival.personIdx);
+    }
+  }
+
+  return 0;
+}
+
+void Locations::EndDay() {
+  interactionsDetector->done();
+
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
+  CkCallback cb(CkReductionTarget(Main, ReceiveInteractionsCount), mainProxy);
+  contribute(sizeof(Counter), &numInteractions,
+      CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), cb);
+
+#endif
+
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
+  if (0 == day) {
+    CkPrintf("    Process %d, thread %d: " COUNTER_PRINT_TYPE " visits, "
+        COUNTER_PRINT_TYPE" interactions, %lu locations\n",
+        CkMyNode(), CkMyPe(), numVisits, numInteractions, locations.size());
   }
 #endif
 
-  loc.addEvent(arrival);
-  loc.addEvent(departure);
+  numInteractions = 0;
+  day++;
 }
 
 void Locations::ComputeInteractions() {

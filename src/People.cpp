@@ -556,7 +556,7 @@ void People::ReceiveIntervention(int interventionIdx) {
   }
 }
 
-void People::EndOfDayStateUpdate() {
+void People::EndDay() {
   // Get ready to count today's states
   DiseaseState totalStates = diseaseModel->getNumberOfStates();
   int offset = totalStates * day;

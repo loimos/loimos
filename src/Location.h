@@ -29,6 +29,8 @@ class Location : public DataInterface {
   // Represents all of the arrivals and departures of people
   // from this location on a given day
   std::vector<Event> events;
+  std::vector<Event> infectiousArrivals;
+  std::vector<Event> susceptibleArrivals;
   std::unordered_map<const void *, VisitTest> visitFilters;
 #ifdef ENABLE_SC
   bool anyInfectious;

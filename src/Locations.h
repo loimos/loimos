@@ -33,6 +33,7 @@ class Locations : public CBase_Locations {
   Counter exposureDuration;
   Counter expectedExposureDuration;
   int day;
+  Counter numInteractions;
 
   // For random generation.
   static std::uniform_real_distribution<> unitDistrib;
@@ -48,6 +49,8 @@ class Locations : public CBase_Locations {
 
   // Runs through all of the current events and return the indices of
   // any people who have been infected
+  Counter processInfectiousArrival(Location *loc, const Event &arrival);
+  Counter processSusceptibleArrival(Location *loc, const Event &arrival);
   Counter processEvents(Location *loc);
 
   // Helper functions to handle when a person leaves a location
@@ -58,7 +61,7 @@ class Locations : public CBase_Locations {
 
   // Helper function which packages all the neccessary information about
   // an interaction between a susceptible person and an infectious person
-  // and add it to the approriate list for the susceptible person
+  // and add it to the appropiate list for the susceptible person
   inline void registerInteraction(Location *loc, const Event &susceptibleEvent,
     const Event &infectiousEvent, Time startTime, Time endTime);
 
@@ -78,6 +81,7 @@ class Locations : public CBase_Locations {
   void ReceiveVisitMessages(VisitMessage visitMsg);
   void ComputeInteractions();  // calls ReceiveInfections
   void ReceiveIntervention(PartitionId interventionIdx);
+  void EndDay();
   // Load location data from CSV.
   void loadLocationData(std::string scenarioPath);
   #ifdef ENABLE_LB
