@@ -53,9 +53,9 @@ mainmodule loimos {
   readonly CProxy_Aggregator aggregatorProxy;
 #endif // USE_HYPERCOMM
   readonly CProxy_DiseaseModel globDiseaseModel;
+  readonly CProxy_CompletionDetector globVisitsDetector;
+  readonly CProxy_CompletionDetector globInteractionsDetector;
   readonly CProxy_TraceSwitcher traceArray;
-  readonly CProxy_CompletionDetector visitsDetector;
-  readonly CProxy_CompletionDetector interactionsDetector;
 
   readonly Id numPeople;
   readonly Id numLocations;
@@ -135,31 +135,20 @@ mainmodule loimos {
 #endif
         serial {
           iterationStartTime = CkWallTimer();
+          stepStartTime = CkWallTimer();
 
           // CkPrintf("  Sending Visit Messages\n");
 
-          visitsDetector.start_detection(numPersonPartitions,
+          globVisitsDetector.start_detection(numPersonPartitions,
             CkCallback(CkIndex_Main::VisitsDetectorReady(), mainProxy),
             CkCallback(),
             CkCallback(CkIndex_Main::DoneVisitMessages(), mainProxy),
             0);
-          interactionsDetector.start_detection(numLocationPartitions,
-            CkCallback(CkIndex_Main::InteractionsDetectorReady(), mainProxy),
-            CkCallback(),
-            CkCallback(CkIndex_Main::DoneInteractionMessages(), mainProxy),
-            0);
         }
         // Wait for both since visit messages trigger interaction messages
         when VisitsDetectorReady() {
-          when InteractionsDetectorReady() {
-            serial{
-              stepStartTime = CkWallTimer();
-              peopleArray.SendVisitMessages();
-
-              if (DAYS_TO_SEED_INFECTION > day) {
-                SeedInfections();
-              }
-            }
+          serial{
+            peopleArray.SendVisitMessages();
           }
         }
         when DoneVisitMessages() {
@@ -170,6 +159,20 @@ mainmodule loimos {
             totalTime[TOTAL_VISITS_TIME_INDEX] += diff;
 
             stepStartTime = CkWallTimer();
+            globInteractionsDetector.start_detection(numLocationPartitions,
+              CkCallback(CkIndex_Main::InteractionsDetectorReady(), mainProxy),
+              CkCallback(),
+              CkCallback(CkIndex_Main::DoneInteractionMessages(), mainProxy),
+              0);
+          }
+        }
+        when InteractionsDetectorReady() {
+          serial {
+            locationsArray.ComputeInteractions();
+
+            if (DAYS_TO_SEED_INFECTION > day) {
+              SeedInfections();
+            }
           }
         }
         when DoneInteractionMessages() {

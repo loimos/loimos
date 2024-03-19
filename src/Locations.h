@@ -12,6 +12,7 @@
 #include "DiseaseModel.h"
 #include "Location.h"
 #include "contact_model/ContactModel.h"
+#include "completion.h"
 
 #include <vector>
 #include <set>
@@ -26,6 +27,8 @@ class Locations : public CBase_Locations {
   std::vector<Location> locations;
   DiseaseModel *diseaseModel;
   ContactModel *contactModel;
+  CompletionDetector *visitsDetector;
+  CompletionDetector *interactionsDetector;
   std::ofstream *interactionsFile;
   Counter exposureDuration;
   Counter expectedExposureDuration;

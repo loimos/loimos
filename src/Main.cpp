@@ -44,9 +44,9 @@
 /* readonly */ CProxy_Aggregator aggregatorProxy;
 #endif
 /* readonly */ CProxy_DiseaseModel globDiseaseModel;
+/* readonly */ CProxy_CompletionDetector globVisitsDetector;
+/* readonly */ CProxy_CompletionDetector globInteractionsDetector;
 /* readonly */ CProxy_TraceSwitcher traceArray;
-/* readonly */ CProxy_CompletionDetector visitsDetector;
-/* readonly */ CProxy_CompletionDetector interactionsDetector;
 /* readonly */ Id numPeople;
 /* readonly */ Id numLocations;
 /* readonly */ PartitionId numPersonPartitions;
@@ -332,8 +332,8 @@ Main::Main(CkArgMsg* msg) {
   }
 #endif
 
-  visitsDetector = CProxy_CompletionDetector::ckNew();
-  interactionsDetector = CProxy_CompletionDetector::ckNew();
+  globVisitsDetector = CProxy_CompletionDetector::ckNew();
+  globInteractionsDetector = CProxy_CompletionDetector::ckNew();
 
   CkPrintf("\nFinished loading shared/global data in %lf seconds.\n",
       CkWallTimer() - dataLoadingStartTime);
@@ -464,6 +464,7 @@ void Main::SeedInfections() {
     interactions.emplace_back(
       std::numeric_limits<double>::max(), -1, -1, -1, -1);
 
+    globInteractionsDetector.ckLocalBranch()->produce();
     InteractionMessage interMsg(-1, personIdx, interactions);
     #ifdef USE_HYPERCOMM
     Aggregator* agg = aggregatorProxy.ckLocalBranch();

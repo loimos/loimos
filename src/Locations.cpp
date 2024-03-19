@@ -32,6 +32,8 @@ std::uniform_real_distribution<> Locations::unitDistrib(0.0, 1.0);
 
 Locations::Locations(int seed, std::string scenarioPath) {
   diseaseModel = globDiseaseModel.ckLocalBranch();
+  visitsDetector = globVisitsDetector.ckLocalBranch();
+  interactionsDetector = globInteractionsDetector.ckLocalBranch();
   day = 0;
 
   // Must be set to true to make AtSync work
@@ -142,6 +144,8 @@ void Locations::pup(PUP::er &p) {
 }
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
+  visitsDetector->consume();
+
   // adding person to location visit list
   Id localLocIdx = diseaseModel->getLocalLocationIndex(
     visitMsg.locationIdx, thisIndex);
@@ -220,6 +224,7 @@ void Locations::ComputeInteractions() {
     //       thisIndex, loc.getUniqueId(), locInters, locVisits);
     // }
   }
+  interactionsDetector->done();
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   CkCallback cb(CkReductionTarget(Main, ReceiveInteractionsCount), mainProxy);
   contribute(sizeof(Counter), &numInteractions,
@@ -430,6 +435,7 @@ inline void Locations::sendInteractions(Location *loc,
   }
 #endif
 
+  interactionsDetector->produce();
   InteractionMessage interMsg(loc->getUniqueId(), personIdx,
       interactions[personIdx]);
 #ifdef USE_HYPERCOMM

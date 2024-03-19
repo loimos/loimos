@@ -39,8 +39,10 @@ People::People(int seed, std::string scenarioPath) {
   // Must be set to true to make AtSync work
   usesAtSync = true;
 
-  day = 0;
   diseaseModel = globDiseaseModel.ckLocalBranch();
+  visitsDetector = globVisitsDetector.ckLocalBranch();
+  interactionsDetector = globInteractionsDetector.ckLocalBranch();
+  day = 0;
 
   // Allocate space to summarize the state summaries for every day
   DiseaseState totalStates = diseaseModel->getNumberOfStates();
@@ -489,9 +491,11 @@ void People::SendVisitMessages() {
       }
 #endif  // USE_HYPERCOMM
 
+      visitsDetector->produce();
       locationsArray[locationPartition].ReceiveVisitMessages(visitMessage);
     }
   }
+  visitsDetector->done();
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
   if (0 == day) {
@@ -514,6 +518,7 @@ double People::getTransmissionModifier(const Person &person) {
 }
 
 void People::ReceiveInteractions(InteractionMessage interMsg) {
+  interactionsDetector->consume();
   Id localIdx = diseaseModel->getLocalPersonIndex(interMsg.personIdx, thisIndex);
 
 #ifdef ENABLE_DEBUG

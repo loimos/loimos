@@ -13,6 +13,7 @@
 #include "Person.h"
 #include "Message.h"
 #include "intervention_model/Intervention.h"
+#include "completion.h"
 
 #include <functional>
 #include <random>
@@ -32,6 +33,8 @@ class People : public CBase_People {
   Counter totalVisitsForDay;
   std::vector<Person> people;
   DiseaseModel *diseaseModel;
+  CompletionDetector *visitsDetector;
+  CompletionDetector *interactionsDetector;
   std::vector<Id> stateSummaries;
   std::ofstream *exposuresFile;
   std::ofstream *transitionsFile;
