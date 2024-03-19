@@ -93,6 +93,11 @@ jobs:
           git submodule init
           git submodule update
           cd src
+          echo
+          echo
+          git branch
+          echo
+          echo
           export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
           export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
           export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
