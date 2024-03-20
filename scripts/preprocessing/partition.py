@@ -355,7 +355,8 @@ def main(args):
         if not args.offsets_only:
             update_visits(args, lid_update)
             if "people" not in args.to_partition:
-                create_textproto(args.out_dir, args.visits_file, VISITS_TYPES)
+                create_textproto(args.out_dir, args.visits_file, VISITS_TYPES,
+                        metadata_type="visits")
         create_textproto(
             args.out_dir,
             args.locations_file,
@@ -369,7 +370,8 @@ def main(args):
         offsets, pid_update = partition_people(args)
         if not args.offsets_only:
             update_visits(args, pid_update, id_col="pid")
-            create_textproto(args.out_dir, args.visits_file, VISITS_TYPES)
+            create_textproto(args.out_dir, args.visits_file, VISITS_TYPES,
+                    metadata_type="visits")
         create_textproto(
             args.out_dir, args.people_file, PEOPLE_TYPES, partition_offsets=offsets
         )
