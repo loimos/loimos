@@ -224,7 +224,6 @@ void Locations::ComputeInteractions() {
   CkCallback cb(CkReductionTarget(Main, ReceiveInteractionsCount), mainProxy);
   contribute(sizeof(Counter), &numInteractions,
       CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), cb);
-
 #endif
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
