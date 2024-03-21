@@ -286,12 +286,11 @@ Scenario::Scenario(Arguments args) : seed(args.seed), numDays(args.numDays),
     numDaysWithDistinctVisits(args.numDaysWithDistinctVisits),
     numDaysToSeedOutbreak(args.numDaysToSeedOutbreak),
     numInitialInfectionsPerDay(args.numInitialInfectionsPerDay),
-    scenarioPath(args.scenarioPath), outputPath(args.outputPath) {
+    scenarioPath(args.scenarioPath), outputPath(args.outputPath),
+    personDef(NULL), locationDef(NULL), visitDef(NULL),
+    onTheFly(NULL), partitioner(NULL), diseaseModel(NULL),
+    contactModel(NULL), interventionModel(NULL) {
   if (args.isOnTheFlyRun) {
-    personDef = NULL;
-    locationDef = NULL;
-    onTheFly = NULL;
-
     onTheFly = new OnTheFlyArguments(args.onTheFly);
 
     numPeople = onTheFly->personGrid.area();
