@@ -282,8 +282,9 @@ bool create_directory(std::string path, std::string referencePath) {
     CkPrintf("Directory %s already exists\n", path.c_str());
     return false;
   } else if (0 == result) {
-    CkError("Attempted to create directory %s which exisits as a regular file\n",
+    CkPrintf("Attempted to create directory %s which exisits as a regular file\n",
         path.c_str());
+    return false;
   } else {
     stat(referencePath.c_str(), &referenceStat);
     mkdir(path.c_str(), referenceStat.st_mode);
