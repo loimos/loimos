@@ -209,6 +209,10 @@ Time DiseaseModel::timeDefToSeconds(TimeDef time) const {
       + time.minutes() * MINUTE_LENGTH);
 }
 
+Time DiseaseModel::timeDefToDays(TimeDef time) const {
+  return static_cast<Time>(time.days());
+}
+
 /** Returns the total number of disease states */
 int DiseaseModel::getNumberOfStates() const {
   return model->disease_states_size();
