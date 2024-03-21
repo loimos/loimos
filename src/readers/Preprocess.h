@@ -30,7 +30,11 @@ int getSeconds(Time day, Time firstDay);
 std::string getScenarioId(Id numPeople, PartitionId numPeopleChares, Id numLocations,
   PartitionId numLocationChares);
 Id getFirstIndex(const loimos::proto::CSVDefinition *metadata, std::string inputPath);
-// Emulates C++17 std::filesystem::create_directory
-bool create_directory(std::string path, std::string referencePath);
+
+/**
+ * Creates a directory at path using file permissions taken from the
+ * file pointed to by refPath, emulating C++17 std::filesystem::create_directory
+ */
+bool createDirectory(std::string path, std::string referencePath);
 
 #endif  // READERS_PREPROCESS_H_

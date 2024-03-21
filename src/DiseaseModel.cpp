@@ -13,10 +13,8 @@
  * .transition
  */
 
-#include "loimos.decl.h"
 #include "DiseaseModel.h"
 #include "Defs.h"
-#include "Extern.h"
 #include "Event.h"
 #include "Person.h"
 #include "Location.h"
@@ -54,12 +52,14 @@
  * Constructor which loads in disease file from text proto file.
  * On failure, aborts the entire simulation.
  */
-DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
-    std::string pathToIntervention) {
-  // Load Disease model
+DiseaseModel::DiseaseModel(std::string diseasePath, const AttributeTable &attrs) {
   model = new loimos::proto::DiseaseModel();
-  readProtobuf(pathToModel, model);
+  readProtobuf(diseasePath, model);
   assert(model->disease_states_size() != 0);
+
+  ageIndex = attrs.getAttributeIndex("age");
+  susceptibilityIndex = attrs.getAttributeIndex("susceptibility");
+  infectivityIndex = attrs.getAttributeIndex("infectivity");
 
   // if (0 == CkMyNode()) {
   //   for (int i = 0; i < model->disease_states_size(); ++i) {
@@ -68,212 +68,6 @@ DiseaseModel::DiseaseModel(std::string pathToModel, std::string scenarioPath,
   //       model->disease_states(i).infectivity());
   //   }
   // }
-
-  // Setup other shared PE objects.
-  personDef = NULL;
-  locationDef = NULL;
-  Id firstPersonIdx = 0;
-  Id firstLocationIdx = 0;
-  if (!syntheticRun) {
-    // Handle people...
-    personDef = new loimos::proto::CSVDefinition;
-    readProtobuf(scenarioPath + "people.textproto", personDef);
-    firstPersonIdx = getFirstIndex(personDef, scenarioPath + "people.csv");
-
-    // ...locations...
-    locationDef = new loimos::proto::CSVDefinition;
-    readProtobuf(scenarioPath + "locations.textproto", locationDef);
-    firstLocationIdx = getFirstIndex(locationDef, scenarioPath + "locations.csv");
-
-    // ...and visits
-    activityDef = new loimos::proto::CSVDefinition;
-    readProtobuf(scenarioPath + "visits.textproto", activityDef);
-
-    personAttributes.readAttributes(personDef->fields());
-    locationAttributes.readAttributes(locationDef->fields());
-  }
-
-  if (0 == CkMyNode()) {
-    CkPrintf("People offsets:\n");
-  }
-  setPartitionOffsets(numPersonPartitions, numPeople, firstPersonIdx,
-    personDef, &personPartitionOffsets);
-  if (0 == CkMyNode()) {
-    CkPrintf("Location offsets:\n");
-  }
-  setPartitionOffsets(numLocationPartitions, numLocations, firstLocationIdx,
-    locationDef, &locationPartitionOffsets);
-
-// #if ENABLE_DEBUG >= DEBUG_PER_CAHRE
-//   if (0 == CkMyNode()) {
-//     for (int i = 0; i < personPartitionOffsets.size(); ++i) {
-//       CkPrintf("  Person Offset %d: " ID_PRINT_TYPE "\n",
-//         i, personPartitionOffsets[i]);
-//     }
-//     for (int i = 0; i < locationPartitionOffsets.size(); ++i) {
-//       CkPrintf("  Location Offset %d: " ID_PRINT_TYPE "\n",
-//         i, locationPartitionOffsets[i]);
-//     }
-//   }
-// #endif
-
-  if (!syntheticRun && 0 == CkMyNode()) {
-    buildCache(scenarioPath, numPeople, personPartitionOffsets,
-      numLocations, locationPartitionOffsets, numDaysWithDistinctVisits);
-  }
-
-  if (interventionStategy) {
-    interventionDef = new loimos::proto::InterventionModel();
-    readProtobuf(pathToIntervention, interventionDef);
-
-    triggerFlags.resize(interventionDef->triggers_size(), false);
-
-    personAttributes.readAttributes(interventionDef->person_attributes());
-    locationAttributes.readAttributes(interventionDef->location_attributes());
-
-    intitialisePersonInterventions(interventionDef->person_interventions(),
-        personAttributes);
-    intitialiseLocationInterventions(
-        interventionDef->location_interventions(),
-        locationAttributes);
-  }
-
-  // Some attributes are priviledged and handled in unique ways
-  susceptibilityIndex = personAttributes.getAttributeIndex("susceptibility");
-  infectivityIndex = personAttributes.getAttributeIndex("infectivity");
-  ageIdx = personAttributes.getAttributeIndex("age");
-  maxSimVisitsIdx = locationAttributes.getAttributeIndex("max_simultaneous_visits");
-
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
-    if (0 == CkMyNode()) {
-    CkPrintf("  Age to be stored at index %d\n",
-        ageIdx);
-    }
-#endif
-}
-
-void DiseaseModel::setPartitionOffsets(PartitionId numPartitions, Id numObjects,
-    Id firstIndex, loimos::proto::CSVDefinition *metadata,
-    std::vector<Id> *partitionOffsets) {
-  partitionOffsets->reserve(numPartitions);
-  Id lastIndex = firstIndex + numObjects;
-
-  if (NULL != metadata && 0 < metadata->partition_offsets_size()) {
-    PartitionId numOffsets = metadata->partition_offsets_size();
-    for (PartitionId i = 0; i < numPartitions; ++i) {
-      PartitionId offsetIdx = getFirstIndex(i, numOffsets, numPartitions, 0);
-      Id offset = metadata->partition_offsets(offsetIdx);
-      partitionOffsets->emplace_back(offset);
-
-#ifdef ENABLE_DEBUG
-      if (outOfBounds(firstIndex, lastIndex, offset)) {
-        CkAbort("Error: Offset " ID_PRINT_TYPE " outside of valid range [0,"
-          ID_PRINT_TYPE")\n", offset, numObjects);
-
-      // Offsets should be sorted so we can do a binary search later
-      } else if (0 != i && partitionOffsets->at(i - 1) > offset) {
-        CkAbort("Error: Offset " ID_PRINT_TYPE " (%d-th offset) for chare "
-        PARTITION_ID_PRINT_TYPE" out of order\n", offset, offsetIdx, i);
-      }
-      // else if (0 == CkMyNode()) {
-      //   CkPrintf("  Chare %d: offset " ID_PRINT_TYPE " (provided)\n",
-      //       i, offset);
-      // }
-#endif  // ENABLE_DEBUG
-    }
-
-  // If no offsets are provided, try to put about the same number of objects
-  // in each partition (i.e. use the old partitioning scheme)
-  } else {
-    for (PartitionId p = 0; p < numPartitions; ++p) {
-      Id offset = getFirstIndex(p, numObjects,
-          numPartitions, firstIndex);
-      partitionOffsets->emplace_back(offset);
-
-#ifdef ENABLE_DEBUG
-      if (outOfBounds(firstIndex, lastIndex, offset)) {
-        CkAbort("Error: Offset " ID_PRINT_TYPE " outside of valid range [0,"
-          ID_PRINT_TYPE")\n", offset, numObjects);
-      }
-      // else if (0 == CkMyNode()) {
-      //   CkPrintf("  Chare %d: offset " ID_PRINT_TYPE " (default)\n",
-      //       p, offset);
-      // }
-#endif  // ENABLE_DEBUG
-    }
-  }
-}
-
-Id DiseaseModel::getLocalLocationIndex(Id globalIndex, PartitionId PartitionId) const {
-  return getLocalIndex(globalIndex, PartitionId, locationPartitionOffsets);
-}
-
-Id DiseaseModel::getGlobalLocationIndex(Id localIndex, PartitionId PartitionId) const {
-  return getGlobalIndex(localIndex, PartitionId, locationPartitionOffsets);
-}
-
-CacheOffset DiseaseModel::getPersonCacheIndex(Id globalIndex) const {
-  return getLocalIndex(globalIndex, 0, locationPartitionOffsets);
-}
-
-PartitionId DiseaseModel::getLocationPartitionIndex(Id globalIndex) const {
-  return getPartition(globalIndex, locationPartitionOffsets);
-}
-
-Id DiseaseModel::getLocationPartitionSize(PartitionId partitionIndex) const {
-  return getPartitionSize(partitionIndex, numLocations, locationPartitionOffsets);
-}
-
-Id DiseaseModel::getLocalPersonIndex(Id globalIndex, PartitionId partitionIndex) const {
-  return getLocalIndex(globalIndex, partitionIndex, personPartitionOffsets);
-}
-
-Id DiseaseModel::getGlobalPersonIndex(Id localIndex, PartitionId partitionIndex) const {
-  return getGlobalIndex(localIndex, partitionIndex, personPartitionOffsets);
-}
-
-CacheOffset DiseaseModel::getLocationCacheIndex(Id globalIndex) const {
-  return getLocalIndex(globalIndex, 0, personPartitionOffsets);
-}
-
-PartitionId DiseaseModel::getPersonPartitionIndex(Id globalIndex) const {
-  return getPartition(globalIndex, personPartitionOffsets);
-}
-
-Id DiseaseModel::getPersonPartitionSize(PartitionId partitionIndex) const {
-  return getPartitionSize(partitionIndex, numPeople, personPartitionOffsets);
-}
-
-void DiseaseModel::intitialisePersonInterventions(
-    const InterventionList &interventionSpecs,
-    const AttributeTable &attributes) {
-  for (uint i = 0; i < interventionSpecs.size(); ++i) {
-    const loimos::proto::InterventionModel::Intervention &spec =
-      interventionSpecs[i];
-
-    if (spec.has_self_isolation()) {
-      personInterventions.emplace_back(new SelfIsolationIntervention(
-        spec, *model, attributes));
-
-    } else if (spec.has_vaccination()) {
-      personInterventions.emplace_back(new VaccinationIntervention(
-        spec, *model, attributes));
-    }
-  }
-}
-
-void DiseaseModel::intitialiseLocationInterventions(
-    const InterventionList &interventionSpecs,
-    const AttributeTable &attributes) {
-  for (uint i = 0; i < interventionSpecs.size(); ++i) {
-    const loimos::proto::InterventionModel::Intervention &spec =
-      interventionSpecs[i];
-
-    if (spec.has_school_closures()) {
-      locationInterventions.emplace_back(new SchoolClosureIntervention(
-        spec, *model, attributes));
-    }
-  }
 }
 
 /**
@@ -415,6 +209,10 @@ Time DiseaseModel::timeDefToSeconds(TimeDef time) const {
       + time.minutes() * MINUTE_LENGTH);
 }
 
+Time DiseaseModel::timeDefToDays(TimeDef time) const {
+  return static_cast<Time>(time.days());
+}
+
 /** Returns the total number of disease states */
 int DiseaseModel::getNumberOfStates() const {
   return model->disease_states_size();
@@ -430,12 +228,12 @@ DiseaseState DiseaseModel::getHealthyState(const std::vector<Data> &dataField) c
       model->starting_states(0);
     return static_cast<DiseaseState>(state.starting_state());
 
-  } else if (-1 == ageIdx) {
+  } else if (-1 == ageIndex) {
     CkAbort("No age data (needed for determinign healthy disease state)\n");
   }
 
   // Age based transition.
-  int personAge = dataField[ageIdx].int32_val;
+  int personAge = dataField[ageIndex].int32_val;
   for (uint stateNum = 0; stateNum < numStartingStates; stateNum++) {
     const loimos::proto::DiseaseModel_StartingCondition state =
       model->starting_states(stateNum);
@@ -504,65 +302,4 @@ double DiseaseModel::getPropensity(DiseaseState susceptibleState,
   return model->transmissibility() * dt * susceptibility * infectivity
     * model->disease_states(susceptibleState).susceptibility()
     * model->disease_states(infectiousState).infectivity() / DAY_LENGTH;
-}
-
-/**
- * Intervention Methods
- * TODO: Move to own chare as these become more complex.
- */
-
-const Intervention<Person> & DiseaseModel::getPersonIntervention(int index)
-  const {
-  return *personInterventions[index];
-}
-
-const Intervention<Location> & DiseaseModel::getLocationIntervention(int index)
-  const {
-  return *locationInterventions[index];
-}
-
-int DiseaseModel::getNumPersonInterventions() const {
-  return static_cast<int>(personInterventions.size());
-}
-
-int DiseaseModel::getNumLocationInterventions() const {
-  return static_cast<int>(locationInterventions.size());
-}
-
-void DiseaseModel::applyInterventions(int day, Id newDailyInfections) {
-  toggleInterventions(day, newDailyInfections);
-
-  for (uint i = 0; i < personInterventions.size(); ++i) {
-    if (triggerFlags[personInterventions[i]->getTriggerIndex()]) {
-      peopleArray.ReceiveIntervention(i);
-    }
-  }
-  for (uint i = 0; i < locationInterventions.size(); ++i) {
-    if (triggerFlags[locationInterventions[i]->getTriggerIndex()]) {
-      locationsArray.ReceiveIntervention(i);
-    }
-  }
-}
-
-void DiseaseModel::toggleInterventions(int day, Id newDailyInfections) {
-  for (uint i = 0; i < interventionDef->triggers_size(); ++i) {
-    const loimos::proto::InterventionModel::Trigger &trigger =
-      interventionDef->triggers(i);
-
-    // Trigger uses simulation day
-    if (trigger.has_day()) {
-      const auto &tmp = trigger.day();
-      triggerFlags[i] = (!triggerFlags[i] && tmp.trigger_on() <= day)
-        || (triggerFlags[i] && tmp.trigger_off() <= day);
-
-    // Trigger uses number of new cases
-    } else if (trigger.has_new_daily_cases()) {
-      double infectionRate = static_cast<double>(newDailyInfections)
-        / numPeople;
-      const auto &tmp = trigger.new_daily_cases();
-      triggerFlags[i] =
-        (!triggerFlags[i] && tmp.trigger_on() <= infectionRate)
-        || (triggerFlags[i] && tmp.trigger_off() <= infectionRate);
-    }
-  }
 }

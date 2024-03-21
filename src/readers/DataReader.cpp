@@ -16,22 +16,6 @@
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 
-/**
- * If path does not name an existing file, create a directory
- * there, with permissions match that of refPath. Return whether
- * or not a new directory was created
- * Should have behavior analogous to C++17 std::filesystem::create_directory
- */
-bool createDirectory(std::string path, std::string refPath) {
-  struct stat dirStat;
-  if (0 == stat(path.c_str(), &dirStat)) {
-    struct stat refStat;
-    stat(refPath.c_str(), &refStat);
-    return 0 == mkdir(path.c_str(), refStat.st_mode);
-  }
-  return false;
-}
-
 void readProtobuf(std::string path, google::protobuf::Message *buffer) {
   int fd = open(path.c_str(), O_RDONLY);
   if (0 > fd) {

@@ -9,6 +9,7 @@
 
 #include "../Location.h"
 #include "../Event.h"
+#include "../readers/AttributeTable.h"
 #include "ContactModel.h"
 
 #include <random>
@@ -20,12 +21,12 @@ class MinMaxAlphaModel : public ContactModel {
  private:
   // Specifies where to look for the attribute we create to store each
   // location's contact probability
-  int contactProbabilityIdx;
+  int maxSimVisitsIndex;
 
  public:
   // We need to re-declare all of these methods from ContactModel so
   // we can override them
-  MinMaxAlphaModel();
+  explicit MinMaxAlphaModel(const AttributeTable &attrs);
   void computeLocationValues(Location *location) override;
   bool madeContact(const Event &susceptibleEvent,
     const Event& infectiousEvent, Location *location) override;

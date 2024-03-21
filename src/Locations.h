@@ -9,7 +9,7 @@
 
 #include "Types.h"
 #include "Location.h"
-#include "DiseaseModel.h"
+#include "Scenario.h"
 #include "Location.h"
 #include "contact_model/ContactModel.h"
 
@@ -24,8 +24,7 @@ class Locations : public CBase_Locations {
   Id numLocalLocations;
   Id firstLocalLocationIdx;
   std::vector<Location> locations;
-  DiseaseModel *diseaseModel;
-  ContactModel *contactModel;
+  Scenario *scenario;
   std::ofstream *interactionsFile;
   Counter exposureDuration;
   Counter expectedExposureDuration;
