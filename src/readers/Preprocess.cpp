@@ -273,7 +273,13 @@ Id getFirstIndex(const loimos::proto::CSVDefinition *metadata, std::string input
   return firstIdx;
 }
 
-bool create_directory(std::string path, std::string referencePath) {
+/**
+ * If path does not name an existing file, create a directory
+ * there, with permissions match that of refPath. Return whether
+ * or not a new directory was created
+ * Should have behavior analogous to C++17 std::filesystem::create_directory
+ */
+bool createDirectory(std::string path, std::string referencePath) {
   struct stat checkStat;
   struct stat referenceStat;
 
