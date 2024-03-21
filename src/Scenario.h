@@ -108,7 +108,6 @@ class Scenario : public CBase_Scenario {
   loimos::proto::CSVDefinition *personDef;
   loimos::proto::CSVDefinition *locationDef;
   loimos::proto::CSVDefinition *visitDef;
-  loimos::proto::DiseaseModel *diseaseDef;
 
   AttributeTable personAttributes;
   AttributeTable locationAttributes;
