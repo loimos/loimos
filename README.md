@@ -53,7 +53,7 @@ When multiple such options are used, these suffixes will be added in the order i
 | `ENABLE_TRACING`        | 1     | `-prj`            | Enables collecting performance profiles using the built-in Charm++ profiler   |
 |                         | 2     |                   | Additionally prints memory usage information                                  |
 | `ENABLE_LB`             | 1     | `-lb`             | Enables Charm++ dynamic load balancing                                        |
-| `ENABLE_AGGREGATE`      | 1     | `-agg`            | Enables Charm++ message aggregation                                           |
+| `ENABLE_AGGREGATION`    | 1     | `-agg`            | Enables Charm++ message aggregation                                           |
 | `ENABLE_SC`             | 1     | `-sc`             | Enables short-circuit evaluation of discrete event simulation                 |
 | `ENABLE_RANDOM_SEED`    | 1     |                   | If not passed, will use a the same seed for all pseudo-random number generators in each run         |
 | `ENABLE_FORCE_FULL_RUN` | 1     |                   | Forces the simulation to run the full number of days, even if the outbreak dies out and no people are still infected   |
@@ -64,6 +64,10 @@ When multiple such options are used, these suffixes will be added in the order i
 |                         | 4     |                   | Saves list of all person-person edges to output file                          |
 |                         | 5     |                   | Chare-level debug information                                                 |
 |                         | 6     |                   | People- and location-level debug information                                  |
+| `OUTPUT_FLAGS`          |       |                   | Adjusts output format. If this flag is set, the `OF` commandline argument is treated as a directory, rather than a file path. All options listed below may be combined with a bitwise or (e.g. passing `OUTPUT_FLAGS=5` will cause both state transitions and visit overlaps to be recorded)|
+|                         | 1     |                   | Writes out individual-level state transitions. Can be or-ed with other options|
+|                         | 2     |                   | Writes out all exposures. Can be or-ed with other options                     |
+|                         | 4     |                   | Writes out all visit overlaps. Can be or-ed with other options                |
 
 ## Running the Code
 
