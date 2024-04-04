@@ -68,7 +68,6 @@ When multiple such options are used, these suffixes will be added in the order i
 |                         | 1     |                   | Writes out individual-level state transitions. Can be or-ed with other options|
 |                         | 2     |                   | Writes out all exposures. Can be or-ed with other options                     |
 |                         | 4     |                   | Writes out all visit overlaps. Can be or-ed with other options                |
-Note that the values for `OUTPUT_FLAGS` . All output options for
 
 ## Running the Code
 
