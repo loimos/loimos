@@ -1,3 +1,5 @@
+num_rows: 5001
+load_column: "total_visits"
 fields {
     field_name: "lid"
     unique_id: {}
