@@ -9,13 +9,6 @@ on:
     branches: [develop]
   pull_request:
     branches: [develop]
-  workflow_dispatch:
-    inputs:
-      debug_enabled:
-        type: boolean
-        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
-        required: false
-        default: false
 
 # A workflow run is made up of one or more jobs that can run sequentially or in
 # parallel
@@ -106,6 +99,7 @@ jobs:
           export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
           export ENABLE_FORCE_FULL_RUN=1
           # Make debug version of Loimos
+          cat People.cpp
           ENABLE_DEBUG=2 make
           mv loimos loimos-debug
           make clean
@@ -121,11 +115,6 @@ jobs:
           ./charmrun +p4 ./loimos-smp 1 100 100 50 50 5 5 5 32 30 \
             ci-test-smp.csv ../data/disease_models/covid19_onepath.textproto \
             +setcpuaffinity ++local
-
-      # Enable tmate debugging of manually-triggered workflows if the input option was provided
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event_name == 'workflow_dispatch' }}
 
       # Make sure small Utopia dataset has the right number of interactions
       - name: Test Interaction Counting (on Utopia Dataset)
