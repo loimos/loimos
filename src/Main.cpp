@@ -10,6 +10,7 @@
 #include "People.h"
 #include "Locations.h"
 #include "DiseaseModel.h"
+#include "Partitioner.h"
 #include "contact_model/ContactModel.h"
 #include "readers/Parse.h"
 #include "readers/Preprocess.h"

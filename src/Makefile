@@ -7,14 +7,14 @@
 include Makefile.include
 
 OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o  \
-         Defs.o Event.o Scenario.o \
-				 readers/Preprocess.o \
-				 readers/DataInterface.o readers/AttributeTable.o \
-				 readers/DataReader.o readers/Parse.o \
-				 contact_model/MinMaxAlphaModel.o contact_model/ContactModel.o \
-				 intervention_model/VaccinationIntervention.o \
+         Event.o Scenario.o Partitioner.o \
+         readers/Preprocess.o \
+         readers/DataInterface.o readers/AttributeTable.o \
+         readers/DataReader.o readers/Parse.o \
+         contact_model/MinMaxAlphaModel.o contact_model/ContactModel.o \
+         intervention_model/VaccinationIntervention.o \
          protobuf/disease.pb.o protobuf/distribution.pb.o \
-		     protobuf/data.pb.o protobuf/interventions.pb.o
+         protobuf/data.pb.o protobuf/interventions.pb.o
 DEFS   = loimos.def.h Defs.h Types.h readers/DataReader.h
 DECLS  = loimos.decl.h
 

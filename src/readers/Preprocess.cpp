@@ -14,6 +14,7 @@
 #include "../loimos.decl.h"
 #include "Preprocess.h"
 #include "DataReader.h"
+#include "../Partitioner.h"
 #include "../Defs.h"
 #include "../Extern.h"
 #include "../Location.h"

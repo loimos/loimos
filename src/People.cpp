@@ -13,6 +13,7 @@
 #include "Scenario.h"
 #include "DiseaseModel.h"
 #include "Person.h"
+#include "Partitioner.h"
 #include "readers/Preprocess.h"
 #include "readers/DataReader.h"
 #include "intervention_model/Intervention.h"

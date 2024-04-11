@@ -62,34 +62,4 @@ const Time MINUTE_LENGTH = 60;
 #define EMPTY_VISIT_SCHEDULE std::numeric_limits<CacheOffset>::max()
 #define CSV_DELIM ','
 
-// Previous, completely algebraic, paritioning scheme:
-// Some functions are still in use in the new scheme but most should be
-// consider depricated outside that scope
-Id getNumElementsPerPartition(Id numElements, PartitionId numPartitions);
-PartitionId getNumLargerPartitions(Id numElements, PartitionId numPartitions);
-PartitionId getPartitionIndex(Id globalIndex, Id numElements,
-    PartitionId numPartitions, Id offset);
-Id getFirstIndex(PartitionId partitionIndex, Id numElements,
-    PartitionId numPartitions, Id offset);
-Id getNumLocalElements(Id numElements, PartitionId numPartitions,
-    PartitionId partitionIndex);
-Id getGlobalIndex(Id localIndex, PartitionId partitionIndex, Id numElements,
-    PartitionId numPartitions, Id offset);
-Id getLocalIndex(Id globalIndex, PartitionId partitionIndex, Id numElements,
-    PartitionId numPartitions, Id offset);
-
-// New, offset-based partitioning scheme:
-Id getLocalIndex(Id globalIndex, PartitionId PartitionId,
-    const std::vector<Id> &offsets);
-Id getGlobalIndex(Id localIndex, PartitionId PartitionId,
-    const std::vector<Id> &offsets);
-PartitionId getPartition(Id globalIndex, const std::vector<Id> &offsets);
-Id getPartitionSize(PartitionId partitionIndex,
-    Id numObjects, const std::vector<Id> &offsets);
-
-template <typename T>
-bool outOfBounds(T lower, T upper, T value) {
-  return lower > value || upper <= value;
-}
-
 #endif  // DEFS_H_

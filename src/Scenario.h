@@ -14,6 +14,7 @@
 #include "protobuf/distribution.pb.h"
 #include "protobuf/data.pb.h"
 #include "protobuf/interventions.pb.h"
+#include "Partitioner.h"
 #include "DiseaseModel.h"
 #include "readers/DataReader.h"
 #include "readers/DataInterface.h"
@@ -27,44 +28,6 @@
 #include <string>
 #include <vector>
 #include <memory>
-
-struct Partitioner {
-  Id numPeople;
-  Id numLocations;
-  std::vector<Id> locationPartitionOffsets;
-  std::vector<Id> personPartitionOffsets;
-
-  Partitioner(std::string scenarioPath,
-    PartitionId numPersonPartitions,
-    PartitionId numLocationPartitions,
-    loimos::proto::CSVDefinition *personMetadata,
-    loimos::proto::CSVDefinition *locationMetadata);
-  Partitioner(PartitionId numPersonPartitions,
-    PartitionId numLocationPartitions, Id numPeople,
-    Id numLocations);
-
-  static void setPartitionOffsets(PartitionId numPartitions,
-    Id firstIndex, Id numObjects, loimos::proto::CSVDefinition *metadata,
-    std::vector<Id> *partitionOffsets);
-  static void setPartitionOffsets(PartitionId numPartitions,
-    Id firstIndex, Id numObjects, std::vector<Id> *partitionOffsets);
-
-  // Offset-based index interface - each calls the corresponding function
-  // with the corresponding offset vector
-  Id getLocalLocationIndex(Id globalIndex, PartitionId PartitionId) const;
-  Id getGlobalLocationIndex(Id localIndex, PartitionId PartitionId) const;
-  CacheOffset getLocationCacheIndex(Id globalIndex) const;
-  PartitionId getLocationPartitionIndex(Id globalIndex) const;
-  Id getLocationPartitionSize(PartitionId partitionIndex) const;
-  PartitionId getNumLocationPartitions();
-
-  Id getLocalPersonIndex(Id globalIndex, PartitionId PartitionId) const;
-  Id getGlobalPersonIndex(Id localIndex, PartitionId PartitionId) const;
-  CacheOffset getPersonCacheIndex(Id globalIndex) const;
-  PartitionId getPersonPartitionIndex(Id globalIndex) const;
-  Id getPersonPartitionSize(PartitionId partitionIndex) const;
-  PartitionId getNumPersonPartitions();
-};
 
 struct InterventionModel {
   std::vector<bool> triggerFlags;

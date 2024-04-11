@@ -16,6 +16,7 @@
 #include "Event.h"
 #include "Extern.h"
 #include "Defs.h"
+#include "Partitioner.h"
 #include "contact_model/ContactModel.h"
 #include "readers/Preprocess.h"
 #include "readers/DataReader.h"
