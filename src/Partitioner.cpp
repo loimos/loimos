@@ -14,6 +14,7 @@
 #include <cmath>
 #include <algorithm>
 #include <iterator>
+#include <string>
 
 /**
  * Returns the number of elements that each chare will track at a maximum

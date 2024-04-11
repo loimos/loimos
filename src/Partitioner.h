@@ -10,6 +10,7 @@
 #include "protobuf/data.pb.h"
 
 #include <vector>
+#include <string>
 
 template <typename T>
 bool outOfBounds(T lower, T upper, T value) {
