@@ -7,13 +7,15 @@
 include Makefile.include
 
 OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o  \
-         Defs.o Event.o readers/Preprocess.o \
-				 readers/DataInterface.o readers/AttributeTable.o \
-				 readers/DataReader.o \
-				 contact_model/MinMaxAlphaModel.o contact_model/ContactModel.o \
-				 intervention_model/VaccinationIntervention.o \
+         Event.o Scenario.o Partitioner.o \
+         readers/Preprocess.o \
+         readers/DataInterface.o readers/AttributeTable.o \
+         readers/DataReader.o readers/Parse.o \
+         contact_model/MinMaxAlphaModel.o contact_model/ContactModel.o \
+		 intervention_model/InterventionModel.o \
+		 intervention_model/VaccinationIntervention.o \
          protobuf/disease.pb.o protobuf/distribution.pb.o \
-		     protobuf/data.pb.o protobuf/interventions.pb.o
+         protobuf/data.pb.o protobuf/interventions.pb.o
 DEFS   = loimos.def.h Defs.h Types.h readers/DataReader.h
 DECLS  = loimos.decl.h
 
@@ -106,27 +108,27 @@ test-style:
 	cpplint --extensions=C,h,ci --root=loimos/src --recursive . &> linter-errors.log
 
 test-utopia: all
-	./charmrun +p4 ./loimos 0 19 12 2 2 1 1 test-utopia.csv ../data/disease_models/covid19.textproto ../data/populations/utopia/ --min-max-alpha ++local
+	./charmrun +p4 ./loimos 0 2 2 1 1 test-utopia.csv ../data/disease_models/covid19.textproto ../data/populations/utopia/ --min-max-alpha ++local
 
 test-small: all
-	./charmrun +p4 ./loimos 0 100 735 2 2 30 7 test-small.csv ../data/disease_models/covid19.textproto ../data/populations/synthetic_small_city/ --min-max-alpha ++local
+	./charmrun +p4 ./loimos 0 2 2 30 7 test-small.csv ../data/disease_models/covid19.textproto ../data/populations/synthetic_small_city/ --min-max-alpha ++local
 
 test-syn: all
 	./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 test-syn.csv ../data/disease_models/covid19_onepath.textproto ++local
 
 test-large: all
 	if [ -f ../data/populations/coc/visits.csv ]; then \
-		./charmrun +p4 ./loimos 0 41119 19203 60 40 30 7 test-large.csv ../data/disease_models/covid19.textproto ../data/populations/coc/ --min-max-alpha ++local;\
+		./charmrun +p4 ./loimos 0 60 40 30 7 test-large.csv ../data/disease_models/covid19.textproto ../data/populations/coc/ --min-max-alpha ++local;\
 	else\
 		echo CoC data not available;\
 	fi
 
 test-safe-risky: all
-	./charmrun +p4 ./loimos 0 25000 5001 60 40 30 1 test-validation.csv ../data/disease_models/safe_risky.textproto ../data/populations/safe_risky_population/ ++local
+	./charmrun +p4 ./loimos 0 60 40 30 1 test-validation.csv ../data/disease_models/safe_risky.textproto ../data/populations/safe_risky_population/ ++local
 
 test-intervention: all
 	if [ -f ../data/populations/coc/visits.csv ]; then \
-		./charmrun +p4 ./loimos 0 41119 19203 60 40 180 7 test-intervention.csv ../data/disease_models/covid19_onepath.textproto ../data/populations/coc/ -i ../data/interventions/isolation_and_school_closures.textproto ++local\
+		./charmrun +p4 ./loimos 0 60 40 180 7 test-intervention.csv ../data/disease_models/covid19_onepath.textproto ../data/populations/coc/ -i ../data/interventions/isolation_and_school_closures.textproto ++local\
 	else\
 		echo CoC data not available;\
 	fi

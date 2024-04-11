@@ -8,6 +8,7 @@
 #define PEOPLE_H_
 
 #include "Types.h"
+#include "Scenario.h"
 #include "DiseaseModel.h"
 #include "Interaction.h"
 #include "Person.h"
@@ -31,7 +32,7 @@ class People : public CBase_People {
   Id numLocalPeople;
   Counter totalVisitsForDay;
   std::vector<Person> people;
-  DiseaseModel *diseaseModel;
+  Scenario *scenario;
   std::vector<Id> stateSummaries;
   std::ofstream *exposuresFile;
   std::ofstream *transitionsFile;

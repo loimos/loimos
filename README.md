@@ -109,12 +109,10 @@ Where
 For pre-defined populations, run Loimos with the command:
 
 ```bash
-./loimos 0 <NP> <NL> <NPP> <NLP> <ND> <NDV> <OF> <DF> <SD> [-m] [-i <IF>]
+./loimos 0 <NPP> <NLP> <ND> <NDV> <OF> <DF> <SD> [-m] [-i <IF>]
 ```
 
 Where
-- `NP` is the number of people.
-- `NL` is the number of locations.
 - `NPP` is the number of people partitions, and should evenly divide the number of cores Loimos is run on.
 - `NLP` is the number of location partitions, and should evenly divide the number of cores Loimos is run on.
 - `ND` is the number of days to simulate.

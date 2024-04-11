@@ -1,3 +1,4 @@
+num_rows: 25000
 fields {
     field_name: "pid"
     unique_id: {}

@@ -24,7 +24,7 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can
       # access it
       - name: Build code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # - name: Restore dependencies
       #   id: cache-dependencies-restore
@@ -86,6 +86,11 @@ jobs:
           git submodule init
           git submodule update
           cd src
+          echo
+          echo
+          git branch
+          echo
+          echo
           export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
           export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
           export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
@@ -94,6 +99,7 @@ jobs:
           export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
           export ENABLE_FORCE_FULL_RUN=1
           # Make debug version of Loimos
+          cat People.cpp
           ENABLE_DEBUG=2 make
           mv loimos loimos-debug
           make clean
@@ -121,7 +127,7 @@ jobs:
           export CHARM_HOME=$GITHUB_WORKSPACE/charm/netlrts-linux-x86_64
           export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
           cd src
-          ./charmrun +p4 ./loimos-debug 0 19 12 2 2 1 1 test-utopia.csv \
+          ./charmrun +p4 ./loimos-debug 0 2 2 1 1 test-utopia.csv \
             ../data/disease_models/covid19.textproto \
             ../data/populations/utopia/ --min-max-alpha ++local > utopia.out
           grep -r "97 interactions" utopia.out
@@ -139,7 +145,7 @@ jobs:
           export CHARM_HOME=$GITHUB_WORKSPACE/charm/netlrts-linux-x86_64
           export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
           cd src
-          ./charmrun +p4 ./loimos 0 25000 5001 60 40 30 1 \
+          ./charmrun +p4 ./loimos 0 60 40 30 1 \
             test-safe-risky.csv \
             ../data/disease_models/safe_risky.textproto \
             ../data/populations/safe_risky_population/ ++local

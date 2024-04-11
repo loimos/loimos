@@ -14,6 +14,7 @@
 #include "../loimos.decl.h"
 #include "Preprocess.h"
 #include "DataReader.h"
+#include "../Partitioner.h"
 #include "../Defs.h"
 #include "../Extern.h"
 #include "../Location.h"
@@ -150,8 +151,7 @@ void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
   readProtobuf(metadataPath, &csvDefinition);
 
   // Create position vector for each person.
-  std::size_t totalDataSize = numPeople * numDaysWithDistinctVisits
-    * sizeof(CacheOffset);
+  std::size_t totalDataSize = numPeople * numDays * sizeof(CacheOffset);
   CacheOffset *elements = reinterpret_cast<CacheOffset *>(malloc(totalDataSize));
   if (NULL == elements) {
     CkAbort("Failed to malloc enough memory for preprocessing.\n");
@@ -193,9 +193,8 @@ void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
     lastTime = nextTime;
     numVisits = 0;
 
-    CacheOffset index =
-      numDaysWithDistinctVisits * (lastPerson - firstPersonIdx) + lastTime;
-    if (numPeople * numDaysWithDistinctVisits > index) {
+    CacheOffset index = numDays * (lastPerson - firstPersonIdx) + lastTime;
+    if (numPeople * numDays > index) {
       elements[index] = current_position;
     } else {
       CkAbort("    Failed to write %lu bytes at %lu\n", current_position, index);
@@ -275,7 +274,13 @@ Id getFirstIndex(const loimos::proto::CSVDefinition *metadata, std::string input
   return firstIdx;
 }
 
-bool create_directory(std::string path, std::string referencePath) {
+/**
+ * If path does not name an existing file, create a directory
+ * there, with permissions match that of refPath. Return whether
+ * or not a new directory was created
+ * Should have behavior analogous to C++17 std::filesystem::create_directory
+ */
+bool createDirectory(std::string path, std::string referencePath) {
   struct stat checkStat;
   struct stat referenceStat;
 
@@ -284,8 +289,9 @@ bool create_directory(std::string path, std::string referencePath) {
     CkPrintf("Directory %s already exists\n", path.c_str());
     return false;
   } else if (0 == result) {
-    CkError("Attempted to create directory %s which exisits as a regular file\n",
+    CkPrintf("Attempted to create directory %s which exisits as a regular file\n",
         path.c_str());
+    return false;
   } else {
     stat(referencePath.c_str(), &referenceStat);
     mkdir(path.c_str(), referenceStat.st_mode);

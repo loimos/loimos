@@ -24,12 +24,6 @@
 
 // Helper functions:
 /**
- * Creates a directory at path using file permissions taken from the
- * file pointed to by refPath
- */
-bool createDirectory(std::string path, std::string refPath);
-
-/**
  * Reads the protobuf file pointed to by path and saves the results in buffer
  */
 void readProtobuf(std::string path, google::protobuf::Message *buffer);
