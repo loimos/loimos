@@ -20,6 +20,7 @@
 #include "contact_model/ContactModel.h"
 #include "readers/Preprocess.h"
 #include "readers/DataReader.h"
+#include "intervention_model/InterventionModel.h"
 #include "intervention_model/Intervention.h"
 #include "pup_stl.h"
 

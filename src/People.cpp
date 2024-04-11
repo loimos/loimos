@@ -16,6 +16,7 @@
 #include "Partitioner.h"
 #include "readers/Preprocess.h"
 #include "readers/DataReader.h"
+#include "intervention_model/InterventionModel.h"
 #include "intervention_model/Intervention.h"
 
 #ifdef USE_HYPERCOMM
