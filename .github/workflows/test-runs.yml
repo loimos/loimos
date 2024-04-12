@@ -23,31 +23,38 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can
       # access it
-      - name: Build code
+      - name: Build and Test Loimos
         uses: actions/checkout@v4
 
-      # - name: Restore dependencies
-      #   id: cache-dependencies-restore
-      #   uses: actions/cache/restore@v3
-      #   with:
-      #     path: |
-      #       charm
-      #       protobuf
-      #     key: ${{ runner.os }}-dependencies
+      - name: Cache Charm++
+        id: cache-charm
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/charm
+          key: ${{ runner.os }}-charm-v7.0.0
 
       - name: build-charm
-      # if: ${{ ! steps.cache-dependencies-restore.outputs.cache-primary-key }}
+        if: ${{ steps.cache-charm.outputs.cache-hit != 'true' }}
         run: |
           git clone https://github.com/UIUC-PPL/charm.git charm
           cd charm
           git checkout v7.0.0
-          ./build charm++ netlrts-linux-x86_64 -g -j4 --with-production \
+          ./build charm++ netlrts-linux-x86_64 -g -j --with-production \
           --enable-error-checking
-          ./build charm++ netlrts-linux-x86_64 smp -g -j4 --with-production \
+          ./build charm++ netlrts-linux-x86_64 smp -g -j --with-production \
           --enable-error-checking
 
+      - name: Cache Protobuf
+        id: cache-protobuf
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/protobuf
+          key: ${{ runner.os }}-protobuf-v3.15.0
+
       - name: build-protobuf
-      # if: ${{ ! steps.cache-dependencies-restore.outputs.cache-primary-key }}
+        if: ${{ steps.cache-protobuf.outputs.cache-hit != 'true' }}
         run: |
           git clone https://github.com/protocolbuffers/protobuf.git
           cd protobuf
@@ -57,15 +64,6 @@ jobs:
           cd build
           ../configure --prefix="$GITHUB_WORKSPACE/protobuf/install"
           make -j4 && make install
-
-      # - name: Save Dependencies
-      #   id: cache-dependencies-save
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: |
-      #       charm
-      #       protobuf
-      #     key: ${{ steps.cache-dependencies-restore.outputs.cache-primary-key }}
 
 #    # Build googletest
 #    - name: build-gtest
