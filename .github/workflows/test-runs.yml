@@ -10,11 +10,15 @@ on:
   pull_request:
     branches: [develop]
 
+env:
+  ACTIONS_RUNNER_DEBUG: true
+
+
 # A workflow run is made up of one or more jobs that can run sequentially or in
 # parallel
 jobs:
   # This workflow contains a single job called "build"
-  build:
+  test:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -23,31 +27,38 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can
       # access it
-      - name: Build code
+      - name: Build and Test Loimos
         uses: actions/checkout@v4
 
-      # - name: Restore dependencies
-      #   id: cache-dependencies-restore
-      #   uses: actions/cache/restore@v3
-      #   with:
-      #     path: |
-      #       charm
-      #       protobuf
-      #     key: ${{ runner.os }}-dependencies
+      - name: Cache Charm++
+        id: cache-charm
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/charm
+          key: ${{ runner.os }}-charm-v7.0.0
 
       - name: build-charm
-      # if: ${{ ! steps.cache-dependencies-restore.outputs.cache-primary-key }}
+        if: ${{ steps.cache-charm.outputs.cache-hit != 'true' }}
         run: |
           git clone https://github.com/UIUC-PPL/charm.git charm
           cd charm
           git checkout v7.0.0
-          ./build charm++ netlrts-linux-x86_64 -g -j4 --with-production \
+          ./build charm++ netlrts-linux-x86_64 -g -j --with-production \
           --enable-error-checking
-          ./build charm++ netlrts-linux-x86_64 smp -g -j4 --with-production \
+          ./build charm++ netlrts-linux-x86_64 smp -g -j --with-production \
           --enable-error-checking
 
+      - name: Cache Protobuf
+        id: cache-protobuf
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/protobuf
+          key: ${{ runner.os }}-protobuf-v3.15.0
+
       - name: build-protobuf
-      # if: ${{ ! steps.cache-dependencies-restore.outputs.cache-primary-key }}
+        if: ${{ steps.cache-protobuf.outputs.cache-hit != 'true' }}
         run: |
           git clone https://github.com/protocolbuffers/protobuf.git
           cd protobuf
@@ -57,15 +68,6 @@ jobs:
           cd build
           ../configure --prefix="$GITHUB_WORKSPACE/protobuf/install"
           make -j4 && make install
-
-      # - name: Save Dependencies
-      #   id: cache-dependencies-save
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: |
-      #       charm
-      #       protobuf
-      #     key: ${{ steps.cache-dependencies-restore.outputs.cache-primary-key }}
 
 #    # Build googletest
 #    - name: build-gtest
@@ -79,18 +81,15 @@ jobs:
 #        make -j4
 #        make install
 
-      # Build and test Loimos
-      - name: Build Loimos
-        id: build-loimos
+      - name: Install Submodules
+        id: build-submodules
         run: |
           git submodule init
           git submodule update
-          cd src
-          echo
-          echo
-          git branch
-          echo
-          echo
+          
+      - name: Build and Test Debug Version
+        id: test-debug-loimos
+        run: |
           export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
           export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
           export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
@@ -98,22 +97,69 @@ jobs:
           export CHARM_HOME=$GITHUB_WORKSPACE/charm/netlrts-linux-x86_64
           export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
           export ENABLE_FORCE_FULL_RUN=1
+          cd src
           # Make debug version of Loimos
-          cat People.cpp
           ENABLE_DEBUG=2 make
           mv loimos loimos-debug
-          make clean
-          # Build and test non-smp version
-          make
-          ./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 30 \
+          ./charmrun +p4 ./loimos-debug 1 100 100 50 50 5 5 5 32 7 \
             ci-test-non-smp.csv \
             ../data/disease_models/covid19_onepath.textproto \
             +setcpuaffinity ++local
-          # Build and test smp version
+
+      - name: Build and Test Non-SMP Version
+        id: test-non-smp
+        run: |
+          export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
+          export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
+          export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
+          export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
+          export CHARM_HOME=$GITHUB_WORKSPACE/charm/netlrts-linux-x86_64
+          export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
+          export ENABLE_FORCE_FULL_RUN=1
+          cd src
+          make clean
+          # Build non-smp version
+          make
+          ./charmrun +p4 ./loimos 1 100 100 50 50 5 5 5 32 7 \
+            ci-test-non-smp.csv \
+            ../data/disease_models/covid19_onepath.textproto \
+            +setcpuaffinity ++local
+
+      - name: Build and Test SMP Version
+        id: test-smp
+        run: |
+          export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
+          export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
+          export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
+          export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
+          export CHARM_HOME=$GITHUB_WORKSPACE/charm/netlrts-linux-x86_64
+          export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
+          export ENABLE_FORCE_FULL_RUN=1
+          cd src
+          # Build smp version
           ENABLE_SMP=1 make clean
           ENABLE_SMP=1 make
-          ./charmrun +p4 ./loimos-smp 1 100 100 50 50 5 5 5 32 30 \
+          ./charmrun +p4 ./loimos-smp 1 100 100 50 50 5 5 5 32 7 \
             ci-test-smp.csv ../data/disease_models/covid19_onepath.textproto \
+            +setcpuaffinity ++local
+      
+      - name: Build and Test Optimizations
+        id: test-opts
+        run: |
+          export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
+          export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
+          export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
+          export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
+          export CHARM_HOME=$GITHUB_WORKSPACE/charm/netlrts-linux-x86_64
+          export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
+          export ENABLE_FORCE_FULL_RUN=1
+          cd src
+          # Build optimized verison
+          ENABLE_AGGREGATION=1 ENABLE_SC=1 make clean
+          ENABLE_AGGREGATION=1 ENABLE_SC=1 make
+          ./charmrun +p4 ./loimos-agg-sc 1 100 100 50 50 5 5 5 32 7 \
+            ci-test-opts.csv \
+            ../data/disease_models/covid19_onepath.textproto \
             +setcpuaffinity ++local
 
       # Make sure small Utopia dataset has the right number of interactions
@@ -168,3 +214,20 @@ jobs:
             ../data/disease_models/covid19_onepath.textproto ++local
           cat test-syn.csv
           diff test-syn.csv ../data/validation/test-syn.csv
+      
+      # Make sure epi-curve doesn't change when we introduce optimizations
+      - name: Test Epicurve on Synthetic Population With Optimizations
+        id: test-regression-synthetic-opts
+        run: |
+          export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
+          export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
+          export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
+          export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
+          export CHARM_HOME=$GITHUB_WORKSPACE/charm/netlrts-linux-x86_64
+          export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
+          cd src
+          ./charmrun +p4 ./loimos-agg-sc 1 100 100 50 50 5 5 5 32 30 test-syn-opts.csv \
+            ../data/disease_models/covid19_onepath.textproto ++local
+          cat test-syn-opts.csv
+          diff test-syn-opts.csv ../data/validation/test-syn.csv
+

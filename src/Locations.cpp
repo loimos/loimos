@@ -193,8 +193,7 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   // ...and queue it up at the appropriate location
   Location &loc = locations[localLocIdx];
 #ifdef ENABLE_SC
-  bool isInfectious = scenario->isInfectious(visitMsg.personState);
-  bool isSusceptible = scenario->isInfectious(visitMsg.personState);
+  bool isInfectious = scenario->diseaseModel->isInfectious(visitMsg.personState);
   if (!loc.anyInfectious && isInfectious) {
     loc.anyInfectious = true;
   }
