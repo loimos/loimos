@@ -218,6 +218,7 @@ def linear_cut_partition(
     df[partition_col] = (
         np.ceil(df[load_col].cumsum() / mean_load_per_partition) - 1
     ).astype(int)
+    df.loc[df[partition_col] < 0, partition_col] = 0
 
     df.at[df.shape[0] - 1, partition_col] = num_partitions - 1
 
