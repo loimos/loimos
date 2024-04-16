@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: MIT
 
 mainmodule loimos {
+  include "Defs.h";
   include "Types.h";
   include "Interaction.h";
   include "Message.h";
@@ -193,15 +194,13 @@ mainmodule loimos {
       serial {
         CkPrintf("Finished simulating %d days in %lf seconds.\n",
           day, (CkWallTimer() - profile.simulationStartTime));
-#ifdef ENABLE_DEBUG
-        if (ENABLE_DEBUG >= DEBUG_VERBOSE) {
-          CkPrintf("  Processed " COUNTER_PRINT_TYPE " visits, "
-            COUNTER_PRINT_TYPE " interactions, and "
-            COUNTER_PRINT_TYPE " exposures, "
-            COUNTER_PRINT_TYPE " total exposure duration\n",
-            profile.totalVisits, profile.totalInteractions,
-            profile.totalExposures, profile.totalExposureDuration);
-        }
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
+        CkPrintf("  Processed " COUNTER_PRINT_TYPE " visits, "
+          COUNTER_PRINT_TYPE " interactions, and "
+          COUNTER_PRINT_TYPE " exposures, "
+          COUNTER_PRINT_TYPE " total exposure duration\n",
+          profile.totalVisits, profile.totalInteractions,
+          profile.totalExposures, profile.totalExposureDuration);
 #endif
         CkPrintf("  Visit messages took %lf seconds\n",
           profile.visitsTime);
