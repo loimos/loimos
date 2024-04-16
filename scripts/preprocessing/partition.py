@@ -6,7 +6,7 @@ import shutil
 
 import pandas as pd
 import numpy as np
-from preprocess import read_csv, write_csv, make_contiguous, update_ids
+from preprocess import read_csv, write_csv, make_contiguous, update_ids, VISIT_SORT_COLS
 from create_textproto import (
     create_textproto,
     PEOPLE_TYPES,
@@ -218,6 +218,7 @@ def linear_cut_partition(
     df[partition_col] = (
         np.ceil(df[load_col].cumsum() / mean_load_per_partition) - 1
     ).astype(int)
+    df.loc[df[partition_col] < 0, partition_col] = 0
 
     df.at[df.shape[0] - 1, partition_col] = num_partitions - 1
 
@@ -321,26 +322,39 @@ def update_chunk(args, visits_chunk, id_update, id_col="lid"):
     return visits_chunk
 
 
-def update_visits(args, id_update, id_col="lid"):
+def update_visits(args, id_update, id_col="lid", sort_values=True):
     if isinstance(id_update, int) and 0 == id_update:
         return
     if args.num_visits is not None:
         visit_chunks = read_csv(
             args.in_dir, args.visits_file, iterator=True, chunksize=args.num_visits
         )
+        chunk_dfs = []
         for i, chunk in enumerate(visit_chunks):
             print(f"Updating {id_col}s in chunk {i}")
             chunk = update_chunk(args, chunk, id_update, id_col=id_col)
-            if i == 0:
+            if sort_values:
+                chunk_dfs.append(chunk)
+            elif i == 0:
                 write_csv(args.out_dir, args.visits_file, chunk)
             else:
                 write_csv(args.out_dir, args.visits_file, chunk, mode="a", header=False)
+        if sort_values:
+            visits = pd.concat(chunk_dfs)
+            print("Sorting visits")
+            visits.sort_values(VISIT_SORT_COLS, inplace=True)
+
+            print("Saving visits", flush=True)
+            write_csv(args.out_dir, args.visits_file, visits)
 
     else:
         visits = read_csv(args.in_dir, args.visits_file, args.num_visits)
 
         print(f"Updating visits {id_col}s", flush=True)
         visits = update_chunk(args, visits, id_update, id_col=id_col)
+        if sort_values:
+            print("Sorting visits")
+            visits.sort_values(VISIT_SORT_COLS, inplace=True)
 
         print("Saving visits", flush=True)
         write_csv(args.out_dir, args.visits_file, visits)
@@ -353,7 +367,7 @@ def main(args):
     if "locations" in args.to_partition:
         offsets, lid_update = partition_locations(args)
         if not args.offsets_only:
-            update_visits(args, lid_update)
+            update_visits(args, lid_update, sort_values=False)
             if "people" not in args.to_partition:
                 create_textproto(
                     args.out_dir, args.visits_file, VISITS_TYPES, metadata_type="visits"

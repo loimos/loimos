@@ -6,6 +6,7 @@
 
 #include "charm++.h"
 #include "Partitioner.h"
+#include "Defs.h"
 #include "Types.h"
 #include "protobuf/data.pb.h"
 #include "readers/Preprocess.h"
