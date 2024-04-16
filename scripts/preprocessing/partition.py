@@ -347,7 +347,6 @@ def update_visits(args, id_update, id_col="lid", sort_values=True):
             print("Saving visits", flush=True)
             write_csv(args.out_dir, args.visits_file, visits)
 
-
     else:
         visits = read_csv(args.in_dir, args.visits_file, args.num_visits)
 
