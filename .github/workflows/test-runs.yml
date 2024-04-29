@@ -117,15 +117,18 @@ jobs:
           export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
           export ENABLE_FORCE_FULL_RUN=1
           cd src
+          make clean
           # Make detailed output version of Loimos
           OUTPUT_FLAGS=7 make
           mv loimos loimos-out
           ./charmrun +p4 ./loimos-out 0 2 2 30 7 \
-            ci-test-out \
+            ci_test_out \
             ../data/disease_models/covid19_onepath.textproto \
+            ../data/populations/synthetic_small_city \
             +setcpuaffinity ++local
-          ls ci-test-out
-          cd ci-test-out
+          ls
+          ls ci_test_out
+          cd ci_test_out
           ls {exposures,interactions,transitions}_chare_{0,1}.csv summary.csv
 
       - name: Build and Test Non-SMP Version
