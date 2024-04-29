@@ -105,6 +105,28 @@ jobs:
             ci-test-non-smp.csv \
             ../data/disease_models/covid19_onepath.textproto \
             +setcpuaffinity ++local
+      
+      - name: Build and Test Detailed Outputs
+        id: test-out-loimos
+        run: |
+          export PROTOBUF_HOME=$GITHUB_WORKSPACE/protobuf/install
+          export GTEST_HOME=$GITHUB_WORKSPACE/googletest/install/cmake
+          export LD_LIBRARY_PATH=$PROTOBUF_HOME/lib:$LD_LIBRARY_PATH
+          export PATH_PROTOBUF=$PROTOBUF_HOME/bin:$PATH
+          export CHARM_HOME=$GITHUB_WORKSPACE/charm/netlrts-linux-x86_64
+          export PATH=$CHARM_HOME/bin:$PATH_PROTOBUF
+          export ENABLE_FORCE_FULL_RUN=1
+          cd src
+          # Make detailed output version of Loimos
+          OUTPUT_FLAGS=7 make
+          mv loimos loimos-out
+          ./charmrun +p4 ./loimos-out 0 2 2 30 7 \
+            ci-test-out \
+            ../data/disease_models/covid19_onepath.textproto \
+            +setcpuaffinity ++local
+          ls ci-test-out
+          cd ci-test-out
+          ls {exposures,interactions,transitions}_chare_{0,1}.csv summary.csv
 
       - name: Build and Test Non-SMP Version
         id: test-non-smp
