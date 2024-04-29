@@ -284,12 +284,6 @@ Counter Locations::processEvents(Location *loc) {
       // Remove the arrival event corresponding to this departure
       std::pop_heap(arrivals->begin(), arrivals->end(), Event::greaterPartner);
       arrivals->pop_back();
-// #if ENABLE_DEBUG >= DEBUG_VERBOSE
-//       duration += saveInteractions(*loc, event, interactionsFile);
-// #endif
-#if OUTPUT_FLAGS & OUTPUT_OVERLAPS
-      saveInteractions(*loc, event, interactionsFile);
-#endif
 
 #if OUTPUT_FLAGS & OUTPUT_OVERLAPS
       saveInteractions(*loc, event, interactionsFile);
