@@ -681,10 +681,10 @@ void People::UpdateDiseaseState(Person *person) {
 #if OUTPUT_FLAGS & OUTPUT_TRANSITIONS
     // State transition information for initial infections is reported when
     // they're infected
-    if (!scenario->isSusceptible(person->state)) {
+    if (!scenario->diseaseModel->isSusceptible(person->state)) {
       // tick,pid,exit_state,contact_pid,contact_start
       *transitionsFile << day << "," << person->getUniqueId() << ","
-          << scenario->getStateLabel(person->next_state)
+          << scenario->diseaseModel->getStateLabel(person->next_state)
           << ",-1,-1" << std::endl;
     }
 #endif
