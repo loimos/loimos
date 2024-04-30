@@ -62,10 +62,10 @@ class Locations : public CBase_Locations {
   // specified person to the appropriate People chare
   inline void sendInteractions(Location *loc, Id personIdx);
 
-  #if ENABLE_DEBUG >= DEBUG_VERBOSE
+#if OUTPUT_FLAGS & OUTPUT_OVERLAPS
   Counter saveInteractions(const Location &loc, const Event &departure,
     std::ofstream *out);
-  #endif
+#endif
 
  public:
   explicit Locations(int seed, std::string scenarioPath);

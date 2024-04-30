@@ -5,6 +5,7 @@
  */
 
 #include "Parse.h"
+#include "Preprocess.h"
 #include "../Types.h"
 #include "../contact_model/ContactModel.h"
 #include "charm++.h"
@@ -106,7 +107,7 @@ void parse(int argc, char **argv, Arguments *args) {
   if (args->outputPath.back() == '/') {
     args->outputPath.pop_back();
   }
-  create_directory(args->outputPath, args->isOnTheFlyRun ? "." : args->scenarioPath);
+  createDirectory(args->outputPath, args->isOnTheFlyRun ? "." : args->scenarioPath);
   args->outputPath.push_back('/');
 #endif
 
