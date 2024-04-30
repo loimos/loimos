@@ -83,7 +83,7 @@ print("\nComputing metrics from location heuristics \n", flush=True)
 msvmed, msvmax, tvmed, tvmax, msvmean, msvmeansq, tvmean, tvmeansq = location_heuristic_metrics()
 print(f'Location heuristics metrics: \n MSVMED: {msvmed} \n MSVMAX: {msvmax} \n TVMED: {tvmed} \n TVMAX: {tvmax} \n MSVMEAN: {msvmean} \n MSVMEANSQ: {msvmeansq} \n TVMEAN: {tvmean} \n TVMEANSQ: {tvmean}', flush=True)
 
-df_data = np.array([nnz, annz, onenorm, msvmed, msvmax, msvmean, msvmeansq, tvmed, tvmax, tvmean, tvmeansq]).reshape(1, -1)
-df = pd.DataFrame(data=df_data, columns=['nnz', 'annz', 'onenorm', 'msvmed', 'msvmax', 'msvmean', 'msvmeansq', 'tvmed', 'tvmax', 'tvmean', 'tvmeansq'])
+df_data = np.array([nnz, annz, onenorm, frobnorm, msvmed, msvmax, msvmean, msvmeansq, tvmed, tvmax, tvmean, tvmeansq]).reshape(1, -1)
+df = pd.DataFrame(data=df_data, columns=['nnz', 'annz', 'onenorm', 'frobnorm', 'msvmed', 'msvmax', 'msvmean', 'msvmeansq', 'tvmed', 'tvmax', 'tvmean', 'tvmeansq'])
 
 df.to_csv(os.path.join(in_dir, 'metrics.csv'), index=False)
