@@ -81,7 +81,7 @@ print("Done running the location heuristics script \n", flush=True)
 
 print("\nComputing metrics from location heuristics \n", flush=True)
 msvmed, msvmax, tvmed, tvmax, msvmean, msvmeansq, tvmean, tvmeansq = location_heuristic_metrics()
-print(f'Location heuristics metrics: \n MSVMED: {msvmed} \n MSVMAX: {msvmax} \n TVMED: {tvmed} \n TVMAX: {tvmax} \n MSVMEAN: {msvmean} \n MSVMEANSQ: {msvmeansq} \n TVMEAN: {tvmean} \n TVMEANSQ: {tvmean}', flush=True)
+print(f'Location heuristics metrics: \n MSVMED: {msvmed} \n MSVMAX: {msvmax} \n TVMED: {tvmed} \n TVMAX: {tvmax} \n MSVMEAN: {msvmean} \n MSVMEANSQ: {msvmeansq} \n TVMEAN: {tvmean} \n TVMEANSQ: {tvmeansq}', flush=True)
 
 df_data = np.array([nnz, annz, onenorm, frobnorm, msvmed, msvmax, msvmean, msvmeansq, tvmed, tvmax, tvmean, tvmeansq]).reshape(1, -1)
 df = pd.DataFrame(data=df_data, columns=['nnz', 'annz', 'onenorm', 'frobnorm', 'msvmed', 'msvmax', 'msvmean', 'msvmeansq', 'tvmed', 'tvmax', 'tvmean', 'tvmeansq'])
