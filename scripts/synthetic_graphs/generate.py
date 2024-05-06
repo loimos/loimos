@@ -74,8 +74,7 @@ def main(unused_argv):
         if len(parameters) != 3:
             raise ValueError("Incorrect number of parameters provided.")
         num_nodes, mean_degree, num_people = parameters
-        graph = random_graphs.generate_barabasi_albert(
-            int(num_nodes), int(mean_degree))
+        graph = random_graphs.generate_barabasi_albert(int(num_nodes), int(mean_degree))
         translation_strategies.graph_to_disease_model(
             graph, out_dir, TEMPLATE_DIR.value, int(num_nodes), int(num_people)
         )

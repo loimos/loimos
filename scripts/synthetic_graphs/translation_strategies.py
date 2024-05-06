@@ -25,7 +25,7 @@ def VISITS_PER_PERSON_PER_DAY():
 
 
 def OCCUPIED_HOURS_PER_DAY():
-    return random.randint(14*3600, 18*3600)
+    return random.randint(14 * 3600, 18 * 3600)
 
 
 # CONSTANTS
@@ -138,10 +138,15 @@ def graph_to_disease_model(graph, out_dir, template_dir, num_nodes, num_people):
                     allowed_visit_locations, k=visits_for_day
                 )
                 sleeping_time = (86400 - time_occupied_for_day) // 2
-                activity_start_times = np.random.uniform(
-                    low=sleeping_time, high=86400 - sleeping_time,
-                    size=visits_for_day + 1,
-                ).round().astype(int)
+                activity_start_times = (
+                    np.random.uniform(
+                        low=sleeping_time,
+                        high=86400 - sleeping_time,
+                        size=visits_for_day + 1,
+                    )
+                    .round()
+                    .astype(int)
+                )
                 activity_start_times.sort()
 
                 # Add visits.
