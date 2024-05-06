@@ -20,16 +20,12 @@ RANDOM_SEED = 42
 random.seed(RANDOM_SEED)
 
 
-def PEOPLE_PER_LOCATION():
-    return random.randint(3, 5)
-
-
 def VISITS_PER_PERSON_PER_DAY():
-    return random.randint(5, 7)
+    return np.random.poisson(lam=4.61)
 
 
 def OCCUPIED_HOURS_PER_DAY():
-    return random.randint(14, 18)
+    return random.randint(14*3600, 18*3600)
 
 
 # CONSTANTS
@@ -136,24 +132,23 @@ def graph_to_disease_model(graph, out_dir, template_dir, num_nodes, num_people):
 
             for day in range(NUM_DAYS):
                 # Randomly split up time of day for each "activity"
-                hours_occupied_for_day = OCCUPIED_HOURS_PER_DAY()
+                time_occupied_for_day = OCCUPIED_HOURS_PER_DAY()
                 visits_for_day = VISITS_PER_PERSON_PER_DAY()
                 locations_to_visit = random.choices(
                     allowed_visit_locations, k=visits_for_day
                 )
-                sleeping_hours = (24 - hours_occupied_for_day) // 2
-                activity_start_times = sorted(
-                    random.sample(
-                        HOURS_OF_THE_DAY[sleeping_hours : 24 - sleeping_hours + 1],
-                        visits_for_day + 1,
-                    )
-                )
+                sleeping_time = (86400 - time_occupied_for_day) // 2
+                activity_start_times = np.random.uniform(
+                    low=sleeping_time, high=86400 - sleeping_time,
+                    size=visits_for_day + 1,
+                ).round().astype(int)
+                activity_start_times.sort()
 
                 # Add visits.
                 for i in range(visits_for_day):
                     location_id = locations_to_visit[i]
-                    start_time = 3600 * activity_start_times[i]
-                    end_time = 3600 * activity_start_times[i + 1]
+                    start_time = activity_start_times[i]
+                    end_time = activity_start_times[i + 1]
                     absolute_start_time = DAY_LENGTH * day + start_time
                     duration = end_time - start_time
                     visit_writer.write_row(
