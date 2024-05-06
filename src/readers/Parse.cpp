@@ -53,7 +53,7 @@ void parse(int argc, char **argv, Arguments *args) {
     }
 
     // Edge degree.
-    onTheFly->averageVisitsPerDay = atoi(argv[++argNum]);
+    onTheFly->averageVisitsPerDay = atof(argv[++argNum]);
 
     // Chare data
     onTheFly->locationPartitionGrid.width = atoi(argv[++argNum]);
