@@ -18,7 +18,7 @@ struct OnTheFlyArguments {
   Grid<PartitionId> locationPartitionGrid;
   Grid<Id> localLocationGrid;
 
-  Id averageVisitsPerDay;
+  double averageVisitsPerDay;
 };
 PUPbytes(OnTheFlyArguments);
 
