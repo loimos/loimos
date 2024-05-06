@@ -15,15 +15,15 @@ mainmodule loimos {
 #endif // USE_HYPERCOMM
 
 #ifdef ENABLE_AGGREGATION
-  #define AGGREGATE [aggregate]
+  #define AGGREGATE [aggregate(numDimensions: 1)]
 #else
   #define AGGREGATE
 #endif
 
   // Profiling/LB parameters (these are here because Defs.h depends on having
   // CBase_* classes defined, and these constants are only used in this file)
-  #define PROFILING_START_DAY 7
-  #define PROFILING_END_DAY 8
+  #define PROFILING_START_DAY 85
+  #define PROFILING_END_DAY 87
   #define SHOULD_PROFILE (day >= PROFILING_START_DAY &&\
     day <= PROFILING_END_DAY)
   //#define PROFILING_INTERVAL 1
