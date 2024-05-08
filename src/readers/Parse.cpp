@@ -111,11 +111,7 @@ void parse(int argc, char **argv, Arguments *args) {
   args->outputPath.push_back('/');
 #endif
 
-#ifdef ENABLE_RANDOM_SEED
-  args->seed = time(NULL);
-#else
   args->seed = 0;
-#endif
 
   // Optional arguments
   args->contactModelType = static_cast<int>(ContactModelType::constant_probability);
@@ -133,8 +129,13 @@ void parse(int argc, char **argv, Arguments *args) {
       args->interventionPath = std::string(argv[++argNum]);
       args->hasIntervention = true;
 
-    } else if (("-s" == tmp || "--seed" == tmp) && argNum + 1 < argc) {
-      args->seed = atoi(argv[++argNum]);
+    } else if ("-s" == tmp || "--seed" == tmp) {
+      if (argNum + 1 < argc && argv[argNum + 1][0] != '-'
+          && argv[argNum + 1][0] != '+') {
+        args->seed = atoi(argv[++argNum]);
+      } else {
+        args->seed = time(NULL);
+      }
     }
   }
 
