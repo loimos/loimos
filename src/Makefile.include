@@ -83,6 +83,10 @@ ifdef ENABLE_AGGREGATION
 OPTS     += -DENABLE_AGGREGATION
 endif
 
+ifdef ENABLE_INLINE
+OPTS     += -DENABLE_INLINE
+endif
+
 ifdef ENABLE_SC
 OPTS     += -DENABLE_SC
 endif

@@ -14,8 +14,10 @@ mainmodule loimos {
   include "AggregatorParam.h";
 #endif // USE_HYPERCOMM
 
-#ifdef ENABLE_AGGREGATION
+#if defined(ENABLE_AGGREGATION)
   #define AGGREGATE [aggregate(numDimensions: 1)]
+#elseif defined(ENABLE_INLINE)
+  #define AGGREGATE [inline]
 #else
   #define AGGREGATE
 #endif

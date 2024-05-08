@@ -33,6 +33,9 @@ endif
 ifdef ENABLE_AGGREGATION
 BIN   :=$(BIN)-agg
 endif
+ifdef ENABLE_INLINE
+BIN   :=$(BIN)-in
+endif
 ifdef ENABLE_SC
 BIN   :=$(BIN)-sc
 endif
