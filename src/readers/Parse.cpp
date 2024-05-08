@@ -111,6 +111,12 @@ void parse(int argc, char **argv, Arguments *args) {
   args->outputPath.push_back('/');
 #endif
 
+#ifdef ENABLE_RANDOM_SEED
+  args->seed = time(NULL);
+#else
+  args->seed = 0;
+#endif
+
   // Optional arguments
   args->contactModelType = static_cast<int>(ContactModelType::constant_probability);
   args->hasIntervention = false;
@@ -126,6 +132,9 @@ void parse(int argc, char **argv, Arguments *args) {
     } else if ("-i" == tmp && argNum + 1 < argc) {
       args->interventionPath = std::string(argv[++argNum]);
       args->hasIntervention = true;
+
+    } else if (("-s" == tmp || "--seed" == tmp) && argNum + 1 < argc) {
+      args->seed = atoi(argv[++argNum]);
     }
   }
 
@@ -138,12 +147,6 @@ void parse(int argc, char **argv, Arguments *args) {
   if (!args->isOnTheFlyRun) {
     CkPrintf("Loading people and locations from %s.\n", args->scenarioPath.c_str());
   }
-#endif
-
-#ifdef ENABLE_RANDOM_SEED
-  args->seed = time(NULL);
-#else
-  args->seed = 0;
 #endif
 
   args->numDaysToSeedOutbreak = 10;
