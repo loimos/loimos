@@ -55,7 +55,6 @@ When multiple such options are used, these suffixes will be added in the order i
 | `ENABLE_LB`             | 1     | `-lb`             | Enables Charm++ dynamic load balancing                                        |
 | `ENABLE_AGGREGATION`    | 1     | `-agg`            | Enables Charm++ message aggregation                                           |
 | `ENABLE_SC`             | 1     | `-sc`             | Enables short-circuit evaluation of discrete event simulation                 |
-| `ENABLE_RANDOM_SEED`    | 1     |                   | If not passed, will use a the same seed for all pseudo-random number generators in each run         |
 | `ENABLE_FORCE_FULL_RUN` | 1     |                   | Forces the simulation to run the full number of days, even if the outbreak dies out and no people are still infected   |
 | `ENABLE_UNIT_TESTING`   | 1     |                   | Builds Loimos with unit tests enabled                                         |
 | `ENABLE_DEBUG`          | 1     |                   | Basic debug information                                                       |
@@ -109,7 +108,7 @@ Where
 For pre-defined populations, run Loimos with the command:
 
 ```bash
-./loimos 0 <NPP> <NLP> <ND> <NDV> <OF> <DF> <SD> [-m] [-i <IF>]
+./loimos 0 <NPP> <NLP> <ND> <NDV> <OF> <DF> <SD> [-m] [-i <IF>] [-s [<S>]]
 ```
 
 Where
@@ -127,6 +126,10 @@ Where
 - `-i` is an optional flag used when specifying an intervention. `IF` should
   be the path to a `.textproto` file specifying the intervention to be used.
   These are generally found in [`loimos/data/interventions`](https://github.com/loimos/loimos/blob/develop/data/interventions).
+- `-s` or `--seed` is an optional flag used to specify the random seed to use
+  for the run if an integer `S` is provided or otherwise to direct Loimos to
+  use an arbitary - and likely unique - seed (given by `time(NULL)` at
+  runtime). If not passed, Loimos will use the default seed of 0.
 
 ## Authors
 

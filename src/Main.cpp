@@ -139,9 +139,10 @@ Main::Main(CkArgMsg* msg) {
   CkPrintf("\nRunning Loimos on %d PEs with "
       ID_PRINT_TYPE " people, " ID_PRINT_TYPE " locations, "
       PARTITION_ID_PRINT_TYPE " people chares, " PARTITION_ID_PRINT_TYPE
-      " location chares, and %d days\n",
+      " location chares, and %d days, with a seed of %d\n",
     CkNumPes(), scenario->numPeople, scenario->numLocations,
-    numPersonPartitions, numLocationPartitions, scenario->numDays);
+    numPersonPartitions, numLocationPartitions, scenario->numDays,
+    scenario->seed);
 
   if (scenario->isOnTheFly()) {
     OnTheFlyArguments *onTheFly = scenario->onTheFly;
