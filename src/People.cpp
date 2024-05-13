@@ -114,7 +114,7 @@ for (Person &p : people) {
 #if OUTPUT_FLAGS & OUTPUT_TRANSITIONS
   transitionsFile = new std::ofstream(scenario->outputPath + "transitions_chare_"
       + std::to_string(thisIndex) + ".csv");
-  *transitionsFile << "tick,pid,exit_state,contact_pid,contact_start"
+  *transitionsFile << "tick,pid,exit_state,contact_pid,contact_start,propensity"
       << std::endl;
 #else
   transitionsFile = NULL;
@@ -632,7 +632,7 @@ void People::ProcessInteractions(Person *person) {
 #endif
   }
 
-  // Detemine whether or not this person was infected...
+  // Determine whether or not this person was infected...
   std::default_random_engine *generator = person->getGenerator();
   double roll = -log(unitDistrib(*generator)) / totalPropensity;
 
@@ -666,7 +666,8 @@ void People::ProcessInteractions(Person *person) {
       const Interaction &inter = person->interactions[interactionIdx];
       *transitionsFile << day << "," << person->getUniqueId() << ","
           << diseaseModel->getStateLabel(person->next_state) << ","
-          << inter.infectiousIdx << "," << inter.startTime << std::endl;
+          << inter.infectiousIdx << "," << inter.startTime << ","
+          << totalPropensity << std::endl;
 #endif
     }
   }
@@ -685,7 +686,7 @@ void People::UpdateDiseaseState(Person *person) {
       // tick,pid,exit_state,contact_pid,contact_start
       *transitionsFile << day << "," << person->getUniqueId() << ","
           << scenario->diseaseModel->getStateLabel(person->next_state)
-          << ",-1,-1" << std::endl;
+          << ",-1,-1," << std::endl;
     }
 #endif
 
