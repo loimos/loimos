@@ -71,6 +71,15 @@ mainmodule loimos {
         lastInfectiousCount = 0;
       }
 
+      serial {
+        locationsArray.SendExpectedVisitors();
+        CkStartQD(CkCallback(
+          CkIndex_Main::ExpectedVisitorsReceived(),
+          mainProxy
+        ));
+      }
+      when ExpectedVisitorsReceived() {}
+
 #ifdef ENABLE_FORCE_FULL_RUN
       for (day = 0; day < scenario->numDays; day++) {
 #else
@@ -91,7 +100,7 @@ mainmodule loimos {
 
           // CkPrintf("  Sending Visit Messages\n");
           profile.stepStartTime = CkWallTimer();
-          peopleArray.SendVisitMessages();
+          peopleArray.SendVisitorStates();
           CkStartQD(CkCallback(
             CkIndex_Main::StartComputingInteractions(),
             mainProxy
@@ -106,7 +115,7 @@ mainmodule loimos {
 
             // CkPrintf("  Compute Interactions\n");
             profile.stepStartTime = CkWallTimer();
-            locationsArray.ComputeInteractions();
+            locationsArray.QueueVisits();
             if (scenario->numDaysToSeedOutbreak > day) {
               SeedInfections();
             }
@@ -222,6 +231,7 @@ mainmodule loimos {
       }
     };
 
+    entry void ExpectedVisitorsReceived();
     entry void SeedInfections();
     entry void StartComputingInteractions();
     entry void ComputedInteractions();
