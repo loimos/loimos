@@ -49,6 +49,7 @@ class People : public CBase_People {
   void pup(PUP::er &p);  // NOLINT(runtime/references)
   void generatePeopleData(Id firstLocalPersonIndex, int seed);
   void generateVisitData();
+  void SendVisitSchedules();
   void ReceiveExpectedVisitors(ExpectedVisitorsMessage msg);
   void SendVisitorStates();
   void SendVisitMessages();

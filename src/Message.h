@@ -40,6 +40,21 @@ struct VisitMessage {
 };
 PUPbytes(VisitMessage);
 
+struct VisitScheduleMessage {
+  PartitionId sourcePartition;
+  std::vector<std::vector<VisitMessage> > visitsByDay;
+
+  VisitScheduleMessage() {}
+  explicit VisitScheduleMessage(CkMigrateMessage *msg) {}
+  VisitScheduleMessage(PartitionId sourcePartition_)
+    : sourcePartition(sourcePartition_) {}
+
+  void pup(PUP::er& p) {  // NOLINT(runtime/references)
+    p | sourcePartition;
+    p | visitsByDay;
+  }
+};
+
 using VisitTest = std::function<bool(const VisitMessage &)>;
 
 struct InteractionMessage {

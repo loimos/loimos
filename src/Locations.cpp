@@ -255,6 +255,18 @@ void Locations::pup(PUP::er &p) {
     scenario = globScenario.ckLocalBranch();
   }
 }
+  
+void Locations::ReceiveVisitSchedule(VisitScheduleMessage msg) {
+  Partitioner *partitioner = scenario->partitioner;
+  for (size_t d = 0; d < msg.visitsByDay.size(); d++) {
+    for (const VisitMessage &visit : msg.visitsByDay[d]) {
+      Id localLocIdx = partitioner->getLocalLocationIndex(visit.locationIdx, thisIndex);
+      locations[localLocIdx].visitsByDay[d].push_back(visit);
+    }
+  }
+
+  msg.visitsByDay.clear();
+}
 
 void Locations::SendExpectedVisitors() {
   Partitioner *partitioner = scenario->partitioner;

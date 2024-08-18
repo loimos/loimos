@@ -71,14 +71,26 @@ mainmodule loimos {
         lastInfectiousCount = 0;
       }
 
-      serial {
-        locationsArray.SendExpectedVisitors();
-        CkStartQD(CkCallback(
-          CkIndex_Main::ExpectedVisitorsReceived(),
-          mainProxy
-        ));
+      if (scenario->isOnTheFly()) {
+        serial {
+          peopleArray.SendVisitSchedules();
+          CkStartQD(CkCallback(
+            CkIndex_Main::StartupComplete(),          
+            mainProxy
+          ));
+        }
+
+      } else {
+        serial {
+          locationsArray.SendExpectedVisitors();
+          CkStartQD(CkCallback(
+            CkIndex_Main::StartupComplete(),
+            mainProxy
+          ));
+        }
       }
-      when ExpectedVisitorsReceived() {}
+
+      when StartupComplete() {}
 
 #ifdef ENABLE_FORCE_FULL_RUN
       for (day = 0; day < scenario->numDays; day++) {
@@ -231,7 +243,7 @@ mainmodule loimos {
       }
     };
 
-    entry void ExpectedVisitorsReceived();
+    entry void StartupComplete();
     entry void SeedInfections();
     entry void StartComputingInteractions();
     entry void ComputedInteractions();
@@ -305,6 +317,7 @@ mainmodule loimos {
 
   array [1D] People {
     entry People(int seed, std::string scenarioPath);
+    entry void SendVisitSchedules();
     entry void ReceiveExpectedVisitors(ExpectedVisitorsMessage msg);
     entry void SendVisitorStates();
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
@@ -318,6 +331,7 @@ mainmodule loimos {
 
   array [1D] Locations {
     entry Locations(int seed, std::string scenarioPath);
+    entry void ReceiveVisitSchedule(VisitScheduleMessage msg);
     entry void SendExpectedVisitors();
     entry void ReceiveVisitorStates(PersonStatesMessage msg);
     entry void QueueVisits();
