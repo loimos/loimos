@@ -12,6 +12,7 @@
 #include "pup_stl.h"
 
 #include <vector>
+#include <unordered_set>
 #include <functional>
 
 struct VisitMessage {
@@ -57,6 +58,21 @@ struct InteractionMessage {
     p | locationIdx;
     p | personIdx;
     p | interactions;
+  }
+};
+
+struct ExpectedVisitorsMessage {
+  PartitionId destPartition;
+  std::unordered_set<Id> visitors;
+  
+  ExpectedVisitorsMessage() {}
+  explicit ExpectedVisitorsMessage(CkMigrateMessage *msg) {}
+  ExpectedVisitorsMessage(PartitionId destPartition_)
+    : destPartition(destPartition_) {}
+  
+  void pup(PUP::er& p) {  // NOLINT(runtime/references)
+    p | destPartition;
+    p | visitors;
   }
 };
 

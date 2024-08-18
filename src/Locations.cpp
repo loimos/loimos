@@ -256,6 +256,28 @@ void Locations::pup(PUP::er &p) {
   }
 }
 
+void Locations::SendExpectedVisitors() {
+  Partitioner *partitioner = scenario->partitioner;
+  std::unordered_map<PartitionId, ExpectedVisitorsMessage > visitorsFromPartition;
+  for (const Location &location : locations) {
+    for (const std::vector<VisitMessage> &visits: location.visitsByDay) {
+      for (const VisitMessage &visit : visits) {
+        PartitionId personPartition = partitioner->getPersonPartitionIndex(
+          visit.personIdx);
+        if (visitorsFromPartition.find(personPartition) == visitorsFromPartition.end()) {
+          visitorsFromPartition[personPartition].destPartition = thisIndex;
+        }
+        visitorsFromPartition[personPartition].visitors.insert(visit.personIdx);
+      }
+    }
+  }
+
+  for (auto &entry : visitorsFromPartition) {
+    peopleArray[entry.first].ReceiveExpectedVisitors(entry.second);
+  }
+  visitorsFromPartition.clear();
+}
+
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   // adding person to location visit list
   Id localLocIdx = scenario->partitioner->getLocalLocationIndex(

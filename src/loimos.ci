@@ -295,6 +295,7 @@ mainmodule loimos {
 
   array [1D] People {
     entry People(int seed, std::string scenarioPath);
+    entry void ReceiveExpectedVisitors(ExpectedVisitorsMessage msg);
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
     entry AGGREGATE void ReceiveInteractions(InteractionMessage);
     entry void EndOfDayStateUpdate(); // contribute call to ReceiveInfectiousCount
@@ -306,6 +307,7 @@ mainmodule loimos {
 
   array [1D] Locations {
     entry Locations(int seed, std::string scenarioPath);
+    entry void SendExpectedVisitors();
     entry AGGREGATE void ReceiveVisitMessages(VisitMessage);
     entry void ComputeInteractions(); // calls ReceiveInteractions
     entry void ReceiveIntervention(int interventionIdx);

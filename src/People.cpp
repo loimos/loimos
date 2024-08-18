@@ -335,6 +335,11 @@ void People::pup(PUP::er &p) {
   }
 }
 
+void People::ReceiveExpectedVisitors(ExpectedVisitorsMessage msg) {
+  visitorsToPartition[msg.destPartition].insert(msg.visitors.begin(),
+    msg.visitors.end());
+}
+
 void People::SendVisitMessages() {
   // Send activities for each person.
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
