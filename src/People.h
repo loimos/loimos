@@ -50,6 +50,7 @@ class People : public CBase_People {
   void generatePeopleData(Id firstLocalPersonIndex, int seed);
   void generateVisitData();
   void ReceiveExpectedVisitors(ExpectedVisitorsMessage msg);
+  void SendVisitorStates();
   void SendVisitMessages();
   double getTransmissionModifier(const Person &person);
   void ReceiveInteractions(InteractionMessage interMsg);

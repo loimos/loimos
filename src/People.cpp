@@ -338,6 +338,26 @@ void People::pup(PUP::er &p) {
 void People::ReceiveExpectedVisitors(ExpectedVisitorsMessage msg) {
   visitorsToPartition[msg.destPartition].insert(msg.visitors.begin(),
     msg.visitors.end());
+  msg.visitors.clear();
+}
+
+void People::SendVisitorStates() {
+  const Partitioner *partitioner = scenario->partitioner;
+  for (auto &entry : visitorsToPartition) {
+    PartitionId partitionIdx = entry.first;
+    const std::unordered_set<Id> &visitors = entry.second;
+    
+    PersonStatesMessage msg(thisIndex);
+    msg.states.reserve(visitors.size());
+    for (Id visitor : visitors) {
+      Id localIdx = partitioner->getLocalPersonIndex(visitor, thisIndex);
+      const Person &person = people[localIdx];
+      msg.states.emplace_back(person.getUniqueId(),
+        person.state, getTransmissionModifier(person));
+    }
+    
+    locationsArray[partitionIdx].ReceiveVisitorStates(msg);
+  }
 }
 
 void People::SendVisitMessages() {

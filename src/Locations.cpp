@@ -278,6 +278,15 @@ void Locations::SendExpectedVisitors() {
   visitorsFromPartition.clear();
 }
 
+void Locations::ReceiveVisitorStates(PersonStatesMessage msg) {
+  for (size_t i = 0; i < msg.states.size(); i++) {
+    PersonState *state = &msg.states[i];
+    std::memcpy(&visitorStates[state->uniqueId], state, sizeof(PersonState));
+  }
+
+  msg.states.clear();
+}
+
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   // adding person to location visit list
   Id localLocIdx = scenario->partitioner->getLocalLocationIndex(

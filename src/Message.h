@@ -76,4 +76,33 @@ struct ExpectedVisitorsMessage {
   }
 };
 
+struct PersonState {
+  Id uniqueId;
+  DiseaseState state;
+  double transmissionModifier;
+
+  PersonState() {}
+  explicit PersonState(CkMigrateMessage *msg) {}
+  PersonState(Id uniqueId_, DiseaseState state_,
+  double transmissionModifier_)
+    : uniqueId(uniqueId_), state(state_),
+    transmissionModifier(transmissionModifier_) {}
+};
+PUPbytes(PersonState);
+
+struct PersonStatesMessage {
+  PartitionId sourcePartition;
+  std::vector<PersonState> states;
+
+  PersonStatesMessage() {}
+  explicit PersonStatesMessage(CkMigrateMessage *msg) {}
+  PersonStatesMessage(PartitionId sourcePartition_)
+    : sourcePartition(sourcePartition_) {}
+  
+  void pup(PUP::er& p) {  // NOLINT(runtime/references)
+    p | sourcePartition;
+    p | states;
+  }
+};
+
 #endif  // MESSAGE_H_

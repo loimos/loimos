@@ -30,7 +30,7 @@ class Locations : public CBase_Locations {
   Counter expectedExposureDuration;
   int day;
 
-  std::unordered_map<Id, DiseaseState> personStates;
+  std::unordered_map<Id, PersonState> visitorStates;
 
   // For random generation.
   static std::uniform_real_distribution<> unitDistrib;
@@ -76,6 +76,7 @@ class Locations : public CBase_Locations {
   explicit Locations(CkMigrateMessage *msg);
   void pup(PUP::er &p);  // NOLINT(runtime/references)
   void SendExpectedVisitors();
+  void ReceiveVisitorStates(PersonStatesMessage msg);
   void ReceiveVisitMessages(VisitMessage visitMsg);
   void ComputeInteractions();  // calls ReceiveInfections
   void ReceiveIntervention(PartitionId interventionIdx);
