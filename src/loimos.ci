@@ -310,6 +310,7 @@ mainmodule loimos {
     entry Locations(int seed, std::string scenarioPath);
     entry void SendExpectedVisitors();
     entry void ReceiveVisitorStates(PersonStatesMessage msg);
+    entry void QueueVisits();
     entry AGGREGATE void ReceiveVisitMessages(VisitMessage);
     entry void ComputeInteractions(); // calls ReceiveInteractions
     entry void ReceiveIntervention(int interventionIdx);

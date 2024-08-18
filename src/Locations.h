@@ -77,6 +77,7 @@ class Locations : public CBase_Locations {
   void pup(PUP::er &p);  // NOLINT(runtime/references)
   void SendExpectedVisitors();
   void ReceiveVisitorStates(PersonStatesMessage msg);
+  void QueueVisits();
   void ReceiveVisitMessages(VisitMessage visitMsg);
   void ComputeInteractions();  // calls ReceiveInfections
   void ReceiveIntervention(PartitionId interventionIdx);
