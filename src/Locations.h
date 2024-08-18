@@ -66,6 +66,8 @@ class Locations : public CBase_Locations {
   Counter saveInteractions(const Location &loc, const Event &departure,
     std::ofstream *out);
 #endif
+  void loadLocationData(std::string scenarioPath);
+  void loadVisitData(std::ifstream *activityData);
 
  public:
   explicit Locations(int seed, std::string scenarioPath);
@@ -74,8 +76,6 @@ class Locations : public CBase_Locations {
   void ReceiveVisitMessages(VisitMessage visitMsg);
   void ComputeInteractions();  // calls ReceiveInfections
   void ReceiveIntervention(PartitionId interventionIdx);
-  // Load location data from CSV.
-  void loadLocationData(std::string scenarioPath);
   #ifdef ENABLE_LB
   void ResumeFromSync();
   #endif  // ENABLE_LB

@@ -66,7 +66,8 @@ Locations::Locations(int seed, std::string scenarioPath) {
   for (int i = 0; i < numLocalLocations; i++) {
     // Seed random number generator via branch ID for reproducibility
     locations.emplace_back(scenario->locationAttributes,
-      numInterventions, firstLocalLocationIdx + i);
+      numInterventions, firstLocalLocationIdx + i,
+      scenario->numDaysWithDistinctVisits);
   }
 
   // Load application data
@@ -125,11 +126,124 @@ void Locations::loadLocationData(std::string scenarioPath) {
   for (Location &location : locations) {
     contactModel->computeLocationValues(&location);
   }
+  
+  // Open activity data and cache.
+  std::ifstream visitData(scenarioPath + "visits.csv");
+  std::ifstream activityCache(scenarioPath + scenarioId
+      + "_visits.cache", std::ios_base::binary);
+  if (!visitData || !activityCache) {
+    CkAbort("Could not open activity input.");
+  }
+
+  // Load preprocessing meta data.
+  CacheOffset *buf = reinterpret_cast<CacheOffset *>(
+    malloc(sizeof(CacheOffset) * scenario->numDaysWithDistinctVisits));
+  for (Id c = 0; c < numLocalLocations; c++) {
+    std::vector<CacheOffset> *data_pos = &locations[c].visitOffsetByDay;
+    Id currId = locations[c].getUniqueId();
+
+    // Read in their activity data offsets.
+    activityCache.seekg(sizeof(CacheOffset) * scenario->numDaysWithDistinctVisits
+       * scenario->partitioner->getLocationCacheIndex(currId));
+    activityCache.read(reinterpret_cast<char *>(buf),
+      sizeof(CacheOffset) * scenario->numDaysWithDistinctVisits);
+    for (int day = 0; day < scenario->numDaysWithDistinctVisits; day++) {
+      data_pos->push_back(buf[day]);
+    }
+  }
+  free(buf);
+
+  loadVisitData(&visitData);
+
+  visitData.close();
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
   CkPrintf("  Chare %d took %f s to load locations\n", thisIndex,
       CkWallTimer() - startTime);
 #endif
+}
+
+void Locations::loadVisitData(std::ifstream *visitData) {
+  loimos::proto::CSVDefinition *visitDef = scenario->visitDef;
+  Time firstDay = 0;
+  if (visitDef->has_start_time()) {
+    firstDay = visitDef->start_time().days();
+  }
+
+  #ifdef ENABLE_DEBUG
+    Id numVisits = 0;
+  #endif
+  Id numDaysWithDistinctVisits = scenario->numDaysWithDistinctVisits;
+  for (Location &location : locations) {
+    location.visitsByDay.reserve(numDaysWithDistinctVisits);
+    for (int day = 0; day < numDaysWithDistinctVisits; ++day) {
+      Time nextDaySecs = getSeconds(day + 1, firstDay);
+
+      // Seek to correct position in file.
+      CacheOffset seekPos = location
+        .visitOffsetByDay[day % numDaysWithDistinctVisits];
+      if (seekPos == EMPTY_VISIT_SCHEDULE) {
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
+        CkPrintf("  Chare %d: Location %d has no visits on day %d\n",
+            thisIndex, location.getUniqueId(), day);
+#endif
+        continue;
+      }
+
+      visitData->seekg(seekPos, std::ios_base::beg);
+
+      // Start reading
+      Id locationId = -1;
+      Id personId = -1;
+      Time visitStart = -1;
+      Time visitDuration = -1;
+      Time visitEnd = -1;
+      std::tie(locationId, personId, visitStart, visitDuration) =
+        parseActivityStream(visitData, scenario->visitDef, NULL);
+
+#if ENABLE_DEBUG >= DEBUG_PER_OBJECT
+      if (0 == locationId % 10000) {
+        CkPrintf("  locations chare %d, location %d reading from %u on day %d\n",
+            thisIndex, location.getUniqueId(), seekPos, day);
+        CkPrintf("  Location %d (%d) on day %d first visit: %d to %d, "
+            "at loc %d\n", location.getUniqueId(), locationId, day,
+            visitStart, visitStart + visitDuration, locationId);
+      }
+#endif
+
+      // Seek while same location on same day
+      while (locationId == location.getUniqueId() && visitStart < nextDaySecs) {
+        // Save visit info
+        visitEnd = visitStart + visitDuration;
+        while (visitEnd > nextDaySecs) {
+          int endDay = getDay(visitEnd, firstDay) % numDaysWithDistinctVisits;
+          Time newStart = getSeconds(endDay, firstDay);
+          location.visitsByDay[endDay].emplace_back(locationId, personId, -1,
+              newStart, visitEnd, 1.0);
+          visitEnd = std::max(nextDaySecs, visitEnd - DAY_LENGTH);
+        }
+
+        location.visitsByDay[day].emplace_back(locationId, personId, -1,
+            visitStart, visitEnd, 1.0);
+        #ifdef ENABLE_DEBUG
+          numVisits++;
+        #endif
+
+        std::tie(locationId, personId, visitStart, visitDuration) =
+          parseActivityStream(visitData,
+              scenario->visitDef, NULL);
+      }
+
+      // CkPrintf("  Chare %d: location %d has %u visits on day %d (offset %u)\n",
+      //     thisIndex, location.getUniqueId(), location.visitsByDay[day].size(),
+      //     day, seekPos);
+    }
+  }
+  #if ENABLE_DEBUG >= DEBUG_VERBOSE
+    CkCallback cb(CkReductionTarget(Main, ReceiveVisitsLoadedCount), mainProxy);
+    contribute(sizeof(Id), &numVisits, CkReduction::CONCAT(sum_, ID_REDUCTION_TYPE),
+      cb);
+  #endif
 }
 
 void Locations::pup(PUP::er &p) {

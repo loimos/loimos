@@ -40,7 +40,6 @@ class People : public CBase_People {
   void ProcessInteractions(Person *person);
   void UpdateDiseaseState(Person *person);
   void loadPeopleData(std::string scenarioPath);
-  void loadVisitData(std::ifstream *activityData);
 
  public:
   explicit People(int seed, std::string scenarioPath);
