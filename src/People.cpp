@@ -343,6 +343,14 @@ void People::SendVisitSchedules() {
       for (const VisitMessage &visit : visits) {
         PartitionId locationPartition = scenario->partitioner->getLocationPartitionIndex(
           visit.locationIdx);
+
+        visitorsToPartition[locationPartition].insert(person.getUniqueId());
+
+        if (schedules.find(locationPartition) == schedules.end()) {
+          schedules[locationPartition] = VisitScheduleMessage(thisIndex);
+          schedules[locationPartition].visitsByDay.resize(
+            scenario->numDaysWithDistinctVisits);
+        }
         schedules[locationPartition].visitsByDay[d].push_back(visit);
       }
     }
