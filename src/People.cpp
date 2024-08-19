@@ -26,6 +26,7 @@
 #include <tuple>
 #include <limits>
 #include <queue>
+#include <unordered_map>
 #include <cmath>
 #include <string>
 #include <iostream>
@@ -337,12 +338,12 @@ void People::pup(PUP::er &p) {
 
 void People::SendVisitSchedules() {
   std::unordered_map<PartitionId, VisitScheduleMessage> schedules;
-  for (const Person &person: people) {
+  for (const Person &person : people) {
     for (size_t d = 0; d < scenario->numDaysWithDistinctVisits; d++) {
       const std::vector<VisitMessage> &visits = person.visitsByDay[d];
       for (const VisitMessage &visit : visits) {
-        PartitionId locationPartition = scenario->partitioner->getLocationPartitionIndex(
-          visit.locationIdx);
+        PartitionId locationPartition
+          = scenario->partitioner->getLocationPartitionIndex(visit.locationIdx);
 
         visitorsToPartition[locationPartition].insert(person.getUniqueId());
 
@@ -377,7 +378,7 @@ void People::SendVisitorStates() {
   for (auto &entry : visitorsToPartition) {
     PartitionId partitionIdx = entry.first;
     const std::unordered_set<Id> &visitors = entry.second;
-    
+
     PersonStatesMessage msg(thisIndex);
     msg.states.reserve(visitors.size());
     for (Id visitor : visitors) {
@@ -386,7 +387,7 @@ void People::SendVisitorStates() {
       msg.states.emplace_back(person.getUniqueId(),
         person.state, getTransmissionModifier(person));
     }
-    
+
     locationsArray[partitionIdx].ReceiveVisitorStates(msg);
   }
 }

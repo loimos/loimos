@@ -24,6 +24,7 @@
 #include <fstream>
 #include <memory>
 #include <unordered_set>
+#include <unordered_map>
 
 #define LOCATION_LAMBDA 5.2
 

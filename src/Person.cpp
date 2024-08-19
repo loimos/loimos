@@ -51,7 +51,6 @@ void Person::pup(PUP::er &p) {
   p | next_state;
   p | secondsLeftInState;
   p | interactions;
-  //p | visitOffsetByDay;
   p | visitsByDay;
   p | data;
   p | generator;

@@ -26,11 +26,6 @@ class Person : public DataInterface {
   // interactions with infectious people in the past day
   std::vector<Interaction> interactions;
 
-  // Integer byte offsets in visits file by day.
-  // For example, fseek(visitOffsetByDay[2]) would seek to the start
-  // of this person's visits on day 3.
-  //std::vector<CacheOffset> visitOffsetByDay;
-
   // Holds visit messages for each day
   std::vector<std::vector<VisitMessage> > visitsByDay;
 

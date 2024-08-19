@@ -46,7 +46,7 @@ struct VisitScheduleMessage {
 
   VisitScheduleMessage() {}
   explicit VisitScheduleMessage(CkMigrateMessage *msg) {}
-  VisitScheduleMessage(PartitionId sourcePartition_)
+  explicit VisitScheduleMessage(PartitionId sourcePartition_)
     : sourcePartition(sourcePartition_) {}
 
   void pup(PUP::er& p) {  // NOLINT(runtime/references)
@@ -79,12 +79,12 @@ struct InteractionMessage {
 struct ExpectedVisitorsMessage {
   PartitionId destPartition;
   std::unordered_set<Id> visitors;
-  
+
   ExpectedVisitorsMessage() {}
   explicit ExpectedVisitorsMessage(CkMigrateMessage *msg) {}
-  ExpectedVisitorsMessage(PartitionId destPartition_)
+  explicit ExpectedVisitorsMessage(PartitionId destPartition_)
     : destPartition(destPartition_) {}
-  
+
   void pup(PUP::er& p) {  // NOLINT(runtime/references)
     p | destPartition;
     p | visitors;
@@ -111,9 +111,9 @@ struct PersonStatesMessage {
 
   PersonStatesMessage() {}
   explicit PersonStatesMessage(CkMigrateMessage *msg) {}
-  PersonStatesMessage(PartitionId sourcePartition_)
+  explicit PersonStatesMessage(PartitionId sourcePartition_)
     : sourcePartition(sourcePartition_) {}
-  
+
   void pup(PUP::er& p) {  // NOLINT(runtime/references)
     p | sourcePartition;
     p | states;

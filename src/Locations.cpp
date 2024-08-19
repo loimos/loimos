@@ -126,7 +126,7 @@ void Locations::loadLocationData(std::string scenarioPath) {
   for (Location &location : locations) {
     contactModel->computeLocationValues(&location);
   }
-  
+
   // Open activity data and cache.
   std::ifstream visitData(scenarioPath + "visits.csv");
   std::ifstream activityCache(scenarioPath + scenarioId
@@ -255,7 +255,7 @@ void Locations::pup(PUP::er &p) {
     scenario = globScenario.ckLocalBranch();
   }
 }
-  
+
 void Locations::ReceiveVisitSchedule(VisitScheduleMessage msg) {
   Partitioner *partitioner = scenario->partitioner;
   for (size_t d = 0; d < msg.visitsByDay.size(); d++) {
@@ -272,11 +272,12 @@ void Locations::SendExpectedVisitors() {
   Partitioner *partitioner = scenario->partitioner;
   std::unordered_map<PartitionId, ExpectedVisitorsMessage > visitorsFromPartition;
   for (const Location &location : locations) {
-    for (const std::vector<VisitMessage> &visits: location.visitsByDay) {
+    for (const std::vector<VisitMessage> &visits : location.visitsByDay) {
       for (const VisitMessage &visit : visits) {
         PartitionId personPartition = partitioner->getPersonPartitionIndex(
           visit.personIdx);
-        if (visitorsFromPartition.find(personPartition) == visitorsFromPartition.end()) {
+        if (visitorsFromPartition.find(personPartition)
+            == visitorsFromPartition.end()) {
           visitorsFromPartition[personPartition].destPartition = thisIndex;
         }
         visitorsFromPartition[personPartition].visitors.insert(visit.personIdx);
