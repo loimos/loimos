@@ -1,4 +1,8 @@
 num_rows: 100
+partition_offsets: 0
+partition_offsets: 24
+partition_offsets: 46
+partition_offsets: 70
 fields {
     field_name: "hid"
     ignore: {}
@@ -69,5 +73,17 @@ fields {
 }
 fields {
     field_name: "admin4"
+    ignore: {}
+}
+fields {
+    field_name: "home_lid"
+    ignore: {}
+}
+fields {
+    field_name: "total_visits"
+    ignore: {}
+}
+fields {
+    field_name: "old_pid"
     ignore: {}
 }

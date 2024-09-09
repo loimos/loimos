@@ -1,11 +1,11 @@
 num_rows: 25000
 fields {
     field_name: "pid"
-    unique_id: {}
+    foreign_id: {}
 }
 fields {
     field_name: "lid"
-    foreign_id: {}
+    unique_id: {}
 }
 fields {
     field_name: "start_time"

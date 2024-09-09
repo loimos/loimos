@@ -1,5 +1,9 @@
 num_rows: 735
 load_column: "total_visits"
+partition_offsets: 0
+partition_offsets: 257
+partition_offsets: 389
+partition_offsets: 502
 fields {
     field_name: "lid"
     unique_id: {}
@@ -111,4 +115,8 @@ fields {
 fields {
     field_name: "max_simultaneous_visits"
     int32: {}
+}
+fields {
+    field_name: "old_lid"
+    ignore: {}
 }
