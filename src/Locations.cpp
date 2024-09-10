@@ -306,15 +306,7 @@ void Locations::QueueVisits() {
       location.visitsByDay[day % scenario->numDaysWithDistinctVisits];
 
     for (const VisitMessage &visit : visits) {
-      const PersonState &state = visitorStates[visit.personIdx];
-      Event arrival { ARRIVAL, visit.personIdx, state.state,
-        state.transmissionModifier, visit.visitStart };
-      Event departure { DEPARTURE, visit.personIdx, state.state,
-        state.transmissionModifier, visit.visitEnd };
-      Event::pair(&arrival, &departure);
-
-      location.addEvent(arrival);
-      location.addEvent(departure);
+      queueVisit(&location, visit);
 
 #ifdef ENABLE_SC
       bool isInfectious = scenario->diseaseModel->isInfectious(state.state);
@@ -326,6 +318,18 @@ void Locations::QueueVisits() {
   }
 
   ComputeInteractions();
+}
+
+inline void Locations::queueVisit(Location *loc, const VisitMessage &visit) {
+  const PersonState &state = visitorStates[visit.personIdx];
+  Event arrival { ARRIVAL, visit.personIdx, state.state,
+    state.transmissionModifier, visit.visitStart };
+  Event departure { DEPARTURE, visit.personIdx, state.state,
+    state.transmissionModifier, visit.visitEnd };
+  Event::pair(&arrival, &departure);
+
+  loc->addEvent(arrival);
+  loc->addEvent(departure);
 }
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
