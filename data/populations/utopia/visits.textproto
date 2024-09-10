@@ -5,7 +5,7 @@ fields {
 }
 fields {
     field_name: "pid"
-    unique_id: {}
+    foreign_id: {}
 }
 fields {
     field_name: "activity_number"
@@ -29,7 +29,7 @@ fields {
 }
 fields {
     field_name: "lid"
-    foreign_id: {}
+    unique_id: {}
 }
 fields {
     field_name: "longitude"

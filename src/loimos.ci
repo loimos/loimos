@@ -71,6 +71,27 @@ mainmodule loimos {
         lastInfectiousCount = 0;
       }
 
+      if (scenario->isOnTheFly()) {
+        serial {
+          peopleArray.SendVisitSchedules();
+          CkStartQD(CkCallback(
+            CkIndex_Main::StartupComplete(),          
+            mainProxy
+          ));
+        }
+
+      } else {
+        serial {
+          locationsArray.SendExpectedVisitors();
+          CkStartQD(CkCallback(
+            CkIndex_Main::StartupComplete(),
+            mainProxy
+          ));
+        }
+      }
+
+      when StartupComplete() {}
+
 #ifdef ENABLE_FORCE_FULL_RUN
       for (day = 0; day < scenario->numDays; day++) {
 #else
@@ -91,7 +112,7 @@ mainmodule loimos {
 
           // CkPrintf("  Sending Visit Messages\n");
           profile.stepStartTime = CkWallTimer();
-          peopleArray.SendVisitMessages();
+          peopleArray.SendVisitorStates();
           CkStartQD(CkCallback(
             CkIndex_Main::StartComputingInteractions(),
             mainProxy
@@ -106,7 +127,7 @@ mainmodule loimos {
 
             // CkPrintf("  Compute Interactions\n");
             profile.stepStartTime = CkWallTimer();
-            locationsArray.ComputeInteractions();
+            locationsArray.QueueVisits();
             if (scenario->numDaysToSeedOutbreak > day) {
               SeedInfections();
             }
@@ -222,6 +243,7 @@ mainmodule loimos {
       }
     };
 
+    entry void StartupComplete();
     entry void SeedInfections();
     entry void StartComputingInteractions();
     entry void ComputedInteractions();
@@ -295,6 +317,9 @@ mainmodule loimos {
 
   array [1D] People {
     entry People(int seed, std::string scenarioPath);
+    entry void SendVisitSchedules();
+    entry void ReceiveExpectedVisitors(ExpectedVisitorsMessage msg);
+    entry void SendVisitorStates();
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
     entry AGGREGATE void ReceiveInteractions(InteractionMessage);
     entry void EndOfDayStateUpdate(); // contribute call to ReceiveInfectiousCount
@@ -306,6 +331,10 @@ mainmodule loimos {
 
   array [1D] Locations {
     entry Locations(int seed, std::string scenarioPath);
+    entry void ReceiveVisitSchedule(VisitScheduleMessage msg);
+    entry void SendExpectedVisitors();
+    entry void ReceiveVisitorStates(PersonStatesMessage msg);
+    entry void QueueVisits();
     entry AGGREGATE void ReceiveVisitMessages(VisitMessage);
     entry void ComputeInteractions(); // calls ReceiveInteractions
     entry void ReceiveIntervention(int interventionIdx);

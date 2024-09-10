@@ -22,10 +22,13 @@
 #include <algorithm>
 
 Location::Location(const AttributeTable &attributes,
-    int numInterventions, int uniqueId_) :
+    int numInterventions, int uniqueId_, int numDays) :
     DataInterface(attributes, numInterventions) {
   setUniqueId(uniqueId_);
   reset();
+  // Create an entry for each day we have data for
+  visitsByDay.resize(numDays);
+  visitOffsetByDay.reserve(numDays);
 }
 
 Location::Location(CkMigrateMessage *msg) {}
@@ -35,6 +38,8 @@ void Location::pup(PUP::er &p) {
   p | uniqueId;
   p | events;
   p | generator;
+  p | visitOffsetByDay;
+  p | visitsByDay;
 #ifdef ENABLE_SC
   p | anyInfectious;
 #endif

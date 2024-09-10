@@ -35,4 +35,8 @@ data/populations/*
 *.csv
 *.cache
 *.pdf
+*.txt
+*.textproto
+*.json
+*.tar.gz
 *__pycache__*

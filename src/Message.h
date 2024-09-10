@@ -12,6 +12,7 @@
 #include "pup_stl.h"
 
 #include <vector>
+#include <unordered_set>
 #include <functional>
 
 struct VisitMessage {
@@ -39,6 +40,21 @@ struct VisitMessage {
 };
 PUPbytes(VisitMessage);
 
+struct VisitScheduleMessage {
+  PartitionId sourcePartition;
+  std::vector<std::vector<VisitMessage> > visitsByDay;
+
+  VisitScheduleMessage() {}
+  explicit VisitScheduleMessage(CkMigrateMessage *msg) {}
+  explicit VisitScheduleMessage(PartitionId sourcePartition_)
+    : sourcePartition(sourcePartition_) {}
+
+  void pup(PUP::er& p) {  // NOLINT(runtime/references)
+    p | sourcePartition;
+    p | visitsByDay;
+  }
+};
+
 using VisitTest = std::function<bool(const VisitMessage &)>;
 
 struct InteractionMessage {
@@ -57,6 +73,50 @@ struct InteractionMessage {
     p | locationIdx;
     p | personIdx;
     p | interactions;
+  }
+};
+
+struct ExpectedVisitorsMessage {
+  PartitionId destPartition;
+  std::unordered_set<Id> visitors;
+
+  ExpectedVisitorsMessage() {}
+  explicit ExpectedVisitorsMessage(CkMigrateMessage *msg) {}
+  explicit ExpectedVisitorsMessage(PartitionId destPartition_)
+    : destPartition(destPartition_) {}
+
+  void pup(PUP::er& p) {  // NOLINT(runtime/references)
+    p | destPartition;
+    p | visitors;
+  }
+};
+
+struct PersonState {
+  Id uniqueId;
+  DiseaseState state;
+  double transmissionModifier;
+
+  PersonState() {}
+  explicit PersonState(CkMigrateMessage *msg) {}
+  PersonState(Id uniqueId_, DiseaseState state_,
+  double transmissionModifier_)
+    : uniqueId(uniqueId_), state(state_),
+    transmissionModifier(transmissionModifier_) {}
+};
+PUPbytes(PersonState);
+
+struct PersonStatesMessage {
+  PartitionId sourcePartition;
+  std::vector<PersonState> states;
+
+  PersonStatesMessage() {}
+  explicit PersonStatesMessage(CkMigrateMessage *msg) {}
+  explicit PersonStatesMessage(PartitionId sourcePartition_)
+    : sourcePartition(sourcePartition_) {}
+
+  void pup(PUP::er& p) {  // NOLINT(runtime/references)
+    p | sourcePartition;
+    p | states;
   }
 };
 

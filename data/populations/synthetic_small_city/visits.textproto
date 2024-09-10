@@ -1,11 +1,17 @@
 num_rows: 3241
+start_time: {
+    days: 0
+}
+duration: {
+    days: 7
+}
 fields {
     field_name: "daynum"
     ignore: {}
 }
 fields {
-    field_name: "pid"
-    unique_id: {}
+    field_name: "old_pid"
+    ignore: {}
 }
 fields {
     field_name: "activity_number"
@@ -28,6 +34,14 @@ fields {
     duration: {}
 }
 fields {
+    field_name: "old_lid"
+    ignore: {}
+}
+fields {
     field_name: "lid"
+    unique_id: {}
+}
+fields {
+    field_name: "pid"
     foreign_id: {}
 }

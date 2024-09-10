@@ -33,6 +33,13 @@ class Location : public DataInterface {
 #ifdef ENABLE_SC
   bool anyInfectious;
 #endif
+  // Integer byte offsets in visits file by day.
+  // For example, fseek(visitOffsetByDay[2]) would seek to the start
+  // of this person's visits on day 3.
+  std::vector<CacheOffset> visitOffsetByDay;
+
+  // Holds visit messages for each day
+  std::vector<std::vector<VisitMessage> > visitsByDay;
 
   // This distribution should always be the same - not sure how well
   // static variables work with Charm++, so this may need to be put
@@ -42,7 +49,7 @@ class Location : public DataInterface {
   Location() = default;
   explicit Location(CkMigrateMessage *msg);
   Location(const AttributeTable &attributes, int numInterventions,
-    int uniqueId);
+    int uniqueId, int numDays);
   Location(const Location&) = default;
   Location(Location&&) = default;
   ~Location() = default;

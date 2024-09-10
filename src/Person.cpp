@@ -23,7 +23,6 @@ Person::Person(const AttributeTable &attributes, int numInterventions,
     secondsLeftInState(secondsLeftInState_) {
   // Create an entry for each day we have data for
   visitsByDay.resize(numDays);
-  visitOffsetByDay.reserve(numDays);
 }
 
 void Person::filterVisits(const void *cause, VisitTest keepVisit) {
@@ -52,7 +51,6 @@ void Person::pup(PUP::er &p) {
   p | next_state;
   p | secondsLeftInState;
   p | interactions;
-  p | visitOffsetByDay;
   p | visitsByDay;
   p | data;
   p | generator;

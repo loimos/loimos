@@ -23,6 +23,8 @@
 #include <iostream>
 #include <fstream>
 #include <memory>
+#include <unordered_set>
+#include <unordered_map>
 
 #define LOCATION_LAMBDA 5.2
 
@@ -36,11 +38,11 @@ class People : public CBase_People {
   std::vector<Id> stateSummaries;
   std::ofstream *exposuresFile;
   std::ofstream *transitionsFile;
+  std::unordered_map<PartitionId, std::unordered_set<Id> > visitorsToPartition;
 
   void ProcessInteractions(Person *person);
   void UpdateDiseaseState(Person *person);
   void loadPeopleData(std::string scenarioPath);
-  void loadVisitData(std::ifstream *activityData);
 
  public:
   explicit People(int seed, std::string scenarioPath);
@@ -48,6 +50,9 @@ class People : public CBase_People {
   void pup(PUP::er &p);  // NOLINT(runtime/references)
   void generatePeopleData(Id firstLocalPersonIndex, int seed);
   void generateVisitData();
+  void SendVisitSchedules();
+  void ReceiveExpectedVisitors(ExpectedVisitorsMessage msg);
+  void SendVisitorStates();
   void SendVisitMessages();
   double getTransmissionModifier(const Person &person);
   void ReceiveInteractions(InteractionMessage interMsg);

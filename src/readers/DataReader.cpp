@@ -28,8 +28,8 @@ void readProtobuf(std::string path, google::protobuf::Message *buffer) {
 
 std::tuple<Id, Id, Time, Time> parseActivityStream(std::ifstream *input,
     loimos::proto::CSVDefinition *dataFormat, std::vector<union Data> *attributes) {
-  Id personId = -1;
   Id locationId = -1;
+  Id personId = -1;
   Time startTime = -1;
   Time duration = -1;
 
@@ -62,10 +62,10 @@ std::tuple<Id, Id, Time, Time> parseActivityStream(std::ifstream *input,
 
         // Parse byte stream to the correct representation.
         if (field->has_unique_id()) {
-          personId = ID_PARSE(start);
+          locationId = ID_PARSE(start);
 
         } else if (field->has_foreign_id()) {
-          locationId = ID_PARSE(start);
+          personId = ID_PARSE(start);
 
         } else if (field->has_start_time()) {
           startTime = TIME_PARSE(start);
@@ -81,5 +81,5 @@ std::tuple<Id, Id, Time, Time> parseActivityStream(std::ifstream *input,
       attrIndex++;
     }
   }
-  return std::make_tuple(personId, locationId, startTime, duration);
+  return std::make_tuple(locationId, personId, startTime, duration);
 }

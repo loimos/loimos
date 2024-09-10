@@ -308,7 +308,7 @@ Id Partitioner::getGlobalLocationIndex(Id localIndex, PartitionId PartitionId) c
   return getGlobalIndex(localIndex, PartitionId, locationPartitionOffsets);
 }
 
-CacheOffset Partitioner::getPersonCacheIndex(Id globalIndex) const {
+CacheOffset Partitioner::getLocationCacheIndex(Id globalIndex) const {
   return getLocalIndex(globalIndex, 0, locationPartitionOffsets);
 }
 
@@ -332,7 +332,7 @@ Id Partitioner::getGlobalPersonIndex(Id localIndex, PartitionId partitionIndex) 
   return getGlobalIndex(localIndex, partitionIndex, personPartitionOffsets);
 }
 
-CacheOffset Partitioner::getLocationCacheIndex(Id globalIndex) const {
+CacheOffset Partitioner::getPersonCacheIndex(Id globalIndex) const {
   return getLocalIndex(globalIndex, 0, personPartitionOffsets);
 }
 

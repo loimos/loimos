@@ -29,7 +29,7 @@ DEFAULT_VALUES = {
     "religion": 0,
     "designation": "none:home",
 }
-VISIT_SORT_COLS = ["pid", "start_time"]
+VISIT_SORT_COLS = ["lid", "start_time"]
 DAY_LENGTH = 86400
 
 
