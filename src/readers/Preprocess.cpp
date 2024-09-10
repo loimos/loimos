@@ -57,7 +57,7 @@ std::string buildCache(std::string scenarioPath,
   buildObjectLookupCache(numLocations,
     locationPartitionOffsets, scenarioPath + "locations.textproto",
     scenarioPath + "locations.csv", scenarioPath + uniqueScenario + "_locations.cache");
-  buildActivityCache(numPeople, numDays, personPartitionOffsets[0],
+  buildActivityCache(numLocations, numDays, locationPartitionOffsets[0],
     scenarioPath + "visits.textproto", scenarioPath + "visits.csv",
     scenarioPath + uniqueScenario + "_visits.cache");
   return uniqueScenario;
@@ -127,7 +127,7 @@ void buildObjectLookupCache(Id numObjs, const std::vector<Id> &offsets,
   }
 }
 
-void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
+void buildActivityCache(Id numLocations, int numDays, Id firstLocationIdx,
   std::string metadataPath, std::string inputPath, std::string outputPath) {
   /**
    * Assumptions.
@@ -151,7 +151,7 @@ void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
   readProtobuf(metadataPath, &csvDefinition);
 
   // Create position vector for each person.
-  std::size_t totalDataSize = numPeople * numDays * sizeof(CacheOffset);
+  std::size_t totalDataSize = numLocations * numDays * sizeof(CacheOffset);
   CacheOffset *elements = reinterpret_cast<CacheOffset *>(malloc(totalDataSize));
   if (NULL == elements) {
     CkAbort("Failed to malloc enough memory for preprocessing.\n");
@@ -168,16 +168,16 @@ void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
   // Clear header.
   std::getline(activityStream, line);
   CacheOffset current_position = activityStream.tellg();
-  Id lastPerson = -1;
+  Id lastLocation = -1;
   Time lastTime = -1;
-  Id nextPerson = 0;
+  Id nextLocation = 0;
   Time nextTime = 0;
   Time nextTimeSec = 0;
-  Id locationId = -1;
+  Id personId = -1;
   Time duration = -1;
   Id totalVisits = 0;
   // For better looping efficiency simulate one break of inner loop to start.
-  std::tie(nextPerson, locationId, nextTime, duration) =
+  std::tie(nextLocation, personId, nextTime, duration) =
     parseActivityStream(&activityStream, &csvDefinition, NULL);
   nextTimeSec = nextTime;
   nextTime = getDay(nextTime, firstDay);
@@ -189,12 +189,12 @@ void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
     //   lastPerson, numVisits, lastTime, current_position);
 
     // Get details of new entry.
-    lastPerson = nextPerson;
+    lastLocation = nextLocation;
     lastTime = nextTime;
     numVisits = 0;
 
-    CacheOffset index = numDays * (lastPerson - firstPersonIdx) + lastTime;
-    if (numPeople * numDays > index) {
+    CacheOffset index = numDays * (lastLocation - firstLocationIdx) + lastTime;
+    if (numLocations * numDays > index) {
       elements[index] = current_position;
     } else {
       CkAbort("    Failed to write %lu bytes at %lu\n", current_position, index);
@@ -210,9 +210,9 @@ void buildActivityCache(Id numPeople, int numDays, Id firstPersonIdx,
     // Scan until the next boundary.
     while (!activityStream.eof()
         && lastTime == nextTime
-        && lastPerson == nextPerson) {
+        && lastLocation == nextLocation) {
       current_position = activityStream.tellg();
-      std::tie(nextPerson, locationId, nextTime, duration) =
+      std::tie(nextLocation, personId, nextTime, duration) =
         parseActivityStream(&activityStream,
             &csvDefinition, NULL);
 

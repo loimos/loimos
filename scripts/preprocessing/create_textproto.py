@@ -18,8 +18,8 @@ LOCATIONS_TYPES = {
     "home": "bool",
 }
 VISITS_TYPES = {
-    "pid": "unique_id",
-    "lid": "foreign_id",
+    "lid": "unique_id",
+    "pid": "foreign_id",
     "start_time": "start_time",
     "duration": "duration",
 }
