@@ -496,8 +496,7 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
   // Just concatenate the interaction lists so that we can process all of the
   // interactions at the end of the day
   Person &person = people[localIdx];
-  person.interactions.insert(person.interactions.end(),
-    interMsg.interactions.cbegin(), interMsg.interactions.cend());
+  person.infectionPropensity += interMsg.infectionPropensity;
 }
 
 void People::ReceiveIntervention(int interventionIdx) {
@@ -561,39 +560,11 @@ double propensityToProbability(double propensity) {
 }
 
 void People::ProcessInteractions(Person *person) {
-  double totalPropensity = 0.0;
-  uint numInteractions = static_cast<uint>(person->interactions.size());
-  for (const Interaction &inter : person->interactions) {
-    totalPropensity += inter.propensity;
-#if OUTPUT_FLAGS & OUTPUT_EXPOSURES
-    // tick,sus_pid,inf_pid,start_time,end_time,propensity
-    *exposuresFile << day << "," << person->getUniqueId() << ","
-        << inter.infectiousIdx << "," << inter.startTime << ","
-        << inter.endTime << "," << inter.propensity << std::endl;
-#endif
-  }
-
-  // Detemine whether or not this person was infected...
+  // Detemine whether or not this person was infected
   std::default_random_engine *generator = person->getGenerator();
-  double roll = -log(unitDistrib(*generator)) / totalPropensity;
+  double roll = -log(unitDistrib(*generator)) / person->infectionPropensity;
 
   if (roll <= 1) {
-    // ...if they were, determine which interaction was responsible, by
-    // choosing an interaction, with a weight equal to the propensity
-    roll = std::uniform_real_distribution<>(0, totalPropensity)(*generator);
-    double partialSum = 0.0;
-    int interactionIdx;
-    for (interactionIdx = 0; interactionIdx < numInteractions;
-        ++interactionIdx) {
-      partialSum += person->interactions[interactionIdx].propensity;
-      if (partialSum > roll) {
-        break;
-      }
-    }
-
-    // TODO(jkitson): Save any useful information about the interaction which
-    // caused the infection
-
     // Mark that exposed healthy individuals should make transition at the end
     // of the day.
     DiseaseModel *diseaseModel = scenario->diseaseModel;
@@ -603,6 +574,8 @@ void People::ProcessInteractions(Person *person) {
         diseaseModel->transitionFromState(person->state, generator);
 
 #if OUTPUT_FLAGS & OUTPUT_TRANSITIONS
+      // TODO(jkitson): decide how to rework this to work with the less granular
+      // interaction reporting; maybe report source location?
       // tick,pid,exit_state,contact_pid,contact_start
       const Interaction &inter = person->interactions[interactionIdx];
       *transitionsFile << day << "," << person->getUniqueId() << ","
@@ -611,7 +584,7 @@ void People::ProcessInteractions(Person *person) {
 #endif
     }
   }
-  person->interactions.clear();
+  person->infectionPropensity = 0;
 }
 
 void People::UpdateDiseaseState(Person *person) {

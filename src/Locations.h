@@ -42,7 +42,7 @@ class Locations : public CBase_Locations {
 
   // Maps each susceptible person's id to a list of interactions with people
   // who could have infected them
-  std::unordered_map<Id, std::vector<Interaction> > interactions;
+  std::unordered_map<Id, double> interactions;
 
   // Runs through all of the current events and return the indices of
   // any people who have been infected

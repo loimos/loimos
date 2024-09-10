@@ -593,11 +593,7 @@ inline void Locations::registerInteraction(Location *loc,
     susceptibleEvent.personState, infectiousEvent.personState, startTime, endTime,
     susceptibleEvent.transmissionModifier, infectiousEvent.transmissionModifier);
 
-  // Note that this will create a new vector if this is the first potential
-  // infection for the susceptible person in question
-  Interaction inter { propensity, infectiousEvent.personIdx,
-    infectiousEvent.personState, startTime, endTime };
-  interactions[susceptibleEvent.personIdx].emplace_back(inter);
+  interactions[susceptibleEvent.personIdx] += propensity;
 }
 
 // Simple helper function which send the list of interactions with the
