@@ -18,6 +18,7 @@
 #include <string>
 #include <unordered_map>
 #include <iostream>
+#include <tuple>
 
 class Locations : public CBase_Locations {
  private:

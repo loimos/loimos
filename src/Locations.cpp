@@ -32,6 +32,7 @@
 #include <string>
 #include <cstring>
 #include <unordered_map>
+#include <tuple>
 
 std::uniform_real_distribution<> Locations::unitDistrib(0.0, 1.0);
 
