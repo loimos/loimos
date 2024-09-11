@@ -315,8 +315,8 @@ void Locations::BinVisits() {
       if (location.acceptsVisit(visit) && diseaseModel->isInfectious(state.state)) {
         Time visitStart = visit.visitStart / N_VISIT_BINS;
         Time visitEnd = visit.visitEnd / N_VISIT_BINS;
-        double prop = diseaseModel->getInfectivity(state.state, visit.visitStart, visit.visitEnd,
-          state.transmissionModifier);
+        double prop = diseaseModel->getInfectivity(state.state, visit.visitStart,
+          visit.visitEnd, state.transmissionModifier);
         for (Time t = visitStart; t <= visitEnd; ++t) {
           infectionPropensities[t] += prop;
         }
@@ -330,7 +330,8 @@ void Locations::BinVisits() {
     }
 
     computePropensities(location);
-    std::memset(infectionPropensities.data(), 0, infectionPropensities.size() * sizeof(double));
+    std::memset(infectionPropensities.data(), 0,
+      infectionPropensities.size() * sizeof(double));
   }
 }
 
@@ -351,7 +352,7 @@ Counter Locations::computePropensities(const Location &loc) {
     if (loc.acceptsVisit(visit) && diseaseModel->isSusceptible(state.state)) {
       Time visitStart = visit.visitStart / N_VISIT_BINS;
       Time visitEnd = visit.visitEnd / N_VISIT_BINS;
-      double prop = 0; 
+      double prop = 0;
       for (Time t = visitStart; t <= visitEnd; ++t) {
         prop += infectionPropensities[t];
       }
