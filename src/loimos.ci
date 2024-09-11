@@ -127,7 +127,9 @@ mainmodule loimos {
 
             // CkPrintf("  Compute Interactions\n");
             profile.stepStartTime = CkWallTimer();
-            locationsArray.QueueVisits();
+            locationsArray.BinVisits();
+            //locationsArray.QueueVisits();
+
             if (scenario->numDaysToSeedOutbreak > day) {
               SeedInfections();
             }
@@ -334,6 +336,7 @@ mainmodule loimos {
     entry void ReceiveVisitSchedule(VisitScheduleMessage msg);
     entry void SendExpectedVisitors();
     entry void ReceiveVisitorStates(PersonStatesMessage msg);
+    entry void BinVisits();
     entry void QueueVisits();
     entry AGGREGATE void ReceiveVisitMessages(VisitMessage);
     entry void ComputeInteractions(); // calls ReceiveInteractions

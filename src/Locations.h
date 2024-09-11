@@ -29,6 +29,7 @@ class Locations : public CBase_Locations {
   Counter exposureDuration;
   Counter expectedExposureDuration;
   int day;
+  std::vector<double> infectionPropensities;
 
   std::unordered_map<Id, PersonState> visitorStates;
 
@@ -63,6 +64,8 @@ class Locations : public CBase_Locations {
   // Simple helper function which send the list of interactions with the
   // specified person to the appropriate People chare
   inline void sendInteractions(Location *loc, Id personIdx);
+  inline void sendInteractions(const Location &loc, Id personIdx,
+    double infectionPropensity) const;
 
 #if OUTPUT_FLAGS & OUTPUT_OVERLAPS
   Counter saveInteractions(const Location &loc, const Event &departure,
@@ -70,6 +73,7 @@ class Locations : public CBase_Locations {
 #endif
   void loadLocationData(std::string scenarioPath);
   void loadVisitData(std::ifstream *activityData);
+  Counter computePropensities(const Location &loc);
   void queueVisit(Location *loc, const VisitMessage &visit);
 
  public:
@@ -79,7 +83,8 @@ class Locations : public CBase_Locations {
   void ReceiveVisitSchedule(VisitScheduleMessage msg);
   void SendExpectedVisitors();
   void ReceiveVisitorStates(PersonStatesMessage msg);
-  void QueueVisits();
+  void BinVisits();
+  void QueueVisits(); // calls ComputeInteractions
   void ReceiveVisitMessages(VisitMessage visitMsg);
   void ComputeInteractions();  // calls ReceiveInfections
   void ReceiveIntervention(PartitionId interventionIdx);

@@ -30,6 +30,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cstring>
+#include <unordered_map>
 
 std::uniform_real_distribution<> Locations::unitDistrib(0.0, 1.0);
 
@@ -82,6 +84,8 @@ Locations::Locations(int seed, std::string scenarioPath) {
       l.toggleCompliance(i, inter.willComply(l, l.getGenerator()));
     }
   }
+
+  infectionPropensities.resize(DAY_LENGTH, 0.0);
 
 #if OUTPUT_FLAGS & OUTPUT_OVERLAPS
   interactionsFile = new std::ofstream(scenario->outputPath + "interactions_chare_"
@@ -298,6 +302,65 @@ void Locations::ReceiveVisitorStates(PersonStatesMessage msg) {
   }
 
   msg.states.clear();
+}
+
+void Locations::BinVisits() {
+  DiseaseModel *diseaseModel = scenario->diseaseModel;
+  for (const Location &location : locations) {
+    const std::vector<VisitMessage> &visits =
+      location.visitsByDay[day % scenario->numDaysWithDistinctVisits];
+
+    for (const VisitMessage &visit : visits) {
+      const PersonState &state = visitorStates[visit.personIdx];
+      if (location.acceptsVisit(visit) && diseaseModel->isInfectious(state.state)) {
+        Time visitStart = visit.visitStart / N_VISIT_BINS;
+        Time visitEnd = visit.visitEnd / N_VISIT_BINS;
+        double prop = diseaseModel->getInfectivity(state.state, visit.visitStart, visit.visitEnd,
+          state.transmissionModifier);
+        for (Time t = visitStart; t <= visitEnd; ++t) {
+          infectionPropensities[t] += prop;
+        }
+
+#ifdef ENABLE_SC
+        if (!location.anyInfectious) {
+          location.anyInfectious = true;
+        }
+#endif
+      }
+    }
+
+    computePropensities(location);
+    std::memset(infectionPropensities.data(), 0, infectionPropensities.size() * sizeof(double));
+  }
+}
+
+Counter Locations::computePropensities(const Location &loc) {
+#if ENABLE_SC
+  if (!loc->anyInfectious) {
+    loc->reset();
+    return 0;
+  }
+#endif
+
+  DiseaseModel *diseaseModel = scenario->diseaseModel;
+  const std::vector<VisitMessage> &visits =
+    loc.visitsByDay[day % scenario->numDaysWithDistinctVisits];
+
+  for (const VisitMessage &visit : visits) {
+    const PersonState &state = visitorStates[visit.personIdx];
+    if (loc.acceptsVisit(visit) && diseaseModel->isSusceptible(state.state)) {
+      Time visitStart = visit.visitStart / N_VISIT_BINS;
+      Time visitEnd = visit.visitEnd / N_VISIT_BINS;
+      double prop = 0; 
+      for (Time t = visitStart; t <= visitEnd; ++t) {
+        prop += infectionPropensities[t];
+      }
+      prop *= diseaseModel->getSusceptibility(state.state, state.transmissionModifier);
+      sendInteractions(loc, visit.personIdx, prop);
+    }
+  }
+
+  return 0;
 }
 
 void Locations::QueueVisits() {
@@ -600,6 +663,12 @@ inline void Locations::registerInteraction(Location *loc,
 // specified person to the appropriate People chare
 inline void Locations::sendInteractions(Location *loc,
     Id personIdx) {
+  sendInteractions(*loc, personIdx, interactions[personIdx]);
+  interactions.erase(personIdx);
+}
+
+inline void Locations::sendInteractions(const Location &loc,
+    Id personIdx, double infectionPropensity) const {
   Partitioner *partitioner = scenario->partitioner;
   PartitionId personPartition = partitioner->getPersonPartitionIndex(personIdx);
 #ifdef ENABLE_DEBUG
@@ -607,13 +676,13 @@ inline void Locations::sendInteractions(Location *loc,
     CkAbort("Error on chare %d: sending exposures at "
       ID_PRINT_TYPE" to person " ID_PRINT_TYPE " on chare "
       PARTITION_ID_PRINT_TYPE" outside of valid range [0, "
-      PARTITION_ID_PRINT_TYPE")\n", thisIndex, loc->getUniqueId(),
+      PARTITION_ID_PRINT_TYPE")\n", thisIndex, loc.getUniqueId(),
       personIdx, personPartition, partitioner->getNumPersonPartitions());
   }
 #endif
 
-  InteractionMessage interMsg(loc->getUniqueId(), personIdx,
-      interactions[personIdx]);
+  InteractionMessage interMsg(loc.getUniqueId(), personIdx,
+      infectionPropensity);
 #ifdef USE_HYPERCOMM
   Aggregator *agg = aggregatorProxy.ckLocalBranch();
   if (agg->interact_aggregator) {
@@ -623,18 +692,6 @@ inline void Locations::sendInteractions(Location *loc,
 #endif  // USE_HYPERCOMM
 
   peopleArray[personPartition].ReceiveInteractions(interMsg);
-
-  // CkPrintf(
-  //   "    Sending %d interactions to person %d in partition %d\r\n",
-  //   (int) interactions[personIdx].size(),
-  //   personIdx,
-  //   personPartition
-  // );
-
-  // Free up space where we were storing interactions data. This also prevents
-  // interactions from being sent multiple times if this person has multiple
-  // visits to this location
-  interactions.erase(personIdx);
 }
 
 void Locations::ReceiveIntervention(PartitionId interventionIdx) {

@@ -65,7 +65,7 @@ void Location::restoreVisits(const void *cause) {
   visitFilters.erase(cause);
 }
 
-bool Location::acceptsVisit(const VisitMessage &visit) {
+bool Location::acceptsVisit(const VisitMessage &visit) const {
   for (const std::pair<const void *, VisitTest> &pair : visitFilters) {
     if (!pair.second(visit)) {
       return false;

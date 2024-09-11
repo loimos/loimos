@@ -303,3 +303,16 @@ double DiseaseModel::getPropensity(DiseaseState susceptibleState,
     * model->disease_states(susceptibleState).susceptibility()
     * model->disease_states(infectiousState).infectivity() / DAY_LENGTH;
 }
+
+double DiseaseModel::getInfectivity(DiseaseState state,
+    Time startTime, Time endTime, double infectivity) const {
+  Time dt = endTime - startTime;
+
+  return model->transmissibility() * dt
+    * model->disease_states(state).infectivity() * infectivity;
+}
+
+double DiseaseModel::getSusceptibility(DiseaseState state,
+    double susceptibility) const {
+  return model->disease_states(state).susceptibility() * susceptibility;
+}
