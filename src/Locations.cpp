@@ -461,14 +461,17 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 void Locations::ComputeInteractions() {
   Counter numVisits = 0;
   Counter numInteractions = 0;
+  Counter numExposures = 0;
   exposureDuration = 0;
   expectedExposureDuration = 0;
   for (Location &loc : locations) {
     Counter locVisits = loc.events.size() / 2;
     numVisits += locVisits;
 
-    Counter locInters = processEvents(&loc);
+    Counter locInters, locExpos;
+    std::tie(locInters, locExpos) = processEvents(&loc);
     numInteractions += locInters;
+    numExposures += locExpos;
 
     // if (0 < locInters) {
     //   CkPrintf("    Chare %d: loc %d found %d interactions from %d visits\n",
@@ -479,6 +482,9 @@ void Locations::ComputeInteractions() {
   CkCallback cb(CkReductionTarget(Main, ReceiveInteractionsCount), mainProxy);
   contribute(sizeof(Counter), &numInteractions,
       CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), cb);
+  CkCallback expCb(CkReductionTarget(Main, ReceiveExposuresCount), mainProxy);
+  contribute(sizeof(Counter), &numExposures,
+      CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), expCb);
 #endif
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
@@ -492,13 +498,14 @@ void Locations::ComputeInteractions() {
   day++;
 }
 
-Counter Locations::processEvents(Location *loc) {
+std::tuple<Counter, Counter> Locations::processEvents(Location *loc) {
   std::vector<Event> *arrivals;
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   Counter numInteractions = 0;
   Counter numPresent = 0;
   Counter numVisits = loc->events.size() / 2;
   Counter duration = 0;
+  Counter numExposures = 0;
   double startTime = CkWallTimer();
 #elif ENABLE_SC
   if (!loc->anyInfectious) {
@@ -544,7 +551,7 @@ Counter Locations::processEvents(Location *loc) {
       saveInteractions(*loc, event, interactionsFile);
 #endif
 
-      onDeparture(loc, event);
+      numExposures += onDeparture(loc, event);
     }
   }
   loc->reset();
@@ -563,9 +570,10 @@ Counter Locations::processEvents(Location *loc) {
         p, numInteractions, total, numVisits, elapsedTime);
   }
 #endif  // DEBUG_LOCATION_SUMMARY
-  return total;
+  return std::make_tuple(total, numExposures);
 #else
-  return 0;
+  Counter tmp = 0;
+  return std::make_tuple(tmp, tmp);
 #endif  // DEBUG_VERBOSE
 }
 
@@ -605,21 +613,23 @@ Counter Locations::saveInteractions(const Location &loc,
 #endif  // OUTPUT_OVERLAPS
 
 // Simple dispatch to the susceptible/infectious depature handlers
-inline void Locations::onDeparture(Location *loc, const Event& departure) {
+inline Counter Locations::onDeparture(Location *loc, const Event& departure) {
   DiseaseModel *diseaseModel = scenario->diseaseModel;
   if (diseaseModel->isSusceptible(departure.personState)) {
-    onSusceptibleDeparture(loc, departure);
+    return onSusceptibleDeparture(loc, departure);
 
   } else if (diseaseModel->isInfectious(departure.personState)) {
-    onInfectiousDeparture(loc, departure);
+    return onInfectiousDeparture(loc, departure);
   }
 }
 
-void Locations::onSusceptibleDeparture(Location *loc,
+Counter Locations::onSusceptibleDeparture(Location *loc,
     const Event& susceptibleDeparture) {
   // Each infectious person at this location might have infected this
   // susceptible person
+  Counter numExposures = 0;
   for (const Event &infectiousArrival : infectiousArrivals) {
+    numExposures++;
     registerInteraction(loc, susceptibleDeparture, infectiousArrival,
       // The start time is whichever arrival happened later
       std::max(infectiousArrival.scheduledTime,
@@ -628,19 +638,24 @@ void Locations::onSusceptibleDeparture(Location *loc,
   }
 
   sendInteractions(loc, susceptibleDeparture.personIdx);
+  return numExposures;
 }
 
-void Locations::onInfectiousDeparture(Location *loc,
+Counter Locations::onInfectiousDeparture(Location *loc,
     const Event& infectiousDeparture) {
   // Each susceptible person at this location might have been infected by this
   // infectious person
+  Counter numExposures = 0;
   for (const Event &susceptibleArrival : susceptibleArrivals) {
+    numExposures++;
     registerInteraction(loc, susceptibleArrival, infectiousDeparture,
       // The start time is whichever arrival happened later
       std::max(susceptibleArrival.scheduledTime,
         infectiousDeparture.partnerTime),
       infectiousDeparture.scheduledTime);
   }
+
+  return numExposures;
 }
 
 inline void Locations::registerInteraction(Location *loc,

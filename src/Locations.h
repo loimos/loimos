@@ -47,13 +47,13 @@ class Locations : public CBase_Locations {
 
   // Runs through all of the current events and return the indices of
   // any people who have been infected
-  Counter processEvents(Location *loc);
+  std::tuple<Counter, Counter> processEvents(Location *loc);
 
   // Helper functions to handle when a person leaves a location
   // onDeparture branches to one of the two other functions
-  inline void onDeparture(Location *loc, const Event& departure);
-  void onSusceptibleDeparture(Location *loc, const Event& departure);
-  void onInfectiousDeparture(Location *loc, const Event& departure);
+  inline Counter onDeparture(Location *loc, const Event& departure);
+  Counter onSusceptibleDeparture(Location *loc, const Event& departure);
+  Counter onInfectiousDeparture(Location *loc, const Event& departure);
 
   // Helper function which packages all the neccessary information about
   // an interaction between a susceptible person and an infectious person

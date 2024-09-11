@@ -493,8 +493,6 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
   }
 #endif
 
-  // Just concatenate the interaction lists so that we can process all of the
-  // interactions at the end of the day
   Person &person = people[localIdx];
   person.infectionPropensity += interMsg.infectionPropensity;
 }
@@ -518,13 +516,7 @@ void People::EndOfDayStateUpdate() {
 
   // Handle state transitions at the end of the day.
   Id infectiousCount = 0;
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
-  Counter totalExposuresPerDay = 0;
-#endif
   for (Person &person : people) {
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
-    totalExposuresPerDay += person.interactions.size();
-#endif
     ProcessInteractions(&person);
     UpdateDiseaseState(&person);
 
@@ -539,11 +531,6 @@ void People::EndOfDayStateUpdate() {
   CkCallback cb(CkReductionTarget(Main, ReceiveInfectiousCount), mainProxy);
   contribute(sizeof(Id), &infectiousCount,
       CONCAT(CkReduction::sum_, ID_REDUCTION_TYPE), cb);
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
-  CkCallback expCb(CkReductionTarget(Main, ReceiveExposuresCount), mainProxy);
-  contribute(sizeof(Counter), &totalExposuresPerDay,
-      CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), expCb);
-#endif
 
   // Get ready for the next day
   day++;
