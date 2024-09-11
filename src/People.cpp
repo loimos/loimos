@@ -564,10 +564,9 @@ void People::ProcessInteractions(Person *person) {
       // TODO(jkitson): decide how to rework this to work with the less granular
       // interaction reporting; maybe report source location?
       // tick,pid,exit_state,contact_pid,contact_start
-      const Interaction &inter = person->interactions[interactionIdx];
       *transitionsFile << day << "," << person->getUniqueId() << ","
           << diseaseModel->getStateLabel(person->next_state) << ","
-          << inter.infectiousIdx << "," << inter.startTime << std::endl;
+          << 0 << "," << 0 << std::endl;
 #endif
     }
   }
