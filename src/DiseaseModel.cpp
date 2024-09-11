@@ -305,10 +305,8 @@ double DiseaseModel::getPropensity(DiseaseState susceptibleState,
 }
 
 double DiseaseModel::getInfectivity(DiseaseState state,
-    Time startTime, Time endTime, double infectivity) const {
-  Time dt = endTime - startTime;
-
-  return model->transmissibility() * dt
+    double infectivity) const {
+  return model->transmissibility()
     * model->disease_states(state).infectivity() * infectivity;
 }
 

@@ -315,8 +315,7 @@ void Locations::BinVisits() {
       if (location.acceptsVisit(visit) && diseaseModel->isInfectious(state.state)) {
         Time visitStart = visit.visitStart / N_VISIT_BINS;
         Time visitEnd = visit.visitEnd / N_VISIT_BINS;
-        double prop = diseaseModel->getInfectivity(state.state, visit.visitStart,
-          visit.visitEnd, state.transmissionModifier);
+        double prop = diseaseModel->getInfectivity(state.state, state.transmissionModifier);
         for (Time t = visitStart; t <= visitEnd; ++t) {
           infectionPropensities[t] += prop;
         }
@@ -356,7 +355,8 @@ Counter Locations::computePropensities(const Location &loc) {
       for (Time t = visitStart; t <= visitEnd; ++t) {
         prop += infectionPropensities[t];
       }
-      prop *= diseaseModel->getSusceptibility(state.state, state.transmissionModifier);
+      prop *= VISIT_BIN_DURATION
+        * diseaseModel->getSusceptibility(state.state, state.transmissionModifier);
       sendInteractions(loc, visit.personIdx, prop);
     }
   }
