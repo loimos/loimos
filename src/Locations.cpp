@@ -552,7 +552,9 @@ std::tuple<Counter, Counter> Locations::processEvents(Location *loc) {
       saveInteractions(*loc, event, interactionsFile);
 #endif
 
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
       numExposures += onDeparture(loc, event);
+#endif
     }
   }
   loc->reset();
