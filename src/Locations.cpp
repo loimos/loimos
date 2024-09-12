@@ -307,7 +307,7 @@ void Locations::ReceiveVisitorStates(PersonStatesMessage msg) {
 
 void Locations::BinVisits() {
   DiseaseModel *diseaseModel = scenario->diseaseModel;
-  for (const Location &location : locations) {
+  for (Location &location : locations) {
     const std::vector<VisitMessage> &visits =
       location.visitsByDay[day % scenario->numDaysWithDistinctVisits];
 
@@ -330,13 +330,13 @@ void Locations::BinVisits() {
       }
     }
 
-    computePropensities(location);
+    computePropensities(&location);
     std::memset(infectionPropensities.data(), 0,
       infectionPropensities.size() * sizeof(double));
   }
 }
 
-Counter Locations::computePropensities(const Location &loc) {
+Counter Locations::computePropensities(Location *loc) {
 #if ENABLE_SC
   if (!loc->anyInfectious) {
     loc->reset();
@@ -346,11 +346,11 @@ Counter Locations::computePropensities(const Location &loc) {
 
   DiseaseModel *diseaseModel = scenario->diseaseModel;
   const std::vector<VisitMessage> &visits =
-    loc.visitsByDay[day % scenario->numDaysWithDistinctVisits];
+    loc->visitsByDay[day % scenario->numDaysWithDistinctVisits];
 
   for (const VisitMessage &visit : visits) {
     const PersonState &state = visitorStates[visit.personIdx];
-    if (loc.acceptsVisit(visit) && diseaseModel->isSusceptible(state.state)) {
+    if (loc->acceptsVisit(visit) && diseaseModel->isSusceptible(state.state)) {
       Time visitStart = visit.visitStart / N_VISIT_BINS;
       Time visitEnd = visit.visitEnd / N_VISIT_BINS;
       double prop = 0;
@@ -359,7 +359,7 @@ Counter Locations::computePropensities(const Location &loc) {
       }
       prop *= VISIT_BIN_DURATION
         * diseaseModel->getSusceptibility(state.state, state.transmissionModifier);
-      sendInteractions(loc, visit.personIdx, prop);
+      sendInteractions(*loc, visit.personIdx, prop);
     }
   }
 
@@ -373,13 +373,6 @@ void Locations::QueueVisits() {
 
     for (const VisitMessage &visit : visits) {
       queueVisit(&location, visit);
-
-#ifdef ENABLE_SC
-      bool isInfectious = scenario->diseaseModel->isInfectious(state.state);
-      if (!location.anyInfectious && isInfectious) {
-        location.anyInfectious = true;
-      }
-#endif
     }
   }
 
@@ -396,6 +389,13 @@ inline void Locations::queueVisit(Location *loc, const VisitMessage &visit) {
 
   loc->addEvent(arrival);
   loc->addEvent(departure);
+
+#ifdef ENABLE_SC
+  bool isInfectious = scenario->diseaseModel->isInfectious(state.state);
+  if (!loc->anyInfectious && isInfectious) {
+    loc->anyInfectious = true;
+  }
+#endif
 }
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
@@ -511,7 +511,7 @@ std::tuple<Counter, Counter> Locations::processEvents(Location *loc) {
 #elif ENABLE_SC
   if (!loc->anyInfectious) {
     loc->reset();
-    return 0;
+    return std::make_tuple(0, 0);
   }
 #endif
 
@@ -575,8 +575,7 @@ std::tuple<Counter, Counter> Locations::processEvents(Location *loc) {
 #endif  // DEBUG_LOCATION_SUMMARY
   return std::make_tuple(total, numExposures);
 #else
-  Counter tmp = 0;
-  return std::make_tuple(tmp, tmp);
+  return std::make_tuple(0, 0);
 #endif  // DEBUG_VERBOSE
 }
 

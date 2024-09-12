@@ -74,7 +74,7 @@ class Locations : public CBase_Locations {
 #endif
   void loadLocationData(std::string scenarioPath);
   void loadVisitData(std::ifstream *activityData);
-  Counter computePropensities(const Location &loc);
+  Counter computePropensities(Location *loc);
   void queueVisit(Location *loc, const VisitMessage &visit);
 
  public:
