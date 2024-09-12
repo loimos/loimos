@@ -74,7 +74,10 @@ class Locations : public CBase_Locations {
 #endif
   void loadLocationData(std::string scenarioPath);
   void loadVisitData(std::ifstream *activityData);
-  Counter computePropensities(Location *loc);
+  bool binInfectivity(const Location &loc, const PersonState &state,
+    const VisitMessage &visit);
+  void computeInfectionPropensity(const Location &loc, const PersonState &state,
+    const VisitMessage &visit);
   void queueVisit(Location *loc, const VisitMessage &visit);
 
  public:

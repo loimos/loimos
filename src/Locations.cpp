@@ -307,71 +307,74 @@ void Locations::ReceiveVisitorStates(PersonStatesMessage msg) {
 
 void Locations::BinVisits() {
   DiseaseModel *diseaseModel = scenario->diseaseModel;
-  for (Location &location : locations) {
+  for (const Location &loc : locations) {
     const std::vector<VisitMessage> &visits =
-      location.visitsByDay[day % scenario->numDaysWithDistinctVisits];
+      loc.visitsByDay[day % scenario->numDaysWithDistinctVisits];
 
+    bool anyInfectious = false;
     for (const VisitMessage &visit : visits) {
       const PersonState &state = visitorStates[visit.personIdx];
-      if (location.acceptsVisit(visit) && diseaseModel->isInfectious(state.state)) {
-        Time visitStart = visit.visitStart / VISIT_BIN_DURATION;
-        Time visitEnd = visit.visitEnd / VISIT_BIN_DURATION;
-        CkPrintf("    Chare %d: Person %d visiting loc %d from %d to %d (bins %d to %d)\n",
-          thisIndex, visit.personIdx, visit.locationIdx, visit.visitStart,
-          visit.visitEnd, visitStart, visitEnd);
-        double prop = diseaseModel->getInfectivity(state.state,
-          state.transmissionModifier);
-        for (Time t = visitStart; t <= visitEnd; ++t) {
-          infectionPropensities[t] += prop;
-        }
-
-#ifdef ENABLE_SC
-        if (!location.anyInfectious) {
-          location.anyInfectious = true;
-        }
-#endif
-      }
+      anyInfectious |= binInfectivity(loc, state, visit);
     }
 
-    computePropensities(&location);
+#ifdef ENABLE_SC
+    if (anyInfectious) {
+#endif
+      for (const VisitMessage &visit : visits) {
+        const PersonState &state = visitorStates[visit.personIdx];
+        computeInfectionPropensity(loc, state, visit);
+      }
+#ifdef ENABLE_SC
+    }
+#endif
+
     std::memset(infectionPropensities.data(), 0,
       infectionPropensities.size() * sizeof(double));
   }
 }
 
-Counter Locations::computePropensities(Location *loc) {
-#if ENABLE_SC
-  if (!loc->anyInfectious) {
-    loc->reset();
-    return 0;
-  }
-#endif
-
-  CkPrintf("  Chare %d: Location %d compute propensities\n", thisIndex,
-    loc->getUniqueId());
+// Helper function to bin the contribution of visit to the propensity for a
+// susceptible visitor to loc to be infected. Returns whether or not this
+// visit had a non-zero contribution.
+inline bool Locations::binInfectivity(const Location &loc, const PersonState &state,
+    const VisitMessage &visit) {
   DiseaseModel *diseaseModel = scenario->diseaseModel;
-  const std::vector<VisitMessage> &visits =
-    loc->visitsByDay[day % scenario->numDaysWithDistinctVisits];
-
-  for (const VisitMessage &visit : visits) {
-    const PersonState &state = visitorStates[visit.personIdx];
-    if (loc->acceptsVisit(visit) && diseaseModel->isSusceptible(state.state)) {
-      Time visitStart = visit.visitStart / VISIT_BIN_DURATION;
-      Time visitEnd = visit.visitEnd / VISIT_BIN_DURATION;
-      double prop = 0;
-      for (Time t = visitStart; t <= visitEnd; ++t) {
-        prop += infectionPropensities[t];
-      }
-      prop *= VISIT_BIN_DURATION
-        * diseaseModel->getSusceptibility(state.state, state.transmissionModifier);
-      CkPrintf("    Chare %d: Person %d infection propensity %f\n", thisIndex,
-        visit.personIdx, prop);
-      sendInteractions(*loc, visit.personIdx, prop);
+  if (loc.acceptsVisit(visit) && diseaseModel->isInfectious(state.state)) {
+    Time visitStart = visit.visitStart / VISIT_BIN_DURATION;
+    Time visitEnd = visit.visitEnd / VISIT_BIN_DURATION;
+    // CkPrintf("    Chare %d: Person %d visiting loc %d from %d to %d (bins %d to %d)\n",
+    //          thisIndex, visit.personIdx, visit.locationIdx, visit.visitStart,
+    //          visit.visitEnd, visitStart, visitEnd);
+    double prop = diseaseModel->getInfectivity(state.state,
+                                               state.transmissionModifier);
+    for (Time t = visitStart; t <= visitEnd; ++t) {
+      infectionPropensities[t] += prop;
     }
-  }
 
-  loc->reset();
-  return 0;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+// Helper function to compute the propensity for a susceptible visitor to loc to be infected
+inline void Locations::computeInfectionPropensity(const Location &loc, const PersonState &state,
+    const VisitMessage &visit) {
+  DiseaseModel *diseaseModel = scenario->diseaseModel;
+  if (loc.acceptsVisit(visit) && diseaseModel->isSusceptible(state.state)) {
+    Time visitStart = visit.visitStart / VISIT_BIN_DURATION;
+    Time visitEnd = visit.visitEnd / VISIT_BIN_DURATION;
+    double prop = 0;
+    for (Time t = visitStart; t <= visitEnd; ++t) {
+      prop += infectionPropensities[t];
+    }
+    
+    prop *= VISIT_BIN_DURATION
+      * diseaseModel->getSusceptibility(state.state, state.transmissionModifier);
+    //CkPrintf("    Chare %d: Person %d infection propensity %f\n", thisIndex,
+    //  visit.personIdx, prop);
+    sendInteractions(loc, visit.personIdx, prop);
+  }
 }
 
 void Locations::QueueVisits() {
