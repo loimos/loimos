@@ -312,14 +312,20 @@ void Locations::BinVisits() {
       loc.visitsByDay[day % scenario->numDaysWithDistinctVisits];
 
     bool anyInfectious = false;
+    int numInfectious = 0;
     for (const VisitMessage &visit : visits) {
       const PersonState &state = visitorStates[visit.personIdx];
-      anyInfectious |= binInfectivity(loc, state, visit);
+      bool tmp = binInfectivity(loc, state, visit);
+      anyInfectious |= tmp;
+      numInfectious += tmp;
     }
 
 #ifdef ENABLE_SC
     if (anyInfectious) {
 #endif
+      // CkPrintf("    Chare %d: Location %d has %d/%lu infectious visits (prob %f)\n",
+      //     thisIndex, loc.getUniqueId(), numInfectious, visits.size(),
+      //     scenario->contactModel->getContactProbability(loc));
       for (const VisitMessage &visit : visits) {
         const PersonState &state = visitorStates[visit.personIdx];
         computeInfectionPropensity(loc, state, visit);
@@ -339,7 +345,7 @@ void Locations::BinVisits() {
 inline bool Locations::binInfectivity(const Location &loc, const PersonState &state,
     const VisitMessage &visit) {
   DiseaseModel *diseaseModel = scenario->diseaseModel;
-  if (loc.acceptsVisit(visit) && diseaseModel->isInfectious(state.state)) {
+  if (/*loc.acceptsVisit(visit) &&*/ diseaseModel->isInfectious(state.state)) {
     Time visitStart = visit.visitStart / VISIT_BIN_DURATION;
     Time visitEnd = visit.visitEnd / VISIT_BIN_DURATION;
     // CkPrintf("    Chare %d: Person %d visiting loc %d from %d to %d "
@@ -363,7 +369,7 @@ inline bool Locations::binInfectivity(const Location &loc, const PersonState &st
 inline void Locations::computeInfectionPropensity(const Location &loc,
     const PersonState &state, const VisitMessage &visit) {
   DiseaseModel *diseaseModel = scenario->diseaseModel;
-  if (loc.acceptsVisit(visit) && diseaseModel->isSusceptible(state.state)) {
+  if (/*loc.acceptsVisit(visit) &&*/ diseaseModel->isSusceptible(state.state)) {
     Time visitStart = visit.visitStart / VISIT_BIN_DURATION;
     Time visitEnd = visit.visitEnd / VISIT_BIN_DURATION;
     double prop = 0;
@@ -371,8 +377,9 @@ inline void Locations::computeInfectionPropensity(const Location &loc,
       prop += infectionPropensities[t];
     }
 
-    prop *= VISIT_BIN_DURATION
-      * diseaseModel->getSusceptibility(state.state, state.transmissionModifier);
+    prop *= VISIT_BIN_DURATION / DAY_LENGTH
+      * diseaseModel->getSusceptibility(state.state, state.transmissionModifier)
+      * scenario->contactModel->getContactProbability(loc);
     // CkPrintf("    Chare %d: Person %d infection propensity %f\n", thisIndex,
     //   visit.personIdx, prop);
     sendInteractions(loc, visit.personIdx, prop);
