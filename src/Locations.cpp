@@ -314,8 +314,11 @@ void Locations::BinVisits() {
     for (const VisitMessage &visit : visits) {
       const PersonState &state = visitorStates[visit.personIdx];
       if (location.acceptsVisit(visit) && diseaseModel->isInfectious(state.state)) {
-        Time visitStart = visit.visitStart / N_VISIT_BINS;
-        Time visitEnd = visit.visitEnd / N_VISIT_BINS;
+        Time visitStart = visit.visitStart / VISIT_BIN_DURATION;
+        Time visitEnd = visit.visitEnd / VISIT_BIN_DURATION;
+        CkPrintf("    Chare %d: Person %d visiting loc %d from %d to %d (bins %d to %d)\n",
+          thisIndex, visit.personIdx, visit.locationIdx, visit.visitStart,
+          visit.visitEnd, visitStart, visitEnd);
         double prop = diseaseModel->getInfectivity(state.state,
           state.transmissionModifier);
         for (Time t = visitStart; t <= visitEnd; ++t) {
@@ -344,6 +347,8 @@ Counter Locations::computePropensities(Location *loc) {
   }
 #endif
 
+  CkPrintf("  Chare %d: Location %d compute propensities\n", thisIndex,
+    loc->getUniqueId());
   DiseaseModel *diseaseModel = scenario->diseaseModel;
   const std::vector<VisitMessage> &visits =
     loc->visitsByDay[day % scenario->numDaysWithDistinctVisits];
@@ -351,18 +356,21 @@ Counter Locations::computePropensities(Location *loc) {
   for (const VisitMessage &visit : visits) {
     const PersonState &state = visitorStates[visit.personIdx];
     if (loc->acceptsVisit(visit) && diseaseModel->isSusceptible(state.state)) {
-      Time visitStart = visit.visitStart / N_VISIT_BINS;
-      Time visitEnd = visit.visitEnd / N_VISIT_BINS;
+      Time visitStart = visit.visitStart / VISIT_BIN_DURATION;
+      Time visitEnd = visit.visitEnd / VISIT_BIN_DURATION;
       double prop = 0;
       for (Time t = visitStart; t <= visitEnd; ++t) {
         prop += infectionPropensities[t];
       }
       prop *= VISIT_BIN_DURATION
         * diseaseModel->getSusceptibility(state.state, state.transmissionModifier);
+      CkPrintf("    Chare %d: Person %d infection propensity %f\n", thisIndex,
+        visit.personIdx, prop);
       sendInteractions(*loc, visit.personIdx, prop);
     }
   }
 
+  loc->reset();
   return 0;
 }
 
