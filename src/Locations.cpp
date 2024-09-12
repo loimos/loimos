@@ -342,8 +342,9 @@ inline bool Locations::binInfectivity(const Location &loc, const PersonState &st
   if (loc.acceptsVisit(visit) && diseaseModel->isInfectious(state.state)) {
     Time visitStart = visit.visitStart / VISIT_BIN_DURATION;
     Time visitEnd = visit.visitEnd / VISIT_BIN_DURATION;
-    // CkPrintf("    Chare %d: Person %d visiting loc %d from %d to %d (bins %d to %d)\n",
-    //          thisIndex, visit.personIdx, visit.locationIdx, visit.visitStart,
+    // CkPrintf("    Chare %d: Person %d visiting loc %d from %d to %d "
+    //          "(bins %d to %d)\n", thisIndex, visit.personIdx,
+    //          visit.locationIdx, visit.visitStart,
     //          visit.visitEnd, visitStart, visitEnd);
     double prop = diseaseModel->getInfectivity(state.state,
                                                state.transmissionModifier);
@@ -357,9 +358,10 @@ inline bool Locations::binInfectivity(const Location &loc, const PersonState &st
   }
 }
 
-// Helper function to compute the propensity for a susceptible visitor to loc to be infected
-inline void Locations::computeInfectionPropensity(const Location &loc, const PersonState &state,
-    const VisitMessage &visit) {
+// Helper function to compute the propensity for a susceptible visitor
+// to loc to be infected
+inline void Locations::computeInfectionPropensity(const Location &loc,
+    const PersonState &state, const VisitMessage &visit) {
   DiseaseModel *diseaseModel = scenario->diseaseModel;
   if (loc.acceptsVisit(visit) && diseaseModel->isSusceptible(state.state)) {
     Time visitStart = visit.visitStart / VISIT_BIN_DURATION;
@@ -368,11 +370,11 @@ inline void Locations::computeInfectionPropensity(const Location &loc, const Per
     for (Time t = visitStart; t <= visitEnd; ++t) {
       prop += infectionPropensities[t];
     }
-    
+
     prop *= VISIT_BIN_DURATION
       * diseaseModel->getSusceptibility(state.state, state.transmissionModifier);
-    //CkPrintf("    Chare %d: Person %d infection propensity %f\n", thisIndex,
-    //  visit.personIdx, prop);
+    // CkPrintf("    Chare %d: Person %d infection propensity %f\n", thisIndex,
+    //   visit.personIdx, prop);
     sendInteractions(loc, visit.personIdx, prop);
   }
 }
