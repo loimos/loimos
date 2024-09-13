@@ -127,14 +127,10 @@ mainmodule loimos {
 
             // CkPrintf("  Compute Interactions\n");
             profile.stepStartTime = CkWallTimer();
-#ifdef ENABLE_DEBUG
-            if (ENABLE_DEBUG >= DEBUG_VERBOSE) {
-              locationsArray.QueueVisits();
-            } else {
-              locationsArray.BinVisits();
-            }
-#else
+#ifdef ENABLE_BINNING
             locationsArray.BinVisits();
+#else
+            locationsArray.QueueVisits();
 #endif
 
             if (scenario->numDaysToSeedOutbreak > day) {

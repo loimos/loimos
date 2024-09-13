@@ -180,9 +180,9 @@ jobs:
           export ENABLE_FORCE_FULL_RUN=1
           cd src
           # Build optimized verison
-          ENABLE_AGGREGATION=1 ENABLE_SC=1 make clean
-          ENABLE_AGGREGATION=1 ENABLE_SC=1 make
-          ./charmrun +p4 ./loimos-agg-sc 1 100 100 50 50 5 5 5 32 7 \
+          ENABLE_AGGREGATION=1 ENABLE_SC=1 ENABLE_BINNING=1 make clean
+          ENABLE_AGGREGATION=1 ENABLE_SC=1 ENABLE_BINNING=1 make
+          ./charmrun +p4 ./loimos-agg-sc-bin 1 100 100 50 50 5 5 5 32 7 \
             ci-test-opts.csv \
             ../data/disease_models/covid19_onepath.textproto \
             +setcpuaffinity ++local

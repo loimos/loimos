@@ -36,6 +36,9 @@ endif
 ifdef ENABLE_SC
 BIN   :=$(BIN)-sc
 endif
+ifdef ENABLE_BINNING
+BIN   :=$(BIN)-bin
+endif
 
 # Set the ENABLE_UNIT_TESTING environment variable to compile for unit testing
 ifdef ENABLE_UNIT_TESTING
