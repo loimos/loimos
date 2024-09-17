@@ -79,7 +79,7 @@ void parse(int argc, char **argv, Arguments *args) {
     }
 
     args->numDays = atoi(argv[++argNum]);
-    args->numDaysWithDistinctVisits = 7;
+    args->numDaysWithDistinctVisits = 1;
     args->scenarioPath = std::string("");
 
   } else {
