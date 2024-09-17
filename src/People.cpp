@@ -338,7 +338,7 @@ void People::pup(PUP::er &p) {
 
 void People::SendVisitSchedules() {
   std::unordered_map<PartitionId, VisitScheduleMessage> schedules;
-  for (const Person &person : people) {
+  for (Person &person : people) {
     for (size_t d = 0; d < scenario->numDaysWithDistinctVisits; d++) {
       const std::vector<VisitMessage> &visits = person.visitsByDay[d];
       for (const VisitMessage &visit : visits) {
@@ -355,15 +355,13 @@ void People::SendVisitSchedules() {
         schedules[locationPartition].visitsByDay[d].push_back(visit);
       }
     }
+
+    person.visitsByDay.clear();
   }
 
   for (auto &entry : schedules) {
     PartitionId partitionIdx = entry.first;
     locationsArray[partitionIdx].ReceiveVisitSchedule(entry.second);
-  }
-
-  for (Person &person : people) {
-    person.visitsByDay.clear();
   }
 }
 
