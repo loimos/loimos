@@ -9,6 +9,7 @@ import numpy as np
 from preprocess import read_csv, write_csv, make_contiguous, update_ids, VISIT_SORT_COLS
 from create_textproto import (
     create_textproto,
+    create_offsets_textproto,
     PEOPLE_TYPES,
     LOCATIONS_TYPES,
     VISITS_TYPES,
@@ -121,6 +122,13 @@ def parse_args():
         action="store_true",
         help="Pass this flag if the script should only update the partition "
         + "offsets and not the population files",
+    )
+    parser.add_argument(
+        "-d",
+        "--set-default",
+        action="store_true",
+        help="Pass this flag if the script should set this partitioning as the "
+        + "default for this dataset",
     )
 
     args = parser.parse_args()
@@ -372,6 +380,14 @@ def main(args):
                 create_textproto(
                     args.out_dir, args.visits_file, VISITS_TYPES, metadata_type="visits"
                 )
+
+        create_offsets_textproto(
+            args.out_dir,
+            f"location_offsets_{len(offsets)}.textproto",
+            offsets
+        )
+        if not args.set_default:
+            offsets = None
         create_textproto(
             args.out_dir,
             args.locations_file,
@@ -388,6 +404,12 @@ def main(args):
             create_textproto(
                 args.out_dir, args.visits_file, VISITS_TYPES, metadata_type="visits"
             )
+        create_offsets_textproto(
+            args.out_dir,
+            f"person_offsets_{len(offsets)}.textproto",
+            offsets)
+        if not args.set_default:
+            offsets = None
         create_textproto(
             args.out_dir, args.people_file, PEOPLE_TYPES, partition_offsets=offsets
         )
