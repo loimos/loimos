@@ -382,9 +382,7 @@ def main(args):
                 )
 
         create_offsets_textproto(
-            args.out_dir,
-            f"location_offsets_{len(offsets)}.textproto",
-            offsets
+            args.out_dir, f"location_offsets_{len(offsets)}.textproto", offsets
         )
         if not args.set_default:
             offsets = None
@@ -405,9 +403,8 @@ def main(args):
                 args.out_dir, args.visits_file, VISITS_TYPES, metadata_type="visits"
             )
         create_offsets_textproto(
-            args.out_dir,
-            f"person_offsets_{len(offsets)}.textproto",
-            offsets)
+            args.out_dir, f"person_offsets_{len(offsets)}.textproto", offsets
+        )
         if not args.set_default:
             offsets = None
         create_textproto(
