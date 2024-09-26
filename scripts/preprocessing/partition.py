@@ -386,12 +386,13 @@ def main(args):
         )
         if not args.set_default:
             offsets = None
-        create_textproto(
-            args.out_dir,
-            args.locations_file,
-            LOCATIONS_TYPES,
-            partition_offsets=offsets,
-        )
+        if args.set_default and not args.offsets_only:
+            create_textproto(
+                args.out_dir,
+                args.locations_file,
+                LOCATIONS_TYPES,
+                partition_offsets=offsets,
+            )
     elif args.in_dir != args.out_dir:
         shutil.copy(os.path.join(args.in_dir, args.locations_file), args.out_dir)
 
@@ -407,8 +408,9 @@ def main(args):
         )
         if not args.set_default:
             offsets = None
-        create_textproto(
-            args.out_dir, args.people_file, PEOPLE_TYPES, partition_offsets=offsets
+        if args.set_default and not args.offsets_only:
+            create_textproto(
+                args.out_dir, args.people_file, PEOPLE_TYPES, partition_offsets=offsets
         )
     elif args.in_dir != args.out_dir:
         shutil.copy(os.path.join(args.in_dir, args.people_file), args.out_dir)
