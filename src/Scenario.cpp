@@ -38,23 +38,59 @@ Scenario::Scenario(Arguments args) : seed(args.seed), numDays(args.numDays),
   } else {
     // Handle people...
     personDef = new loimos::proto::CSVDefinition;
-    readProtobuf(args.scenarioPath + "people.textproto", personDef);
+    checkReadResult(readProtobuf(args.scenarioPath + "people.textproto",
+      personDef), args.scenarioPath + "people.textproto");
     numPeople = personDef->num_rows();
+
+    loimos::proto::CSVDefinition *personOffsetDef = new loimos::proto::CSVDefinition;
+    std::string personOffsetPath = args.scenarioPath + "person_offsets_" +
+      std::to_string(args.partitionsToOffsetsRatio * args.numPersonPartitions) +
+      ".textproto";
+    CkPrintf("Looking for person offsets in %s (%d chares, %ld ratio)\n",
+      personOffsetPath.c_str(), args.numPersonPartitions, args.partitionsToOffsetsRatio);
+    if (FILE_READ_ERROR == readProtobuf(personOffsetPath, personOffsetDef)) {
+      delete personOffsetDef;
+      personOffsetDef = personDef;
+      CkPrintf("Read %d person offsets from %s\n", personOffsetDef->partition_offsets_size(),
+        (args.scenarioPath + "people.textproto").c_str());
+    } else {
+      CkPrintf("Read %d person offsets from %s\n", personOffsetDef->partition_offsets_size(),
+        personOffsetPath.c_str());
+    }
 
     // ...locations...
     locationDef = new loimos::proto::CSVDefinition;
-    readProtobuf(args.scenarioPath + "locations.textproto", locationDef);
+    checkReadResult(readProtobuf(args.scenarioPath + "locations.textproto",
+      locationDef), args.scenarioPath + "locations.textproto");
     numLocations = locationDef->num_rows();
+
+    loimos::proto::CSVDefinition *locationOffsetDef = new loimos::proto::CSVDefinition;
+    std::string locationOffsetPath = args.scenarioPath + "location_offsets_" +
+      std::to_string(args.partitionsToOffsetsRatio * args.numLocationPartitions) +
+      ".textproto";
+    CkPrintf("Looking for location offsets in %s (%d chares, %ld ratio)\n",
+      locationOffsetPath.c_str(), args.numLocationPartitions, args.partitionsToOffsetsRatio);
+    if (FILE_READ_ERROR == readProtobuf(locationOffsetPath, locationOffsetDef)) {
+      delete locationOffsetDef;
+      locationOffsetDef = locationDef;
+      CkPrintf("Read %d person offsets from %s\n", locationOffsetDef->partition_offsets_size(),
+        (args.scenarioPath + "location.textproto").c_str());
+    } else {
+      CkPrintf("Read %d location offsets from %s\n", locationOffsetDef->partition_offsets_size(),
+        locationOffsetPath.c_str());
+    }
 
     // ...and visits
     visitDef = new loimos::proto::CSVDefinition;
-    readProtobuf(args.scenarioPath + "visits.textproto", visitDef);
+    checkReadResult(readProtobuf(args.scenarioPath + "visits.textproto",
+      visitDef), args.scenarioPath + "visits.textproto");
 
     personAttributes.readAttributes(personDef->fields());
     locationAttributes.readAttributes(locationDef->fields());
 
     partitioner = new Partitioner(args.scenarioPath, args.numPersonPartitions,
-      args.numLocationPartitions, personDef, locationDef);
+      args.numLocationPartitions, personDef, locationDef, personOffsetDef,
+      locationOffsetDef);
 
     if (0 == CkMyNode()) {
       buildCache(args.scenarioPath, numPeople, partitioner->personPartitionOffsets,

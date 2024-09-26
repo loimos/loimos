@@ -52,7 +52,9 @@ struct Partitioner {
     PartitionId numPersonPartitions,
     PartitionId numLocationPartitions,
     loimos::proto::CSVDefinition *personMetadata,
-    loimos::proto::CSVDefinition *locationMetadata);
+    loimos::proto::CSVDefinition *locationMetadata,
+    loimos::proto::CSVDefinition *personOffsetDef,
+    loimos::proto::CSVDefinition *locationOffsetDef);
   Partitioner(PartitionId numPersonPartitions,
     PartitionId numLocationPartitions, Id numPeople,
     Id numLocations);

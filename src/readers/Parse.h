@@ -24,12 +24,13 @@ PUPbytes(OnTheFlyArguments);
 
 struct Arguments {
   // Arguments needed for all runs
+  Id numInitialInfectionsPerDay;
+  Id partitionsToOffsetsRatio; // Used to identify the correct offset file
   PartitionId numPersonPartitions;
   PartitionId numLocationPartitions;
   Time numDays;
   Time numDaysWithDistinctVisits;
   Time numDaysToSeedOutbreak;
-  Id numInitialInfectionsPerDay;
   int seed;
 
   bool hasIntervention;
@@ -53,6 +54,7 @@ struct Arguments {
     p | numDaysWithDistinctVisits;
     p | numDaysToSeedOutbreak;
     p | numInitialInfectionsPerDay;
+    p | partitionsToOffsetsRatio;
     p | seed;
     p | hasIntervention;
     p | contactModelType;

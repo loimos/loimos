@@ -61,5 +61,6 @@ const Time MINUTE_LENGTH = 60;
 // Data loading
 #define EMPTY_VISIT_SCHEDULE std::numeric_limits<CacheOffset>::max()
 #define CSV_DELIM ','
+#define FILE_READ_ERROR -1
 
 #endif  // DEFS_H_
