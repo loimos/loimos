@@ -25,7 +25,7 @@ PUPbytes(OnTheFlyArguments);
 struct Arguments {
   // Arguments needed for all runs
   Id numInitialInfectionsPerDay;
-  Id partitionsToOffsetsRatio; // Used to identify the correct offset file
+  Id partitionsToOffsetsRatio;  // Used to identify the correct offset file
   PartitionId numPersonPartitions;
   PartitionId numLocationPartitions;
   Time numDays;

@@ -50,11 +50,13 @@ Scenario::Scenario(Arguments args) : seed(args.seed), numDays(args.numDays),
       delete personOffsetDef;
       personOffsetDef = personDef;
 #ifdef ENABLE_DEBUG
-      CkPrintf("Read %d person offsets from %s\n", personOffsetDef->partition_offsets_size(),
-        (args.scenarioPath + "people.textproto").c_str());
+      CkPrintf("Read %d person offsets from %s\n",
+          personOffsetDef->partition_offsets_size(),
+          (args.scenarioPath + "people.textproto").c_str());
     } else {
-      CkPrintf("Read %d person offsets from %s\n", personOffsetDef->partition_offsets_size(),
-        personOffsetPath.c_str());
+      CkPrintf("Read %d person offsets from %s\n",
+          personOffsetDef->partition_offsets_size(),
+          personOffsetPath.c_str());
 #endif
     }
 
@@ -72,11 +74,13 @@ Scenario::Scenario(Arguments args) : seed(args.seed), numDays(args.numDays),
       delete locationOffsetDef;
       locationOffsetDef = locationDef;
 #ifdef ENABLE_DEBUG
-      CkPrintf("Read %d person offsets from %s\n", locationOffsetDef->partition_offsets_size(),
+      CkPrintf("Read %d person offsets from %s\n",
+          locationOffsetDef->partition_offsets_size(),
         (args.scenarioPath + "location.textproto").c_str());
     } else {
-      CkPrintf("Read %d location offsets from %s\n", locationOffsetDef->partition_offsets_size(),
-        locationOffsetPath.c_str());
+      CkPrintf("Read %d location offsets from %s\n",
+          locationOffsetDef->partition_offsets_size(),
+          locationOffsetPath.c_str());
     }
 #endif
 
