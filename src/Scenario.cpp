@@ -123,7 +123,7 @@ Scenario::Scenario(Arguments args) : seed(args.seed), numDays(args.numDays),
         personAttributes.getDataType(i));
   }
 
-  CkPrintf("Locations Attributes:\n");
+  CkPrintf("Location Attributes:\n");
   for (int i = 0; i < locationAttributes.size(); i++) {
     CkPrintf("(%d) %s: default: %lf, type: %d\n",
         i, locationAttributes.getName(i).c_str(),
@@ -133,7 +133,7 @@ Scenario::Scenario(Arguments args) : seed(args.seed), numDays(args.numDays),
 #endif
 }
 
-void Scenario::applyInterventions(int day, Id newDailyInfections) {
+void Scenario::ApplyInterventions(int day, Id newDailyInfections) {
   if (hasInterventions()) {
     interventionModel->applyInterventions(day, newDailyInfections, numPeople);
   }
