@@ -81,8 +81,8 @@ Scenario::Scenario(Arguments args) : seed(args.seed), numDays(args.numDays),
       CkPrintf("Read %d location offsets from %s\n",
           locationOffsetDef->partition_offsets_size(),
           locationOffsetPath.c_str());
-    }
 #endif
+    }
 
     // ...and visits
     visitDef = new loimos::proto::CSVDefinition;
