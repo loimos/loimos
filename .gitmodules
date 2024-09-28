@@ -1,3 +1,6 @@
 [submodule "hypercomm-aggregation"]
 	path = hypercomm-aggregation
 	url = https://github.com/jszaday/hypercomm-aggregation.git
+[submodule "scripts/sparsification/EffectiveResistanceSampling"]
+	path = scripts/sparsification/EffectiveResistanceSampling
+	url = https://github.com/DaDevFox/EffectiveResistanceSampling
