@@ -197,7 +197,8 @@ void buildActivityCache(Id numLocations, int numDays, Id firstLocationIdx,
     if (numLocations * numDays > index) {
       elements[index] = current_position;
     } else {
-      CkAbort("    Failed to write %lu bytes at %lu\n", current_position, index);
+      CkAbort("    Failed to write %lu bytes at %lu (location %lu/%lu)\n",
+          current_position, index, lastLocation, numLocations);
     }
     // if (0 == lastPerson % 10000) {
     //   CkPrintf("  Setting person %d to read from %u on day %d\n",

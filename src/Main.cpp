@@ -149,7 +149,7 @@ Main::Main(CkArgMsg* msg) {
     CkPrintf("Synthetic run with (" ID_PRINT_TYPE ", " ID_PRINT_TYPE
         ") person grid and "
         "(" ID_PRINT_TYPE ", " ID_PRINT_TYPE
-        ") location grid. Average degree of " ID_PRINT_TYPE "\n\n",
+        ") location grid. Average degree of %f\n\n",
       onTheFly->personGrid.width, onTheFly->personGrid.height,
       onTheFly->locationGrid.width, onTheFly->locationGrid.height,
       onTheFly->averageVisitsPerDay);

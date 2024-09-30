@@ -26,7 +26,11 @@
 /**
  * Reads the protobuf file pointed to by path and saves the results in buffer
  */
-void readProtobuf(std::string path, google::protobuf::Message *buffer);
+int readProtobuf(std::string path, google::protobuf::Message *buffer);
+/**
+ * Checks the result of readProtobuf and aborts if it is not 0
+ */
+void checkReadResult(int result, std::string path);
 
 std::tuple<Id, Id, Time, Time> parseActivityStream(std::ifstream *input,
     loimos::proto::CSVDefinition *dataFormat, std::vector<union Data> *attributes);

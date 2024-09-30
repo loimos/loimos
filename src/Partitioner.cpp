@@ -200,20 +200,22 @@ Partitioner::Partitioner(std::string scenarioPath,
     PartitionId numPersonPartitions,
     PartitionId numLocationPartitions,
     loimos::proto::CSVDefinition *personMetadata,
-    loimos::proto::CSVDefinition *locationMetadata) :
+    loimos::proto::CSVDefinition *locationMetadata,
+    loimos::proto::CSVDefinition *personOffsetDef,
+    loimos::proto::CSVDefinition *locationOffsetDef) :
     numPeople(personMetadata->num_rows()),
     numLocations(locationMetadata->num_rows()) {
   Id firstLocationIdx = getFirstIndex(locationMetadata, scenarioPath + "locations.csv");
   Id firstPersonIdx = getFirstIndex(personMetadata, scenarioPath + "people.csv");
 
-  PartitionId numOffsets = personMetadata->partition_offsets_size();
+  PartitionId numOffsets = personOffsetDef->partition_offsets_size();
   if (0 < numOffsets && numPersonPartitions > numOffsets) {
     CkAbort("Error: attempting to run with more person partitions ("
       PARTITION_ID_PRINT_TYPE ") than provided offsets ("
       PARTITION_ID_PRINT_TYPE ")\n",
       numPersonPartitions, numOffsets);
   }
-  numOffsets = locationMetadata->partition_offsets_size();
+  numOffsets = locationOffsetDef->partition_offsets_size();
   if (0 < numOffsets && numLocationPartitions > numOffsets) {
     CkAbort("Error: attempting to run with more location partitions ("
       PARTITION_ID_PRINT_TYPE ") than provided offsets ("
@@ -222,9 +224,9 @@ Partitioner::Partitioner(std::string scenarioPath,
   }
 
   setPartitionOffsets(numPersonPartitions, firstPersonIdx, numPeople,
-    personMetadata, &personPartitionOffsets);
+    personOffsetDef, &personPartitionOffsets);
   setPartitionOffsets(numLocationPartitions, firstLocationIdx, numLocations,
-    locationMetadata, &locationPartitionOffsets);
+    locationOffsetDef, &locationPartitionOffsets);
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
   if (0 == CkMyNode()) {
@@ -238,6 +240,12 @@ Partitioner::Partitioner(std::string scenarioPath,
     }
   }
 #endif
+  if (personOffsetDef != personMetadata) {
+    delete personOffsetDef;
+  }
+  if (locationOffsetDef != locationMetadata) {
+    delete locationOffsetDef;
+  }
 }
 
 Partitioner::Partitioner(PartitionId numPersonPartitions,

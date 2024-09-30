@@ -170,6 +170,27 @@ def create_textproto(
             write_entries(f)
 
 
+def create_offsets_textproto(
+    pop_dir, out_filename, partition_offsets, print_only=False
+):
+    textproto_path = os.path.join(pop_dir, out_filename)
+
+    def write_entries(f):
+        f.write(SINGLETON_ENTRY.format(name="num_rows", value=len(partition_offsets)))
+
+        for offset in partition_offsets:
+            f.write(SINGLETON_ENTRY.format(name="partition_offsets", value=f"{offset}"))
+
+    if print_only:
+        print(f"{textproto_path}:")
+        write_entries(sys.stdout)
+        print("")
+        print("")
+    else:
+        with open(textproto_path, "w") as f:
+            write_entries(f)
+
+
 def main():
     args = parse_args()
 
