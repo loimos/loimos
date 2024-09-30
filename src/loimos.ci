@@ -75,7 +75,7 @@ mainmodule loimos {
         serial {
           peopleArray.SendVisitSchedules();
           CkStartQD(CkCallback(
-            CkIndex_Main::StartupComplete(),          
+            CkIndex_Main::StartupComplete(),
             mainProxy
           ));
         }
@@ -160,7 +160,7 @@ mainmodule loimos {
             // Use this count as desired here
             lastInfectiousCount = infectiousCount;
             if (scenario->hasInterventions()) {
-              globScenario.applyInterventions(day, infectiousCount);
+              globScenario.ApplyInterventions(day, infectiousCount);
             }
 
             // Print how long this iteration took to run
@@ -172,7 +172,7 @@ mainmodule loimos {
 
             // Trigger intervention updates.
             if (scenario->hasInterventions()) {
-              globScenario.applyInterventions(day, infectiousCount);
+              globScenario.ApplyInterventions(day, infectiousCount);
             }
           }
         }
@@ -343,7 +343,7 @@ mainmodule loimos {
 
   nodegroup Scenario {
     entry Scenario(Arguments args);
-    entry void applyInterventions(int day, Id newDailyInfections);
+    entry void ApplyInterventions(int day, Id newDailyInfections);
   };
 
 #ifdef USE_HYPERCOMM

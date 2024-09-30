@@ -108,7 +108,7 @@ Where
 For pre-defined populations, run Loimos with the command:
 
 ```bash
-./loimos 0 <NPP> <NLP> <ND> <NDV> <OF> <DF> <SD> [-m] [-i <IF>] [-s [<S>]]
+./loimos 0 <NPP> <NLP> <ND> <NDV> <OF> <DF> <SD> [-m] [-i <IF>] [-s [<S>]] [-or <OR>]
 ```
 
 Where
@@ -130,6 +130,9 @@ Where
   for the run if an integer `S` is provided or otherwise to direct Loimos to
   use an arbitary - and likely unique - seed (given by `time(NULL)` at
   runtime). If not passed, Loimos will use the default seed of 0.
+- `-or` or `--offset-ratio` is an optional flag specifying to look for an
+  offset file containing `OR` times the number of person and location chares
+  entries before using the offsets saved to `SD/{people,locations}.textproto`.
 
 ## Authors
 

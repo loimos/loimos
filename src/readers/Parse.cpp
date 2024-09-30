@@ -13,6 +13,7 @@
 #include <vector>
 #include <string>
 #include <cstdlib>
+#include <cstdio>
 #include <sys/time.h>
 
 void parse(int argc, char **argv, Arguments *args) {
@@ -111,7 +112,9 @@ void parse(int argc, char **argv, Arguments *args) {
   args->outputPath.push_back('/');
 #endif
 
+  // Defaults
   args->seed = 0;
+  args->partitionsToOffsetsRatio = 1;
 
   // Optional arguments
   args->contactModelType = static_cast<int>(ContactModelType::constant_probability);
@@ -136,6 +139,9 @@ void parse(int argc, char **argv, Arguments *args) {
       } else {
         args->seed = time(NULL);
       }
+    } else if (("-or" == tmp || "--offset-ratio" == tmp)
+        && argNum + 1 < argc) {
+      args->partitionsToOffsetsRatio = atol(argv[++argNum]);
     }
   }
 

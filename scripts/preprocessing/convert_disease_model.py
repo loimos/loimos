@@ -56,20 +56,20 @@ def create_transition_set(paths):
 def to_textproto(out_file, dictv, offset=0):
     coffset = "  " * offset
     for key, value in dictv.items():
-        if type(value) == dict:
+        if isinstance(value, dict):
             out_file.write(coffset + f"{key}: {{\n")
             to_textproto(out_file, value, offset + 1)
             out_file.write(coffset + "}\n")
-        elif type(value) == list:
+        elif isinstance(value, list):
             for x in value:
                 out_file.write(coffset + f"{key}: {{\n")
                 to_textproto(out_file, x, offset + 1)
                 out_file.write(coffset + "}\n")
-        elif type(value) == bool:
+        elif isinstance(value, bool):
             formatted_value = "true" if value else "false"
             out_file.write(coffset + f"{key}: {formatted_value}\n")
         else:
-            formatted_value = value if type(value) != str else f'"{value}"'
+            formatted_value = value if not isinstance(value, str) else f'"{value}"'
             out_file.write(coffset + f"{key}: {formatted_value}\n")
 
 

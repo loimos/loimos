@@ -38,23 +38,63 @@ Scenario::Scenario(Arguments args) : seed(args.seed), numDays(args.numDays),
   } else {
     // Handle people...
     personDef = new loimos::proto::CSVDefinition;
-    readProtobuf(args.scenarioPath + "people.textproto", personDef);
+    checkReadResult(readProtobuf(args.scenarioPath + "people.textproto",
+      personDef), args.scenarioPath + "people.textproto");
     numPeople = personDef->num_rows();
+
+    loimos::proto::CSVDefinition *personOffsetDef = new loimos::proto::CSVDefinition;
+    std::string personOffsetPath = args.scenarioPath + "person_offsets_" +
+      std::to_string(args.partitionsToOffsetsRatio * args.numPersonPartitions) +
+      ".textproto";
+    if (FILE_READ_ERROR == readProtobuf(personOffsetPath, personOffsetDef)) {
+      delete personOffsetDef;
+      personOffsetDef = personDef;
+#ifdef ENABLE_DEBUG
+      CkPrintf("Read %d person offsets from %s\n",
+          personOffsetDef->partition_offsets_size(),
+          (args.scenarioPath + "people.textproto").c_str());
+    } else {
+      CkPrintf("Read %d person offsets from %s\n",
+          personOffsetDef->partition_offsets_size(),
+          personOffsetPath.c_str());
+#endif
+    }
 
     // ...locations...
     locationDef = new loimos::proto::CSVDefinition;
-    readProtobuf(args.scenarioPath + "locations.textproto", locationDef);
+    checkReadResult(readProtobuf(args.scenarioPath + "locations.textproto",
+      locationDef), args.scenarioPath + "locations.textproto");
     numLocations = locationDef->num_rows();
+
+    loimos::proto::CSVDefinition *locationOffsetDef = new loimos::proto::CSVDefinition;
+    std::string locationOffsetPath = args.scenarioPath + "location_offsets_" +
+      std::to_string(args.partitionsToOffsetsRatio * args.numLocationPartitions) +
+      ".textproto";
+    if (FILE_READ_ERROR == readProtobuf(locationOffsetPath, locationOffsetDef)) {
+      delete locationOffsetDef;
+      locationOffsetDef = locationDef;
+#ifdef ENABLE_DEBUG
+      CkPrintf("Read %d person offsets from %s\n",
+          locationOffsetDef->partition_offsets_size(),
+        (args.scenarioPath + "location.textproto").c_str());
+    } else {
+      CkPrintf("Read %d location offsets from %s\n",
+          locationOffsetDef->partition_offsets_size(),
+          locationOffsetPath.c_str());
+#endif
+    }
 
     // ...and visits
     visitDef = new loimos::proto::CSVDefinition;
-    readProtobuf(args.scenarioPath + "visits.textproto", visitDef);
+    checkReadResult(readProtobuf(args.scenarioPath + "visits.textproto",
+      visitDef), args.scenarioPath + "visits.textproto");
 
     personAttributes.readAttributes(personDef->fields());
     locationAttributes.readAttributes(locationDef->fields());
 
     partitioner = new Partitioner(args.scenarioPath, args.numPersonPartitions,
-      args.numLocationPartitions, personDef, locationDef);
+      args.numLocationPartitions, personDef, locationDef, personOffsetDef,
+      locationOffsetDef);
 
     if (0 == CkMyNode()) {
       buildCache(args.scenarioPath, numPeople, partitioner->personPartitionOffsets,
@@ -83,7 +123,7 @@ Scenario::Scenario(Arguments args) : seed(args.seed), numDays(args.numDays),
         personAttributes.getDataType(i));
   }
 
-  CkPrintf("Locations Attributes:\n");
+  CkPrintf("Location Attributes:\n");
   for (int i = 0; i < locationAttributes.size(); i++) {
     CkPrintf("(%d) %s: default: %lf, type: %d\n",
         i, locationAttributes.getName(i).c_str(),
@@ -93,7 +133,7 @@ Scenario::Scenario(Arguments args) : seed(args.seed), numDays(args.numDays),
 #endif
 }
 
-void Scenario::applyInterventions(int day, Id newDailyInfections) {
+void Scenario::ApplyInterventions(int day, Id newDailyInfections) {
   if (hasInterventions()) {
     interventionModel->applyInterventions(day, newDailyInfections, numPeople);
   }

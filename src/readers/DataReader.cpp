@@ -16,14 +16,21 @@
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 
-void readProtobuf(std::string path, google::protobuf::Message *buffer) {
+int readProtobuf(std::string path, google::protobuf::Message *buffer) {
   int fd = open(path.c_str(), O_RDONLY);
   if (0 > fd) {
-    CkAbort("Error: unable to read %s", path.c_str());
+    return FILE_READ_ERROR;
   }
   google::protobuf::io::FileInputStream fstream(fd);
   google::protobuf::TextFormat::Parse(&fstream, buffer);
   close(fd);
+  return 0;
+}
+
+void checkReadResult(int result, std::string path) {
+  if (FILE_READ_ERROR == result) {
+    CkAbort("Error: unable to read %s", path.c_str());
+  }
 }
 
 std::tuple<Id, Id, Time, Time> parseActivityStream(std::ifstream *input,

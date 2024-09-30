@@ -46,7 +46,7 @@ class Scenario : public CBase_Scenario {
   InterventionModel *interventionModel;
 
   explicit Scenario(Arguments args);
-  void applyInterventions(int day, Id newDailyInfections);
+  void ApplyInterventions(int day, Id newDailyInfections);
   bool isOnTheFly();
   bool hasInterventions();
 };
