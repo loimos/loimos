@@ -208,7 +208,7 @@ Partitioner::Partitioner(std::string scenarioPath,
   Id firstLocationIdx = getFirstIndex(locationMetadata, scenarioPath + "locations.csv");
   Id firstPersonIdx = getFirstIndex(personMetadata, scenarioPath + "people.csv");
 
-  PartitionId numOffsets = locationOffsetDef->partition_offsets_size();
+  PartitionId numOffsets = personOffsetDef->partition_offsets_size();
   if (0 < numOffsets && numPersonPartitions > numOffsets) {
     CkAbort("Error: attempting to run with more person partitions ("
       PARTITION_ID_PRINT_TYPE ") than provided offsets ("
