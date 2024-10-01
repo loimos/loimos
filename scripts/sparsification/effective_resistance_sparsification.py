@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 from EffectiveResistanceSampling.Network import Network
@@ -26,28 +27,34 @@ def parse_args():
 def main():
     args = parse_args()
 
-    input = 'visits.csv'
-    df = pd.read_csv(input, usecols=['pid', 'lid'])
+    input = os.path.join(args.input_dir, 'visits.csv')
+    df = pd.read_csv(input, usecols=['pid', 'lid', 'duration'])
 
-    edge_list = df[['pid', 'lid']].to_numpy()  # Transpose to get 2 x m shape
-    print('read visits.csv')
+    edge_list = df[['pid', 'lid']].to_numpy()  # should be 2 x m shape
 
-    # TODO: weights as visit durations
-    weights = np.ones(edge_list.shape[0])  # Default weight of 1 for each edge
+    # weight edge by visit duration
+    weights = df['duration'].to_numpy()  
 
+    print(f'sparsifying network of {len(df)} visit edges')
     network = Network(edge_list, weights)
     epsilon=0.1
     method='kts'
 
+    print(f'calculating effective resistance with epsilon={epsilon} and method={method}')
     Effective_R = network.effR(epsilon, method)
+
+    # sparsifies the network using effective resistance measure calculated above
     q = 10000
-
+    print(f'sparsifying network with {q} samples')
     EffR_Sparse = network.spl(q, Effective_R, seed=2020)
+    print(f'sparsified; resulting network has {len(EffR_Sparse.edge_list)} edges')
 
-    with open('network_original.pkl', 'wb') as outp:
-        pickle.dump(network, outp, pickle.HIGHEST_PROTOCOL)
+    filtered_df = df[df[['pid', 'lid']].apply(tuple, axis=1).isin(map(tuple, EffR_Sparse.edge_list))]
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
 
-    with open('network_sparsified.pkl', 'wb') as outp:
-        pickle.dump(EffR_Sparse, outp, pickle.HIGHEST_PROTOCOL)
+    filtered_df.to_csv(os.path.join(args.output_dir, 'visits.csv'), index=False)
 
-    print('complete')
+    print(f'complete: {os.path.join(args.output_dir, "visits.csv")}')
+
+main()
