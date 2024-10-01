@@ -1,32 +1,53 @@
 import numpy as np
 import pandas as pd
-from Network import Network
+from EffectiveResistanceSampling.Network import Network
 import networkx as nx
 import pickle
+import argparse
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    # Positional/required arguments:
+    parser.add_argument(
+        "input_dir",
+        metavar="I",
+        help="The path to directory containing data files for a population",
+    )
+    parser.add_argument(
+        "output_dir",
+        metavar="O",
+        help="The directory in which the output files should be saved",
+    )
+
+    return parser.parse_args()
 
 # name result file visits.csv
-df = pd.read_csv('visits.csv', usecols=['pid', 'lid'])
-print('read')
+def main():
+    args = parse_args()
 
-edge_list = df[['pid', 'lid']].to_numpy()  # Transpose to get 2 x m shape
+    input = 'visits.csv'
+    df = pd.read_csv(input, usecols=['pid', 'lid'])
 
-# TODO: weights as visit durations
-print(edge_list.shape[0])
-weights = np.ones(edge_list.shape[0])  # Default weight of 1 for each edge
+    edge_list = df[['pid', 'lid']].to_numpy()  # Transpose to get 2 x m shape
+    print('read visits.csv')
 
-network = Network(edge_list, weights)
-epsilon=0.1
-method='kts'
+    # TODO: weights as visit durations
+    weights = np.ones(edge_list.shape[0])  # Default weight of 1 for each edge
 
-Effective_R = network.effR(epsilon, method)
-q = 10000
+    network = Network(edge_list, weights)
+    epsilon=0.1
+    method='kts'
 
-EffR_Sparse = network.spl(q, Effective_R, seed=2020)
+    Effective_R = network.effR(epsilon, method)
+    q = 10000
 
-with open('network_original.pkl', 'wb') as outp:
-    pickle.dump(network, outp, pickle.HIGHEST_PROTOCOL)
+    EffR_Sparse = network.spl(q, Effective_R, seed=2020)
 
-with open('network_sparsified.pkl', 'wb') as outp:
-    pickle.dump(EffR_Sparse, outp, pickle.HIGHEST_PROTOCOL)
+    with open('network_original.pkl', 'wb') as outp:
+        pickle.dump(network, outp, pickle.HIGHEST_PROTOCOL)
 
-print('complete')
+    with open('network_sparsified.pkl', 'wb') as outp:
+        pickle.dump(EffR_Sparse, outp, pickle.HIGHEST_PROTOCOL)
+
+    print('complete')
