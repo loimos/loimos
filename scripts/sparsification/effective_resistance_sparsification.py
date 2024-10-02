@@ -21,6 +21,13 @@ def parse_args():
         help="The directory in which the output files should be saved",
     )
 
+    parser.add_argument(
+        "resultant_sample_size",
+        metavar="Q",
+        default=10000,
+        help="approxomate number of edges to maintain in the sparsified network",
+    )
+
     return parser.parse_args()
 
 # name result file visits.csv
@@ -32,7 +39,7 @@ def main():
         raise FileNotFoundError(args.input_dir)
 
     input = os.path.join(args.input_dir, 'visits.csv')
-    df = pd.read_csv(input, usecols=['pid', 'lid', 'duration'])
+    df = pd.read_csv(input)
 
     edge_list = df[['pid', 'lid']].to_numpy()  # should be 2 x m shape
 
@@ -48,7 +55,7 @@ def main():
     Effective_R = network.effR(epsilon, method)
 
     # sparsifies the network using effective resistance measure calculated above
-    q = 10000
+    q = int(args.resultant_sample_size)
     print(f'\tsparsifying network with {q} samples')
     EffR_Sparse = network.spl(q, Effective_R, seed=2020)
     print(f'\tsparsified; resulting network has {len(EffR_Sparse.E_list)} edges')
