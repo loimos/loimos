@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import numpy as np
 import pandas as pd
@@ -24,8 +26,7 @@ def parse_args():
     parser.add_argument(
         "resultant_sample_size",
         metavar="Q",
-        default=10000,
-        help="approxomate number of edges to maintain in the sparsified network",
+        help="approxomate percentage of number of edges to maintain in the sparsified network",
     )
 
     return parser.parse_args()
@@ -34,6 +35,7 @@ def parse_args():
 def main():
     args = parse_args()
 
+    print('parsing input data')
     if not os.path.exists(args.input_dir):
         print(f'input directory not found: {args.input_dir}')
         raise FileNotFoundError(args.input_dir)
@@ -47,6 +49,9 @@ def main():
     weights = df['duration'].to_numpy()  
 
     print(f'sparsifying network of {len(df)} visit edges')
+    print(args.resultant_sample_size)
+    q = int(float(args.resultant_sample_size) * float(len(df)))
+    print(f'\tsparsifying network with {q} ({float(args.resultant_sample_size) * 100}% of original visit edges) samples')
     network = Network(edge_list, weights)
     epsilon=0.1
     method='kts'
@@ -55,8 +60,6 @@ def main():
     Effective_R = network.effR(epsilon, method)
 
     # sparsifies the network using effective resistance measure calculated above
-    q = int(args.resultant_sample_size)
-    print(f'\tsparsifying network with {q} samples')
     EffR_Sparse = network.spl(q, Effective_R, seed=2020)
     print(f'\tsparsified; resulting network has {len(EffR_Sparse.E_list)} edges')
 
