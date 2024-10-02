@@ -22,9 +22,8 @@ class Person : public DataInterface {
   DiseaseState next_state;
   Time secondsLeftInState;
 
-  // If this is a susceptible person, this is a list of all of their
-  // interactions with infectious people in the past day
-  std::vector<Interaction> interactions;
+  // If this is a susceptible person, this is the chance they get infected
+  double infectionPropensity;
 
   // Holds visit messages for each day
   std::vector<std::vector<VisitMessage> > visitsByDay;

@@ -57,6 +57,8 @@ const Time DAY_LENGTH = 3600 * 24;
 const Time HOUR_LENGTH = 3600;
 const Time MINUTE_LENGTH = 60;
 #define DAYS_IN_WEEK 7
+const Time N_VISIT_BINS = 24 * 60 * 2;
+const double VISIT_BIN_DURATION = DAY_LENGTH / N_VISIT_BINS;
 
 // Data loading
 #define EMPTY_VISIT_SCHEDULE std::numeric_limits<CacheOffset>::max()

@@ -61,6 +61,8 @@ class DiseaseModel {
       Time endTime,
       double susceptibility,
       double infectivity) const;
+  double getInfectivity(DiseaseState state, double infectivity) const;
+  double getSusceptibility(DiseaseState state, double susceptibility) const;
 };
 
 #endif  // DISEASEMODEL_H_

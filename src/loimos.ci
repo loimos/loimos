@@ -127,7 +127,12 @@ mainmodule loimos {
 
             // CkPrintf("  Compute Interactions\n");
             profile.stepStartTime = CkWallTimer();
+#ifdef ENABLE_BINNING
+            locationsArray.BinVisits();
+#else
             locationsArray.QueueVisits();
+#endif
+
             if (scenario->numDaysToSeedOutbreak > day) {
               SeedInfections();
             }
@@ -215,13 +220,15 @@ mainmodule loimos {
       serial {
         CkPrintf("Finished simulating %d days in %lf seconds.\n",
           day, (CkWallTimer() - profile.simulationStartTime));
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
-        CkPrintf("  Processed " COUNTER_PRINT_TYPE " visits, "
-          COUNTER_PRINT_TYPE " interactions, and "
-          COUNTER_PRINT_TYPE " exposures, "
-          COUNTER_PRINT_TYPE " total exposure duration\n",
-          profile.totalVisits, profile.totalInteractions,
-          profile.totalExposures, profile.totalExposureDuration);
+#ifdef ENABLE_DEBUG
+        if (ENABLE_DEBUG >= DEBUG_VERBOSE) {
+          CkPrintf("  Processed " COUNTER_PRINT_TYPE " visits, "
+            COUNTER_PRINT_TYPE " interactions, and "
+            COUNTER_PRINT_TYPE " exposures, "
+            COUNTER_PRINT_TYPE " total exposure duration\n",
+            profile.totalVisits, profile.totalInteractions,
+            profile.totalExposures, profile.totalExposureDuration);
+        }
 #endif
         CkPrintf("  Visit messages took %lf seconds\n",
           profile.visitsTime);
@@ -334,6 +341,7 @@ mainmodule loimos {
     entry void ReceiveVisitSchedule(VisitScheduleMessage msg);
     entry void SendExpectedVisitors();
     entry void ReceiveVisitorStates(PersonStatesMessage msg);
+    entry void BinVisits();
     entry void QueueVisits();
     entry AGGREGATE void ReceiveVisitMessages(VisitMessage);
     entry void ComputeInteractions(); // calls ReceiveInteractions

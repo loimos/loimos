@@ -270,12 +270,7 @@ void Main::SeedInfections() {
     PartitionId peoplePartitionIdx =
       scenario->partitioner->getPersonPartitionIndex(personIdx);
 
-    // Make a super contagious visit for that person.
-    std::vector<Interaction> interactions;
-    interactions.emplace_back(
-      std::numeric_limits<double>::max(), -1, -1, -1, -1);
-
-    InteractionMessage interMsg(-1, personIdx, interactions);
+    InteractionMessage interMsg(-1, personIdx, std::numeric_limits<double>::max());
     #ifdef USE_HYPERCOMM
     Aggregator* agg = aggregatorProxy.ckLocalBranch();
     if (agg->interact_aggregator) {

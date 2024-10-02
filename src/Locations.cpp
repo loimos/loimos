@@ -30,6 +30,9 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cstring>
+#include <unordered_map>
+#include <tuple>
 
 std::uniform_real_distribution<> Locations::unitDistrib(0.0, 1.0);
 
@@ -82,6 +85,8 @@ Locations::Locations(int seed, std::string scenarioPath) {
       l.toggleCompliance(i, inter.willComply(l, l.getGenerator()));
     }
   }
+
+  infectionPropensities.resize(DAY_LENGTH, 0.0);
 
 #if OUTPUT_FLAGS & OUTPUT_OVERLAPS
   interactionsFile = new std::ofstream(scenario->outputPath + "interactions_chare_"
@@ -300,32 +305,117 @@ void Locations::ReceiveVisitorStates(PersonStatesMessage msg) {
   msg.states.clear();
 }
 
+void Locations::BinVisits() {
+  DiseaseModel *diseaseModel = scenario->diseaseModel;
+  for (const Location &loc : locations) {
+    const std::vector<VisitMessage> &visits =
+      loc.visitsByDay[day % scenario->numDaysWithDistinctVisits];
+
+    bool anyInfectious = false;
+    int numInfectious = 0;
+    for (const VisitMessage &visit : visits) {
+      const PersonState &state = visitorStates[visit.personIdx];
+      bool tmp = binInfectivity(loc, state, visit);
+      anyInfectious |= tmp;
+      numInfectious += tmp;
+    }
+
+#ifdef ENABLE_SC
+    if (anyInfectious) {
+#endif
+      // CkPrintf("    Chare %d: Location %d has %d/%lu infectious visits (prob %f)\n",
+      //     thisIndex, loc.getUniqueId(), numInfectious, visits.size(),
+      //     scenario->contactModel->getContactProbability(loc));
+      for (const VisitMessage &visit : visits) {
+        const PersonState &state = visitorStates[visit.personIdx];
+        computeInfectionPropensity(loc, state, visit);
+      }
+#ifdef ENABLE_SC
+    }
+#endif
+
+    std::memset(infectionPropensities.data(), 0,
+      infectionPropensities.size() * sizeof(double));
+  }
+}
+
+// Helper function to bin the contribution of visit to the propensity for a
+// susceptible visitor to loc to be infected. Returns whether or not this
+// visit had a non-zero contribution.
+inline bool Locations::binInfectivity(const Location &loc, const PersonState &state,
+    const VisitMessage &visit) {
+  DiseaseModel *diseaseModel = scenario->diseaseModel;
+  if (/*loc.acceptsVisit(visit) &&*/ diseaseModel->isInfectious(state.state)) {
+    Time visitStart = visit.visitStart / VISIT_BIN_DURATION;
+    Time visitEnd = visit.visitEnd / VISIT_BIN_DURATION;
+    // CkPrintf("    Chare %d: Person %d visiting loc %d from %d to %d "
+    //          "(bins %d to %d)\n", thisIndex, visit.personIdx,
+    //          visit.locationIdx, visit.visitStart,
+    //          visit.visitEnd, visitStart, visitEnd);
+    double prop = diseaseModel->getInfectivity(state.state,
+                                               state.transmissionModifier);
+    for (Time t = visitStart; t <= visitEnd; ++t) {
+      infectionPropensities[t] += prop;
+    }
+
+    return true;
+  } else {
+    return false;
+  }
+}
+
+// Helper function to compute the propensity for a susceptible visitor
+// to loc to be infected
+inline void Locations::computeInfectionPropensity(const Location &loc,
+    const PersonState &state, const VisitMessage &visit) {
+  DiseaseModel *diseaseModel = scenario->diseaseModel;
+  if (/*loc.acceptsVisit(visit) &&*/ diseaseModel->isSusceptible(state.state)) {
+    Time visitStart = visit.visitStart / VISIT_BIN_DURATION;
+    Time visitEnd = visit.visitEnd / VISIT_BIN_DURATION;
+    double prop = 0;
+    for (Time t = visitStart; t <= visitEnd; ++t) {
+      prop += infectionPropensities[t];
+    }
+
+    prop *= VISIT_BIN_DURATION / DAY_LENGTH
+      * diseaseModel->getSusceptibility(state.state, state.transmissionModifier)
+      * scenario->contactModel->getContactProbability(loc);
+    // CkPrintf("    Chare %d: Person %d infection propensity %f\n", thisIndex,
+    //   visit.personIdx, prop);
+    sendInteractions(loc, visit.personIdx, prop);
+  }
+}
+
 void Locations::QueueVisits() {
   for (Location &location : locations) {
     const std::vector<VisitMessage> &visits =
       location.visitsByDay[day % scenario->numDaysWithDistinctVisits];
 
     for (const VisitMessage &visit : visits) {
-      const PersonState &state = visitorStates[visit.personIdx];
-      Event arrival { ARRIVAL, visit.personIdx, state.state,
-        state.transmissionModifier, visit.visitStart };
-      Event departure { DEPARTURE, visit.personIdx, state.state,
-        state.transmissionModifier, visit.visitEnd };
-      Event::pair(&arrival, &departure);
-
-      location.addEvent(arrival);
-      location.addEvent(departure);
-
-#ifdef ENABLE_SC
-      bool isInfectious = scenario->diseaseModel->isInfectious(state.state);
-      if (!location.anyInfectious && isInfectious) {
-        location.anyInfectious = true;
-      }
-#endif
+      queueVisit(&location, visit);
     }
   }
 
   ComputeInteractions();
+}
+
+inline void Locations::queueVisit(Location *loc, const VisitMessage &visit) {
+  const PersonState &state = visitorStates[visit.personIdx];
+  Event arrival { ARRIVAL, visit.personIdx, state.state,
+    state.transmissionModifier, visit.visitStart };
+  Event departure { DEPARTURE, visit.personIdx, state.state,
+    state.transmissionModifier, visit.visitEnd };
+  Event::pair(&arrival, &departure);
+
+  loc->addEvent(arrival);
+  loc->addEvent(departure);
+
+#ifdef ENABLE_SC
+  bool isInfectious = scenario->diseaseModel->isInfectious(state.state);
+  if (!loc->anyInfectious && isInfectious) {
+    loc->anyInfectious = true;
+  }
+#endif
 }
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
@@ -392,14 +482,17 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 void Locations::ComputeInteractions() {
   Counter numVisits = 0;
   Counter numInteractions = 0;
+  Counter numExposures = 0;
   exposureDuration = 0;
   expectedExposureDuration = 0;
   for (Location &loc : locations) {
     Counter locVisits = loc.events.size() / 2;
     numVisits += locVisits;
 
-    Counter locInters = processEvents(&loc);
+    Counter locInters, locExpos;
+    std::tie(locInters, locExpos) = processEvents(&loc);
     numInteractions += locInters;
+    numExposures += locExpos;
 
     // if (0 < locInters) {
     //   CkPrintf("    Chare %d: loc %d found %d interactions from %d visits\n",
@@ -410,6 +503,9 @@ void Locations::ComputeInteractions() {
   CkCallback cb(CkReductionTarget(Main, ReceiveInteractionsCount), mainProxy);
   contribute(sizeof(Counter), &numInteractions,
       CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), cb);
+  CkCallback expCb(CkReductionTarget(Main, ReceiveExposuresCount), mainProxy);
+  contribute(sizeof(Counter), &numExposures,
+      CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), expCb);
 #endif
 
 #if ENABLE_DEBUG >= DEBUG_PER_CHARE
@@ -423,18 +519,19 @@ void Locations::ComputeInteractions() {
   day++;
 }
 
-Counter Locations::processEvents(Location *loc) {
+std::tuple<Counter, Counter> Locations::processEvents(Location *loc) {
   std::vector<Event> *arrivals;
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   Counter numInteractions = 0;
   Counter numPresent = 0;
   Counter numVisits = loc->events.size() / 2;
   Counter duration = 0;
+  Counter numExposures = 0;
   double startTime = CkWallTimer();
 #elif ENABLE_SC
   if (!loc->anyInfectious) {
     loc->reset();
-    return 0;
+    return std::make_tuple(0, 0);
   }
 #endif
 
@@ -475,7 +572,9 @@ Counter Locations::processEvents(Location *loc) {
       saveInteractions(*loc, event, interactionsFile);
 #endif
 
-      onDeparture(loc, event);
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
+      numExposures += onDeparture(loc, event);
+#endif
     }
   }
   loc->reset();
@@ -494,9 +593,9 @@ Counter Locations::processEvents(Location *loc) {
         p, numInteractions, total, numVisits, elapsedTime);
   }
 #endif  // DEBUG_LOCATION_SUMMARY
-  return total;
+  return std::make_tuple(total, numExposures);
 #else
-  return 0;
+  return std::make_tuple(0, 0);
 #endif  // DEBUG_VERBOSE
 }
 
@@ -536,21 +635,23 @@ Counter Locations::saveInteractions(const Location &loc,
 #endif  // OUTPUT_OVERLAPS
 
 // Simple dispatch to the susceptible/infectious depature handlers
-inline void Locations::onDeparture(Location *loc, const Event& departure) {
+inline Counter Locations::onDeparture(Location *loc, const Event& departure) {
   DiseaseModel *diseaseModel = scenario->diseaseModel;
   if (diseaseModel->isSusceptible(departure.personState)) {
-    onSusceptibleDeparture(loc, departure);
+    return onSusceptibleDeparture(loc, departure);
 
   } else if (diseaseModel->isInfectious(departure.personState)) {
-    onInfectiousDeparture(loc, departure);
+    return onInfectiousDeparture(loc, departure);
   }
 }
 
-void Locations::onSusceptibleDeparture(Location *loc,
+Counter Locations::onSusceptibleDeparture(Location *loc,
     const Event& susceptibleDeparture) {
   // Each infectious person at this location might have infected this
   // susceptible person
+  Counter numExposures = 0;
   for (const Event &infectiousArrival : infectiousArrivals) {
+    numExposures++;
     registerInteraction(loc, susceptibleDeparture, infectiousArrival,
       // The start time is whichever arrival happened later
       std::max(infectiousArrival.scheduledTime,
@@ -559,19 +660,24 @@ void Locations::onSusceptibleDeparture(Location *loc,
   }
 
   sendInteractions(loc, susceptibleDeparture.personIdx);
+  return numExposures;
 }
 
-void Locations::onInfectiousDeparture(Location *loc,
+Counter Locations::onInfectiousDeparture(Location *loc,
     const Event& infectiousDeparture) {
   // Each susceptible person at this location might have been infected by this
   // infectious person
+  Counter numExposures = 0;
   for (const Event &susceptibleArrival : susceptibleArrivals) {
+    numExposures++;
     registerInteraction(loc, susceptibleArrival, infectiousDeparture,
       // The start time is whichever arrival happened later
       std::max(susceptibleArrival.scheduledTime,
         infectiousDeparture.partnerTime),
       infectiousDeparture.scheduledTime);
   }
+
+  return numExposures;
 }
 
 inline void Locations::registerInteraction(Location *loc,
@@ -589,17 +695,19 @@ inline void Locations::registerInteraction(Location *loc,
     susceptibleEvent.personState, infectiousEvent.personState, startTime, endTime,
     susceptibleEvent.transmissionModifier, infectiousEvent.transmissionModifier);
 
-  // Note that this will create a new vector if this is the first potential
-  // infection for the susceptible person in question
-  Interaction inter { propensity, infectiousEvent.personIdx,
-    infectiousEvent.personState, startTime, endTime };
-  interactions[susceptibleEvent.personIdx].emplace_back(inter);
+  interactions[susceptibleEvent.personIdx] += propensity;
 }
 
 // Simple helper function which send the list of interactions with the
 // specified person to the appropriate People chare
 inline void Locations::sendInteractions(Location *loc,
     Id personIdx) {
+  sendInteractions(*loc, personIdx, interactions[personIdx]);
+  interactions.erase(personIdx);
+}
+
+inline void Locations::sendInteractions(const Location &loc,
+    Id personIdx, double infectionPropensity) const {
   Partitioner *partitioner = scenario->partitioner;
   PartitionId personPartition = partitioner->getPersonPartitionIndex(personIdx);
 #ifdef ENABLE_DEBUG
@@ -607,13 +715,13 @@ inline void Locations::sendInteractions(Location *loc,
     CkAbort("Error on chare %d: sending exposures at "
       ID_PRINT_TYPE" to person " ID_PRINT_TYPE " on chare "
       PARTITION_ID_PRINT_TYPE" outside of valid range [0, "
-      PARTITION_ID_PRINT_TYPE")\n", thisIndex, loc->getUniqueId(),
+      PARTITION_ID_PRINT_TYPE")\n", thisIndex, loc.getUniqueId(),
       personIdx, personPartition, partitioner->getNumPersonPartitions());
   }
 #endif
 
-  InteractionMessage interMsg(loc->getUniqueId(), personIdx,
-      interactions[personIdx]);
+  InteractionMessage interMsg(loc.getUniqueId(), personIdx,
+      infectionPropensity);
 #ifdef USE_HYPERCOMM
   Aggregator *agg = aggregatorProxy.ckLocalBranch();
   if (agg->interact_aggregator) {
@@ -623,18 +731,6 @@ inline void Locations::sendInteractions(Location *loc,
 #endif  // USE_HYPERCOMM
 
   peopleArray[personPartition].ReceiveInteractions(interMsg);
-
-  // CkPrintf(
-  //   "    Sending %d interactions to person %d in partition %d\r\n",
-  //   (int) interactions[personIdx].size(),
-  //   personIdx,
-  //   personPartition
-  // );
-
-  // Free up space where we were storing interactions data. This also prevents
-  // interactions from being sent multiple times if this person has multiple
-  // visits to this location
-  interactions.erase(personIdx);
 }
 
 void Locations::ReceiveIntervention(PartitionId interventionIdx) {

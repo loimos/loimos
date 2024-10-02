@@ -18,6 +18,7 @@
 #include <string>
 #include <unordered_map>
 #include <iostream>
+#include <tuple>
 
 class Locations : public CBase_Locations {
  private:
@@ -29,6 +30,7 @@ class Locations : public CBase_Locations {
   Counter exposureDuration;
   Counter expectedExposureDuration;
   int day;
+  std::vector<double> infectionPropensities;
 
   std::unordered_map<Id, PersonState> visitorStates;
 
@@ -42,17 +44,17 @@ class Locations : public CBase_Locations {
 
   // Maps each susceptible person's id to a list of interactions with people
   // who could have infected them
-  std::unordered_map<Id, std::vector<Interaction> > interactions;
+  std::unordered_map<Id, double> interactions;
 
   // Runs through all of the current events and return the indices of
   // any people who have been infected
-  Counter processEvents(Location *loc);
+  std::tuple<Counter, Counter> processEvents(Location *loc);
 
   // Helper functions to handle when a person leaves a location
   // onDeparture branches to one of the two other functions
-  inline void onDeparture(Location *loc, const Event& departure);
-  void onSusceptibleDeparture(Location *loc, const Event& departure);
-  void onInfectiousDeparture(Location *loc, const Event& departure);
+  inline Counter onDeparture(Location *loc, const Event& departure);
+  Counter onSusceptibleDeparture(Location *loc, const Event& departure);
+  Counter onInfectiousDeparture(Location *loc, const Event& departure);
 
   // Helper function which packages all the neccessary information about
   // an interaction between a susceptible person and an infectious person
@@ -63,6 +65,8 @@ class Locations : public CBase_Locations {
   // Simple helper function which send the list of interactions with the
   // specified person to the appropriate People chare
   inline void sendInteractions(Location *loc, Id personIdx);
+  inline void sendInteractions(const Location &loc, Id personIdx,
+    double infectionPropensity) const;
 
 #if OUTPUT_FLAGS & OUTPUT_OVERLAPS
   Counter saveInteractions(const Location &loc, const Event &departure,
@@ -70,6 +74,11 @@ class Locations : public CBase_Locations {
 #endif
   void loadLocationData(std::string scenarioPath);
   void loadVisitData(std::ifstream *activityData);
+  bool binInfectivity(const Location &loc, const PersonState &state,
+    const VisitMessage &visit);
+  void computeInfectionPropensity(const Location &loc, const PersonState &state,
+    const VisitMessage &visit);
+  void queueVisit(Location *loc, const VisitMessage &visit);
 
  public:
   explicit Locations(int seed, std::string scenarioPath);
@@ -78,6 +87,7 @@ class Locations : public CBase_Locations {
   void ReceiveVisitSchedule(VisitScheduleMessage msg);
   void SendExpectedVisitors();
   void ReceiveVisitorStates(PersonStatesMessage msg);
+  void BinVisits();
   void QueueVisits();
   void ReceiveVisitMessages(VisitMessage visitMsg);
   void ComputeInteractions();  // calls ReceiveInfections

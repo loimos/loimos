@@ -60,21 +60,15 @@ using VisitTest = std::function<bool(const VisitMessage &)>;
 struct InteractionMessage {
   Id locationIdx;
   Id personIdx;
-  std::vector<Interaction> interactions;
+  double infectionPropensity;
 
   InteractionMessage() {}
   explicit InteractionMessage(CkMigrateMessage *msg) {}
   InteractionMessage(Id locationIdx_, Id personIdx_,
-      const std::vector<Interaction>& interactions_)
-    : locationIdx(locationIdx_), personIdx(personIdx_),
-    interactions(interactions_) {}
-
-  void pup(PUP::er& p) {  // NOLINT(runtime/references)
-    p | locationIdx;
-    p | personIdx;
-    p | interactions;
-  }
+      double propensity_) : locationIdx(locationIdx_),
+      personIdx(personIdx_), infectionPropensity(propensity_) {}
 };
+PUPbytes(InteractionMessage);
 
 struct ExpectedVisitorsMessage {
   PartitionId destPartition;

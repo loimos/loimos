@@ -20,7 +20,7 @@ Person::Person(const AttributeTable &attributes, int numInterventions,
     DiseaseState startingState, Time secondsLeftInState_, int numDays) :
     DataInterface(attributes, numInterventions),
     state(startingState), next_state(-1),
-    secondsLeftInState(secondsLeftInState_) {
+    secondsLeftInState(secondsLeftInState_), infectionPropensity(0) {
   // Create an entry for each day we have data for
   visitsByDay.resize(numDays);
 }
@@ -50,7 +50,7 @@ void Person::pup(PUP::er &p) {
   p | state;
   p | next_state;
   p | secondsLeftInState;
-  p | interactions;
+  p | infectionPropensity;
   p | visitsByDay;
   p | data;
   p | generator;
