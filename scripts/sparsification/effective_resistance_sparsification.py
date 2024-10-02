@@ -27,6 +27,10 @@ def parse_args():
 def main():
     args = parse_args()
 
+    if not os.path.exists(args.input_dir):
+        print(f'input directory not found: {args.input_dir}')
+        raise FileNotFoundError(args.input_dir)
+
     input = os.path.join(args.input_dir, 'visits.csv')
     df = pd.read_csv(input, usecols=['pid', 'lid', 'duration'])
 
@@ -40,16 +44,16 @@ def main():
     epsilon=0.1
     method='kts'
 
-    print(f'calculating effective resistance with epsilon={epsilon} and method={method}')
+    print(f'\tcalculating effective resistance with epsilon={epsilon} and method={method}')
     Effective_R = network.effR(epsilon, method)
 
     # sparsifies the network using effective resistance measure calculated above
     q = 10000
-    print(f'sparsifying network with {q} samples')
+    print(f'\tsparsifying network with {q} samples')
     EffR_Sparse = network.spl(q, Effective_R, seed=2020)
-    print(f'sparsified; resulting network has {len(EffR_Sparse.edge_list)} edges')
+    print(f'\tsparsified; resulting network has {len(EffR_Sparse.E_list)} edges')
 
-    filtered_df = df[df[['pid', 'lid']].apply(tuple, axis=1).isin(map(tuple, EffR_Sparse.edge_list))]
+    filtered_df = df[df[['pid', 'lid']].apply(tuple, axis=1).isin(map(tuple, EffR_Sparse.E_list))]
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
