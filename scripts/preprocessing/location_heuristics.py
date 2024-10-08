@@ -36,6 +36,7 @@ START_COL = "start_time"
 
 
 # test_set = {2,3,4}
+#test_set = {2,3,4}
 def find_max_simultaneous_visits(lid, visits):
     events = visits.melt(
         value_vars=["start_time", "end_time"], value_name="time", var_name="type"
@@ -44,7 +45,7 @@ def find_max_simultaneous_visits(lid, visits):
     events["occupancy"] = -1
     events.loc[events["type"] == "start_time", "occupancy"] = 1
     result = events["occupancy"].cumsum().max()
-    # if lid in test_set:
+    #if lid in test_set:
     #   print(f"location {lid}: {visits.shape[0]} visits, {result} msv")
     #   print(events)
     #   # print(visits.memory_usage())
