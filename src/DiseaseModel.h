@@ -43,7 +43,8 @@ class DiseaseModel {
   int susceptibilityIndex;
   int infectivityIndex;
 
-  DiseaseModel(std::string diseasePath, const AttributeTable &attrs);
+  DiseaseModel(std::string diseasePath, double transmissibility,
+    const AttributeTable &attrs);
   DiseaseState getIndexOfState(std::string stateLabel) const;
   std::tuple<DiseaseState, Time> transitionFromState(DiseaseState fromState,
     std::default_random_engine *generator) const;

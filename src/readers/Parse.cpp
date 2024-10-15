@@ -119,6 +119,7 @@ void parse(int argc, char **argv, Arguments *args) {
   // Optional arguments
   args->contactModelType = static_cast<int>(ContactModelType::constant_probability);
   args->hasIntervention = false;
+  args->transmissibility = -1.0;
   for (; argNum < argc; ++argNum) {
     std::string tmp = std::string(argv[argNum]);
 
@@ -142,6 +143,9 @@ void parse(int argc, char **argv, Arguments *args) {
     } else if (("-or" == tmp || "--offset-ratio" == tmp)
         && argNum + 1 < argc) {
       args->partitionsToOffsetsRatio = atol(argv[++argNum]);
+    } else if (("-t" == tmp || "--transmissibility" == tmp)
+        && argNum + 1 < argc) {
+      args->transmissibility = atof(argv[++argNum]);
     }
   }
 

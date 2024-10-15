@@ -108,7 +108,7 @@ Where
 For pre-defined populations, run Loimos with the command:
 
 ```bash
-./loimos 0 <NPP> <NLP> <ND> <NDV> <OF> <DF> <SD> [-m] [-i <IF>] [-s [<S>]] [-or <OR>]
+./loimos 0 <NPP> <NLP> <ND> <NDV> <OF> <DF> <SD> [-m] [-i <IF>] [-s [<S>]] [-or <OR>] [-t [<T>]]
 ```
 
 Where
@@ -133,6 +133,10 @@ Where
 - `-or` or `--offset-ratio` is an optional flag specifying to look for an
   offset file containing `OR` times the number of person and location chares
   entries before using the offsets saved to `SD/{people,locations}.textproto`.
+- `-t` or `--transmissibility` is an optional flag which overrides the
+  transmissibility value in the provided disease model (given in `DF`),
+  and takes a floating point value of 0.0 or greater (this flag will be
+  ignored if `T` is negative)
 
 ## Authors
 

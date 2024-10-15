@@ -31,6 +31,7 @@ struct Arguments {
   Time numDays;
   Time numDaysWithDistinctVisits;
   Time numDaysToSeedOutbreak;
+  double transmissibility;
   int seed;
 
   bool hasIntervention;
@@ -55,6 +56,7 @@ struct Arguments {
     p | numDaysToSeedOutbreak;
     p | numInitialInfectionsPerDay;
     p | partitionsToOffsetsRatio;
+    p | transmissibility;
     p | seed;
     p | hasIntervention;
     p | contactModelType;
