@@ -31,7 +31,7 @@ LID_COL = "lid"
 START_COL = "start_time"
 
 
-#test_set = {2,3,4}
+# test_set = {2,3,4}
 def find_max_simultaneous_visits(lid, visits):
     events = visits.melt(
         value_vars=["start_time", "end_time"], value_name="time", var_name="type"
@@ -40,7 +40,7 @@ def find_max_simultaneous_visits(lid, visits):
     events["occupancy"] = -1
     events.loc[events["type"] == "start_time", "occupancy"] = 1
     result = events["occupancy"].cumsum().max()
-    #if lid in test_set:
+    # if lid in test_set:
     #   print(f"location {lid}: {visits.shape[0]} visits, {result} msv")
     #   print(events)
     #   # print(visits.memory_usage())
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     #    end_time = time.perf_counter()
     #    print("Calculating daily summaries:", end_time - start_time)
 
-    # Calculate the maximum simulatenous visits using as many processes
+    # Calculate the maximum simultaneous visits using as many processes
     # as possible
     start_time = time.perf_counter()
     # print(visits.memory_usage())
@@ -166,7 +166,7 @@ if __name__ == "__main__":
         # python-multiprocessing-debugging-oserror-errno-12-cannot-allocate-memory
         set_start_method("spawn")
         # print(visits_by_location.groups, flush=True)
-        #shared_visits = SharedPandasDataFrame(visits)
+        # shared_visits = SharedPandasDataFrame(visits)
 
         with Pool(args.n_tasks) as pool:
             # visits_by_location = {k: SharedPandasDataFrame(df) \
@@ -176,7 +176,7 @@ if __name__ == "__main__":
                 visits_by_location,
             )
 
-        #shared_visits.unlink()
+        # shared_visits.unlink()
     else:
         max_visits["max_simultaneous_visits"] = [
             find_max_simultaneous_visits(lid, group)
