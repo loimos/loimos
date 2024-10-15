@@ -104,7 +104,8 @@ Scenario::Scenario(Arguments args) : seed(args.seed), numDays(args.numDays),
       numLocations, args.numLocationPartitions);
   }
 
-  diseaseModel = new DiseaseModel(args.diseasePath, personAttributes);
+  diseaseModel = new DiseaseModel(args.diseasePath, args.transmissibility,
+    personAttributes);
   if (args.hasIntervention) {
     interventionModel = new InterventionModel(args.interventionPath,
       &personAttributes, &locationAttributes, *diseaseModel);

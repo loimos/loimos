@@ -119,6 +119,7 @@ void parse(int argc, char **argv, Arguments *args) {
   // Optional arguments
   args->contactModelType = static_cast<int>(ContactModelType::constant_probability);
   args->hasIntervention = false;
+  args->transmissibility = -1.0;
   for (; argNum < argc; ++argNum) {
     std::string tmp = std::string(argv[argNum]);
 
