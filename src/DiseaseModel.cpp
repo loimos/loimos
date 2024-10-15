@@ -52,10 +52,14 @@
  * Constructor which loads in disease file from text proto file.
  * On failure, aborts the entire simulation.
  */
-DiseaseModel::DiseaseModel(std::string diseasePath, const AttributeTable &attrs) {
+DiseaseModel::DiseaseModel(std::string diseasePath, double transmissibility,
+    const AttributeTable &attrs) {
   model = new loimos::proto::DiseaseModel();
   readProtobuf(diseasePath, model);
   assert(model->disease_states_size() != 0);
+  if (transmissibility >= 0.0) {
+    model->set_transmissibility(transmissibility);
+  }
 
   ageIndex = attrs.getAttributeIndex("age");
   susceptibilityIndex = attrs.getAttributeIndex("susceptibility");
