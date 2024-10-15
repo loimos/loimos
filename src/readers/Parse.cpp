@@ -142,6 +142,9 @@ void parse(int argc, char **argv, Arguments *args) {
     } else if (("-or" == tmp || "--offset-ratio" == tmp)
         && argNum + 1 < argc) {
       args->partitionsToOffsetsRatio = atol(argv[++argNum]);
+    } else if (("-t" == tmp || "--transmissibility" == tmp)
+        && argNum + 1 < argc) {
+      args->transmissibility = atof(argv[++argNum]);
     }
   }
 
