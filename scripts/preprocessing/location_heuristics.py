@@ -10,7 +10,8 @@ import argparse
 import os
 import sys
 import time
-import functools
+
+# import functools
 
 from multiprocessing import Pool, set_start_method
 
