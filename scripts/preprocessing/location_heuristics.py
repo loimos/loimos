@@ -10,7 +10,8 @@ import argparse
 import os
 import sys
 import time
-import functools
+
+# import functools
 
 from multiprocessing import Pool, set_start_method
 
@@ -31,23 +32,19 @@ LID_COL = "lid"
 START_COL = "start_time"
 
 
-def find_max_simultaneous_visits(visit_ids, visits=None, shared=False):
-    if shared:
-        visits = visits.read()
-    events = visits.iloc[visit_ids].melt(
+# test_set = {2,3,4}
+def find_max_simultaneous_visits(lid, visits):
+    events = visits.melt(
         value_vars=["start_time", "end_time"], value_name="time", var_name="type"
     )
     events.sort_values(["time", "type"], inplace=True)
-    # if lid % 1000000 == 0:
-    #    print("location {} has {} visits".format(lid, len(visits)))
-    #    # print(visits.memory_usage())
     events["occupancy"] = -1
     events.loc[events["type"] == "start_time", "occupancy"] = 1
-    # if lid % 1000000 == 0:
-    #    print(f"location {lid}:")
-    #    print(events)
-    #    # print(visits.memory_usage())
     result = events["occupancy"].cumsum().max()
+    # if lid in test_set:
+    #   print(f"location {lid}: {visits.shape[0]} visits, {result} msv")
+    #   print(events)
+    #   # print(visits.memory_usage())
     return result
 
 
@@ -158,7 +155,7 @@ if __name__ == "__main__":
     #    end_time = time.perf_counter()
     #    print("Calculating daily summaries:", end_time - start_time)
 
-    # Calculate the maximum simulatenous visits using as many processes
+    # Calculate the maximum simultaneous visits using as many processes
     # as possible
     start_time = time.perf_counter()
     # print(visits.memory_usage())
@@ -170,23 +167,21 @@ if __name__ == "__main__":
         # python-multiprocessing-debugging-oserror-errno-12-cannot-allocate-memory
         set_start_method("spawn")
         # print(visits_by_location.groups, flush=True)
-        shared_visits = SharedPandasDataFrame(visits)
+        # shared_visits = SharedPandasDataFrame(visits)
 
         with Pool(args.n_tasks) as pool:
             # visits_by_location = {k: SharedPandasDataFrame(df) \
             #        for k, df in visits_by_location.groups.items()}
-            max_visits["max_simultaneous_visits"] = pool.map(
-                functools.partial(
-                    find_max_simultaneous_visits, visits=shared_visits, shared=True
-                ),
-                visits_by_location.groups.values(),
+            max_visits["max_simultaneous_visits"] = pool.starmap(
+                find_max_simultaneous_visits,
+                visits_by_location,
             )
 
-        shared_visits.unlink()
+        # shared_visits.unlink()
     else:
         max_visits["max_simultaneous_visits"] = [
-            find_max_simultaneous_visits(group, visits)
-            for lid, group in visits_by_location.groups.values()
+            find_max_simultaneous_visits(lid, group)
+            for lid, group in visits_by_location
         ]
 
     end_time = time.perf_counter()
