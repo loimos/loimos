@@ -15,8 +15,8 @@
 VaccinationIntervention::VaccinationIntervention(
     const loimos::proto::InterventionModel::Intervention &interventionDef,
     const loimos::proto::DiseaseModel &diseaseDef,
-    const AttributeTable &t) :
-  Intervention(interventionDef, diseaseDef, t) {
+    const AttributeTable &t, uint index) :
+  Intervention(interventionDef, diseaseDef, t, index) {
   vaccinationProbability = interventionDef.vaccination().probability();
   vaccinatedSusceptibility = interventionDef.vaccination()
     .vaccinated_susceptibility();

@@ -48,25 +48,7 @@ struct InterventionModel {
   void applyIntervention(int interventionIdx, std::vector<T> *data) const {
     const Intervention<T> &inter = getIntervention<T>(interventionIdx);
     bool isActive = triggerFlags[inter.getTriggerIndex()];
-
-    if (isActive) {
-      for (T &d : *data) {
-        if (d.willComply(interventionIdx)
-            && inter.shouldApply(d, d.getGenerator())) {
-          inter.apply(&d);
-        } else if (d.isActive(interventionIdx)
-          && inter.shouldRemove(d, d.getGenerator())) {
-        inter.remove(&d);
-      }
-    }
-
-    } else {
-      for (T &d : *data) {
-        if (d.isActive(interventionIdx)) {
-          inter.remove(&d);
-        }
-      }
-    }
+    inter.apply(data, isActive);
   }
 };
 #endif  // INTERVENTION_MODEL_INTERVENTIONMODEL_H_

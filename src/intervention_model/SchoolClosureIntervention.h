@@ -22,8 +22,8 @@ class SchoolClosureIntervention : public VisitFilterIntervention<Location> {
   SchoolClosureIntervention(
       const loimos::proto::InterventionModel::Intervention &interventionDef,
       const loimos::proto::DiseaseModel &diseaseDef,
-      const AttributeTable &t) :
-    VisitFilterIntervention<Location>(interventionDef, diseaseDef, t) {
+      const AttributeTable &t, uint index) :
+    VisitFilterIntervention<Location>(interventionDef, diseaseDef, t, index) {
     schoolIndex = t.getAttributeIndex("school");
   }
 

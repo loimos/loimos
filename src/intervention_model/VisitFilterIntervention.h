@@ -22,8 +22,8 @@ class VisitFilterIntervention : public Intervention<T> {
   VisitFilterIntervention(
       const loimos::proto::InterventionModel::Intervention &interventionDef,
       const loimos::proto::DiseaseModel &diseaseDef,
-      const AttributeTable &t) :
-    Intervention<T>(interventionDef, diseaseDef, t) {
+      const AttributeTable &t, uint index) :
+    Intervention<T>(interventionDef, diseaseDef, t, index) {
     keepVisit = [](const VisitMessage &visit) {
       return false;
     };
@@ -35,10 +35,6 @@ class VisitFilterIntervention : public Intervention<T> {
 
   void remove(T *d) const override {
     d->restoreVisits(this);
-  }
-  
-  static bool updatesVisits() {
-    return true;
   }
 };
 

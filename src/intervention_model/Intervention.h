@@ -23,6 +23,7 @@ class Intervention {
   static std::uniform_real_distribution<double> unitDistrib;
   double compliance;
   int triggerIndex;
+  uint interventionIndex;
 
  public:
   int getTriggerIndex() const {
@@ -43,15 +44,34 @@ class Intervention {
   // For any intervention that cannot be undone, this should have no effect.
   virtual void remove(T *p) const {}
 
-  static bool updatesVisits() {
-    return false;
+  // Applies the intervention to or removes it from all objects on a chare
+  virtual void apply(std::vector<T> *data, bool isActive) const {
+    if (isActive) {
+      for (T &d : *data) {
+        if (d.willComply(interventionIndex)
+            && shouldApply(d, d.getGenerator())) {
+          apply(&d);
+        } else if (d.isActive(interventionIndex)
+          && shouldRemove(d, d.getGenerator())) {
+        remove(&d);
+      }
+    }
+
+    } else {
+      for (T &d : *data) {
+        if (d.isActive(interventionIndex)) {
+          remove(&d);
+        }
+      }
+    }
   }
 
   Intervention() {}
   Intervention(
       const loimos::proto::InterventionModel::Intervention &interventionDef,
       const loimos::proto::DiseaseModel &diseaseDef,
-      const AttributeTable &t) {
+      const AttributeTable &t, uint _interventionIndex) :
+      interventionIndex(_interventionIndex) {
     compliance = interventionDef.compliance();
     triggerIndex = interventionDef.trigger_index();
   }

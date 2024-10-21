@@ -42,11 +42,11 @@ void InterventionModel::initPersonInterventions(
 
     if (spec.has_self_isolation()) {
       personInterventions.emplace_back(new SelfIsolationIntervention(
-        spec, *diseaseModel.model, attributes));
+        spec, *diseaseModel.model, attributes, i));
 
     } else if (spec.has_vaccination()) {
       personInterventions.emplace_back(new VaccinationIntervention(
-        spec, *diseaseModel.model, attributes));
+        spec, *diseaseModel.model, attributes, i));
     }
   }
 }
@@ -61,7 +61,7 @@ void InterventionModel::initLocationInterventions(
 
     if (spec.has_school_closures()) {
       locationInterventions.emplace_back(new SchoolClosureIntervention(
-        spec, *diseaseModel.model, attributes));
+        spec, *diseaseModel.model, attributes, i));
     }
   }
 }

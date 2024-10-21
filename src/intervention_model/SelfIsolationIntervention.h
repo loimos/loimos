@@ -25,8 +25,8 @@ class SelfIsolationIntervention : public VisitFilterIntervention<Person> {
   SelfIsolationIntervention(
       const loimos::proto::InterventionModel::Intervention &interventionDef,
       const loimos::proto::DiseaseModel &diseaseDef_,
-      const AttributeTable &t) : diseaseDef(diseaseDef_),
-    VisitFilterIntervention<Person>(interventionDef, diseaseDef_, t) {}
+      const AttributeTable &t, uint index) : diseaseDef(diseaseDef_),
+    VisitFilterIntervention<Person>(interventionDef, diseaseDef_, t, index) {}
   virtual bool shouldApply(const Person &p, std::default_random_engine *generator) const {
     return diseaseDef.disease_states(p.state).symptomatic();
   }
