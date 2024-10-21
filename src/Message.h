@@ -99,7 +99,7 @@ struct PersonState {
   PersonState() {}
   explicit PersonState(CkMigrateMessage *msg) {}
   PersonState(Id uniqueId_, DiseaseState state_,
-  double transmissionModifier_)
+    double transmissionModifier_)
     : uniqueId(uniqueId_), state(state_),
     transmissionModifier(transmissionModifier_) {}
 };
@@ -117,6 +117,26 @@ struct PersonStatesMessage {
   void pup(PUP::er& p) {  // NOLINT(runtime/references)
     p | sourcePartition;
     p | states;
+  }
+};
+
+struct VisitInterventionMessage {
+  PartitionId interventionIdx;
+  std::unordered_set<Id> affectedPeople;
+  std::unordered_set<Id> previouslyAffectedPeople;
+
+  VisitInterventionMessage() {}
+  VisitInterventionMessage(PartitionId interventionIdx_,
+      const std::unordered_set<Id>& affectedPeople_,
+      const std::unordered_set<Id>& previouslyAffectedPeople_)
+    : interventionIdx(interventionIdx_),
+    affectedPeople(affectedPeople_),
+    previouslyAffectedPeople(previouslyAffectedPeople_) {}
+  
+  void pup(PUP::er& p) {  // NOLINT(runtime/references) 
+    p | interventionIdx;
+    p | affectedPeople;
+    p | previouslyAffectedPeople;
   }
 };
 

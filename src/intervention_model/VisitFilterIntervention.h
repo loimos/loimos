@@ -29,11 +29,16 @@ class VisitFilterIntervention : public Intervention<T> {
     };
   }
 
-  void apply(T *p) const override {
-    p->filterVisits(this, keepVisit);
+  void apply(T *d) const override {
+    d->filterVisits(this, keepVisit);
   }
-  void remove(T *p) const override {
-    p->restoreVisits(this);
+
+  void remove(T *d) const override {
+    d->restoreVisits(this);
+  }
+  
+  static bool updatesVisits() {
+    return true;
   }
 };
 

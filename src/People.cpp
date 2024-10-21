@@ -501,14 +501,8 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
 }
 
 void People::ReceiveIntervention(int interventionIdx) {
-  const Intervention<Person> &inter =
-    scenario->interventionModel->getPersonIntervention(interventionIdx);
-  for (Person &person : people) {
-    if (person.willComply(interventionIdx)
-        && inter.test(person, person.getGenerator())) {
-      inter.apply(&person);
-    }
-  }
+  InterventionModel *interventions = scenario->interventionModel;
+  interventions->applyIntervention(interventionIdx, &people);
 }
 
 void People::EndOfDayStateUpdate() {

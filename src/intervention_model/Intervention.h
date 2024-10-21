@@ -31,7 +31,10 @@ class Intervention {
   bool willComply(const T &p, std::default_random_engine *generator) const {
     return unitDistrib(*generator) < compliance;
   }
-  virtual bool test(const T &p, std::default_random_engine *generator) const {
+  virtual bool shouldApply(const T &p, std::default_random_engine *generator) const {
+    return false;
+  }
+  virtual bool shouldRemove(const T &p, std::default_random_engine *generator) const {
     return false;
   }
   // Applies intervention to object
@@ -39,6 +42,10 @@ class Intervention {
   // Undoes any previous intervention application on this object.
   // For any intervention that cannot be undone, this should have no effect.
   virtual void remove(T *p) const {}
+
+  static bool updatesVisits() {
+    return false;
+  }
 
   Intervention() {}
   Intervention(
@@ -48,7 +55,7 @@ class Intervention {
     compliance = interventionDef.compliance();
     triggerIndex = interventionDef.trigger_index();
   }
-};
+};  
 
 template <class T>
 std::uniform_real_distribution<double> Intervention<T>::unitDistrib(

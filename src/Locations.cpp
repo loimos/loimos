@@ -351,7 +351,7 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 #endif
 
   // Interventions might cause us to reject some visits
-  if (!locations[localLocIdx].acceptsVisit(visitMsg)) {
+  if (!visitMsg.isActive()) {
     return;
   }
 
@@ -639,14 +639,7 @@ inline void Locations::sendInteractions(Location *loc,
 
 void Locations::ReceiveIntervention(PartitionId interventionIdx) {
   InterventionModel *interventions = scenario->interventionModel;
-  const Intervention<Location> &inter =
-    interventions->getLocationIntervention(interventionIdx);
-  for (Location &location : locations) {
-    if (location.willComply(interventionIdx)
-        && inter.test(location, location.getGenerator())) {
-      inter.apply(&location);
-    }
-  }
+  interventions->applyIntervention(interventionIdx, &locations);
 }
 
 #ifdef ENABLE_LB

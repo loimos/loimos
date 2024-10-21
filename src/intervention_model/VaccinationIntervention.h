@@ -30,7 +30,7 @@ class VaccinationIntervention : public Intervention<Person> {
       const AttributeTable &t);
   VaccinationIntervention() {}
 
-  bool test(const Person &p, std::default_random_engine *generator)
+  bool shouldApply(const Person &p, std::default_random_engine *generator)
       const override;
   void apply(Person *p) const override;
 };

@@ -76,6 +76,16 @@ const Intervention<Location> & InterventionModel::getLocationIntervention(int in
   return *locationInterventions[index];
 }
 
+template <>
+const Intervention<Location> &InterventionModel::getIntervention(int index) const {
+  return getLocationIntervention(index);
+}
+
+template <>
+const Intervention<Person> &InterventionModel::getIntervention(int index) const {
+  return getPersonIntervention(index);
+}
+
 int InterventionModel::getNumPersonInterventions() const {
   return static_cast<int>(personInterventions.size());
 }
@@ -86,15 +96,20 @@ int InterventionModel::getNumLocationInterventions() const {
 
 void InterventionModel::applyInterventions(int day, Id newDailyInfections,
     Id numPeople) {
+  std::vector<bool> prevTriggerFlags;
+  prevTriggerFlags.insert(prevTriggerFlags.end(), triggerFlags.begin(),
+      triggerFlags.end());
   toggleInterventions(day, newDailyInfections, numPeople);
 
   for (uint i = 0; i < personInterventions.size(); ++i) {
-    if (triggerFlags[personInterventions[i]->getTriggerIndex()]) {
+    int triggerIndex = personInterventions[i]->getTriggerIndex();
+    if (triggerFlags[triggerIndex] || prevTriggerFlags[triggerIndex]) {
       peopleArray.ReceiveIntervention(i);
     }
   }
   for (uint i = 0; i < locationInterventions.size(); ++i) {
-    if (triggerFlags[locationInterventions[i]->getTriggerIndex()]) {
+    int triggerIndex = personInterventions[i]->getTriggerIndex();
+    if (triggerFlags[triggerIndex] || prevTriggerFlags[triggerIndex]) {
       locationsArray.ReceiveIntervention(i);
     }
   }

@@ -25,6 +25,11 @@ using PartitionId = int;
 #define PARTITION_ID_PRINT_TYPE "%d"
 #define PARTITION_ID_PARSE std::stoi
 
+// For keeping track of intervention status
+using InterventionStatus = uint8_t;
+#define INTERVENTION_WILL_COMPLY 1
+#define INTERVENTION_IS_ACTIVE 2
+
 // Disease states
 using DiseaseState = int;
 

@@ -29,8 +29,9 @@ class DataInterface {
   // Various dynamic attributes
   std::vector<union Data> data;
 
-  // Indicates whether or not this entity will comply with a given intervention
-  std::vector<bool> willComplyWithIntervention;
+  // Indicates whether or not this entity will comply with a given intervention,
+  // whether or not said intervention is active, etc
+  std::vector<InterventionStatus> interventionStatuses;
 
  public:
   DataInterface() = default;
@@ -44,6 +45,8 @@ class DataInterface {
   std::default_random_engine * getGenerator();
   void toggleCompliance(int interventionIndex, bool value);
   bool willComply(int interventionIndex);
+  void toggleActivity(int interventionIndex, bool value);
+  bool isActive(int interventionIndex);
   virtual void filterVisits(const void *cause, VisitTest keepVisit) = 0;
   virtual void restoreVisits(const void *cause) = 0;
 };

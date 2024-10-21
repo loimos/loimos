@@ -27,7 +27,7 @@ class SchoolClosureIntervention : public VisitFilterIntervention<Location> {
     schoolIndex = t.getAttributeIndex("school");
   }
 
-  bool test(const Location &p, std::default_random_engine *generator) const override {
+  bool shouldApply(const Location &p, std::default_random_engine *generator) const override {
     return p.getValue(schoolIndex).bool_val;
   }
 };
