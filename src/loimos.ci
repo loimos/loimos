@@ -338,6 +338,7 @@ mainmodule loimos {
     entry AGGREGATE void ReceiveVisitMessages(VisitMessage);
     entry void ComputeInteractions(); // calls ReceiveInteractions
     entry void ReceiveIntervention(int interventionIdx);
+    entry void ReceiveVisitIntervention(VisitInterventionMessage msg);
     entry void AtSync();
   };
 

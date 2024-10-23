@@ -639,7 +639,16 @@ inline void Locations::sendInteractions(Location *loc,
 
 void Locations::ReceiveIntervention(PartitionId interventionIdx) {
   InterventionModel *interventions = scenario->interventionModel;
-  interventions->applyIntervention(interventionIdx, &locations);
+  std::unordered_set<Id> applied;
+  std::unordered_set<Id> removed;
+  interventions->applyIntervention(interventionIdx, &locations, &applied, &removed);
+}
+  
+void Locations::ReceiveVisitIntervention(VisitInterventionMessage msg) {
+  InterventionModel *interventions = scenario->interventionModel;
+  const Intervention<Person> &inter =
+    interventions->getPersonIntervention(msg.interventionIdx);
+  inter.apply(&locations, msg.affectedPeople, msg.previouslyAffectedPeople);
 }
 
 #ifdef ENABLE_LB

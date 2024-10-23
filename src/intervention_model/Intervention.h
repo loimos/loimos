@@ -11,8 +11,10 @@
 #include "../protobuf/disease.pb.h"
 #include "../readers/DataInterface.h"
 #include "../readers/AttributeTable.h"
+#include "../Location.h"
 
 #include "charm++.h"
+#include <unordered_set>
 
 using InterventionList = google::protobuf::RepeatedPtrField<
   loimos::proto::InterventionModel::Intervention>;
@@ -45,7 +47,8 @@ class Intervention {
   virtual void remove(T *p) const {}
 
   // Applies the intervention to or removes it from all objects on a chare
-  virtual void apply(std::vector<T> *data, bool isActive) const {
+  virtual void apply(std::vector<T> *data, bool isActive,
+      std::unordered_set<Id> *applied, std::unordered_set<Id> *removed) const {
     if (isActive) {
       for (T &d : *data) {
         if (d.willComply(interventionIndex)
@@ -65,6 +68,10 @@ class Intervention {
       }
     }
   }
+  
+  virtual void apply(std::vector<Location> *data,
+    const std::unordered_set<Id> &applied,
+    const std::unordered_set<Id> &removed) const {}
 
   Intervention() {}
   Intervention(
@@ -75,7 +82,7 @@ class Intervention {
     compliance = interventionDef.compliance();
     triggerIndex = interventionDef.trigger_index();
   }
-};  
+};
 
 template <class T>
 std::uniform_real_distribution<double> Intervention<T>::unitDistrib(

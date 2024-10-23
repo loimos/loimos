@@ -13,6 +13,7 @@
 
 #include "charm++.h"
 #include <functional>
+#include <unordered_set>
 
 template <class T = DataInterface>
 class VisitFilterIntervention : public Intervention<T> {
@@ -36,6 +37,54 @@ class VisitFilterIntervention : public Intervention<T> {
   void remove(T *d) const override {
     d->restoreVisits(this);
   }
+
+  void apply(std::vector<Person> *data, bool isActive,
+    std::unordered_set<Id> *applied,
+    std::unordered_set<Id> *removed) const override;
+  
+  virtual void apply(std::vector<Location> *data,
+    const std::unordered_set<Id> &applied,
+    const std::unordered_set<Id> &removed) const override;
 };
+
+template <>
+void VisitFilterIntervention<Person>::apply(std::vector<Person> *data, bool isActive,
+    std::unordered_set<Id> *applied,
+    std::unordered_set<Id> *removed) const {
+  if (isActive) {
+    for (T &d : *data) {
+      if (d.willComply(interventionIndex)
+          && shouldApply(d, d.getGenerator())) {
+        applied->add(d.getUniqueId());
+      } else if (d.isActive(interventionIndex)
+        && shouldRemove(d, d.getGenerator())) {
+        removed->add(d.getUniqueId());
+    }
+  }
+
+  } else {
+    for (T &d : *data) {
+      if (d.isActive(interventionIndex)) {
+        removed->add(d.getUniqueId());
+      }
+    }
+  }
+}
+
+template <>
+void VisitFilterIntervention<Person>::apply(std::vector<Location> *data,
+    const std::unordered_set<Id> &applied,
+    const std::unordered_set<Id> &removed) const {
+  VisitTest notInApplied = [&applied](const VisitMessage &visit) {
+    return applied.find(visit.getPersonId()) == applied.end();
+  };
+  for (Location &d : *data) {
+    if (applied.find(d.getUniqueId()) != applied.end()) {
+      d.filterVisits(this, notInApplied);
+    } else if (removed.find(d.getUniqueId()) != removed.end()) {
+      d.restoreVisits(this);
+    }
+  }
+}
 
 #endif  // INTERVENTION_MODEL_VISITFILTERINTERVENTION_H_

@@ -43,6 +43,8 @@ class People : public CBase_People {
   void ProcessInteractions(Person *person);
   void UpdateDiseaseState(Person *person);
   void loadPeopleData(std::string scenarioPath);
+  void updateVisitedLocationsForIntervention(int interventionIdx,
+    std::unordered_set<Id> *applied, std::unordered_set<Id> *removed);
 
  public:
   explicit People(int seed, std::string scenarioPath);
