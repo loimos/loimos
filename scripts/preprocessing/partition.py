@@ -130,6 +130,13 @@ def parse_args():
         help="Pass this flag if the script should set this partitioning as the "
         + "default for this dataset",
     )
+    parser.add_argument(
+        "-fv",
+        "--force-visits",
+        action="store_true",
+        help="Pass this flag if the script should sort visits even when not sorting "
+        + "locations or people",
+    )
 
     args = parser.parse_args()
 
@@ -414,6 +421,12 @@ def main(args):
             )
     elif args.in_dir != args.out_dir:
         shutil.copy(os.path.join(args.in_dir, args.people_file), args.out_dir)
+
+    if args.offsets_only and args.force_visits:
+        update_visits(args, pid_update, id_col="pid")
+        create_textproto(
+            args.out_dir, args.visits_file, VISITS_TYPES, metadata_type="visits"
+        )
 
 
 if __name__ == "__main__":
