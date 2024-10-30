@@ -12,7 +12,10 @@ import sys
 import time
 
 # import functools
-
+from create_textproto import (
+    create_textproto,
+    LOCATIONS_TYPES,
+)
 from multiprocessing import Pool, set_start_method
 
 # Python modules need to either be in/below this dir or in the path
@@ -220,3 +223,5 @@ if __name__ == "__main__":
     # Output with index column which is the lids.
     print(f"Saving heuristics to {output_file}")
     output_df.to_csv(output_file, index=False)
+    create_textproto(args.population_dir, os.path.basename(output_file),
+                     LOCATIONS_TYPES)
