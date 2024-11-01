@@ -68,7 +68,7 @@ class Location : public DataInterface {
   // from this location
   void addEvent(const Event &e);
   void filterVisits(const void *cause, VisitTest keepVisit) override;
-  void restoreVisits(const void *cause) override;
+  void restoreVisits(const void *cause, VisitTest restoreVisit) override;
   bool acceptsVisit(const VisitMessage &visit);
 };
 

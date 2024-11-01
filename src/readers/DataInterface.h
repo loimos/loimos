@@ -48,6 +48,6 @@ class DataInterface {
   void toggleActivity(int interventionIndex, bool value);
   bool isActive(int interventionIndex);
   virtual void filterVisits(const void *cause, VisitTest keepVisit) = 0;
-  virtual void restoreVisits(const void *cause) = 0;
+  virtual void restoreVisits(const void *cause, VisitTest restoreVisit) = 0;
 };
 #endif  // READERS_DATAINTERFACE_H_

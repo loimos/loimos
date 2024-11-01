@@ -25,10 +25,9 @@ class Intervention {
   static std::uniform_real_distribution<double> unitDistrib;
   double compliance;
   int triggerIndex;
-
- public:
   const uint interventionIndex;
 
+ public:
   int getTriggerIndex() const {
     return triggerIndex;
   }
@@ -56,8 +55,8 @@ class Intervention {
             && shouldApply(d, d.getGenerator())) {
           apply(&d);
         } else if (d.isActive(interventionIndex)
-          && shouldRemove(d, d.getGenerator())) {
-        remove(&d);
+            && shouldRemove(d, d.getGenerator())) {
+          remove(&d);
       }
     }
 

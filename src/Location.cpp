@@ -67,10 +67,10 @@ void Location::filterVisits(const void *cause, VisitTest keepVisit) {
   }
 }
 
-void Location::restoreVisits(const void *cause) {
+void Location::restoreVisits(const void *cause, VisitTest restoreVisit) {
   for (std::vector<VisitMessage> &visits : visitsByDay) {
     for (int i = 0; i < visits.size(); ++i) {
-      if (cause == visits[i].deactivatedBy) {
+      if (cause == visits[i].deactivatedBy && restoreVisit(visits[i])) {
         visits[i].deactivatedBy = NULL;
       }
     }

@@ -21,6 +21,7 @@ template <class T = DataInterface>
 class VisitFilterIntervention : public Intervention<T> {
  protected:
   VisitTest keepVisit;
+  VisitTest restoreVisit;
  public:
   VisitFilterIntervention(
       const loimos::proto::InterventionModel::Intervention &interventionDef,
@@ -30,6 +31,9 @@ class VisitFilterIntervention : public Intervention<T> {
     keepVisit = [](const VisitMessage &visit) {
       return false;
     };
+    restoreVisit = [](const VisitMessage &visit) {
+      return true;
+    };
   }
 
   void apply(T *d) const override {
@@ -37,7 +41,7 @@ class VisitFilterIntervention : public Intervention<T> {
   }
 
   void remove(T *d) const override {
-    d->restoreVisits(this);
+    d->restoreVisits(this, restoreVisit);
   }
 
   // This just exists to dispatch to the other two implementations
@@ -54,6 +58,8 @@ class VisitFilterIntervention : public Intervention<T> {
     Intervention<T>::apply(data, isActive, applied, removed);
   }
 
+  // Visit filtering no longer occurs on person chares, so just keep
+  // track of affected people
   void apply(std::vector<T> *data, bool isActive,
       std::unordered_set<Id> *applied,
       std::unordered_set<Id> *removed,
@@ -90,18 +96,22 @@ class VisitFilterIntervention : public Intervention<T> {
       const std::unordered_set<Id> &removed,
       std::false_type) const {}
 
+  // Filters visits on Location chares based on the set of selected people
   void apply(std::vector<Location> *data,
       const std::unordered_set<Id> &applied,
       const std::unordered_set<Id> &removed,
       std::true_type) const {
     VisitTest notInApplied = [&](const VisitMessage &visit) {
-      return applied.find(visit.personIdx) == applied.end();
+      return applied.find(visit.personIdx) == applied.end() && keepVisit(visit);
+    };
+    VisitTest inRemoved = [&](const VisitMessage &visit) {
+      return removed.find(visit.personIdx) != removed.end() || restoreVisit(visit);
     };
     for (Location &d : *data) {
       if (applied.find(d.getUniqueId()) != applied.end()) {
         d.filterVisits(this, notInApplied);
       } else if (removed.find(d.getUniqueId()) != removed.end()) {
-        d.restoreVisits(this);
+        d.restoreVisits(this, inRemoved);
       }
     }
   }
