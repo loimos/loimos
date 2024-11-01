@@ -25,9 +25,10 @@ class Intervention {
   static std::uniform_real_distribution<double> unitDistrib;
   double compliance;
   int triggerIndex;
-  uint interventionIndex;
 
  public:
+  const uint interventionIndex;
+
   int getTriggerIndex() const {
     return triggerIndex;
   }
@@ -73,7 +74,6 @@ class Intervention {
     const std::unordered_set<Id> &applied,
     const std::unordered_set<Id> &removed) const {}
 
-  Intervention() {}
   Intervention(
       const loimos::proto::InterventionModel::Intervention &interventionDef,
       const loimos::proto::DiseaseModel &diseaseDef,

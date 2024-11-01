@@ -28,7 +28,6 @@ class VaccinationIntervention : public Intervention<Person> {
       const loimos::proto::InterventionModel::Intervention &interventionDef,
       const loimos::proto::DiseaseModel &diseaseDef,
       const AttributeTable &t, uint index);
-  VaccinationIntervention() {}
 
   bool shouldApply(const Person &p, std::default_random_engine *generator)
       const override;
