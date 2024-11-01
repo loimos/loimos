@@ -14,6 +14,7 @@
 #include "../Location.h"
 
 #include "charm++.h"
+#include <vector>
 #include <unordered_set>
 
 using InterventionList = google::protobuf::RepeatedPtrField<
@@ -68,7 +69,7 @@ class Intervention {
       }
     }
   }
-  
+
   virtual void apply(std::vector<Location> *data,
     const std::unordered_set<Id> &applied,
     const std::unordered_set<Id> &removed) const {}

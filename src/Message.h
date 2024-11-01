@@ -132,8 +132,8 @@ struct VisitInterventionMessage {
     : interventionIdx(interventionIdx_),
     affectedPeople(affectedPeople_),
     previouslyAffectedPeople(previouslyAffectedPeople_) {}
-  
-  void pup(PUP::er& p) {  // NOLINT(runtime/references) 
+
+  void pup(PUP::er& p) {  // NOLINT(runtime/references)
     p | interventionIdx;
     p | affectedPeople;
     p | previouslyAffectedPeople;

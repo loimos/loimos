@@ -14,6 +14,7 @@
 
 #include "charm++.h"
 #include <functional>
+#include <vector>
 #include <unordered_set>
 #include <type_traits>
 
@@ -22,6 +23,7 @@ class VisitFilterIntervention : public Intervention<T> {
  protected:
   VisitTest keepVisit;
   VisitTest restoreVisit;
+
  public:
   VisitFilterIntervention(
       const loimos::proto::InterventionModel::Intervention &interventionDef,

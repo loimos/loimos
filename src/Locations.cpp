@@ -30,6 +30,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <unordered_set>
 
 std::uniform_real_distribution<> Locations::unitDistrib(0.0, 1.0);
 
@@ -643,7 +644,7 @@ void Locations::ReceiveIntervention(PartitionId interventionIdx) {
   std::unordered_set<Id> removed;
   interventions->applyIntervention(interventionIdx, &locations, &applied, &removed);
 }
-  
+
 void Locations::ReceiveVisitIntervention(VisitInterventionMessage msg) {
   InterventionModel *interventions = scenario->interventionModel;
   const Intervention<Person> &inter =

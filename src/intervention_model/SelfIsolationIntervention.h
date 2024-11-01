@@ -27,10 +27,12 @@ class SelfIsolationIntervention : public VisitFilterIntervention<Person> {
       const loimos::proto::DiseaseModel &diseaseDef_,
       const AttributeTable &t, uint index) : diseaseDef(diseaseDef_),
     VisitFilterIntervention<Person>(interventionDef, diseaseDef_, t, index) {}
-  virtual bool shouldApply(const Person &p, std::default_random_engine *generator) const {
+  virtual bool shouldApply(const Person &p,
+      std::default_random_engine *generator) const {
     return diseaseDef.disease_states(p.state).symptomatic();
   }
-  virtual bool shouldRemove(const Person &p, std::default_random_engine *generator) const {
+  virtual bool shouldRemove(const Person &p,
+      std::default_random_engine *generator) const {
     return !diseaseDef.disease_states(p.state).symptomatic();
   }
 };
