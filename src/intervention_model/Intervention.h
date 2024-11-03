@@ -53,6 +53,7 @@ class Intervention {
     if (isActive) {
       for (T &d : *data) {
         if (d.willComply(interventionIndex)
+            && !d.isActive(interventionIndex)
             && shouldApply(d, d.getGenerator())) {
           apply(&d);
         } else if (d.isActive(interventionIndex)

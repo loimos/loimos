@@ -69,6 +69,7 @@ class VisitFilterIntervention : public Intervention<T> {
     if (isActive) {
       for (T &d : *data) {
         if (d.willComply(this->interventionIndex)
+            && !d.isActive(this->interventionIndex)
             && this->shouldApply(d, d.getGenerator())) {
           applied->emplace(d.getUniqueId());
         } else if (d.isActive(this->interventionIndex)
@@ -107,14 +108,11 @@ class VisitFilterIntervention : public Intervention<T> {
       return applied.find(visit.personIdx) == applied.end() && keepVisit(visit);
     };
     VisitTest inRemoved = [&](const VisitMessage &visit) {
-      return removed.find(visit.personIdx) != removed.end() || restoreVisit(visit);
+      return removed.find(visit.personIdx) != removed.end() && restoreVisit(visit);
     };
     for (Location &d : *data) {
-      if (applied.find(d.getUniqueId()) != applied.end()) {
-        d.filterVisits(this, notInApplied);
-      } else if (removed.find(d.getUniqueId()) != removed.end()) {
-        d.restoreVisits(this, inRemoved);
-      }
+      d.filterVisits(this, notInApplied);
+      d.restoreVisits(this, inRemoved);
     }
   }
 };
