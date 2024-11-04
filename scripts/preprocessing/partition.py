@@ -130,6 +130,13 @@ def parse_args():
         help="Pass this flag if the script should set this partitioning as the "
         + "default for this dataset",
     )
+    parser.add_argument(
+        "-fv",
+        "--force-visits",
+        action="store_true",
+        help="Pass this flag if the script should sort visits even when not sorting "
+        + "locations or people",
+    )
 
     args = parser.parse_args()
 
@@ -330,7 +337,7 @@ def update_chunk(args, visits_chunk, id_update, id_col="lid"):
     return visits_chunk
 
 
-def update_visits(args, id_update, id_col="lid", sort_values=True):
+def update_visits(args, id_update=None, id_col="lid", sort_values=True):
     if isinstance(id_update, int) and 0 == id_update:
         return
     if args.num_visits is not None:
@@ -340,7 +347,8 @@ def update_visits(args, id_update, id_col="lid", sort_values=True):
         chunk_dfs = []
         for i, chunk in enumerate(visit_chunks):
             print(f"Updating {id_col}s in chunk {i}")
-            chunk = update_chunk(args, chunk, id_update, id_col=id_col)
+            if id_update is not None:
+                chunk = update_chunk(args, chunk, id_update, id_col=id_col)
             if sort_values:
                 chunk_dfs.append(chunk)
             elif i == 0:
@@ -359,7 +367,8 @@ def update_visits(args, id_update, id_col="lid", sort_values=True):
         visits = read_csv(args.in_dir, args.visits_file, args.num_visits)
 
         print(f"Updating visits {id_col}s", flush=True)
-        visits = update_chunk(args, visits, id_update, id_col=id_col)
+        if id_update is not None:
+            visits = update_chunk(args, visits, id_update, id_col=id_col)
         if sort_values:
             print("Sorting visits")
             visits.sort_values(VISIT_SORT_COLS, inplace=True)
@@ -375,7 +384,7 @@ def main(args):
     if "locations" in args.to_partition:
         offsets, lid_update = partition_locations(args)
         if not args.offsets_only:
-            update_visits(args, lid_update, sort_values=False)
+            update_visits(args, lid_update, sort_values=True)
             if "people" not in args.to_partition:
                 create_textproto(
                     args.out_dir, args.visits_file, VISITS_TYPES, metadata_type="visits"
@@ -399,7 +408,7 @@ def main(args):
     if "people" in args.to_partition:
         offsets, pid_update = partition_people(args)
         if not args.offsets_only:
-            update_visits(args, pid_update, id_col="pid")
+            update_visits(args, pid_update, sort_values=False, id_col="lid")
             create_textproto(
                 args.out_dir, args.visits_file, VISITS_TYPES, metadata_type="visits"
             )
@@ -414,6 +423,12 @@ def main(args):
             )
     elif args.in_dir != args.out_dir:
         shutil.copy(os.path.join(args.in_dir, args.people_file), args.out_dir)
+
+    if args.offsets_only and args.force_visits:
+        update_visits(args, id_col="lid")
+        create_textproto(
+            args.out_dir, args.visits_file, VISITS_TYPES, metadata_type="visits"
+        )
 
 
 if __name__ == "__main__":
