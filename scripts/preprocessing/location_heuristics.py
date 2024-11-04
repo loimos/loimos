@@ -223,5 +223,6 @@ if __name__ == "__main__":
     # Output with index column which is the lids.
     print(f"Saving heuristics to {output_file}")
     output_df.to_csv(output_file, index=False)
-    create_textproto(args.population_dir, os.path.basename(output_file),
-                     LOCATIONS_TYPES)
+    create_textproto(
+        args.population_dir, os.path.basename(output_file), LOCATIONS_TYPES
+    )
