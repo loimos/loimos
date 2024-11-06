@@ -57,12 +57,24 @@ void Location::addEvent(const Event &e) {
   events.push_back(e);
 }
 
-void Location::filterVisits(const void *cause, VisitTest keepVisit) {
-  visitFilters[cause] = keepVisit;
+void Location::filterVisits(InterventionId interventionId, VisitTest keepVisit) {
+  for (std::vector<VisitMessage> &visits : visitsByDay) {
+    for (int i = 0; i < visits.size(); ++i) {
+      if (!keepVisit(visits[i])) {
+        visits[i].deactivatedBy = interventionId;
+      }
+    }
+  }
 }
 
-void Location::restoreVisits(const void *cause) {
-  visitFilters.erase(cause);
+void Location::restoreVisits(InterventionId interventionId, VisitTest restoreVisit) {
+  for (std::vector<VisitMessage> &visits : visitsByDay) {
+    for (int i = 0; i < visits.size(); ++i) {
+      if (interventionId == visits[i].deactivatedBy && restoreVisit(visits[i])) {
+        visits[i].deactivatedBy = DEACTIVATED_BY_NONE;
+      }
+    }
+  }
 }
 
 bool Location::acceptsVisit(const VisitMessage &visit) {

@@ -25,25 +25,9 @@ Person::Person(const AttributeTable &attributes, int numInterventions,
   visitsByDay.resize(numDays);
 }
 
-void Person::filterVisits(const void *cause, VisitTest keepVisit) {
-  for (std::vector<VisitMessage> &visits : visitsByDay) {
-    for (int i = 0; i < visits.size(); ++i) {
-      if (!keepVisit(visits[i])) {
-        visits[i].deactivatedBy = cause;
-      }
-    }
-  }
-}
+void Person::filterVisits(InterventionId interventionId, VisitTest keepVisit) {}
 
-void Person::restoreVisits(const void *cause) {
-  for (std::vector<VisitMessage> &visits : visitsByDay) {
-    for (int i = 0; i < visits.size(); ++i) {
-      if (cause == visits[i].deactivatedBy) {
-        visits[i].deactivatedBy = NULL;
-      }
-    }
-  }
-}
+void Person::restoreVisits(InterventionId interventionId, VisitTest restoreVisit) {}
 
 void Person::pup(PUP::er &p) {
   p | uniqueId;

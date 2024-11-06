@@ -501,13 +501,34 @@ void People::ReceiveInteractions(InteractionMessage interMsg) {
 }
 
 void People::ReceiveIntervention(int interventionIdx) {
-  const Intervention<Person> &inter =
-    scenario->interventionModel->getPersonIntervention(interventionIdx);
-  for (Person &person : people) {
-    if (person.willComply(interventionIdx)
-        && inter.test(person, person.getGenerator())) {
-      inter.apply(&person);
-    }
+  InterventionModel *interventions = scenario->interventionModel;
+  std::unordered_set<Id> applied;
+  std::unordered_set<Id> removed;
+  interventions->applyIntervention(interventionIdx, &people, &applied, &removed);
+
+  if (applied.size() > 0 || removed.size() > 0) {
+    updateVisitedLocationsForIntervention(interventionIdx, &applied, &removed);
+  }
+}
+
+void People::updateVisitedLocationsForIntervention(int interventionIdx,
+    std::unordered_set<Id> *applied, std::unordered_set<Id> *removed) {
+  const Partitioner *partitioner = scenario->partitioner;
+  for (auto &entry : visitorsToPartition) {
+    PartitionId partitionIdx = entry.first;
+    const std::unordered_set<Id> &visitors = entry.second;
+
+    std::unordered_set<Id> partitionApplied;
+    std::unordered_set<Id> partitionRemoved;
+    set_intersection(visitors.begin(), visitors.end(),
+        applied->begin(), applied->end(),
+        std::inserter(partitionApplied, partitionApplied.begin()));
+    set_intersection(visitors.begin(), visitors.end(),
+        removed->begin(), removed->end(),
+        std::inserter(partitionRemoved, partitionRemoved.begin()));
+
+    VisitInterventionMessage msg(interventionIdx, partitionApplied, partitionRemoved);
+    locationsArray[partitionIdx].ReceiveVisitIntervention(msg);
   }
 }
 
