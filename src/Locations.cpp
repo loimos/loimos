@@ -305,8 +305,11 @@ void Locations::QueueVisits() {
   for (Location &location : locations) {
     const std::vector<VisitMessage> &visits =
       location.visitsByDay[day % scenario->numDaysWithDistinctVisits];
-
     for (const VisitMessage &visit : visits) {
+      if (!visit.isActive()) {
+        continue;
+      }
+
       const PersonState &state = visitorStates[visit.personIdx];
       Event arrival { ARRIVAL, visit.personIdx, state.state,
         state.transmissionModifier, visit.visitStart };
@@ -642,6 +645,7 @@ void Locations::ReceiveIntervention(PartitionId interventionIdx) {
   InterventionModel *interventions = scenario->interventionModel;
   std::unordered_set<Id> applied;
   std::unordered_set<Id> removed;
+  //CkPrintf("    Location chare %d: applying intervention %d\n", thisIndex, interventionIdx);
   interventions->applyIntervention(interventionIdx, &locations, &applied, &removed);
 }
 

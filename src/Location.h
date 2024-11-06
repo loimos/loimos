@@ -67,8 +67,8 @@ class Location : public DataInterface {
   // Adds an event representing a person either arriving or departing
   // from this location
   void addEvent(const Event &e);
-  void filterVisits(const void *cause, VisitTest keepVisit) override;
-  void restoreVisits(const void *cause, VisitTest restoreVisit) override;
+  void filterVisits(InterventionId interventionId, VisitTest keepVisit) override;
+  void restoreVisits(InterventionId interventionId, VisitTest restoreVisit) override;
   bool acceptsVisit(const VisitMessage &visit);
 };
 

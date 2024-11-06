@@ -28,8 +28,8 @@ class VisitFilterIntervention : public Intervention<T> {
   VisitFilterIntervention(
       const loimos::proto::InterventionModel::Intervention &interventionDef,
       const loimos::proto::DiseaseModel &diseaseDef,
-      const AttributeTable &t, uint index) :
-    Intervention<T>(interventionDef, diseaseDef, t, index) {
+      const AttributeTable &t, InterventionId id) :
+    Intervention<T>(interventionDef, diseaseDef, t, id) {
     keepVisit = [](const VisitMessage &visit) {
       return false;
     };
@@ -39,11 +39,11 @@ class VisitFilterIntervention : public Intervention<T> {
   }
 
   void apply(T *d) const override {
-    d->filterVisits(this, keepVisit);
+    d->filterVisits(this->getInterventionId(), keepVisit);
   }
 
   void remove(T *d) const override {
-    d->restoreVisits(this, restoreVisit);
+    d->restoreVisits(this->getInterventionId(), restoreVisit);
   }
 
   // This just exists to dispatch to the other two implementations
@@ -68,19 +68,22 @@ class VisitFilterIntervention : public Intervention<T> {
       std::true_type) const {
     if (isActive) {
       for (T &d : *data) {
-        if (d.willComply(this->interventionIndex)
-            && !d.isActive(this->interventionIndex)
+        if (d.willComply(this->interventionId)
+            && !d.isActive(this->interventionId)
             && this->shouldApply(d, d.getGenerator())) {
+          d.toggleActivity(this->interventionId, true);
           applied->emplace(d.getUniqueId());
-        } else if (d.isActive(this->interventionIndex)
-          && this->shouldRemove(d, d.getGenerator())) {
+        } else if (d.isActive(this->interventionId)
+            && this->shouldRemove(d, d.getGenerator())) {
+          d.toggleActivity(this->interventionId, false);
           removed->emplace(d.getUniqueId());
       }
     }
 
     } else {
       for (T &d : *data) {
-        if (d.isActive(this->interventionIndex)) {
+        if (d.isActive(this->interventionId)) {
+          d.toggleActivity(this->interventionId, false);
           removed->emplace(d.getUniqueId());
         }
       }
@@ -111,8 +114,8 @@ class VisitFilterIntervention : public Intervention<T> {
       return removed.find(visit.personIdx) != removed.end() && restoreVisit(visit);
     };
     for (Location &d : *data) {
-      d.filterVisits(this, notInApplied);
-      d.restoreVisits(this, inRemoved);
+      d.filterVisits(this->getInterventionId(), notInApplied);
+      d.restoreVisits(this->getInterventionId(), inRemoved);
     }
   }
 };

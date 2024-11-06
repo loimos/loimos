@@ -25,9 +25,9 @@ Person::Person(const AttributeTable &attributes, int numInterventions,
   visitsByDay.resize(numDays);
 }
 
-void Person::filterVisits(const void *cause, VisitTest keepVisit) {}
+void Person::filterVisits(InterventionId interventionId, VisitTest keepVisit) {}
 
-void Person::restoreVisits(const void *cause, VisitTest restoreVisit) {}
+void Person::restoreVisits(InterventionId interventionId, VisitTest restoreVisit) {}
 
 void Person::pup(PUP::er &p) {
   p | uniqueId;

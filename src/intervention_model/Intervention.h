@@ -11,6 +11,8 @@
 #include "../protobuf/disease.pb.h"
 #include "../readers/DataInterface.h"
 #include "../readers/AttributeTable.h"
+#include "../Types.h"
+#include "../Person.h"
 #include "../Location.h"
 
 #include "charm++.h"
@@ -24,13 +26,27 @@ template <class T = DataInterface>
 class Intervention {
  protected:
   static std::uniform_real_distribution<double> unitDistrib;
-  double compliance;
-  int triggerIndex;
-  const uint interventionIndex;
+  const double compliance;
+  const InterventionId triggerIndex;
+  const InterventionId interventionId;
 
  public:
+
+  Intervention(
+      const loimos::proto::InterventionModel::Intervention &interventionDef,
+      const loimos::proto::DiseaseModel &diseaseDef,
+      const AttributeTable &t, InterventionId _interventionId) :
+      interventionId(_interventionId),
+      compliance(interventionDef.compliance()),
+      triggerIndex(interventionDef.trigger_index()) {}
+
   int getTriggerIndex() const {
     return triggerIndex;
+  }
+  // Meant to uniquely identify an intervention, regardless of whether
+  // it is applied to people or locations
+  InterventionId getInterventionId() const {
+    return interventionId;
   }
   bool willComply(const T &p, std::default_random_engine *generator) const {
     return unitDistrib(*generator) < compliance;
@@ -52,19 +68,22 @@ class Intervention {
       std::unordered_set<Id> *applied, std::unordered_set<Id> *removed) const {
     if (isActive) {
       for (T &d : *data) {
-        if (d.willComply(interventionIndex)
-            && !d.isActive(interventionIndex)
+        if (d.willComply(interventionId)
+            && !d.isActive(interventionId)
             && shouldApply(d, d.getGenerator())) {
+          d.toggleActivity(interventionId, true);
           apply(&d);
-        } else if (d.isActive(interventionIndex)
+        } else if (d.isActive(interventionId)
             && shouldRemove(d, d.getGenerator())) {
+          d.toggleActivity(interventionId, false);
           remove(&d);
       }
     }
 
     } else {
       for (T &d : *data) {
-        if (d.isActive(interventionIndex)) {
+        if (d.isActive(interventionId)) {
+          d.toggleActivity(interventionId, false);
           remove(&d);
         }
       }
@@ -74,15 +93,6 @@ class Intervention {
   virtual void apply(std::vector<Location> *data,
     const std::unordered_set<Id> &applied,
     const std::unordered_set<Id> &removed) const {}
-
-  Intervention(
-      const loimos::proto::InterventionModel::Intervention &interventionDef,
-      const loimos::proto::DiseaseModel &diseaseDef,
-      const AttributeTable &t, uint _interventionIndex) :
-      interventionIndex(_interventionIndex) {
-    compliance = interventionDef.compliance();
-    triggerIndex = interventionDef.trigger_index();
-  }
 };
 
 template <class T>

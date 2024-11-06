@@ -38,8 +38,8 @@ class Person : public DataInterface {
   Person& operator=(const Person&) = default;
   Person& operator=(Person&&) = default;
   ~Person() = default;
-  void filterVisits(const void *cause, VisitTest keepVisit) override;
-  void restoreVisits(const void *cause, VisitTest restoreVisit) override;
+  void filterVisits(InterventionId interventionId, VisitTest keepVisit) override;
+  void restoreVisits(InterventionId interventionId, VisitTest restoreVisit) override;
   // Lets charm++ migrate objects
   void pup(PUP::er &p);  // NOLINT(runtime/references)
   // Debugging.

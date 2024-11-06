@@ -55,13 +55,14 @@ void InterventionModel::initLocationInterventions(
     const InterventionList &interventionSpecs,
     const AttributeTable &attributes,
     const DiseaseModel &diseaseModel) {
+  uint offset = personInterventions.size();
   for (uint i = 0; i < interventionSpecs.size(); ++i) {
     const loimos::proto::InterventionModel::Intervention &spec =
       interventionSpecs[i];
 
     if (spec.has_school_closures()) {
       locationInterventions.emplace_back(new SchoolClosureIntervention(
-        spec, *diseaseModel.model, attributes, i));
+        spec, *diseaseModel.model, attributes, i + offset));
     }
   }
 }

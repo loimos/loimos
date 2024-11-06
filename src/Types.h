@@ -21,9 +21,13 @@ using Id = int64_t;
 #define ID_REDUCTION_TYPE long  // NOLINT(runtime/int)
 #define ID_PARSE std::stol
 
-using PartitionId = int;
+using PartitionId = int32_t;
 #define PARTITION_ID_PRINT_TYPE "%d"
 #define PARTITION_ID_PARSE std::stoi
+
+using InterventionId = int16_t;
+#define INTERVENTION_ID_PRINT_TYPE "%d"
+#define INTERVENTION_ID_PARSE std::stoi
 
 // For keeping track of intervention status
 using InterventionStatus = uint8_t;

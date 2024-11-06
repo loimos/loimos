@@ -49,20 +49,32 @@ std::default_random_engine * DataInterface::getGenerator() {
   return &generator;
 }
 
-void DataInterface::toggleCompliance(int interventionIndex, bool value) {
-  interventionStatuses[interventionIndex] &= ~INTERVENTION_WILL_COMPLY;
-  interventionStatuses[interventionIndex] |= INTERVENTION_WILL_COMPLY * value;
+int DataInterface::interventionIdToIndex(InterventionId id) const {
+  if (id >= interventionStatuses.size()) {
+    return id - interventionStatuses.size();
+  } else {
+    return id;
+  }
 }
 
-bool DataInterface::willComply(int interventionIndex) {
-  return interventionStatuses[interventionIndex] & INTERVENTION_WILL_COMPLY;
+void DataInterface::toggleCompliance(InterventionId id, bool value) {
+  int index = interventionIdToIndex(id);
+  interventionStatuses[index] &= ~INTERVENTION_WILL_COMPLY;
+  interventionStatuses[index] |= INTERVENTION_WILL_COMPLY * value;
 }
 
-void DataInterface::toggleActivity(int interventionIndex, bool value) {
-  interventionStatuses[interventionIndex] &= ~INTERVENTION_IS_ACTIVE;
-  interventionStatuses[interventionIndex] |= INTERVENTION_IS_ACTIVE * value;
+bool DataInterface::willComply(InterventionId id) const {
+  int index = interventionIdToIndex(id);
+  return interventionStatuses[index] & INTERVENTION_WILL_COMPLY;
 }
 
-bool DataInterface::isActive(int interventionIndex) {
-  return interventionStatuses[interventionIndex] & INTERVENTION_IS_ACTIVE;
+void DataInterface::toggleActivity(InterventionId id, bool value) {
+  int index = interventionIdToIndex(id);
+  interventionStatuses[index] &= ~INTERVENTION_IS_ACTIVE;
+  interventionStatuses[index] |= INTERVENTION_IS_ACTIVE * value;
+}
+
+bool DataInterface::isActive(InterventionId id) const {
+  int index = interventionIdToIndex(id);
+  return interventionStatuses[index] & INTERVENTION_IS_ACTIVE;
 }

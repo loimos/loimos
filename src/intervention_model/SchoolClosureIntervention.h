@@ -17,15 +17,14 @@
 
 class SchoolClosureIntervention : public VisitFilterIntervention<Location> {
  protected:
-  int schoolIndex;
+  const int schoolIndex;
  public:
   SchoolClosureIntervention(
       const loimos::proto::InterventionModel::Intervention &interventionDef,
       const loimos::proto::DiseaseModel &diseaseDef,
-      const AttributeTable &t, uint index) :
-    VisitFilterIntervention<Location>(interventionDef, diseaseDef, t, index) {
-    schoolIndex = t.getAttributeIndex("school");
-  }
+      const AttributeTable &t, InterventionId id) :
+    VisitFilterIntervention<Location>(interventionDef, diseaseDef, t, id),
+    schoolIndex(t.getAttributeIndex("school")) {}
 
   bool shouldApply(const Location &p,
       std::default_random_engine *generator) const override {

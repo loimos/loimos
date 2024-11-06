@@ -57,21 +57,21 @@ void Location::addEvent(const Event &e) {
   events.push_back(e);
 }
 
-void Location::filterVisits(const void *cause, VisitTest keepVisit) {
+void Location::filterVisits(InterventionId interventionId, VisitTest keepVisit) {
   for (std::vector<VisitMessage> &visits : visitsByDay) {
     for (int i = 0; i < visits.size(); ++i) {
       if (!keepVisit(visits[i])) {
-        visits[i].deactivatedBy = cause;
+        visits[i].deactivatedBy = interventionId;
       }
     }
   }
 }
 
-void Location::restoreVisits(const void *cause, VisitTest restoreVisit) {
+void Location::restoreVisits(InterventionId interventionId, VisitTest restoreVisit) {
   for (std::vector<VisitMessage> &visits : visitsByDay) {
     for (int i = 0; i < visits.size(); ++i) {
-      if (cause == visits[i].deactivatedBy && restoreVisit(visits[i])) {
-        visits[i].deactivatedBy = NULL;
+      if (interventionId == visits[i].deactivatedBy && restoreVisit(visits[i])) {
+        visits[i].deactivatedBy = DEACTIVATED_BY_NONE;
       }
     }
   }

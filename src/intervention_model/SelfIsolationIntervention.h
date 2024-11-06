@@ -19,14 +19,13 @@
 
 class SelfIsolationIntervention : public VisitFilterIntervention<Person> {
  protected:
-  int schoolIndex;
   const loimos::proto::DiseaseModel &diseaseDef;
  public:
   SelfIsolationIntervention(
       const loimos::proto::InterventionModel::Intervention &interventionDef,
       const loimos::proto::DiseaseModel &diseaseDef_,
-      const AttributeTable &t, uint index) : diseaseDef(diseaseDef_),
-    VisitFilterIntervention<Person>(interventionDef, diseaseDef_, t, index) {}
+      const AttributeTable &t, InterventionId id) : diseaseDef(diseaseDef_),
+    VisitFilterIntervention<Person>(interventionDef, diseaseDef_, t, id) {}
 
   bool shouldApply(const Person &p,
       std::default_random_engine *generator) const override {

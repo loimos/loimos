@@ -252,12 +252,12 @@ DiseaseState DiseaseModel::getHealthyState(const std::vector<Data> &dataField) c
 
 /** Returns if someone is infectious */
 bool DiseaseModel::isInfectious(DiseaseState personState) const {
-  return model->disease_states(personState).infectivity() != 0.0;
+  return model->disease_states(personState).infectivity() > 0.0;
 }
 
 /** Returns if someone is susceptible */
 bool DiseaseModel::isSusceptible(DiseaseState personState) const {
-  return model->disease_states(personState).susceptibility() != 0.0;
+  return model->disease_states(personState).susceptibility() > 0.0;
 }
 
 /** Returns the name of the person's state, as a C-style string */

@@ -14,7 +14,9 @@
 #include <vector>
 #include <unordered_set>
 #include <functional>
+#include <limits>
 
+const InterventionId DEACTIVATED_BY_NONE = -1;
 struct VisitMessage {
   Id locationIdx;
   Id personIdx;
@@ -23,19 +25,19 @@ struct VisitMessage {
   Time visitEnd;
   // Susceptibility or infectivity, depending on disease state
   double transmissionModifier;
-  const void *deactivatedBy;
+  int deactivatedBy;
 
   VisitMessage() {}
-  explicit VisitMessage(CkMigrateMessage *msg) {}
+  explicit VisitMessage(CkMigrateMessage *msg) : deactivatedBy(DEACTIVATED_BY_NONE) {}
   VisitMessage(Id locationIdx_, Id personIdx_, DiseaseState personState_,
       Time visitStart_, Time visitEnd_, double transmissionModifier_) :
     locationIdx(locationIdx_), personIdx(personIdx_),
     personState(personState_), visitStart(visitStart_),
     visitEnd(visitEnd_), transmissionModifier(transmissionModifier_),
-    deactivatedBy(NULL) {}
+    deactivatedBy(DEACTIVATED_BY_NONE) {}
 
-  bool isActive() {
-    return NULL != deactivatedBy;
+  bool isActive() const {
+    return DEACTIVATED_BY_NONE == deactivatedBy;
   }
 };
 PUPbytes(VisitMessage);
@@ -121,7 +123,7 @@ struct PersonStatesMessage {
 };
 
 struct VisitInterventionMessage {
-  PartitionId interventionIdx;
+  int interventionIdx;
   std::unordered_set<Id> affectedPeople;
   std::unordered_set<Id> previouslyAffectedPeople;
 

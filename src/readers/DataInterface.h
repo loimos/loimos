@@ -43,11 +43,12 @@ class DataInterface {
   std::vector<union Data> &getData();
   void setSeed(int seed);
   std::default_random_engine * getGenerator();
-  void toggleCompliance(int interventionIndex, bool value);
-  bool willComply(int interventionIndex);
-  void toggleActivity(int interventionIndex, bool value);
-  bool isActive(int interventionIndex);
-  virtual void filterVisits(const void *cause, VisitTest keepVisit) = 0;
-  virtual void restoreVisits(const void *cause, VisitTest restoreVisit) = 0;
+  void toggleCompliance(InterventionId interventionIndex, bool value);
+  inline int interventionIdToIndex(InterventionId id) const;
+  bool willComply(InterventionId id) const;
+  void toggleActivity(InterventionId id, bool value);
+  bool isActive(InterventionId id) const;
+  virtual void filterVisits(InterventionId interventionId, VisitTest keepVisit) = 0;
+  virtual void restoreVisits(InterventionId interventionId, VisitTest restoreVisit) = 0;
 };
 #endif  // READERS_DATAINTERFACE_H_
