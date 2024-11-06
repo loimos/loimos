@@ -29,8 +29,9 @@ class DataInterface {
   // Various dynamic attributes
   std::vector<union Data> data;
 
-  // Indicates whether or not this entity will comply with a given intervention
-  std::vector<bool> willComplyWithIntervention;
+  // Indicates whether or not this entity will comply with a given intervention,
+  // whether or not said intervention is active, etc
+  std::vector<InterventionStatus> interventionStatuses;
 
  public:
   DataInterface() = default;
@@ -42,9 +43,12 @@ class DataInterface {
   std::vector<union Data> &getData();
   void setSeed(int seed);
   std::default_random_engine * getGenerator();
-  void toggleCompliance(int interventionIndex, bool value);
-  bool willComply(int interventionIndex);
-  virtual void filterVisits(const void *cause, VisitTest keepVisit) = 0;
-  virtual void restoreVisits(const void *cause) = 0;
+  void toggleCompliance(InterventionId interventionIndex, bool value);
+  inline int interventionIdToIndex(InterventionId id) const;
+  bool willComply(InterventionId id) const;
+  void toggleActivity(InterventionId id, bool value);
+  bool isActive(InterventionId id) const;
+  virtual void filterVisits(InterventionId interventionId, VisitTest keepVisit) = 0;
+  virtual void restoreVisits(InterventionId interventionId, VisitTest restoreVisit) = 0;
 };
 #endif  // READERS_DATAINTERFACE_H_

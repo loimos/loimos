@@ -19,16 +19,22 @@
 
 class SelfIsolationIntervention : public VisitFilterIntervention<Person> {
  protected:
-  int schoolIndex;
   const loimos::proto::DiseaseModel &diseaseDef;
  public:
   SelfIsolationIntervention(
       const loimos::proto::InterventionModel::Intervention &interventionDef,
       const loimos::proto::DiseaseModel &diseaseDef_,
-      const AttributeTable &t) : diseaseDef(diseaseDef_),
-    VisitFilterIntervention<Person>(interventionDef, diseaseDef_, t) {}
-  virtual bool test(const Person &p, std::default_random_engine *generator) const {
+      const AttributeTable &t, InterventionId id) : diseaseDef(diseaseDef_),
+    VisitFilterIntervention<Person>(interventionDef, diseaseDef_, t, id) {}
+
+  bool shouldApply(const Person &p,
+      std::default_random_engine *generator) const override {
     return diseaseDef.disease_states(p.state).symptomatic();
+  }
+
+  bool shouldRemove(const Person &p,
+      std::default_random_engine *generator) const override {
+    return !diseaseDef.disease_states(p.state).symptomatic();
   }
 };
 

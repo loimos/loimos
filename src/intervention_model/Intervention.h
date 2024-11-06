@@ -11,8 +11,13 @@
 #include "../protobuf/disease.pb.h"
 #include "../readers/DataInterface.h"
 #include "../readers/AttributeTable.h"
+#include "../Types.h"
+#include "../Person.h"
+#include "../Location.h"
 
 #include "charm++.h"
+#include <vector>
+#include <unordered_set>
 
 using InterventionList = google::protobuf::RepeatedPtrField<
   loimos::proto::InterventionModel::Intervention>;
@@ -21,17 +26,34 @@ template <class T = DataInterface>
 class Intervention {
  protected:
   static std::uniform_real_distribution<double> unitDistrib;
-  double compliance;
-  int triggerIndex;
+  const double compliance;
+  const InterventionId triggerIndex;
+  const InterventionId interventionId;
 
  public:
+  Intervention(
+      const loimos::proto::InterventionModel::Intervention &interventionDef,
+      const loimos::proto::DiseaseModel &diseaseDef,
+      const AttributeTable &t, InterventionId _interventionId) :
+      interventionId(_interventionId),
+      compliance(interventionDef.compliance()),
+      triggerIndex(interventionDef.trigger_index()) {}
+
   int getTriggerIndex() const {
     return triggerIndex;
+  }
+  // Meant to uniquely identify an intervention, regardless of whether
+  // it is applied to people or locations
+  InterventionId getInterventionId() const {
+    return interventionId;
   }
   bool willComply(const T &p, std::default_random_engine *generator) const {
     return unitDistrib(*generator) < compliance;
   }
-  virtual bool test(const T &p, std::default_random_engine *generator) const {
+  virtual bool shouldApply(const T &p, std::default_random_engine *generator) const {
+    return false;
+  }
+  virtual bool shouldRemove(const T &p, std::default_random_engine *generator) const {
     return false;
   }
   // Applies intervention to object
@@ -40,14 +62,36 @@ class Intervention {
   // For any intervention that cannot be undone, this should have no effect.
   virtual void remove(T *p) const {}
 
-  Intervention() {}
-  Intervention(
-      const loimos::proto::InterventionModel::Intervention &interventionDef,
-      const loimos::proto::DiseaseModel &diseaseDef,
-      const AttributeTable &t) {
-    compliance = interventionDef.compliance();
-    triggerIndex = interventionDef.trigger_index();
+  // Applies the intervention to or removes it from all objects on a chare
+  virtual void apply(std::vector<T> *data, bool isActive,
+      std::unordered_set<Id> *applied, std::unordered_set<Id> *removed) const {
+    if (isActive) {
+      for (T &d : *data) {
+        if (d.willComply(interventionId)
+            && !d.isActive(interventionId)
+            && shouldApply(d, d.getGenerator())) {
+          d.toggleActivity(interventionId, true);
+          apply(&d);
+        } else if (d.isActive(interventionId)
+            && shouldRemove(d, d.getGenerator())) {
+          d.toggleActivity(interventionId, false);
+          remove(&d);
+        }
+      }
+
+    } else {
+      for (T &d : *data) {
+        if (d.isActive(interventionId)) {
+          d.toggleActivity(interventionId, false);
+          remove(&d);
+        }
+      }
+    }
   }
+
+  virtual void apply(std::vector<Location> *data,
+    const std::unordered_set<Id> &applied,
+    const std::unordered_set<Id> &removed) const {}
 };
 
 template <class T>

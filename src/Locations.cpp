@@ -30,6 +30,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <unordered_set>
 
 std::uniform_real_distribution<> Locations::unitDistrib(0.0, 1.0);
 
@@ -304,8 +305,11 @@ void Locations::QueueVisits() {
   for (Location &location : locations) {
     const std::vector<VisitMessage> &visits =
       location.visitsByDay[day % scenario->numDaysWithDistinctVisits];
-
     for (const VisitMessage &visit : visits) {
+      if (!visit.isActive()) {
+        continue;
+      }
+
       const PersonState &state = visitorStates[visit.personIdx];
       Event arrival { ARRIVAL, visit.personIdx, state.state,
         state.transmissionModifier, visit.visitStart };
@@ -351,7 +355,7 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
 #endif
 
   // Interventions might cause us to reject some visits
-  if (!locations[localLocIdx].acceptsVisit(visitMsg)) {
+  if (!visitMsg.isActive()) {
     return;
   }
 
@@ -639,14 +643,16 @@ inline void Locations::sendInteractions(Location *loc,
 
 void Locations::ReceiveIntervention(PartitionId interventionIdx) {
   InterventionModel *interventions = scenario->interventionModel;
-  const Intervention<Location> &inter =
-    interventions->getLocationIntervention(interventionIdx);
-  for (Location &location : locations) {
-    if (location.willComply(interventionIdx)
-        && inter.test(location, location.getGenerator())) {
-      inter.apply(&location);
-    }
-  }
+  std::unordered_set<Id> applied;
+  std::unordered_set<Id> removed;
+  interventions->applyIntervention(interventionIdx, &locations, &applied, &removed);
+}
+
+void Locations::ReceiveVisitIntervention(VisitInterventionMessage msg) {
+  InterventionModel *interventions = scenario->interventionModel;
+  const Intervention<Person> &inter =
+    interventions->getPersonIntervention(msg.interventionIdx);
+  inter.apply(&locations, msg.affectedPeople, msg.previouslyAffectedPeople);
 }
 
 #ifdef ENABLE_LB

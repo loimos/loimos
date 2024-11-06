@@ -15,8 +15,8 @@
 VaccinationIntervention::VaccinationIntervention(
     const loimos::proto::InterventionModel::Intervention &interventionDef,
     const loimos::proto::DiseaseModel &diseaseDef,
-    const AttributeTable &t) :
-  Intervention(interventionDef, diseaseDef, t) {
+    const AttributeTable &t, InterventionId id) :
+  Intervention(interventionDef, diseaseDef, t, id) {
   vaccinationProbability = interventionDef.vaccination().probability();
   vaccinatedSusceptibility = interventionDef.vaccination()
     .vaccinated_susceptibility();
@@ -26,7 +26,7 @@ VaccinationIntervention::VaccinationIntervention(
   this->susceptibilityIndex = t.getAttributeIndex("susceptibility");
 }
 
-bool VaccinationIntervention::test(const Person &p,
+bool VaccinationIntervention::shouldApply(const Person &p,
     std::default_random_engine *generator) const {
   return !p.getValue(vaccinatedIndex).bool_val
     && unitDistrib(*generator) < vaccinationProbability;

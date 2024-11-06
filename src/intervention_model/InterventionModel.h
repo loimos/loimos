@@ -16,6 +16,7 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <unordered_set>
 
 struct InterventionModel {
   std::vector<bool> triggerFlags;
@@ -36,9 +37,20 @@ struct InterventionModel {
 
   const Intervention<Person> &getPersonIntervention(int index) const;
   const Intervention<Location> &getLocationIntervention(int index) const;
+  template <class T = DataInterface>
+  const Intervention<T> &getIntervention(int index) const;
+
   int getNumPersonInterventions() const;
   int getNumLocationInterventions() const;
   void applyInterventions(int day, Id newDailyInfections, Id numPeople);
   void toggleInterventions(int day, Id newDailyInfections, Id numPeople);
+
+  template <class T = DataInterface>
+  void applyIntervention(int interventionIdx, std::vector<T> *data,
+      std::unordered_set<Id> *applied, std::unordered_set<Id> *removed) const {
+    const Intervention<T> &inter = getIntervention<T>(interventionIdx);
+    bool isActive = triggerFlags[inter.getTriggerIndex()];
+    inter.apply(data, isActive, applied, removed);
+  }
 };
 #endif  // INTERVENTION_MODEL_INTERVENTIONMODEL_H_

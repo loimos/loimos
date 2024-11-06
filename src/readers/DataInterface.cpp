@@ -12,7 +12,7 @@
 
 DataInterface::DataInterface(const AttributeTable &attributes, int numInterventions) {
   if (0 != numInterventions) {
-    willComplyWithIntervention.resize(numInterventions);
+    interventionStatuses.resize(numInterventions);
   }
 
   // Treat all attributes same, no need to make distinction
@@ -49,10 +49,32 @@ std::default_random_engine * DataInterface::getGenerator() {
   return &generator;
 }
 
-void DataInterface::toggleCompliance(int interventionIndex, bool value) {
-  willComplyWithIntervention[interventionIndex] = value;
+int DataInterface::interventionIdToIndex(InterventionId id) const {
+  if (id >= interventionStatuses.size()) {
+    return id - interventionStatuses.size();
+  } else {
+    return id;
+  }
 }
 
-bool DataInterface::willComply(int interventionIndex) {
-  return willComplyWithIntervention[interventionIndex];
+void DataInterface::toggleCompliance(InterventionId id, bool value) {
+  int index = interventionIdToIndex(id);
+  interventionStatuses[index] &= ~INTERVENTION_WILL_COMPLY;
+  interventionStatuses[index] |= INTERVENTION_WILL_COMPLY * value;
+}
+
+bool DataInterface::willComply(InterventionId id) const {
+  int index = interventionIdToIndex(id);
+  return interventionStatuses[index] & INTERVENTION_WILL_COMPLY;
+}
+
+void DataInterface::toggleActivity(InterventionId id, bool value) {
+  int index = interventionIdToIndex(id);
+  interventionStatuses[index] &= ~INTERVENTION_IS_ACTIVE;
+  interventionStatuses[index] |= INTERVENTION_IS_ACTIVE * value;
+}
+
+bool DataInterface::isActive(InterventionId id) const {
+  int index = interventionIdToIndex(id);
+  return interventionStatuses[index] & INTERVENTION_IS_ACTIVE;
 }
