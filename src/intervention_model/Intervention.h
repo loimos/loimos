@@ -31,7 +31,6 @@ class Intervention {
   const InterventionId interventionId;
 
  public:
-
   Intervention(
       const loimos::proto::InterventionModel::Intervention &interventionDef,
       const loimos::proto::DiseaseModel &diseaseDef,
@@ -77,8 +76,8 @@ class Intervention {
             && shouldRemove(d, d.getGenerator())) {
           d.toggleActivity(interventionId, false);
           remove(&d);
+        }
       }
-    }
 
     } else {
       for (T &d : *data) {

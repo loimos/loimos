@@ -504,12 +504,9 @@ void People::ReceiveIntervention(int interventionIdx) {
   InterventionModel *interventions = scenario->interventionModel;
   std::unordered_set<Id> applied;
   std::unordered_set<Id> removed;
-  //CkPrintf("    Person chare %d: applying intervention %d\n", thisIndex, interventionIdx);
   interventions->applyIntervention(interventionIdx, &people, &applied, &removed);
 
   if (applied.size() > 0 || removed.size() > 0) {
-    //CkPrintf("  Person chare %d: intervention %d applied to %ld and removed from %ld\n",
-    //  thisIndex, interventionIdx, applied.size(), removed.size());
     updateVisitedLocationsForIntervention(interventionIdx, &applied, &removed);
   }
 }

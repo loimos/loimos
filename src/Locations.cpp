@@ -645,7 +645,6 @@ void Locations::ReceiveIntervention(PartitionId interventionIdx) {
   InterventionModel *interventions = scenario->interventionModel;
   std::unordered_set<Id> applied;
   std::unordered_set<Id> removed;
-  //CkPrintf("    Location chare %d: applying intervention %d\n", thisIndex, interventionIdx);
   interventions->applyIntervention(interventionIdx, &locations, &applied, &removed);
 }
 
