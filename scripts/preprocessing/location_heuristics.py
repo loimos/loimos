@@ -35,7 +35,6 @@ LID_COL = "lid"
 START_COL = "start_time"
 
 
-# test_set = {2,3,4}
 def find_max_simultaneous_visits(lid, visits):
     events = visits.melt(
         value_vars=["start_time", "end_time"], value_name="time", var_name="type"
@@ -44,10 +43,6 @@ def find_max_simultaneous_visits(lid, visits):
     events["occupancy"] = -1
     events.loc[events["type"] == "start_time", "occupancy"] = 1
     result = events["occupancy"].cumsum().max()
-    # if lid in test_set:
-    #   print(f"location {lid}: {visits.shape[0]} visits, {result} msv")
-    #   print(events)
-    #   # print(visits.memory_usage())
     return result
 
 
@@ -131,56 +126,23 @@ if __name__ == "__main__":
     print("Calculating total visits:", end_time - start_time)
 
     renaming = []
-    # if "daynum" in visits:
-    #    # Calculate total visits for each day per location.
-    #    start_time = time.perf_counter()
-    #    daily_summaries = (
-    #        visits[["lid", "daynum", "start_time"]]
-    #        .groupby(["lid", "daynum"])
-    #        .count()
-    #        .unstack()
-    #        .fillna(0)
-    #    )
-    #    # Rename columns.
-    #    for column in daily_summaries.columns:
-    #        renaming.append(f"total_on_day_{column[1]}")
-    #    daily_summaries.columns = renaming
-
-    #    # Calculate some additional statistics.
-    #    daily_summaries["average_daily_total"] = daily_summaries.mean(axis=1)
-    #    daily_summaries["median_daily_total"] = daily_summaries.median(axis=1)
-    #    daily_summaries["max_daily_total"] = daily_summaries.max(axis=1)
-    #    # Merge in.
-    #    max_visits = max_visits.merge(
-    #        daily_summaries, left_index=True, right_index=True
-    #    )
-
-    #    end_time = time.perf_counter()
-    #    print("Calculating daily summaries:", end_time - start_time)
 
     # Calculate the maximum simultaneous visits using as many processes
     # as possible
     start_time = time.perf_counter()
-    # print(visits.memory_usage())
-    # max_visits = pd.DataFrame(max_visits)
     if args.n_tasks > 1:
         # The default way of starting new processes - fork - duplicates the
         # entire process - including its memory footprint - so let's choose
         # another method (see https://stackoverflow.com/questions/42584525/
         # python-multiprocessing-debugging-oserror-errno-12-cannot-allocate-memory
         set_start_method("spawn")
-        # print(visits_by_location.groups, flush=True)
-        # shared_visits = SharedPandasDataFrame(visits)
 
         with Pool(args.n_tasks) as pool:
-            # visits_by_location = {k: SharedPandasDataFrame(df) \
-            #        for k, df in visits_by_location.groups.items()}
             max_visits["max_simultaneous_visits"] = pool.starmap(
                 find_max_simultaneous_visits,
                 visits_by_location,
             )
 
-        # shared_visits.unlink()
     else:
         max_visits["max_simultaneous_visits"] = [
             find_max_simultaneous_visits(lid, group)
@@ -190,8 +152,6 @@ if __name__ == "__main__":
     end_time = time.perf_counter()
     print("Calculating maximum simultaneous visits:", end_time - start_time)
 
-    # print(max_visits.columns)
-    # print(max_visits.index)
 
     # We need the max visit data to be a location attribute, so combine it
     # with the location data
@@ -202,8 +162,6 @@ if __name__ == "__main__":
     overlap = set(np.intersect1d(locations.columns, max_visits.columns))
     locations.drop(axis="columns", labels=overlap - {LID_COL}, inplace=True)
     output_df = locations.merge(max_visits, how="left", on=LID_COL)
-    # print(output_df)
-    # print(output_df.columns)
 
     # Zero out the heuristic values for any location with no visits
     output_df.fillna(0, inplace=True)
