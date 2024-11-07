@@ -108,7 +108,7 @@ Where
 For pre-defined populations, run Loimos with the command:
 
 ```bash
-./loimos 0 <NPP> <NLP> <ND> <NDV> <OF> <DF> <SD> [-m] [-i <IF>] [-s [<S>]] [-or <OR>] [-t [<T>]]
+./loimos 0 <NPP> <NLP> <ND> <NDV> <OF> <DF> <SD> [-m] [-i <IF>] [-s [<S>]] [-or <OR>] [-t [<T>]] [-si [<SD> <SPD>]] [-lb <LBS> <LBI>] [-tr <TRS> <TRE>]
 ```
 
 Where
@@ -137,6 +137,15 @@ Where
   transmissibility value in the provided disease model (given in `DF`),
   and takes a floating point value of 0.0 or greater (this flag will be
   ignored if `T` is negative)
+- `si` or `--seed-infections` is an optional flag which specifies the number
+  of days spent seeding initial infections, `SD`, and the number of infections
+  seeded per day `SPD`
+- `-lb` or `--load-balance` is an optional flag for use when `ENABLE_LB=1` is
+  set at compile time. It specifies the day when load balancing should start,
+  `LBS`, and the interval (in days) between rounds of load balancing, `LBI`
+- `tr` or `--tracing` is an optional flag for use when `ENABLE_TRACING=1` is
+  set at compile time. It specifies the day when tracing should start and end
+  being collected (`TRS` and `TRE`, respectively)
 
 ## Authors
 

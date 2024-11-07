@@ -20,17 +20,6 @@ mainmodule loimos {
   #define AGGREGATE
 #endif
 
-  // Profiling/LB parameters (these are here because Defs.h depends on having
-  // CBase_* classes defined, and these constants are only used in this file)
-  #define PROFILING_START_DAY 85
-  #define PROFILING_END_DAY 87
-  #define SHOULD_PROFILE (day >= PROFILING_START_DAY &&\
-    day <= PROFILING_END_DAY)
-  //#define PROFILING_INTERVAL 1
-  //#define SHOULD_PROFILE(day) (day >= PROFILING_START_DAY &&\
-  //  day <= PROFILING_END_DAY && \
-  //  (day - PROFILING_START_DAY) % PROFILING_INTERVAL == 0)
-
   #define LB_START_DAY 6
   #define LB_INTERVAL 8
   #define SHOULD_LB(day) (day >= LB_START_DAY &&\
@@ -92,6 +81,7 @@ mainmodule loimos {
 
       when StartupComplete() {}
 
+      for (day = 0; scenario->isNotDone(day, lastInfectiousCount)l day++)
 #ifdef ENABLE_FORCE_FULL_RUN
       for (day = 0; day < scenario->numDays; day++) {
 #else
@@ -102,7 +92,7 @@ mainmodule loimos {
 #endif  // ENABLE_FORCE_FULL_RUN
         // serial{CkPrintf("  Starting iteration\n");}
 #ifdef ENABLE_TRACING
-          if (day == PROFILING_START_DAY){
+          if (day == scenario->tracing_start_day){
             serial{traceArray.traceOn();}
             when traceSwitchOn() {}
           }
@@ -182,7 +172,7 @@ mainmodule loimos {
         serial{traceArray.instrumentOff();}
         when instrumentSwitchOff() {}
 
-        if (SHOULD_LB(day)) {
+        if (scenario->should_lb(day)) {
           serial {
             locationsArray.AtSync();
             peopleArray.AtSync();
@@ -197,7 +187,7 @@ mainmodule loimos {
 #endif // ENABLE_LB
 
 #ifdef ENABLE_TRACING
-        if (day == PROFILING_END_DAY) {
+        if (day == scenario->tracing_end_day) {
           serial{traceArray.traceOff();}
           when traceSwitchOff(){}
 

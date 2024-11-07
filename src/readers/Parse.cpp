@@ -120,6 +120,21 @@ void parse(int argc, char **argv, Arguments *args) {
   args->contactModelType = static_cast<int>(ContactModelType::constant_probability);
   args->hasIntervention = false;
   args->transmissibility = -1.0;
+  args->numDaysToSeedOutbreak = 10;
+#if OUTPUT_FLAGS & OUTPUT_OVERLAPS
+  args->numInitialInfectionsPerDay = 0;
+#else
+  args->numInitialInfectionsPerDay = 2;
+#endif
+#ifdef ENABLE_LB
+  args->lb_start_day = 7;
+  args->lb_interval = 7;
+#endif
+#ifdef ENABLE_TRACING
+  args->tracing_start_day = args->numDaysToSeedOutbreak + 1;
+  args->tracing_end_day = args->tracing_start_day + 1;
+#endif
+  
   for (; argNum < argc; ++argNum) {
     std::string tmp = std::string(argv[argNum]);
 
@@ -146,6 +161,22 @@ void parse(int argc, char **argv, Arguments *args) {
     } else if (("-t" == tmp || "--transmissibility" == tmp)
         && argNum + 1 < argc) {
       args->transmissibility = atof(argv[++argNum]);
+    } else if (("-si" == tmp || "--seed-infections" == tmp
+      && argNum + 2 < argc)) {
+        args->numDaysToSeedOutbreak = atof(argv[++argNum]);
+        args->numInitialInfectionsPerDay = atof(argv[++argNum]);
+#ifdef ENABLE_LB
+    } else if (("-lb" == tmp || "--load-balance" == tmp)
+        && argNum + 2 < argc) {
+      args->lb_start_day = atoi(argv[++argNum]);
+      args->lb_interval = atoi(argv[++argNum]);
+#endif
+#ifdef ENABLE_TRACING
+    } else if (("-tr" == tmp || "--tracing" == tmp)
+        && argNum + 2 < argc) {
+      args->tracing_start_day = atoi(argv[++argNum]);
+      args->tracing_end_day = atoi(argv[++argNum]);
+#endif
     }
   }
 
@@ -158,12 +189,5 @@ void parse(int argc, char **argv, Arguments *args) {
   if (!args->isOnTheFlyRun) {
     CkPrintf("Loading people and locations from %s.\n", args->scenarioPath.c_str());
   }
-#endif
-
-  args->numDaysToSeedOutbreak = 10;
-#if OUTPUT_FLAGS & OUTPUT_OVERLAPS
-  args->numInitialInfectionsPerDay = 0;
-#else
-  args->numInitialInfectionsPerDay = 2;
 #endif
 }
