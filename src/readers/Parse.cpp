@@ -134,7 +134,7 @@ void parse(int argc, char **argv, Arguments *args) {
   args->tracing_start_day = args->numDaysToSeedOutbreak + 1;
   args->tracing_end_day = args->tracing_start_day + 1;
 #endif
-  
+
   for (; argNum < argc; ++argNum) {
     std::string tmp = std::string(argv[argNum]);
 

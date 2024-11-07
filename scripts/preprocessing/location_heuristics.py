@@ -152,7 +152,6 @@ if __name__ == "__main__":
     end_time = time.perf_counter()
     print("Calculating maximum simultaneous visits:", end_time - start_time)
 
-
     # We need the max visit data to be a location attribute, so combine it
     # with the location data
     locations = pd.read_csv(path_to_locations)

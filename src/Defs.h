@@ -62,7 +62,7 @@ const Time MINUTE_LENGTH = 60;
 #define EMPTY_VISIT_SCHEDULE std::numeric_limits<CacheOffset>::max()
 #define CSV_DELIM ','
 #define FILE_READ_ERROR -1
-  
+
 // Profiling parameters
 #define PROFILING_START_DAY 85
 #define PROFILING_END_DAY 87
