@@ -75,8 +75,8 @@ message DiseaseModel {
     }
 
     message ExposureTransitionSet {
+      // Exposure transitions immediately follow an infection
       message ExposureTransition {
-        // Describes
         int32 next_state = 2;
       }
       repeated ExposureTransition transitions = 1;

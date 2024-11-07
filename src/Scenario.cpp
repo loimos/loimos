@@ -22,6 +22,12 @@ Scenario::Scenario(Arguments args) : seed(args.seed), numDays(args.numDays),
     numDaysToSeedOutbreak(args.numDaysToSeedOutbreak),
     numInitialInfectionsPerDay(args.numInitialInfectionsPerDay),
     scenarioPath(args.scenarioPath), outputPath(args.outputPath),
+#ifdef ENABLE_LB
+    lb_start_day(args.lb_start_day), lb_interval(args.lb_interval),
+#endif
+#ifdef ENABLE_TRACING
+    tracing_start_day(args.tracing_start_day), tracing_end_day(args.tracing_end_day),
+#endif
     personDef(NULL), locationDef(NULL), visitDef(NULL),
     onTheFly(NULL), partitioner(NULL), diseaseModel(NULL),
     contactModel(NULL), interventionModel(NULL) {
@@ -147,3 +153,10 @@ bool Scenario::isOnTheFly() {
 bool Scenario::hasInterventions() {
   return NULL != interventionModel->interventionDef;
 }
+
+#ifdef ENABLE_LB
+bool Scenario::shouldLB(int day) {
+  return (day >= lb_start_day &&\
+    (day - lb_start_day) % lb_interval == 0)
+}
+#endif

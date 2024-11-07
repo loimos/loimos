@@ -65,7 +65,6 @@ def parse_args():
         "-pi",
         "--people-in-file",
         default=os.path.join("base_population", "{region}_person.csv"),
-        # default="{region}_person.csv",
         help="The name of the file containing person data within the "
         + "population dir",
     )
@@ -73,7 +72,6 @@ def parse_args():
         "-ri",
         "--residences-in-file",
         default=os.path.join("locations", "{region}_residence_locations.csv"),
-        # default="{region}_residence_locations.csv",
         help="The name of the file containing home location data within the "
         + "population dir",
     )
@@ -81,7 +79,6 @@ def parse_args():
         "-ai",
         "--activity-locs-in-file",
         default=os.path.join("locations", "{region}_activity_locations.csv"),
-        # default="{region}_activity_locations.csv",
         help="The name of the file containing home location data within the "
         + "population dir",
     )
@@ -91,7 +88,6 @@ def parse_args():
         default=os.path.join(
             "home_location_assignment", "{region}_household_residence_assignment.csv"
         ),
-        # default="{region}_household_residence_assignment.csv",
         help="The name of the file asigning households to home locations "
         + "within the population dir",
     )
@@ -216,15 +212,13 @@ def read_csv(
         print(f"searching in {d} for files matching {filename + suffix_regex}")
         regex = re.compile(filename + suffix_regex)
         dfs = []
-        # for f in os.listdir(d):
-        #    pd.read_csv(os.path.join(d, f))
         dfs = [
             pd.read_csv(os.path.join(d, f))
             for f in os.listdir(d)
             if re.match(regex, f) is not None
         ]
         if concat:
-            return pd.concat(dfs)  # , ignore_index=True)
+            return pd.concat(dfs)
         else:
             return dfs
 
@@ -316,27 +310,10 @@ def update_ids(
 
         if validate:
             assert num_rows == new_df.shape[0]
-            # if num_rows != new_df.shape[0]:
-            #    print(f"Had {num_rows} before, but now have {new_df.shape[0]}")
             # Make sure the transformation is inverible
             tmp = new_df.drop(columns=id_col)
             inverted_cols = [new_col] + suplimental_cols
             inverted_df = merge(tmp, update, how="left", on=inverted_cols)
-            # df.sort_index(inplace=True, axis="columns")
-            # inverted_df[df.columns].sort_index(inplace=True, axis="columns")
-            # df.to_csv("updated_visits.csv", index=False)
-            # inverted_df.to_csv("inverted_visits.csv", index=False)
-            # update.to_csv("update.csv", index=False)
-            # display_cols = [
-            #     "daynum",
-            #     "pid",
-            #     "start_time",
-            #     "duration",
-            #     "activity_number",
-            # ]
-            # print(df[display_cols])
-            # print(inverted_df[display_cols])
-            # inverted_df.drop(columns="new_lid", inplace=True)
             mask = inverted_df[df.columns] == df
             assert mask.all(axis=None)
 
