@@ -154,7 +154,9 @@ bool Scenario::hasInterventions() {
   return NULL != interventionModel->interventionDef;
 }
 
+#ifdef ENABLE_LB
 bool Scenario::shouldLB(int day) {
   return (day >= lb_start_day &&\
     (day - lb_start_day) % lb_interval == 0)
 }
+#endif
