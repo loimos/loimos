@@ -28,6 +28,16 @@ class Scenario : public CBase_Scenario {
   Id numPeople;
   Id numLocations;
 
+#ifdef ENABLE_LB
+  int lb_start_day;
+  int lb_interval;
+#endif
+
+#ifdef ENABLE_TRACING
+  int tracing_start_day;
+  int tracing_end_day;
+#endif
+
   const std::string scenarioPath;
   const std::string outputPath;
   std::string scenarioId;
@@ -49,6 +59,9 @@ class Scenario : public CBase_Scenario {
   void ApplyInterventions(int day, Id newDailyInfections);
   bool isOnTheFly();
   bool hasInterventions();
+#ifdef ENABLE_LB
+  bool shouldLB(int day);
+#endif
 };
 
 #endif  // SCENARIO_H__
