@@ -81,7 +81,6 @@ mainmodule loimos {
 
       when StartupComplete() {}
 
-      for (day = 0; scenario->isNotDone(day, lastInfectiousCount)l day++)
 #ifdef ENABLE_FORCE_FULL_RUN
       for (day = 0; day < scenario->numDays; day++) {
 #else
