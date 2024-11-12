@@ -217,7 +217,7 @@ mainmodule loimos {
         CkPrintf("  Interaction calculations and messages took %lf seconds\n",
           profile.interactionsTime);
         CkPrintf("    Queueing events took %lf\n", profile.queueTime);
-        CkPrintf("    DES took %lf\n", profile.queueTime);
+        CkPrintf("    DES took %lf\n", profile.desTime);
         CkPrintf("  End of day update and reduction took %lf seconds\n",
           profile.eodTime);
 
