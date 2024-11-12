@@ -302,6 +302,7 @@ void Locations::ReceiveVisitorStates(PersonStatesMessage msg) {
 }
 
 void Locations::QueueVisits() {
+  double startTime = CkWallTimer();
   for (Location &location : locations) {
     const std::vector<VisitMessage> &visits =
       location.visitsByDay[day % scenario->numDaysWithDistinctVisits];
@@ -328,6 +329,10 @@ void Locations::QueueVisits() {
 #endif
     }
   }
+
+  double elapsedTime = CkWallTimer() - startTime;
+  CkCallback cbTime(CkReductionTarget(Main, ReceiveQueueTime), mainProxy);
+  contribute(sizeof(double), &elapsedTime, CkReduction::max_double, cbTime);
 
   ComputeInteractions();
 }
@@ -398,6 +403,7 @@ void Locations::ComputeInteractions() {
   Counter numInteractions = 0;
   exposureDuration = 0;
   expectedExposureDuration = 0;
+  double startTime = CkWallTimer();
   for (Location &loc : locations) {
     Counter locVisits = loc.events.size() / 2;
     numVisits += locVisits;
@@ -410,6 +416,10 @@ void Locations::ComputeInteractions() {
     //       thisIndex, loc.getUniqueId(), locInters, locVisits);
     // }
   }
+  double elapsedTime = CkWallTimer() - startTime;
+  CkCallback cbTime(CkReductionTarget(Main, ReceiveDESTime), mainProxy);
+  contribute(sizeof(double), &elapsedTime, CkReduction::max_double, cbTime);
+
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   CkCallback cb(CkReductionTarget(Main, ReceiveInteractionsCount), mainProxy);
   contribute(sizeof(Counter), &numInteractions,

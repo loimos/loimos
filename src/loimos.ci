@@ -236,6 +236,16 @@ mainmodule loimos {
     entry void SeedInfections();
     entry void StartComputingInteractions();
     entry void ComputedInteractions();
+    entry [reductiontarget] void ReceiveQueueTime(double elapsedTime) {
+      serial{
+        CkPrintf("  Queueing events took %lf seconds sent visits\n", elapsedTime);
+      }
+    };
+    entry [reductiontarget] void ReceiveDESTime(double elapsedTime) {
+      serial{
+        CkPrintf("  DES took %lf seconds sent visits\n", elapsedTime);
+      }
+    };
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
     entry [reductiontarget] void ReceiveVisitsLoadedCount(Id visitsCount) {
       serial{CkPrintf("  Loaded a total of " ID_PRINT_TYPE " visits\n", visitsCount);}
