@@ -332,7 +332,7 @@ void Locations::QueueVisits() {
 
   double elapsedTime = CkWallTimer() - startTime;
   CkCallback cbTime(CkReductionTarget(Main, ReceiveQueueTime), mainProxy);
-  contribute(sizeof(double), &elapsedTime, CkReduction::max_double, cbTime);
+  contribute(sizeof(double), &elapsedTime, CkReduction::sum_double, cbTime);
 
   ComputeInteractions();
 }
@@ -418,7 +418,7 @@ void Locations::ComputeInteractions() {
   }
   double elapsedTime = CkWallTimer() - startTime;
   CkCallback cbTime(CkReductionTarget(Main, ReceiveDESTime), mainProxy);
-  contribute(sizeof(double), &elapsedTime, CkReduction::max_double, cbTime);
+  contribute(sizeof(double), &elapsedTime, CkReduction::sum_double, cbTime);
 
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   CkCallback cb(CkReductionTarget(Main, ReceiveInteractionsCount), mainProxy);

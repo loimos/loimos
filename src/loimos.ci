@@ -240,14 +240,18 @@ mainmodule loimos {
     entry void ComputedInteractions();
     entry [reductiontarget] void ReceiveQueueTime(double elapsedTime) {
       serial{
-        profile.queueTime += elapsedTime;
-        CkPrintf("  Queueing events took %lf seconds\n", elapsedTime);
+        double aveTime = elapsedTime
+          / scenario->partitioner->getNumLocationPartitions();
+        profile.queueTime += aveTime;
+        CkPrintf("  Queueing events took %lf seconds\n", aveTime);
       }
     };
     entry [reductiontarget] void ReceiveDESTime(double elapsedTime) {
       serial{
-        profile.desTime += elapsedTime;
-        CkPrintf("  DES took %lf seconds\n", elapsedTime);
+        double aveTime = elapsedTime
+          / scenario->partitioner->getNumLocationPartitions();
+        profile.desTime += aveTime;
+        CkPrintf("  DES took %lf seconds\n", aveTime);
       }
     };
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
