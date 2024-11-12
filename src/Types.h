@@ -83,9 +83,11 @@ struct Profile {
   double iterationStartTime;
   double stepStartTime;
 
-  double visitsTime;
-  double interactionsTime;
-  double eodTime;
+  double visitsTime = 0;
+  double interactionsTime = 0;
+  double eodTime = 0;
+  double queueTime = 0;
+  double desTime = 0;
 };
 
 #endif  // TYPES_H_

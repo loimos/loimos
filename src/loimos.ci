@@ -207,7 +207,7 @@ mainmodule loimos {
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
         CkPrintf("  Processed " COUNTER_PRINT_TYPE " visits, "
           COUNTER_PRINT_TYPE " interactions, and "
-          COUNTER_PRINT_TYPE " exposures, "
+          COUNTER_PRINT_TYPE " exposures , "
           COUNTER_PRINT_TYPE " total exposure duration\n",
           profile.totalVisits, profile.totalInteractions,
           profile.totalExposures, profile.totalExposureDuration);
@@ -216,6 +216,8 @@ mainmodule loimos {
           profile.visitsTime);
         CkPrintf("  Interaction calculations and messages took %lf seconds\n",
           profile.interactionsTime);
+        CkPrintf("    Queueing events took %lf\n", profile.queueTime);
+        CkPrintf("    DES took %lf\n", profile.queueTime);
         CkPrintf("  End of day update and reduction took %lf seconds\n",
           profile.eodTime);
 
@@ -238,12 +240,14 @@ mainmodule loimos {
     entry void ComputedInteractions();
     entry [reductiontarget] void ReceiveQueueTime(double elapsedTime) {
       serial{
-        CkPrintf("  Queueing events took %lf seconds sent visits\n", elapsedTime);
+        profile.queueTime += elapsedTime;
+        CkPrintf("  Queueing events took %lf seconds\n", elapsedTime);
       }
     };
     entry [reductiontarget] void ReceiveDESTime(double elapsedTime) {
       serial{
-        CkPrintf("  DES took %lf seconds sent visits\n", elapsedTime);
+        profile.desTime += elapsedTime;
+        CkPrintf("  DES took %lf seconds\n", elapsedTime);
       }
     };
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
