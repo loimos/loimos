@@ -97,46 +97,8 @@ def main():
     all_datapoints = {}
     datapoint_averages_by_series = {}
 
-    root, series_directories, _ = next(os.walk(args.input_dir))
-    if len(series_directories) == 0:
-        print(f"no series directories found in {args.input_dir}")
-        raise FileNotFoundError(args.input_dir)
-
-    for series_directory in series_directories:
-        try:
-            _, _, files = next(os.walk(os.path.join(root, series_directory)))
-        except StopIteration:
-            continue
-
-
-        datapoint_averages_by_series[series_directory] = {}
-        all_datapoints[series_directory] = {}
-        all_datapoints_bucketed = {}
-        for file in files:
-            if not file.endswith(".csv"):
-                print(f"file {file} is not a csv")
-                raise FileNotFoundError(file)
-            input = os.path.join(root, series_directory, file)
-            current = pd.read_csv(input, usecols=csvcols)["infectious_count"]
-
-            print(f"calculating earthmover distance for {file}")
-            datapoint = re.compile(r"(.+)_\d+.csv").match(file).group(1)
-            if datapoint is None:
-                raise ValueError(f"{file}: datapoint not found in file name; should be in form [datapoint]_[trial_number].csv")
-            
-            if datapoint not in all_datapoints_bucketed:
-                all_datapoints_bucketed[datapoint] = []
-
-            # calculate earthmover distance
-            distance = wasserstein_distance(control, current)
-            all_datapoints_bucketed[datapoint].append(distance)
-            all_datapoints[series_directory][file.rstrip(".csv")] = distance
-
-
-        for key, values in all_datapoints_bucketed.items():
-            datapoint_averages_by_series[series_directory][key] = sum(values) / len(values)
-    
-    print(datapoint_averages_by_series)
+    for i in range(200):
+        print(compute_earthmover_distance(args.input_dir, args.control_csv, i))
 
     averages = pd.DataFrame(datapoint_averages_by_series)
     averages.to_csv(f"{args.output_dir}/averages.csv")
