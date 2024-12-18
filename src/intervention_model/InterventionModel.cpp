@@ -42,11 +42,11 @@ void InterventionModel::initPersonInterventions(
 
     if (spec.has_self_isolation()) {
       personInterventions.emplace_back(new SelfIsolationIntervention(
-        spec, *diseaseModel.model, attributes));
+        spec, *diseaseModel.model, attributes, i));
 
     } else if (spec.has_vaccination()) {
       personInterventions.emplace_back(new VaccinationIntervention(
-        spec, *diseaseModel.model, attributes));
+        spec, *diseaseModel.model, attributes, i));
     }
   }
 }
@@ -55,13 +55,14 @@ void InterventionModel::initLocationInterventions(
     const InterventionList &interventionSpecs,
     const AttributeTable &attributes,
     const DiseaseModel &diseaseModel) {
+  uint offset = personInterventions.size();
   for (uint i = 0; i < interventionSpecs.size(); ++i) {
     const loimos::proto::InterventionModel::Intervention &spec =
       interventionSpecs[i];
 
     if (spec.has_school_closures()) {
       locationInterventions.emplace_back(new SchoolClosureIntervention(
-        spec, *diseaseModel.model, attributes));
+        spec, *diseaseModel.model, attributes, i + offset));
     }
   }
 }
@@ -76,6 +77,16 @@ const Intervention<Location> & InterventionModel::getLocationIntervention(int in
   return *locationInterventions[index];
 }
 
+template <>
+const Intervention<Location> &InterventionModel::getIntervention(int index) const {
+  return getLocationIntervention(index);
+}
+
+template <>
+const Intervention<Person> &InterventionModel::getIntervention(int index) const {
+  return getPersonIntervention(index);
+}
+
 int InterventionModel::getNumPersonInterventions() const {
   return static_cast<int>(personInterventions.size());
 }
@@ -86,15 +97,20 @@ int InterventionModel::getNumLocationInterventions() const {
 
 void InterventionModel::applyInterventions(int day, Id newDailyInfections,
     Id numPeople) {
+  std::vector<bool> prevTriggerFlags;
+  prevTriggerFlags.insert(prevTriggerFlags.end(), triggerFlags.begin(),
+      triggerFlags.end());
   toggleInterventions(day, newDailyInfections, numPeople);
 
   for (uint i = 0; i < personInterventions.size(); ++i) {
-    if (triggerFlags[personInterventions[i]->getTriggerIndex()]) {
+    int triggerIndex = personInterventions[i]->getTriggerIndex();
+    if (triggerFlags[triggerIndex] || prevTriggerFlags[triggerIndex]) {
       peopleArray.ReceiveIntervention(i);
     }
   }
   for (uint i = 0; i < locationInterventions.size(); ++i) {
-    if (triggerFlags[locationInterventions[i]->getTriggerIndex()]) {
+    int triggerIndex = personInterventions[i]->getTriggerIndex();
+    if (triggerFlags[triggerIndex] || prevTriggerFlags[triggerIndex]) {
       locationsArray.ReceiveIntervention(i);
     }
   }

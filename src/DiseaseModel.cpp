@@ -52,10 +52,14 @@
  * Constructor which loads in disease file from text proto file.
  * On failure, aborts the entire simulation.
  */
-DiseaseModel::DiseaseModel(std::string diseasePath, const AttributeTable &attrs) {
+DiseaseModel::DiseaseModel(std::string diseasePath, double transmissibility,
+    const AttributeTable &attrs) {
   model = new loimos::proto::DiseaseModel();
   readProtobuf(diseasePath, model);
   assert(model->disease_states_size() != 0);
+  if (transmissibility >= 0.0) {
+    model->set_transmissibility(transmissibility);
+  }
 
   ageIndex = attrs.getAttributeIndex("age");
   susceptibilityIndex = attrs.getAttributeIndex("susceptibility");
@@ -248,12 +252,12 @@ DiseaseState DiseaseModel::getHealthyState(const std::vector<Data> &dataField) c
 
 /** Returns if someone is infectious */
 bool DiseaseModel::isInfectious(DiseaseState personState) const {
-  return model->disease_states(personState).infectivity() != 0.0;
+  return model->disease_states(personState).infectivity() > 0.0;
 }
 
 /** Returns if someone is susceptible */
 bool DiseaseModel::isSusceptible(DiseaseState personState) const {
-  return model->disease_states(personState).susceptibility() != 0.0;
+  return model->disease_states(personState).susceptibility() > 0.0;
 }
 
 /** Returns the name of the person's state, as a C-style string */

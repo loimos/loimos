@@ -31,10 +31,21 @@ struct Arguments {
   Time numDays;
   Time numDaysWithDistinctVisits;
   Time numDaysToSeedOutbreak;
+  double transmissibility;
   int seed;
 
   bool hasIntervention;
   int contactModelType;
+
+#ifdef ENABLE_LB
+  int lb_start_day;
+  int lb_interval;
+#endif
+
+#ifdef ENABLE_TRACING
+  int tracing_start_day;
+  int tracing_end_day;
+#endif
 
   std::string diseasePath;
   std::string interventionPath;
@@ -55,6 +66,7 @@ struct Arguments {
     p | numDaysToSeedOutbreak;
     p | numInitialInfectionsPerDay;
     p | partitionsToOffsetsRatio;
+    p | transmissibility;
     p | seed;
     p | hasIntervention;
     p | contactModelType;
@@ -64,6 +76,14 @@ struct Arguments {
     p | scenarioPath;
     p | isOnTheFlyRun;
     p | onTheFly;
+#ifdef ENABLE_LB
+    p | lb_start_day;
+    p | lb_interval;
+#endif
+#ifdef ENABLE_TRACING
+    p | tracing_start_day;
+    p | tracing_end_day;
+#endif
   }
 };
 

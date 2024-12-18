@@ -82,6 +82,7 @@ class Locations : public CBase_Locations {
   void ReceiveVisitMessages(VisitMessage visitMsg);
   void ComputeInteractions();  // calls ReceiveInfections
   void ReceiveIntervention(PartitionId interventionIdx);
+  void ReceiveVisitIntervention(VisitInterventionMessage msg);
   #ifdef ENABLE_LB
   void ResumeFromSync();
   #endif  // ENABLE_LB
