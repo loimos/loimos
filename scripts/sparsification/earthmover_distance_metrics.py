@@ -57,6 +57,9 @@ def compute_earthmover_distance(input_dir, control_file, k):
                 except IndexError:
                     print(f"file {file} does not have a row {k}")
                     continue
+                except Exception as e:
+                    print(f"exception processing file {file}: {e}")
+                    continue
 
                 print(f"calculating earthmover distance for {file}")
                 datapoint = re.compile(r"(.+)_\d+.csv").match(file).group(1)
@@ -94,14 +97,22 @@ def main():
     csvcols = ["day", "infectious_count"]
     control = pd.read_csv(args.control_csv, usecols=csvcols)["infectious_count"]
 
+    distribution_totals = {}
     all_datapoints = {}
-    datapoint_averages_by_series = {}
 
     for i in range(200):
-        print(compute_earthmover_distance(args.input_dir, args.control_csv, i))
+        current_timestep = compute_earthmover_distance(args.input_dir, args.control_csv, i)
+        all_datapoints[i] = current_timestep
+        for key in current_timestep.keys():
+            if not key in distribution_totals:
+                distribution_totals[key] = current_timestep[key]
+            else:
+                distribution_totals[key] += current_timestep[key]
 
-    averages = pd.DataFrame(datapoint_averages_by_series)
-    averages.to_csv(f"{args.output_dir}/averages.csv")
+    print(distribution_totals)
+
+    data = pd.DataFrame({k: [v] for k, v in distribution_totals.items()})
+    data.to_csv(f"{args.output_dir}/totals.csv")
 
     data = pd.DataFrame(all_datapoints)
     data.to_csv(f"{args.output_dir}/data.csv")
