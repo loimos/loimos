@@ -89,6 +89,25 @@ def main():
         if args.separate_days:
             print(f'Splitting data into subsets by day')
             subsets = df.groupby('daynum')
+            day_keys = sorted(subsets.groups.keys())
+            for daynum in day_keys[:-1]: 
+                # ignore the very last day 
+                # as we don't have a dataframe 
+                # which succeeds it to cull overlap 
+                # days from
+
+                day_df = subsets.get_group(daynum).copy()
+                for idx, row in day_df.iterrows():
+                    end_time = row['start_time'] + row['duration']
+                    # assume 24-hour boundary; adjust as needed
+                    if end_time > 24:
+                        new_duration = 24 - row['start_time']
+                        # truncate duration for this day
+                        df.loc[idx, 'duration'] = new_duration
+                        # remove from subsequent days
+                        for future_day in day_keys[day_keys.index(daynum)+1:]:
+                            if idx in subsets.get_group(future_day).index:
+                                df.drop(idx, inplace=True)
             filtered_dfs = []
             threads = []
             results = []
