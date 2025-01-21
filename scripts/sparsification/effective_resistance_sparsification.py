@@ -37,11 +37,18 @@ def parse_args():
         help="Run sparsification on each day separately and reassemble into final csv",
     )
 
+    parser.add_argument(
+        "-v", "--visual",
+        action="store_true",
+        help="show visual progress indicators of thread execution",
+    )
+
+
     return parser.parse_args()
 
 
-def process_subset(progressbar, task, df_subset, q, thread_results, thread_idx):
-    progressbar.update(thread_idx, advance=1)
+def process_subset(df_subset, q, thread_results, thread_idx, progressbar, progresstask):
+    progressbar.update(progresstask, advance=1)
     if thread_results is not None and thread_idx is not None:
         start_time = perf_counter()
     edge_list = df_subset[['pid', 'lid']].to_numpy()  # should be 2 x m shape
@@ -50,11 +57,11 @@ def process_subset(progressbar, task, df_subset, q, thread_results, thread_idx):
     network = Network(edge_list, weights)
     epsilon = 0.1
     method = 'kts'
-    progressbar.update(task, advance=1)
+    progressbar.update(progresstask, advance=1)
 
     Effective_R = network.effR(epsilon, method)
     EffR_Sparse = network.spl(q, Effective_R, seed=2020)
-    progressbar.update(task, advance=1)
+    progressbar.update(progresstask, advance=1)
 
     filtered_df_subset = df_subset[df_subset[['pid', 'lid']].apply(tuple, axis=1).isin(map(tuple, EffR_Sparse.E_list))]
 
@@ -62,7 +69,7 @@ def process_subset(progressbar, task, df_subset, q, thread_results, thread_idx):
         end_time = perf_counter()
         thread_results[thread_idx] = filtered_df_subset
         print(f"worker thread {thread_idx} completed in {end_time - start_time :0.2f} seconds")
-    progressbar.update(task, advance=1)
+    progressbar.update(progresstask, advance=1)
     return filtered_df_subset
 
 def main():
