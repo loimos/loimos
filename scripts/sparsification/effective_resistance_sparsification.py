@@ -89,7 +89,10 @@ def main():
         if args.separate_days:
             print(f'Splitting data into subsets by day')
             subsets = df.groupby('daynum')
+
+            preprocessing_task = progress_bar.add_task(f"[green]splitting data into [bold]7 subsets", total=1.0)
             day_keys = sorted(subsets.groups.keys())
+            unit_scaling = 1 / (60 * 60) # convert seconds to hours
             for daynum in day_keys[:-1]: 
                 # ignore the very last day 
                 # as we don't have a dataframe 
@@ -98,9 +101,10 @@ def main():
 
                 day_df = subsets.get_group(daynum).copy()
                 for idx, row in day_df.iterrows():
+                    progress_bar.update(preprocessing_task, advance=(1.0 / (len(day_keys) * len(day_df))))
                     end_time = row['start_time'] + row['duration']
                     # assume 24-hour boundary; adjust as needed
-                    if end_time > 24:
+                    if end_time * unit_scaling > 24:
                         new_duration = 24 - row['start_time']
                         # truncate duration for this day
                         df.loc[idx, 'duration'] = new_duration
@@ -108,6 +112,7 @@ def main():
                         for future_day in day_keys[day_keys.index(daynum)+1:]:
                             if idx in subsets.get_group(future_day).index:
                                 df.drop(idx, inplace=True)
+            progress_bar.remove_task(preprocessing_task)
             filtered_dfs = []
             threads = []
             results = []
