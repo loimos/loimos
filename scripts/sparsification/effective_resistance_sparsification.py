@@ -58,6 +58,7 @@ def process_subset(df_subset, q, thread_results, thread_idx, progressbar, progre
         start_time = perf_counter()
     edge_list = df_subset[['pid', 'lid']].to_numpy()  # should be 2 x m shape
     weights = df_subset['duration'].to_numpy()  # weight edge by visit duration
+    print(f"worker thread {thread_idx}: {len(weights)}")
 
     network = Network(edge_list, weights)
     epsilon = 0.1
