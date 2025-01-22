@@ -32,9 +32,8 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-s", "--separate-days",
-        action="store_true",
-        help="Run sparsification on each day separately and reassemble into final csv",
+        "-s", "--split",
+        help="Run sparsification on S separate equally-sized subintervals",
     )
 
     parser.add_argument(
@@ -62,7 +61,7 @@ def process_subset(df_subset, q, thread_results, thread_idx, progressbar, progre
 
     if args.visual:
         subtask = progressbar.add_task(f"[cyan]day {thread_idx} -- network init", total=1.0)
-    # TODO: ensure debug branch checkout on visual arg flag
+    # TODO: ensure debug branch checkout on visual arg flag (and inverse)
     network = Network(edge_list, weights, progress_bar=progressbar, progress_task=subtask)
     if args.visual:
         progressbar.remove_task(subtask)
@@ -104,33 +103,31 @@ def main():
     with Progress(TextColumn("[progress.description]{task.description}"),
                   BarColumn(), TaskProgressColumn(),
                   TimeElapsedColumn()) as progress_bar:
-        if args.separate_days:
-            print(f'Splitting data into subsets by day')
-            subsets = df.groupby('daynum')
+        if args.split is not None:
+            print(f'Splitting data into {args.split} subsets')
+            num_subsets = int(args.split)
 
-            if args.visual:
-                preprocessing_task = progress_bar.add_task(f"[green]splitting data into [bold]7 subsets", total=1.0)
-            day_keys = sorted(subsets.groups.keys())
-            unit_scaling = 1 / (60 * 60) # convert seconds to hours
-            for daynum in day_keys[:-1]: 
-                # ignore the very last day as we don't have a dataframe 
-                # which succeeds it to cull overlap days from
-                day_df = subsets.get_group(daynum).copy()
-                for idx, row in day_df.iterrows():
-                    if args.visual:
-                        progress_bar.update(preprocessing_task, advance=(1.0 / (len(day_keys) * len(day_df))))
-                    end_time = row['start_time'] + row['duration']
-                    # assume 24-hour boundary; adjust as needed
-                    if end_time * unit_scaling > 24:
-                        new_duration = 24 - row['start_time']
-                        # truncate duration for this day
-                        df.loc[idx, 'duration'] = new_duration
-                        # remove from subsequent days
-                        for future_day in day_keys[day_keys.index(daynum)+1:]:
-                            if idx in subsets.get_group(future_day).index:
-                                df.drop(idx, inplace=True)
-            if args.visual:
-                progress_bar.remove_task(preprocessing_task)
+            days = df.groupby('daynum')
+            num_days = len(days.groups.keys())
+            seconds_in_day = (24 * 60.0 * 60.0) 
+
+            subset_size = (seconds_in_day * num_days) / num_subsets
+            def subset_num(col):
+                np.floor(col / subset_size)
+            
+            subsets = df.groupby(subset_num(df['start_time']))
+
+            # temp
+            print(df['duration'].copy().where(subset_num(df['start_time']) != subset_num(df['end_time'])), "LOOOK HERERERERERER")
+
+            df['duration'].where(
+                                subset_num(df['start_time']) != subset_num(df['end_time']), 
+                                subset_size * (subset_num(df['start_time']) + 1) - df['start_time'], inplace=True)
+            df['end_time'].where(
+                                subset_num(df['start_time']) != subset_num(df['end_time']), 
+                                df['start_time'] + df['duration'], inplace=True)
+            # TODO: spawn split-off days into other subset dataframes
+            
             filtered_dfs = []
             threads = []
             results = [None] * len(subsets)
