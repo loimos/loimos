@@ -76,9 +76,11 @@ def process_subset(df_subset, q, thread_results, thread_idx, progressbar, progre
     Effective_R = network.effR(epsilon, method, progress_bar=progressbar, progress_task=subtask)
     if args.visual:
         progressbar.remove_task(subtask)
+        subtask = progressbar.add_task(f"[cyan]day {thread_idx} -- network.spl", total=1.0)
 
-    EffR_Sparse = network.spl(q, Effective_R, seed=2020)
+    EffR_Sparse = network.spl(q, Effective_R, progressbar, subtask, seed=2020)
     if args.visual:
+        progressbar.remove_task(subtask)
         progressbar.update(progresstask, advance=1)
 
     filtered_df_subset = df_subset[df_subset[['pid', 'lid']].apply(tuple, axis=1).isin(map(tuple, EffR_Sparse.E_list))]
