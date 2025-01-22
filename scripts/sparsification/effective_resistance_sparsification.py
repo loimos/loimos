@@ -60,7 +60,7 @@ def process_subset(df_subset, q, thread_results, thread_idx, progressbar, progre
     weights = df_subset['duration'].to_numpy()  # weight edge by visit duration
 
     if args.visual:
-        subtask = progressbar.add_task(f"[cyan]interval {thread_idx} -- network init", total=1.0)
+        subtask = progressbar.add_task(f"[cyan]interval {thread_idx}[/cyan] -- network init", total=1.0)
     # TODO: ensure debug branch checkout on visual arg flag (and inverse)
     network = Network(edge_list, weights, progress_bar=progressbar, progress_task=subtask)
     if args.visual:
@@ -72,11 +72,11 @@ def process_subset(df_subset, q, thread_results, thread_idx, progressbar, progre
         progressbar.update(progresstask, advance=1)
     
     if args.visual:
-        subtask = progressbar.add_task(f"[cyan]interval {thread_idx} -- effective resistance", total=1.0)
+        subtask = progressbar.add_task(f"[cyan]interval {thread_idx}[/cyan] -- effective resistance", total=1.0)
     Effective_R = network.effR(epsilon, method, progress_bar=progressbar, progress_task=subtask)
     if args.visual:
         progressbar.remove_task(subtask)
-        subtask = progressbar.add_task(f"[cyan]interval {thread_idx} -- network.spl", total=1.0)
+        subtask = progressbar.add_task(f"[cyan]interval {thread_idx}[/cyan] -- network.spl", total=1.0)
 
     EffR_Sparse = network.spl(q, Effective_R, progressbar, subtask, seed=2020)
     if args.visual:
@@ -103,7 +103,7 @@ def main():
 
     input = os.path.join(args.input_dir, 'visits.csv')
     if args.test_mode:
-        df = pd.read_csv(input, nrows=20)
+        df = pd.read_csv(input, nrows=10000)
     else:
         df = pd.read_csv(input)
 
@@ -126,18 +126,14 @@ def main():
             subsets = df.groupby(subset_num(df['start_time']))
 
             # temp
-            print(subset_num(df['start_time']) != subset_num(df['end_time']))
-            print(df['duration'])
             df['duration'].mask(
                                 subset_num(df['start_time']) != subset_num(df['end_time']), 
                                 subset_size * (subset_num(df['start_time']) + 1) - df['start_time'], inplace=True)
-            print(df['duration'])
             df['end_time'].mask(
                                 subset_num(df['start_time']) != subset_num(df['end_time']), 
                                 df['start_time'] + df['duration'], inplace=True)
             # TODO: spawn split-off days into other subset dataframes
             
-
             filtered_dfs = []
             threads = []
             results = [None] * len(subsets)
@@ -147,7 +143,7 @@ def main():
             start = perf_counter()
             for i, subset in subsets:
                 if args.visual:
-                    progress_task = progress_bar.add_task(f"[cyan]interval {int(i)}", total=4)
+                    progress_task = progress_bar.add_task(f"[cyan]interval {int(i)}[/cyan] ([bold]{len(subset)}[/bold] rows)", total=4)
                 else:
                     print(f'Initializing interval {int(i)} worker thread')
                 q = int(float(args.resultant_sample_size) * float(len(subset)))
