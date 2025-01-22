@@ -113,7 +113,7 @@ def main():
 
             subset_size = (seconds_in_day * num_days) / num_subsets
             def subset_num(col):
-                np.floor(col / subset_size)
+                return np.floor(col / subset_size)
             
             subsets = df.groupby(subset_num(df['start_time']))
 
