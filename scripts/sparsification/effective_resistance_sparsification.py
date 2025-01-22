@@ -43,6 +43,11 @@ def parse_args():
         help="show visual progress indicators of thread execution",
     )
 
+    parser.add_argument(
+        "-t", "--test-mode",
+        action="store_true",
+        help="run in experimental/debug mode in which only first 10000 lines of visits.csv are read",
+    )
 
     return parser.parse_args()
 
@@ -81,7 +86,10 @@ def main():
         raise FileNotFoundError(args.input_dir)
 
     input = os.path.join(args.input_dir, 'visits.csv')
-    df = pd.read_csv(input)
+    if args.test_mode:
+        df = pd.read_csv(input, nrows=10000)
+    else:
+        df = pd.read_csv(input)
 
     with Progress(TextColumn("[progress.description]{task.description}"),
                   BarColumn(), TaskProgressColumn(),
@@ -90,18 +98,17 @@ def main():
             print(f'Splitting data into subsets by day')
             subsets = df.groupby('daynum')
 
-            preprocessing_task = progress_bar.add_task(f"[green]splitting data into [bold]7 subsets", total=1.0)
+            if args.visual:
+                preprocessing_task = progress_bar.add_task(f"[green]splitting data into [bold]7 subsets", total=1.0)
             day_keys = sorted(subsets.groups.keys())
             unit_scaling = 1 / (60 * 60) # convert seconds to hours
             for daynum in day_keys[:-1]: 
-                # ignore the very last day 
-                # as we don't have a dataframe 
-                # which succeeds it to cull overlap 
-                # days from
-
+                # ignore the very last day as we don't have a dataframe 
+                # which succeeds it to cull overlap days from
                 day_df = subsets.get_group(daynum).copy()
                 for idx, row in day_df.iterrows():
-                    progress_bar.update(preprocessing_task, advance=(1.0 / (len(day_keys) * len(day_df))))
+                    if args.visual:
+                        progress_bar.update(preprocessing_task, advance=(1.0 / (len(day_keys) * len(day_df))))
                     end_time = row['start_time'] + row['duration']
                     # assume 24-hour boundary; adjust as needed
                     if end_time * unit_scaling > 24:
@@ -112,20 +119,23 @@ def main():
                         for future_day in day_keys[day_keys.index(daynum)+1:]:
                             if idx in subsets.get_group(future_day).index:
                                 df.drop(idx, inplace=True)
-            progress_bar.remove_task(preprocessing_task)
+            if args.visual:
+                progress_bar.remove_task(preprocessing_task)
             filtered_dfs = []
             threads = []
-            results = []
+            results = [None] * len(subsets)
 
             # python3 effective_resistance_sparsification.py -s ~/src/data/coc-unsparsified ~/src/data-spars-para/coc-sparsified-90 0.9
 
             start = perf_counter()
             for i, subset in subsets:
-                progress_task = progress_bar.add_task(f"[cyan]day {i}", total=4)
-                print(f'Initializing day {i+1} worker thread')
+                if args.visual:
+                    progress_task = progress_bar.add_task(f"[cyan]day {i}", total=4)
+                else:
+                    print(f'Initializing day {i+1} worker thread')
                 q = int(float(args.resultant_sample_size) * float(len(subset)))
-                threads.append(Thread(target=process_subset, args=(progress_bar, progress_task, subset, q, results, i)))
-                results.append(None)
+                t_args = (subset, q, results, i, progress_bar, progress_task) if args.visual else (subset, q, results, i)
+                threads.append(Thread(target=process_subset, args=t_args))
                 threads[i].start()
 
             for _, thread in enumerate(threads):
