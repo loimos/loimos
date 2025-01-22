@@ -103,7 +103,7 @@ def main():
 
     input = os.path.join(args.input_dir, 'visits.csv')
     if args.test_mode:
-        df = pd.read_csv(input, nrows=10000)
+        df = pd.read_csv(input, nrows=20)
     else:
         df = pd.read_csv(input)
 
@@ -126,14 +126,18 @@ def main():
             subsets = df.groupby(subset_num(df['start_time']))
 
             # temp
-            df['duration'].where(
+            print(subset_num(df['start_time']) != subset_num(df['end_time']))
+            print(df['duration'])
+            df['duration'].mask(
                                 subset_num(df['start_time']) != subset_num(df['end_time']), 
                                 subset_size * (subset_num(df['start_time']) + 1) - df['start_time'], inplace=True)
-            df['end_time'].where(
+            print(df['duration'])
+            df['end_time'].mask(
                                 subset_num(df['start_time']) != subset_num(df['end_time']), 
                                 df['start_time'] + df['duration'], inplace=True)
             # TODO: spawn split-off days into other subset dataframes
             
+
             filtered_dfs = []
             threads = []
             results = [None] * len(subsets)
