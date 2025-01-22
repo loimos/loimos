@@ -60,7 +60,7 @@ def process_subset(df_subset, q, thread_results, thread_idx, progressbar, progre
     weights = df_subset['duration'].to_numpy()  # weight edge by visit duration
 
     if args.visual:
-        subtask = progressbar.add_task(f"[cyan]day {thread_idx} -- network init", total=1.0)
+        subtask = progressbar.add_task(f"[cyan]interval {thread_idx} -- network init", total=1.0)
     # TODO: ensure debug branch checkout on visual arg flag (and inverse)
     network = Network(edge_list, weights, progress_bar=progressbar, progress_task=subtask)
     if args.visual:
@@ -72,11 +72,11 @@ def process_subset(df_subset, q, thread_results, thread_idx, progressbar, progre
         progressbar.update(progresstask, advance=1)
     
     if args.visual:
-        subtask = progressbar.add_task(f"[cyan]day {thread_idx} -- effective resistance", total=1.0)
+        subtask = progressbar.add_task(f"[cyan]interval {thread_idx} -- effective resistance", total=1.0)
     Effective_R = network.effR(epsilon, method, progress_bar=progressbar, progress_task=subtask)
     if args.visual:
         progressbar.remove_task(subtask)
-        subtask = progressbar.add_task(f"[cyan]day {thread_idx} -- network.spl", total=1.0)
+        subtask = progressbar.add_task(f"[cyan]interval {thread_idx} -- network.spl", total=1.0)
 
     EffR_Sparse = network.spl(q, Effective_R, progressbar, subtask, seed=2020)
     if args.visual:
@@ -111,7 +111,6 @@ def main():
                   BarColumn(), TaskProgressColumn(),
                   TimeElapsedColumn()) as progress_bar:
         if args.split is not None:
-            print(f'Splitting data into {args.split} subsets')
             num_subsets = int(args.split)
 
             days = df.groupby('daynum')
@@ -119,14 +118,14 @@ def main():
             seconds_in_day = (24 * 60.0 * 60.0) 
 
             subset_size = (seconds_in_day * num_days) / num_subsets
+            print("Sparsifying:")
+            print(f"{num_subsets} intervals of length {subset_size} seconds each")
             def subset_num(col):
                 return np.floor(col / subset_size)
             
             subsets = df.groupby(subset_num(df['start_time']))
 
             # temp
-            print(df['duration'].copy().where(subset_num(df['start_time']) != subset_num(df['end_time'])), "LOOOK HERERERERERER")
-
             df['duration'].where(
                                 subset_num(df['start_time']) != subset_num(df['end_time']), 
                                 subset_size * (subset_num(df['start_time']) + 1) - df['start_time'], inplace=True)
@@ -144,9 +143,9 @@ def main():
             start = perf_counter()
             for i, subset in subsets:
                 if args.visual:
-                    progress_task = progress_bar.add_task(f"[cyan]day {int(i)}", total=4)
+                    progress_task = progress_bar.add_task(f"[cyan]interval {int(i)}", total=4)
                 else:
-                    print(f'Initializing day {int(i)} worker thread')
+                    print(f'Initializing interval {int(i)} worker thread')
                 q = int(float(args.resultant_sample_size) * float(len(subset)))
                 t_args = (subset, q, results, int(i), progress_bar, progress_task) if args.visual else (subset, q, results, int(i))
                 threads.append(Thread(target=process_subset, args=t_args))
@@ -155,11 +154,10 @@ def main():
             for _, thread in enumerate(threads):
                 thread.join()
 
-            print(f'Initializing day {i+1} worker thread')
+            print(f'Initializing interval {i+1} worker thread')
             for _, df_subset in enumerate(results):
                 filtered_dfs.append(df_subset)
 
-            # TODO: cull multi-day visits
             end = perf_counter()
             final_filtered_df = pd.concat(filtered_dfs)
         else:
