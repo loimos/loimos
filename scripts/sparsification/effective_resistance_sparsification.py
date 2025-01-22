@@ -43,6 +43,11 @@ def parse_args():
         help="show visual progress indicators of thread execution",
     )
 
+    parser.add_argument(
+        "-t", "--test-mode",
+        action="store_true",
+        help="run in experimental/debug mode in which only first 10000 lines of visits.csv are read",
+    )
 
     return parser.parse_args()
 
@@ -81,7 +86,10 @@ def main():
         raise FileNotFoundError(args.input_dir)
 
     input = os.path.join(args.input_dir, 'visits.csv')
-    df = pd.read_csv(input)
+    if args.test_mode:
+        df = pd.read_csv(input, nrows=10000)
+    else:
+        df = pd.read_csv(input)
 
     with Progress(TextColumn("[progress.description]{task.description}"),
                   BarColumn(), TaskProgressColumn(),
@@ -95,11 +103,8 @@ def main():
             day_keys = sorted(subsets.groups.keys())
             unit_scaling = 1 / (60 * 60) # convert seconds to hours
             for daynum in day_keys[:-1]: 
-                # ignore the very last day 
-                # as we don't have a dataframe 
-                # which succeeds it to cull overlap 
-                # days from
-
+                # ignore the very last day as we don't have a dataframe 
+                # which succeeds it to cull overlap days from
                 day_df = subsets.get_group(daynum).copy()
                 for idx, row in day_df.iterrows():
                     if args.visual:
