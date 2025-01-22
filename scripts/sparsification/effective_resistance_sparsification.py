@@ -134,7 +134,7 @@ def main():
                 else:
                     print(f'Initializing day {i+1} worker thread')
                 q = int(float(args.resultant_sample_size) * float(len(subset)))
-                t_args = (progress_bar, progress_task, subset, q, results, i) if args.visual else (subset, q, results, i)
+                t_args = (subset, q, results, i, progress_bar, progress_task) if args.visual else (subset, q, results, i)
                 threads.append(Thread(target=process_subset, args=t_args))
                 threads[i].start()
 
