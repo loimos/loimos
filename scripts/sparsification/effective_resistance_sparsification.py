@@ -61,6 +61,7 @@ def process_subset(df_subset, q, thread_results, thread_idx, progressbar, progre
 
     subtask = progressbar.add_task(f"[cyan]day {thread_idx} -- network init", total=1.0)
     network = Network(edge_list, weights, progress_bar=progressbar, progress_task=subtask)
+    progressbar.remove_task(subtask)
     epsilon = 0.1
     method = 'kts'
     progressbar.update(progresstask, advance=1)
