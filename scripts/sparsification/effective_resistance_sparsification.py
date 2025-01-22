@@ -53,22 +53,29 @@ def parse_args():
 
 
 def process_subset(df_subset, q, thread_results, thread_idx, progressbar, progresstask):
-    progressbar.update(progresstask, advance=1)
+    if args.visual:
+        progressbar.update(progresstask, advance=1)
     if thread_results is not None and thread_idx is not None:
         start_time = perf_counter()
     edge_list = df_subset[['pid', 'lid']].to_numpy()  # should be 2 x m shape
     weights = df_subset['duration'].to_numpy()  # weight edge by visit duration
 
-    subtask = progressbar.add_task(f"[cyan]day {thread_idx} -- network init", total=1.0)
+    if args.visual:
+        subtask = progressbar.add_task(f"[cyan]day {thread_idx} -- network init", total=1.0)
+    # TODO: ensure debug branch checkout on visual arg flag
     network = Network(edge_list, weights, progress_bar=progressbar, progress_task=subtask)
-    progressbar.remove_task(subtask)
+    if args.visual:
+        progressbar.remove_task(subtask)
+
     epsilon = 0.1
     method = 'kts'
-    progressbar.update(progresstask, advance=1)
+    if args.visual:
+        progressbar.update(progresstask, advance=1)
 
     Effective_R = network.effR(epsilon, method)
     EffR_Sparse = network.spl(q, Effective_R, seed=2020)
-    progressbar.update(progresstask, advance=1)
+    if args.visual:
+        progressbar.update(progresstask, advance=1)
 
     filtered_df_subset = df_subset[df_subset[['pid', 'lid']].apply(tuple, axis=1).isin(map(tuple, EffR_Sparse.E_list))]
 
@@ -76,13 +83,14 @@ def process_subset(df_subset, q, thread_results, thread_idx, progressbar, progre
         end_time = perf_counter()
         thread_results[thread_idx] = filtered_df_subset
         print(f"worker thread {thread_idx} completed in {end_time - start_time :0.2f} seconds")
-    progressbar.update(progresstask, advance=1)
+    if args.visual:
+        progressbar.update(progresstask, advance=1)
     return filtered_df_subset
 
 def main():
+    global args
     args = parse_args()
 
-    print(f'parsing input data')
     if not os.path.exists(args.input_dir):
         print(f'input directory not found: {args.input_dir}')
         raise FileNotFoundError(args.input_dir)
