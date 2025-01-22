@@ -136,14 +136,15 @@ def main():
 
             start = perf_counter()
             for i, subset in subsets:
+                print(i)
                 if args.visual:
-                    progress_task = progress_bar.add_task(f"[cyan]day {i}", total=4)
+                    progress_task = progress_bar.add_task(f"[cyan]day {int(i)}", total=4)
                 else:
-                    print(f'Initializing day {i+1} worker thread')
+                    print(f'Initializing day {int(i)} worker thread')
                 q = int(float(args.resultant_sample_size) * float(len(subset)))
-                t_args = (subset, q, results, i, progress_bar, progress_task) if args.visual else (subset, q, results, i)
+                t_args = (subset, q, results, int(i), progress_bar, progress_task) if args.visual else (subset, q, results, int(i))
                 threads.append(Thread(target=process_subset, args=t_args))
-                threads[i].start()
+                threads[int(i)].start()
 
             for _, thread in enumerate(threads):
                 thread.join()
