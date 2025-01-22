@@ -70,8 +70,13 @@ def process_subset(df_subset, q, thread_results, thread_idx, progressbar, progre
     method = 'kts'
     if args.visual:
         progressbar.update(progresstask, advance=1)
+    
+    if args.visual:
+        subtask = progressbar.add_task(f"[cyan]day {thread_idx} -- effective resistance", total=1.0)
+    Effective_R = network.effR(epsilon, method, progress_bar=progressbar, progress_task=subtask)
+    if args.visual:
+        progressbar.remove_task(subtask)
 
-    Effective_R = network.effR(epsilon, method)
     EffR_Sparse = network.spl(q, Effective_R, seed=2020)
     if args.visual:
         progressbar.update(progresstask, advance=1)
@@ -136,7 +141,6 @@ def main():
 
             start = perf_counter()
             for i, subset in subsets:
-                print(i)
                 if args.visual:
                     progress_task = progress_bar.add_task(f"[cyan]day {int(i)}", total=4)
                 else:
