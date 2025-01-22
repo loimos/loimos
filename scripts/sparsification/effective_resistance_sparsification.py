@@ -58,6 +58,7 @@ def process_subset(df_subset, q, thread_results, thread_idx, progressbar, progre
         start_time = perf_counter()
     edge_list = df_subset[['pid', 'lid']].to_numpy()  # should be 2 x m shape
     weights = df_subset['duration'].to_numpy()  # weight edge by visit duration
+    progressbar.update(progresstask, advance=1)
 
     network = Network(edge_list, weights)
     epsilon = 0.1
@@ -130,7 +131,7 @@ def main():
             start = perf_counter()
             for i, subset in subsets:
                 if args.visual:
-                    progress_task = progress_bar.add_task(f"[cyan]day {i}", total=4)
+                    progress_task = progress_bar.add_task(f"[cyan]day {i}", total=5)
                 else:
                     print(f'Initializing day {i+1} worker thread')
                 q = int(float(args.resultant_sample_size) * float(len(subset)))
