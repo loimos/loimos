@@ -63,27 +63,28 @@ def process_subset(df_subset, q, thread_results, thread_idx, progressbar, progre
 
     if args.visual:
         subtask = progressbar.add_task(f"[cyan]interval {thread_idx}[/cyan] -- network init", total=1.0)
-    # TODO: ensure debug branch checkout on visual arg flag (and inverse)
-    network = Network(edge_list, weights, progress_bar=progressbar, progress_task=subtask)
-    if args.visual:
+        network = Network(edge_list, weights, progress_bar=progressbar, progress_task=subtask)
         progressbar.remove_task(subtask)
+    else:
+        network = Network(edge_list, weights)
 
     epsilon = 0.1
     method = 'kts'
     if args.visual:
         progressbar.update(progresstask, advance=1)
-    
-    if args.visual:
         subtask = progressbar.add_task(f"[cyan]interval {thread_idx}[/cyan] -- effective resistance", total=1.0)
-    Effective_R = network.effR(epsilon, method, progress_bar=progressbar, progress_task=subtask)
-    if args.visual:
+        Effective_R = network.effR(epsilon, method, progress_bar=progressbar, progress_task=subtask)
         progressbar.remove_task(subtask)
-        subtask = progressbar.add_task(f"[cyan]interval {thread_idx}[/cyan] -- network.spl", total=1.0)
+    else:
+        Effective_R = network.effR(epsilon, method)
 
-    EffR_Sparse = network.spl(q, Effective_R, progressbar, subtask, seed=2020)
     if args.visual:
+        subtask = progressbar.add_task(f"[cyan]interval {thread_idx}[/cyan] -- network.spl", total=1.0)
+        EffR_Sparse = network.spl(q, Effective_R, progressbar, subtask, seed=2020)
         progressbar.remove_task(subtask)
         progressbar.update(progresstask, advance=1)
+    else:
+        EffR_Sparse = network.spl(q, Effective_R, seed=2020)
 
     filtered_df_subset = df_subset[df_subset[['pid', 'lid']].apply(tuple, axis=1).isin(map(tuple, EffR_Sparse.E_list))]
 
@@ -156,7 +157,7 @@ def main():
                 else:
                     print(f'Initializing interval {int(i)} worker thread')
                 q = int(float(args.resultant_sample_size) * float(len(subset)))
-                t_args = (subset, q, results, int(i), progress_bar, progress_task) if args.visual else (subset, q, results, int(i))
+                t_args = (subset, q, results, int(i), progress_bar, progress_task) if args.visual else (subset, q, results, int(i), None, None)
                 threads.append(Thread(target=process_subset, args=t_args))
                 threads[int(i)].start()
 
