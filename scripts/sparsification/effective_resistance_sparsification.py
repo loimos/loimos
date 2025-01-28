@@ -111,9 +111,9 @@ def main():
         df = pd.read_csv(input)
 
     if args.visual:
-        if subprocess.run(['git', 'checkout', 'debug/rich-progresss-bars'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling').returncode != 0 or subprocess.run(['git', 'pull'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling').returncode != 0:
+        if subprocess.run(['git', 'checkout', 'debug/rich-progresss-bars'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling').returncode != 0:
             raise Exception("git checkout failed")
-    elif subprocess.run(['git', 'checkout', 'older-pythons'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling').returncode != 0 or subprocess.run(['git', 'pull'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling').returncode != 0:
+    elif subprocess.run(['git', 'checkout', 'older-pythons'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling').returncode != 0:
         raise Exception("git checkout failed")
     print("EffectiveResistanceSampling repo updated")
 
