@@ -110,16 +110,17 @@ def main():
     else:
         df = pd.read_csv(input)
 
+    if args.visual:
+        if subprocess.run(['git', 'checkout', 'debug/rich-progresss-bars'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling').returncode != 0 or subprocess.run(['git', 'pull'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling').returncode != 0:
+            raise Exception("git checkout failed")
+    elif subprocess.run(['git', 'checkout', 'older-pythons'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling').returncode != 0 or subprocess.run(['git', 'pull'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling').returncode != 0:
+        raise Exception("git checkout failed")
+    print("EffectiveResistanceSampling repo updated")
+
+
     with Progress(TextColumn("[progress.description]{task.description}"),
                   BarColumn(), TaskProgressColumn(),
                   TimeElapsedColumn()) as progress_bar:
-        if args.visual:
-            if subprocess.run(['git', 'checkout', 'debug/rich-progresss-bars'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling') != 0 or subprocess.run(['git', 'pull'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling') != 0:
-                raise Exception("git checkout failed")
-        elif subprocess.run(['git', 'checkout', 'older-pythons'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling') != 0 or subprocess.run(['git', 'pull'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling') != 0:
-            raise Exception("git checkout failed")
-        print("EffectiveResistanceSampling repo updated")
-
         if args.split is not None:
             num_subsets = int(args.split)
 
