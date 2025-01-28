@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from os import system
 import os
 import numpy as np
 import pandas as pd
@@ -110,6 +111,10 @@ def main():
     with Progress(TextColumn("[progress.description]{task.description}"),
                   BarColumn(), TaskProgressColumn(),
                   TimeElapsedColumn()) as progress_bar:
+        if args.visual:
+            system("cd ./EffectiveResistanceSampling && git status")
+            system("echo \"Hello\"")
+
         if args.split is not None:
             num_subsets = int(args.split)
 
