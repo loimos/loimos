@@ -113,11 +113,11 @@ def main():
                   BarColumn(), TaskProgressColumn(),
                   TimeElapsedColumn()) as progress_bar:
         if args.visual:
-            if subprocess.run(['git', 'checkout', 'debug/rich-progresss-bars'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling') == 0:
-                subprocess.run(['git', 'pull'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling')
-                print("EffectiveResistanceSampling repo updated")
-
-            # system("cd ./EffectiveResistanceSampling && git checkout debug/rich-progresss-bars")
+            if subprocess.run(['git', 'checkout', 'debug/rich-progresss-bars'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling') != 0 or subprocess.run(['git', 'pull'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling') != 0:
+                raise Exception("git checkout failed")
+        elif subprocess.run(['git', 'checkout', 'older-pythons'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling') != 0 or subprocess.run(['git', 'pull'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling') != 0:
+            raise Exception("git checkout failed")
+        print("EffectiveResistanceSampling repo updated")
 
         if args.split is not None:
             num_subsets = int(args.split)
