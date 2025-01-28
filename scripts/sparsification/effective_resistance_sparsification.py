@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from os import system
+import subprocess
 import os
 import numpy as np
 import pandas as pd
@@ -112,8 +113,11 @@ def main():
                   BarColumn(), TaskProgressColumn(),
                   TimeElapsedColumn()) as progress_bar:
         if args.visual:
-            system("cd ./EffectiveResistanceSampling && git status")
-            system("echo \"Hello\"")
+            if subprocess.run(['git', 'checkout', 'debug/rich-progresss-bars'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling') == 0:
+                subprocess.run(['git', 'pull'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling')
+                print("EffectiveResistanceSampling repo updated")
+
+            # system("cd ./EffectiveResistanceSampling && git checkout debug/rich-progresss-bars")
 
         if args.split is not None:
             num_subsets = int(args.split)
