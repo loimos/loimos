@@ -39,6 +39,12 @@ def parse_args():
     )
 
     parser.add_argument(
+        "-p", "--parallelize",
+        action="store_true",
+        help="If -s or --split is set to an integer value, run the [-s/--split value] subinterval calculations in parallel rather than in serial sequence",
+    )
+
+    parser.add_argument(
         "-v", "--visual",
         action="store_true",
         help="show visual progress indicators of thread execution",
@@ -159,11 +165,20 @@ def main():
                     print(f'Initializing interval {int(i)} worker thread')
                 q = int(float(args.resultant_sample_size) * float(len(subset)))
                 t_args = (subset, q, results, int(i), progress_bar, progress_task) if args.visual else (subset, q, results, int(i), None, None)
+                # TODO: look into python duplicating process memory on thread spawning
+                # TODO: look into python multiprocessing pool
+                # TODO: 
                 threads.append(Thread(target=process_subset, args=t_args))
                 threads[int(i)].start()
 
-            for _, thread in enumerate(threads):
-                thread.join()
+                if not args.parallelize:
+                    threads[int(i)].join()
+
+                # TODO: for serial script; join per-thread to run threads one-after-another
+
+            if args.parallelize:
+                for _, thread in enumerate(threads):
+                    thread.join()
 
             print(f'Initializing interval {i+1} worker thread')
             for _, df_subset in enumerate(results):
