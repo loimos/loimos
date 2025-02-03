@@ -97,7 +97,7 @@ def process_subset(df_subset, q, thread_results, thread_idx, progressbar, progre
     if thread_results is not None and thread_idx is not None:
         end_time = perf_counter()
         thread_results[thread_idx] = filtered_df_subset
-        print(f"worker thread {thread_idx} completed in {end_time - start_time :0.2f} seconds")
+        print(f"worker thread {thread_idx} completed in {end_time - start_time :0.2f} seconds", flush=True)
     if args.visual:
         progressbar.update(progresstask, advance=1)
     return filtered_df_subset
@@ -107,7 +107,7 @@ def main():
     args = parse_args()
 
     if not os.path.exists(args.input_dir):
-        print(f'input directory not found: {args.input_dir}')
+        print(f'input directory not found: {args.input_dir}', flush=True)
         raise FileNotFoundError(args.input_dir)
 
     input = os.path.join(args.input_dir, 'visits.csv')
@@ -135,8 +135,8 @@ def main():
             seconds_in_day = (24 * 60.0 * 60.0) 
 
             subset_size = (seconds_in_day * num_days) / num_subsets
-            print("Sparsifying:")
-            print(f"{num_subsets} intervals of length {subset_size} seconds each")
+            print("Sparsifying:", flush=True)
+            print(f"{num_subsets} intervals of length {subset_size} seconds each", flush=True)
             def subset_num(col):
                 return np.floor(col / subset_size)
             
@@ -155,14 +155,12 @@ def main():
             threads = []
             results = [None] * len(subsets)
 
-            # python3 effective_resistance_sparsification.py -s ~/src/data/coc-unsparsified ~/src/data-spars-para/coc-sparsified-90 0.9
-
             start = perf_counter()
             for i, subset in subsets:
                 if args.visual:
                     progress_task = progress_bar.add_task(f"[cyan]interval {int(i)}[/cyan] ([bold]{len(subset)}[/bold] rows)", total=4)
                 else:
-                    print(f'Initializing interval {int(i)} worker thread')
+                    print(f'Initializing interval {int(i, flush=True)} worker thread')
                 q = int(float(args.resultant_sample_size) * float(len(subset)))
                 t_args = (subset, q, results, int(i), progress_bar, progress_task) if args.visual else (subset, q, results, int(i), None, None)
                 # TODO: look into python duplicating process memory on thread spawning
@@ -174,13 +172,11 @@ def main():
                 if not args.parallelize:
                     threads[int(i)].join()
 
-                # TODO: for serial script; join per-thread to run threads one-after-another
-
             if args.parallelize:
                 for _, thread in enumerate(threads):
                     thread.join()
 
-            print(f'Initializing interval {i+1} worker thread')
+            print(f'Initializing interval {i+1} worker thread', flush=True)
             for _, df_subset in enumerate(results):
                 filtered_dfs.append(df_subset)
 
@@ -194,7 +190,7 @@ def main():
             os.makedirs(args.output_dir)
 
         final_filtered_df.to_csv(os.path.join(args.output_dir, 'visits.csv'), index=False)
-        print(f'complete: {os.path.join(args.output_dir, "visits.csv")}')
+        print(f'complete: {os.path.join(args.output_dir, "visits.csv", flush=True)}')
 
 if __name__ == "__main__":
     main()
