@@ -160,7 +160,7 @@ def main():
                 if args.visual:
                     progress_task = progress_bar.add_task(f"[cyan]interval {int(i)}[/cyan] ([bold]{len(subset)}[/bold] rows)", total=4)
                 else:
-                    print(f'Initializing interval {int(i, flush=True)} worker thread')
+                    print(f'Initializing interval {int(i)} worker thread', flush=True)
                 q = int(float(args.resultant_sample_size) * float(len(subset)))
                 t_args = (subset, q, results, int(i), progress_bar, progress_task) if args.visual else (subset, q, results, int(i), None, None)
                 # TODO: look into python duplicating process memory on thread spawning
@@ -190,7 +190,7 @@ def main():
             os.makedirs(args.output_dir)
 
         final_filtered_df.to_csv(os.path.join(args.output_dir, 'visits.csv'), index=False)
-        print(f'complete: {os.path.join(args.output_dir, "visits.csv", flush=True)}')
+        print(f'complete: {os.path.join(args.output_dir, "visits.csv")}', flush=True)
 
 if __name__ == "__main__":
     main()
