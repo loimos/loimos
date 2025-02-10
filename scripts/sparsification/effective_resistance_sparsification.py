@@ -4,13 +4,17 @@ import subprocess
 import os
 import numpy as np
 import pandas as pd
-from EffectiveResistanceSampling.Network import Network
+from EffectiveResistanceSampling import Network
 import networkx as nx
 import pickle
 import argparse
 from time import perf_counter
-from threading import Thread
+from multiprocessing import pool
 from rich.progress import *
+
+# reference scripts:
+# location_herustics.py
+# 
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -26,11 +30,11 @@ def parse_args():
         metavar="O",
         help="The directory in which the output files should be saved",
     )
-
+    # fix mispelling, should be approximate
     parser.add_argument(
         "resultant_sample_size",
         metavar="Q",
-        help="approxomate percentage of number of edges to maintain in the sparsified network",
+        help="approximate percentage of number of edges to maintain in the sparsified network",
     )
 
     parser.add_argument(
@@ -73,6 +77,8 @@ def process_subset(df_subset, q, thread_results, thread_idx, progressbar, progre
         progressbar.remove_task(subtask)
     else:
         network = Network(edge_list, weights)
+        # NOTE: ask abt undirected vs directed for e-list to adj list
+
 
     epsilon = 0.1
     method = 'kts'
@@ -160,18 +166,20 @@ def main():
             results = [None] * len(subsets)
 
             start = perf_counter()
-            for i, subset in subsets:
-                if args.visual:
-                    progress_task = progress_bar.add_task(f"[cyan]interval {int(i)}[/cyan] ([bold]{len(subset)}[/bold] rows)", total=4)
-                else:
-                    print(f'Initializing interval {int(i)} worker thread', flush=True)
-                q = int(float(args.resultant_sample_size) * float(len(subset)))
-                t_args = (subset, q, results, int(i), progress_bar, progress_task) if args.visual else (subset, q, results, int(i), None, None)
-                # TODO: look into python duplicating process memory on thread spawning
-                # TODO: look into python multiprocessing pool
-                # TODO: 
-                threads.append(Thread(target=process_subset, args=t_args))
-                threads[int(i)].start()
+            with pool.Pool(processes=num_subsets) as p:
+                tasks = []
+                for i, subset in subsets:
+                    if args.visual:
+                        progress_task = progress_bar.add_task(f"[cyan]interval {int(i)}[/cyan] ([bold]{len(subset)}[/bold] rows)", total=4)
+                    else:
+                        print(f'Initializing interval {int(i)} worker process', flush=True)
+                    q = int(float(args.resultant_sample_size) * len(subset))
+                    t_args = (subset, q, results, int(i), progress_bar, progress_task) if args.visual else (subset, q, results, int(i), None, None)
+                    tasks.append(p.apply_async(process_subset, t_args))
+
+                for task in tasks:
+                    task.wait()
+                    filtered_dfs.append(task.get())
 
                 if not args.parallelize:
                     threads[int(i)].join()
