@@ -4,7 +4,7 @@ import subprocess
 import os
 import numpy as np
 import pandas as pd
-from EffectiveResistanceSampling import Network
+from EffectiveResistanceSampling.Network import Network
 import networkx as nx
 import pickle
 import argparse
