@@ -127,7 +127,7 @@ def main():
 
     input = os.path.join(args.input_dir, 'visits.csv')
     if args.test_mode:
-        df = pd.read_csv(input, nrows=10000)
+        df = pd.read_csv(input, nrows=1000)
     else:
         df = pd.read_csv(input)
 
@@ -179,19 +179,21 @@ def main():
                     else:
                         print(f'Initializing interval {int(i)} worker process', flush=True)
                     q = int(float(args.resultant_sample_size) * len(subset))
-                    t_args = (subset, q, results, int(i), progress_bar, progress_task) if args.visual else (subset, q, results, int(i), None, None)
-                    tasks.append(p.apply_async(process_subset, t_args))
+                    p_args = (subset, q, results, int(i), progress_bar, progress_task) if args.visual else (subset, q, results, int(i), None, None)
+                    if not args.parallelize:
+                        tasks.append(p.apply_async(process_subset, p_args))
+                    else:
+                        p.apply(process_subset, p_args)
 
                 for task in tasks:
                     task.wait()
                     filtered_dfs.append(task.get())
 
-                if not args.parallelize:
                     threads[int(i)].join()
 
-            if args.parallelize:
-                for _, thread in enumerate(threads):
-                    thread.join()
+            # if args.parallelize:
+            #     for _, thread in enumerate(threads):
+            #         thread.join()
 
             print(f'Initializing interval {i+1} worker thread', flush=True)
             for _, df_subset in enumerate(results):
