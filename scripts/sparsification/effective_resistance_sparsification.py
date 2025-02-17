@@ -208,8 +208,11 @@ def main():
             os.makedirs(args.output_dir)
 
         final_filtered_df.to_csv(os.path.join(args.output_dir, 'visits.csv'), index=False)
+        
+        # Ensure times is a dictionary with proper keys and values
         times["total"] = end - start
-        pd.DataFrame(times).to_csv(os.path.join(args.output_dir, 'times.csv'), index=False)
+        times_df = pd.DataFrame(list(times.items()), columns=['Interval', 'Time'])
+        times_df.to_csv(os.path.join(args.output_dir, 'times.csv'), index=False)
 
         print(f'complete: {os.path.join(args.output_dir, "visits.csv")}', flush=True)
 
