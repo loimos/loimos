@@ -114,9 +114,9 @@ def process_subset(df_subset, q, thread_results, times, thread_idx, progressbar,
 
     if thread_results is not None and thread_idx is not None:
         end_time = perf_counter()
-        thread_results[thread_idx] = filtered_df_subset
+        thread_results[int(thread_idx)] = filtered_df_subset
         print(f"worker thread {thread_idx} completed in {end_time - start_time :0.2f} seconds", flush=True)
-        times[thread_idx] = end_time - start_time
+        times[int(thread_idx)] = end_time - start_time
     if args.visual:
         progressbar.update(progresstask, advance=1)
     return filtered_df_subset
