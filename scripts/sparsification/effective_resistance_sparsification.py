@@ -183,6 +183,7 @@ def main():
                     p.join()
 
                     for i, subset in enumerate(subsets):
+                        q = int(float(args.resultant_sample_size) * len(subset))
                         p_args = (subset, q, results, int(i), times, progress_bar, progress_task) if args.visual else (subset, q, results, int(i), times, None, None)
                         task = p.apply_async(process_subset, p_args)
                         task.wait()
