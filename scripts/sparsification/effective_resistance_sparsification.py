@@ -173,19 +173,19 @@ def main():
             # TODO: spawn split-off days into other subset dataframes
             
             filtered_dfs = []
-            threads = []
             results = [None] * len(subsets)
 
             start = perf_counter()
             with pool.Pool(processes=int(args.process_count)) as p:
                 if args.parallelize:
-                    p.close()
-                    p.join()
-
+                    tasks = []
                     for i, subset in enumerate(subsets):
                         q = int(float(args.resultant_sample_size) * len(subset))
                         p_args = (subset, q, results, int(i), times, progress_bar, progress_task) if args.visual else (subset, q, results, int(i), times, None, None)
-                        task = p.apply_async(process_subset, p_args)
+                        tasks.append(p.apply_async(process_subset, p_args))
+                    p.close()
+                    p.join()
+                    for task in tasks:
                         task.wait()
                         filtered_dfs.append(task.get())
                 else:
