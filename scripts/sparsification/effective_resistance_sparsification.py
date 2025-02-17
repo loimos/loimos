@@ -186,7 +186,7 @@ def main():
                         print(f'Initializing interval {int(i)} worker process', flush=True)
                     q = int(float(args.resultant_sample_size) * len(subset))
                     p_args = (subset, q, results, int(i), times, progress_bar, progress_task) if args.visual else (subset, q, results, int(i), times, None, None)
-                    if not args.parallelize:
+                    if args.parallelize:
                         tasks.append(p.apply_async(process_subset, p_args))
                     else:
                         p.apply(process_subset, p_args)
