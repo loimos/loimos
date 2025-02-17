@@ -68,7 +68,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def process_subset(df_subset, q, thread_results, times, thread_idx, progressbar, progresstask):
+def process_subset(df_subset, q, thread_results, thread_idx, times, progressbar, progresstask):
     if times is None:
         print("ERROR: need to supply times dict")
 
