@@ -68,7 +68,10 @@ def parse_args():
     return parser.parse_args()
 
 
-def process_subset(df_subset, q, thread_results, thread_idx, progressbar, progresstask):
+def process_subset(df_subset, q, thread_results, times, thread_idx, progressbar, progresstask):
+    if times is None:
+        print("ERROR: need to supply times dict")
+
     if args.visual:
         progressbar.update(progresstask, advance=1)
     if thread_results is not None and thread_idx is not None:
@@ -113,6 +116,7 @@ def process_subset(df_subset, q, thread_results, thread_idx, progressbar, progre
         end_time = perf_counter()
         thread_results[thread_idx] = filtered_df_subset
         print(f"worker thread {thread_idx} completed in {end_time - start_time :0.2f} seconds", flush=True)
+        times[thread_idx] = end_time - start_time
     if args.visual:
         progressbar.update(progresstask, advance=1)
     return filtered_df_subset
@@ -144,6 +148,8 @@ def main():
                   TimeElapsedColumn()) as progress_bar:
         if args.split is not None:
             num_subsets = int(args.split)
+
+            times = {}
 
             days = df.groupby('daynum')
             num_days = len(days.groups.keys())
@@ -179,7 +185,7 @@ def main():
                     else:
                         print(f'Initializing interval {int(i)} worker process', flush=True)
                     q = int(float(args.resultant_sample_size) * len(subset))
-                    p_args = (subset, q, results, int(i), progress_bar, progress_task) if args.visual else (subset, q, results, int(i), None, None)
+                    p_args = (subset, q, results, int(i), times, progress_bar, progress_task) if args.visual else (subset, q, results, int(i), times, None, None)
                     if not args.parallelize:
                         tasks.append(p.apply_async(process_subset, p_args))
                     else:
@@ -209,8 +215,8 @@ def main():
             os.makedirs(args.output_dir)
 
         final_filtered_df.to_csv(os.path.join(args.output_dir, 'visits.csv'), index=False)
-        with open(os.path.join(args.output_dir, 'time.txt')) as time_file:
-            time_file.write(f"{end - start}")
+        times["total"] = end - start
+        pd.DataFrame(times).to_csv(os.path.join(args.output_dir, 'times.csv'), index=False)
 
         print(f'complete: {os.path.join(args.output_dir, "visits.csv")}', flush=True)
 
