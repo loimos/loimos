@@ -207,6 +207,9 @@ def main():
             os.makedirs(args.output_dir)
 
         final_filtered_df.to_csv(os.path.join(args.output_dir, 'visits.csv'), index=False)
+        with open(os.path.join(args.output_dir, 'time.csv')) as time_file:
+            time_file.write(f"{end - start}")
+
         print(f'complete: {os.path.join(args.output_dir, "visits.csv")}', flush=True)
 
 if __name__ == "__main__":
