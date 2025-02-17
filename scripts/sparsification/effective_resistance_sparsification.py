@@ -178,28 +178,20 @@ def main():
 
             start = perf_counter()
             with pool.Pool(processes=int(args.process_count)) as p:
-                tasks = []
-                for i, subset in subsets:
-                    if args.visual:
-                        progress_task = progress_bar.add_task(f"[cyan]interval {int(i)}[/cyan] ([bold]{len(subset)}[/bold] rows)", total=4)
-                    else:
-                        print(f'Initializing interval {int(i)} worker process', flush=True)
-                    q = int(float(args.resultant_sample_size) * len(subset))
-                    p_args = (subset, q, results, int(i), times, progress_bar, progress_task) if args.visual else (subset, q, results, int(i), times, None, None)
-                    if args.parallelize:
-                        tasks.append(p.apply_async(process_subset, p_args))
-                    else:
-                        p.apply(process_subset, p_args)
+                if args.parallelize:
+                    p.close()
+                    p.join()
 
-                for task in tasks:
-                    task.wait()
-                    filtered_dfs.append(task.get())
+                    for i, subset in enumerate(subsets):
+                        p_args = (subset, q, results, int(i), times, progress_bar, progress_task) if args.visual else (subset, q, results, int(i), times, None, None)
+                        task = p.apply_async(process_subset, p_args)
+                        task.wait()
+                        filtered_dfs.append(task.get())
+                else:
+                    for i, subset in enumerate(subsets):
+                        q = int(float(args.resultant_sample_size) * len(subset))
+                        filtered_dfs.append(process_subset(subset, q, results, i, times, progress_bar, progress_task) if args.visual else process_subset(subset, q, results, i, times, None, None))
 
-                    threads[int(i)].join()
-
-            # if args.parallelize:
-            #     for _, thread in enumerate(threads):
-            #         thread.join()
 
             print(f'Initializing interval {i+1} worker thread', flush=True)
             for _, df_subset in enumerate(results):
