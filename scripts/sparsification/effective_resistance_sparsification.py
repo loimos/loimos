@@ -189,7 +189,7 @@ def main():
                         task.wait()
                         filtered_dfs.append(task.get())
                 else:
-                    for i, subset in enumerate(subsets):
+                    for i, subset in subsets:
                         q = int(float(args.resultant_sample_size) * len(subset))
                         filtered_dfs.append(process_subset(subset, q, results, i, times, progress_bar, progress_task) if args.visual else process_subset(subset, q, results, i, times, None, None))
 
