@@ -179,9 +179,9 @@ def main():
             with pool.Pool(processes=int(args.process_count)) as p:
                 if args.parallelize:
                     tasks = []
-                    for i, subset in enumerate(subsets):
+                    for i, subset in subsets:
                         q = int(float(args.resultant_sample_size) * len(subset))
-                        p_args = (subset, q, results, int(i), times, progress_bar, progress_task) if args.visual else (subset, q, results, int(i), times, None, None)
+                        p_args = (subset, q, results, int(i), times, progress_bar, None) if args.visual else (subset, q, results, int(i), times, None, None)
                         tasks.append(p.apply_async(process_subset, p_args))
                     p.close()
                     p.join()
