@@ -14,7 +14,7 @@ from rich.progress import *
 
 # reference scripts:
 # location_herustics.py
-# 
+#
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -39,6 +39,8 @@ def parse_args():
 
     parser.add_argument(
         "-s", "--split",
+        type=int,
+        default=1,
         help="Run sparsification on S separate equally-sized subintervals",
     )
 
@@ -50,6 +52,8 @@ def parse_args():
 
     parser.add_argument(
         "--process_count",
+        default=0,
+        type=int,
         help="Number of processes to use for parallelization. Default is the number of subintervals specified by -s/--split. ",
     )
 
@@ -65,7 +69,13 @@ def parse_args():
         help="run in experimental/debug mode in which only first 10000 lines of visits.csv are read",
     )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    if args.parallelize and args.process_count == 0:
+        args.process_count = args.split
+
+
+    return args
 
 
 def process_subset(df_subset, q, thread_results, thread_idx, times, progressbar, progresstask):
@@ -153,25 +163,25 @@ def main():
 
             days = df.groupby('daynum')
             num_days = len(days.groups.keys())
-            seconds_in_day = (24 * 60.0 * 60.0) 
+            seconds_in_day = (24 * 60.0 * 60.0)
 
             subset_size = (seconds_in_day * num_days) / num_subsets
             print("Sparsifying:", flush=True)
             print(f"{num_subsets} intervals of length {subset_size} seconds each", flush=True)
             def subset_num(col):
                 return np.floor(col / subset_size)
-            
+
             subsets = df.groupby(subset_num(df['start_time']))
 
             # temp
             df['duration'].mask(
-                                subset_num(df['start_time']) != subset_num(df['end_time']), 
+                                subset_num(df['start_time']) != subset_num(df['end_time']),
                                 subset_size * (subset_num(df['start_time']) + 1) - df['start_time'], inplace=True)
             df['end_time'].mask(
-                                subset_num(df['start_time']) != subset_num(df['end_time']), 
+                                subset_num(df['start_time']) != subset_num(df['end_time']),
                                 df['start_time'] + df['duration'], inplace=True)
             # TODO: spawn split-off days into other subset dataframes
-            
+
             filtered_dfs = []
             results = [None] * len(subsets)
 
@@ -208,7 +218,7 @@ def main():
             os.makedirs(args.output_dir)
 
         final_filtered_df.to_csv(os.path.join(args.output_dir, 'visits.csv'), index=False)
-        
+
         # Ensure times is a dictionary with proper keys and values
         times["total"] = end - start
         times_df = pd.DataFrame(list(times.items()), columns=['Interval', 'Time'])
