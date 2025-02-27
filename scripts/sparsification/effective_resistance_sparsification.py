@@ -174,12 +174,12 @@ def main():
             subsets = df.groupby(subset_num(df['start_time']))
 
             # temp
-            df['duration'].mask(
+            df['duration'] = df['duration'].mask(
                                 subset_num(df['start_time']) != subset_num(df['end_time']),
-                                subset_size * (subset_num(df['start_time']) + 1) - df['start_time'], inplace=True)
-            df['end_time'].mask(
+                                subset_size * (subset_num(df['start_time']) + 1) - df['start_time'])
+            df['end_time'] = df['end_time'].mask(
                                 subset_num(df['start_time']) != subset_num(df['end_time']),
-                                df['start_time'] + df['duration'], inplace=True)
+                                df['start_time'] + df['duration'])
             # TODO: spawn split-off days into other subset dataframes
 
             filtered_dfs = []
