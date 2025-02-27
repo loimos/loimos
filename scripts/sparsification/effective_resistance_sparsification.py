@@ -11,6 +11,7 @@ import argparse
 from time import perf_counter
 from multiprocessing import pool
 from rich.progress import *
+from itertools import starmap
 
 # reference scripts:
 # location_herustics.py
@@ -34,6 +35,7 @@ def parse_args():
     parser.add_argument(
         "resultant_sample_size",
         metavar="Q",
+        type=float,
         help="approximate percentage of number of edges to maintain in the sparsified network",
     )
 
@@ -78,14 +80,10 @@ def parse_args():
     return args
 
 
-def process_subset(df_subset, q, thread_results, thread_idx, times, progressbar, progresstask):
-    if times is None:
-        print("ERROR: need to supply times dict")
-
+def process_subset(df_subset, q, thread_index=0, progressbar=None, progresstask=None):
     if args.visual:
         progressbar.update(progresstask, advance=1)
-    if thread_results is not None and thread_idx is not None:
-        start_time = perf_counter()
+
     edge_list = df_subset[['pid', 'lid']].to_numpy()  # should be 2 x m shape
     weights = df_subset['duration'].to_numpy()  # weight edge by visit duration
 
@@ -122,11 +120,6 @@ def process_subset(df_subset, q, thread_results, thread_idx, times, progressbar,
 
     filtered_df_subset = df_subset[df_subset[['pid', 'lid']].apply(tuple, axis=1).isin(map(tuple, EffR_Sparse.E_list))]
 
-    if thread_results is not None and thread_idx is not None:
-        end_time = perf_counter()
-        thread_results[int(thread_idx)] = filtered_df_subset
-        print(f"worker thread {thread_idx} completed in {end_time - start_time :0.2f} seconds", flush=True)
-        times[int(thread_idx)] = end_time - start_time
     if args.visual:
         progressbar.update(progresstask, advance=1)
     return filtered_df_subset
@@ -156,6 +149,9 @@ def main():
     with Progress(TextColumn("[progress.description]{task.description}"),
                   BarColumn(), TaskProgressColumn(),
                   TimeElapsedColumn()) as progress_bar:
+        if not args.visual:
+            progress_bar = None
+
         if args.split is not None:
             num_subsets = int(args.split)
 
@@ -186,32 +182,20 @@ def main():
             results = [None] * len(subsets)
 
             start = perf_counter()
-            with pool.Pool(processes=int(args.process_count)) as p:
-                if args.parallelize:
-                    tasks = []
-                    for i, subset in subsets:
-                        q = int(float(args.resultant_sample_size) * len(subset))
-                        p_args = (subset, q, results, int(i), times, progress_bar, None) if args.visual else (subset, q, results, int(i), times, None, None)
-                        tasks.append(p.apply_async(process_subset, p_args))
-                    p.close()
-                    p.join()
-                    for task in tasks:
-                        task.wait()
-                        filtered_dfs.append(task.get())
-                else:
-                    for i, subset in enumerate(subsets):
-                        q = int(float(args.resultant_sample_size) * len(subset))
-                        filtered_dfs.append(process_subset(subset, q, results, i, times, progress_bar, progress_task) if args.visual else process_subset(subset, q, results, i, times, None, None))
+            q = int(args.resultant_sample_size * len(subsets))
+            subset_args = [[subset, q, i, progress_bar] for i, subset
+                    in subsets]
 
+            if args.parallelize:
+                with pool.Pool(processes=args.process_count) as p:
+                    filtered_dfs = p.starmap(process_subset, subset_args)
+            else:
+                filtered_dfs = startmap(process_subset, subset_args)
 
-            print(f'Initializing interval {i+1} worker thread', flush=True)
-            for _, df_subset in enumerate(results):
-                filtered_dfs.append(df_subset)
-
-            end = perf_counter()
+            print(f'Spent {start - perf_counter()}s sparcifying data"')
             final_filtered_df = pd.concat(filtered_dfs)
         else:
-            q = int(float(args.resultant_sample_size) * float(len(df)))
+            q = int(args.resultant_sample_size * float(len(df)))
             final_filtered_df = process_subset(df, q, None, None)
 
         if not os.path.exists(args.output_dir):
