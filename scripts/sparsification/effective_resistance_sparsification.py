@@ -9,7 +9,7 @@ import networkx as nx
 import pickle
 import argparse
 from time import perf_counter
-from multiprocessing import pool
+from multiprocessing import Pool, set_start_method
 from rich.progress import *
 from itertools import starmap
 
@@ -80,14 +80,16 @@ def parse_args():
     return args
 
 
-def process_subset(df_subset, q, thread_index=0, progressbar=None, progresstask=None):
-    if args.visual:
+def process_subset(df_subset, q, thread_index=0, progressbar=None,
+                   progresstask=None, epsilon = 0.1, method = 'kts'):
+    if progressbar is not None:
         progressbar.update(progresstask, advance=1)
 
     edge_list = df_subset[['pid', 'lid']].to_numpy()  # should be 2 x m shape
     weights = df_subset['duration'].to_numpy()  # weight edge by visit duration
 
-    if args.visual:
+    network = None
+    if progressbar is not None:
         subtask = progressbar.add_task(f"[cyan]interval {thread_idx}[/cyan] -- network init", total=1.0)
         network = Network(edge_list, weights, progress_bar=progressbar, progress_task=subtask)
         progressbar.remove_task(subtask)
@@ -96,9 +98,7 @@ def process_subset(df_subset, q, thread_index=0, progressbar=None, progresstask=
         # NOTE: ask abt undirected vs directed for e-list to adj list
 
 
-    epsilon = 0.1
-    method = 'kts'
-    if args.visual:
+    if progressbar is not None:
         progressbar.update(progresstask, advance=1)
         subtask = progressbar.add_task(f"[cyan]interval {thread_idx}[/cyan] -- effective resistance", total=1.0)
         Effective_R = network.effR(epsilon, method, progress_bar=progressbar, progress_task=subtask)
@@ -108,7 +108,7 @@ def process_subset(df_subset, q, thread_index=0, progressbar=None, progresstask=
         Effective_R = network.effR(epsilon, method)
         print("effective resistance complete", flush=True)
 
-    if args.visual:
+    if progressbar is not None:
         subtask = progressbar.add_task(f"[cyan]interval {thread_idx}[/cyan] -- network.spl", total=1.0)
         EffR_Sparse = network.spl(q, Effective_R, progressbar, subtask, seed=2020)
         progressbar.remove_task(subtask)
@@ -120,7 +120,7 @@ def process_subset(df_subset, q, thread_index=0, progressbar=None, progresstask=
 
     filtered_df_subset = df_subset[df_subset[['pid', 'lid']].apply(tuple, axis=1).isin(map(tuple, EffR_Sparse.E_list))]
 
-    if args.visual:
+    if progressbar is not None:
         progressbar.update(progresstask, advance=1)
     return filtered_df_subset
 
@@ -187,7 +187,7 @@ def main():
                     in subsets]
 
             if args.parallelize:
-                with pool.Pool(processes=args.process_count) as p:
+                with Pool(processes=args.process_count) as p:
                     filtered_dfs = p.starmap(process_subset, subset_args)
             else:
                 filtered_dfs = startmap(process_subset, subset_args)
