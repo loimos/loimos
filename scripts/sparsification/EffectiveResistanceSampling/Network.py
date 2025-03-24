@@ -149,7 +149,9 @@ class Network:
     def spl(self, q, effR, seed=None):
         spl_net = spl.Spl_EffRSparse(n=self.graph.shape[0], E_list=self.E_list, weights=self.weights, q=q, effR=effR,
                                      seed=seed)
+        print(spl_net)
         E_list, weights = er.Mtrx_Elist(spl_net)
+        print(E_list)
         return Network(E_list, weights)
 
     def uni(self, q, seed=None):

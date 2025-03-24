@@ -2,6 +2,7 @@ import random as ran
 import numpy as np
 import scipy.sparse as sparse
 from EffRApprox import Mtrx_Elist
+from tqdm import tqdm
 
 
 # from virtualenvs.AdaptiveAlgo import Adapt1
@@ -48,14 +49,14 @@ def normprobs(P):
 def Spl_EffRSparse(n, E_list, weights, q, effR, seed=None):
     ran.seed(seed)
     P = []
-    for i in range(len(E_list)):
+    for i in tqdm(range(len(E_list)), desc="Spl_EffRSparse_1"):
         w_e = weights[i]
         R_e = effR[i]
         P.append((w_e * R_e) / (n - 1))
     Pn = np.array(normprobs(P))
     C = ran.choices(list(zip(E_list, weights, Pn)), Pn, k=q)
     H = np.zeros(shape=(n, n))
-    for x in range(q):
+    for x in tqdm(range(q), desc="Spl_EffRSparse_2"):
         e, w_e, p_e = C[x][0], C[x][1], C[x][2]
         H[e[0]][e[1]] += w_e / (q * p_e)
     return H + np.transpose(H)
