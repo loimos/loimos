@@ -79,8 +79,11 @@ def parse_args():
     return args
 
 
-def process_subset(df_subset, q, epsilon=0.1, method='kts'):
-    edge_list = df_subset[['pid', 'lid']].to_numpy()  # should be 2 x m shape
+def process_subset(args, epsilon=0.1, method='kts'):
+    df_subset = args[0]
+    q = args[1]
+
+    edge_list = df_subset[0][['pid', 'lid']].to_numpy()  # should be 2 x m shape
     weights = df_subset['duration'].to_numpy()  # weight edge by visit duration
 
     # Time the Network constructor
@@ -98,6 +101,7 @@ def process_subset(df_subset, q, epsilon=0.1, method='kts'):
     # Time the sparsification process
     print("running network.spl", flush=True)
     start = perf_counter()
+    print(f"q: {q}, Effective_R: {Effective_R}, seed: 2020", flush=True)
     EffR_Sparse = network.spl(q, Effective_R, seed=2020)
     spl_time = perf_counter() - start
     print("network.spl complete", flush=True)
