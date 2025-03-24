@@ -62,6 +62,7 @@ mainmodule loimos {
 
       if (scenario->isOnTheFly()) {
         serial {
+          profile.stepStartTime = CkWallTimer();
           peopleArray.SendVisitSchedules();
           CkStartQD(CkCallback(
             CkIndex_Main::StartupComplete(),
@@ -71,6 +72,7 @@ mainmodule loimos {
 
       } else {
         serial {
+          profile.stepStartTime = CkWallTimer();
           locationsArray.SendExpectedVisitors();
           CkStartQD(CkCallback(
             CkIndex_Main::StartupComplete(),
@@ -79,7 +81,11 @@ mainmodule loimos {
         }
       }
 
-      when StartupComplete() {}
+      when StartupComplete() {
+        serial {
+          profile.initTime = CkWallTimer() - profile.stepStartTime;
+        }
+      }
 
 #ifdef ENABLE_FORCE_FULL_RUN
       for (day = 0; day < scenario->numDays; day++) {
@@ -212,6 +218,13 @@ mainmodule loimos {
           profile.totalVisits, profile.totalInteractions,
           profile.totalExposures, profile.totalExposureDuration);
 #endif
+        if (scenario->isOnTheFly()) {
+          CkPrintf("  Initial schedule distribution took %lf seconds\n",
+            profile.initTime);
+        } else {
+          CkPrintf("  Initial visitor list distribution took %lf seconds\n",
+            profile.initTime);
+        }
         CkPrintf("  Visit messages took %lf seconds\n",
           profile.visitsTime);
         CkPrintf("  Interaction calculations and messages took %lf seconds\n",
