@@ -79,11 +79,8 @@ def parse_args():
     return args
 
 
-def process_subset(args, epsilon=0.1, method='kts'):
-    df_subset = args[0]
-    q = args[1]
-
-    edge_list = df_subset[0][['pid', 'lid']].to_numpy()  # should be 2 x m shape
+def process_subset(df_subset, q, epsilon=0.1, method='kts'):
+    edge_list = df_subset[['pid', 'lid']].to_numpy()  # should be 2 x m shape
     weights = df_subset['duration'].to_numpy()  # weight edge by visit duration
 
     # Time the Network constructor
@@ -170,8 +167,9 @@ def main():
         results = [None] * len(subsets)
 
         start = perf_counter()
-        q = int(args.resultant_sample_size * len(subsets))
-        subset_args = [[subset, q] for _, subset in subsets]
+
+        # q = int(args.resultant_sample_size * len(subsets))
+        subset_args = [[subset, int(args.resultant_sample_size * len(subset))] for _, subset in subsets]
 
         if args.parallelize:
             with Pool(processes=args.process_count) as p:
