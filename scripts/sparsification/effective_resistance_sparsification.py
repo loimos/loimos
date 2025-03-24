@@ -58,6 +58,13 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--time",
+        default="times.csv",
+        type=str,
+        help="time and store the timing results in this csv file",
+    )
+
+    parser.add_argument(
         "-t", "--test-mode",
         action="store_true",
         help="run in experimental/debug mode in which only first 10000 lines of visits.csv are read",
@@ -72,19 +79,34 @@ def parse_args():
     return args
 
 
-def process_subset(df_subset, q, epsilon = 0.1, method = 'kts'):
+# Global variables to track timing
+network_constructor_time = 0
+effR_time = 0
+spl_time = 0
+
+def process_subset(df_subset, q, epsilon=0.1, method='kts'):
+    global network_constructor_time, effR_time, spl_time
+
     edge_list = df_subset[['pid', 'lid']].to_numpy()  # should be 2 x m shape
     weights = df_subset['duration'].to_numpy()  # weight edge by visit duration
 
+    # Time the Network constructor
+    start = perf_counter()
     network = Network(edge_list, weights)
+    network_constructor_time += perf_counter() - start
 
-
+    # Time the effective resistance calculation
     print("running effective resistance", flush=True)
+    start = perf_counter()
     Effective_R = network.effR(epsilon, method)
+    effR_time += perf_counter() - start
     print("effective resistance complete", flush=True)
 
+    # Time the sparsification process
     print("running network.spl", flush=True)
+    start = perf_counter()
     EffR_Sparse = network.spl(q, Effective_R, seed=2020)
+    spl_time += perf_counter() - start
     print("network.spl complete", flush=True)
 
     filtered_df_subset = df_subset[df_subset[['pid', 'lid']].apply(tuple, axis=1).isin(map(tuple, EffR_Sparse.E_list))]
@@ -166,9 +188,28 @@ def main():
     final_filtered_df.to_csv(os.path.join(args.output_dir, 'visits.csv'), index=False)
 
     # Ensure times is a dictionary with proper keys and values
+    network_constructor_time /= len(subsets)
+    effR_time /= len(subsets)
+    spl_time /= len(subsets)
+
+    end = perf_counter()
     times["total"] = end - start
-    times_df = pd.DataFrame(list(times.items()), columns=['Interval', 'Time'])
-    times_df.to_csv(os.path.join(args.output_dir, 'times.csv'), index=False)
+
+    times_path = args.time
+    if os.path.exists(times_path):
+        times_df = pd.read_csv(times_path)
+    else:
+        times_df = pd.DataFrame(columns=['network_constructor_time', 'effR_time', 'spl_time', 'total'])
+
+    new_row = {
+        'network_constructor_time': network_constructor_time,
+        'effR_time': effR_time,
+        'spl_time': spl_time,
+        'total': times["total"]
+    }
+
+    times_df = pd.concat([times_df, pd.DataFrame([new_row])], ignore_index=True)
+    times_df.to_csv(times_path, index=False)
 
     print(f'complete: {os.path.join(args.output_dir, "visits.csv")}', flush=True)
 
