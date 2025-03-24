@@ -79,39 +79,39 @@ def parse_args():
     return args
 
 
-# Global variables to track timing
 def process_subset(df_subset, q, epsilon=0.1, method='kts'):
-    global network_constructor_time, effR_time, spl_time
-
     edge_list = df_subset[['pid', 'lid']].to_numpy()  # should be 2 x m shape
     weights = df_subset['duration'].to_numpy()  # weight edge by visit duration
 
     # Time the Network constructor
     start = perf_counter()
     network = Network(edge_list, weights)
-    network_constructor_time += perf_counter() - start
+    network_constructor_time = perf_counter() - start
 
     # Time the effective resistance calculation
     print("running effective resistance", flush=True)
     start = perf_counter()
     Effective_R = network.effR(epsilon, method)
-    effR_time += perf_counter() - start
+    effR_time = perf_counter() - start
     print("effective resistance complete", flush=True)
 
     # Time the sparsification process
     print("running network.spl", flush=True)
     start = perf_counter()
     EffR_Sparse = network.spl(q, Effective_R, seed=2020)
-    spl_time += perf_counter() - start
+    spl_time = perf_counter() - start
     print("network.spl complete", flush=True)
 
+    print(f"marginal times: {network_constructor_time}, {effR_time}, {spl_time}", flush=True)
     filtered_df_subset = df_subset[df_subset[['pid', 'lid']].apply(tuple, axis=1).isin(map(tuple, EffR_Sparse.E_list))]
 
-    return filtered_df_subset
+    return filtered_df_subset, network_constructor_time, effR_time, spl_time
 
 def main():
-    global args, network_constructor_time, effR_time, spl_time
+    global args
     args = parse_args()
+
+    script_start = perf_counter()
 
     network_constructor_time = 0
     effR_time = 0
@@ -167,16 +167,23 @@ def main():
 
         start = perf_counter()
         q = int(args.resultant_sample_size * len(subsets))
-        subset_args = [[subset, q] for i, subset
-                in subsets]
+        subset_args = [[subset, q] for _, subset in subsets]
 
         if args.parallelize:
             with Pool(processes=args.process_count) as p:
-                filtered_dfs = p.starmap(process_subset, subset_args)
+                results = p.starmap(process_subset, subset_args)
         else:
-            filtered_dfs = starmap(process_subset, subset_args)
+            results = list(starmap(process_subset, subset_args))
 
-        print(f'Spent {start - perf_counter()}s sparcifying data"')
+        # Combine results and update global times
+        filtered_dfs = []
+        for result in results:
+            filtered_dfs.append(result[0])
+            network_constructor_time += result[1]
+            effR_time += result[2]
+            spl_time += result[3]
+
+        print(f'Spent {perf_counter() - start}s sparsifying data')
         final_filtered_df = pd.concat(filtered_dfs)
     else:
         q = int(args.resultant_sample_size * float(len(df)))
@@ -193,7 +200,7 @@ def main():
     spl_time /= len(subsets)
 
     end = perf_counter()
-    times["total"] = end - start
+    times["total"] = end - script_start
 
     times_path = args.time
     if os.path.exists(times_path):
