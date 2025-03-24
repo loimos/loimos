@@ -30,7 +30,7 @@ def parse_args():
         metavar="O",
         help="The directory in which the output files should be saved",
     )
-    # fix mispelling, should be approximate
+
     parser.add_argument(
         "resultant_sample_size",
         metavar="Q",
@@ -54,12 +54,6 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-v", "--visual",
-        action="store_true",
-        help="show visual progress indicators of thread execution",
-    )
-
-    parser.add_argument(
         "-t", "--test-mode",
         action="store_true",
         help="run in experimental/debug mode in which only first 10000 lines of visits.csv are read",
@@ -72,43 +66,24 @@ def process_subset(df_subset, q, thread_results, thread_idx, times, progressbar,
     if times is None:
         print("ERROR: need to supply times dict")
 
-    if args.visual:
-        progressbar.update(progresstask, advance=1)
     if thread_results is not None and thread_idx is not None:
         start_time = perf_counter()
     edge_list = df_subset[['pid', 'lid']].to_numpy()  # should be 2 x m shape
     weights = df_subset['duration'].to_numpy()  # weight edge by visit duration
 
-    if args.visual:
-        subtask = progressbar.add_task(f"[cyan]interval {thread_idx}[/cyan] -- network init", total=1.0)
-        network = Network(edge_list, weights, progress_bar=progressbar, progress_task=subtask)
-        progressbar.remove_task(subtask)
-    else:
-        network = Network(edge_list, weights)
-        # NOTE: ask abt undirected vs directed for e-list to adj list
+    network = Network(edge_list, weights)
+    # NOTE: ask abt undirected vs directed for e-list to adj list
 
 
     epsilon = 0.1
     method = 'kts'
-    if args.visual:
-        progressbar.update(progresstask, advance=1)
-        subtask = progressbar.add_task(f"[cyan]interval {thread_idx}[/cyan] -- effective resistance", total=1.0)
-        Effective_R = network.effR(epsilon, method, progress_bar=progressbar, progress_task=subtask)
-        progressbar.remove_task(subtask)
-    else:
-        print("running effective resistance", flush=True)
-        Effective_R = network.effR(epsilon, method)
-        print("effective resistance complete", flush=True)
+    print("running effective resistance", flush=True)
+    Effective_R = network.effR(epsilon, method)
+    print("effective resistance complete", flush=True)
 
-    if args.visual:
-        subtask = progressbar.add_task(f"[cyan]interval {thread_idx}[/cyan] -- network.spl", total=1.0)
-        EffR_Sparse = network.spl(q, Effective_R, progressbar, subtask, seed=2020)
-        progressbar.remove_task(subtask)
-        progressbar.update(progresstask, advance=1)
-    else:
-        print("running network.spl", flush=True)
-        EffR_Sparse = network.spl(q, Effective_R, seed=2020)
-        print("network.spl complete", flush=True)
+    print("running network.spl", flush=True)
+    EffR_Sparse = network.spl(q, Effective_R, seed=2020)
+    print("network.spl complete", flush=True)
 
     filtered_df_subset = df_subset[df_subset[['pid', 'lid']].apply(tuple, axis=1).isin(map(tuple, EffR_Sparse.E_list))]
 
@@ -117,8 +92,7 @@ def process_subset(df_subset, q, thread_results, thread_idx, times, progressbar,
         thread_results[int(thread_idx)] = filtered_df_subset
         print(f"worker thread {thread_idx} completed in {end_time - start_time :0.2f} seconds", flush=True)
         times[int(thread_idx)] = end_time - start_time
-    if args.visual:
-        progressbar.update(progresstask, advance=1)
+
     return filtered_df_subset
 
 def main():
@@ -135,6 +109,7 @@ def main():
     else:
         df = pd.read_csv(input)
 
+    # TODO: profile preprocessing
     # if args.visual:
         # if subprocess.run(['git', 'checkout', 'debug/rich-progresss-bars'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling').returncode != 0:
             # raise Exception("git checkout failed")
@@ -181,7 +156,7 @@ def main():
                     tasks = []
                     for i, subset in subsets:
                         q = int(float(args.resultant_sample_size) * len(subset))
-                        p_args = (subset, q, results, int(i), times, progress_bar, None) if args.visual else (subset, q, results, int(i), times, None, None)
+                        p_args = [subset, q, results, int(i), times, None, None]
                         tasks.append(p.apply_async(process_subset, p_args))
                     p.close()
                     p.join()
