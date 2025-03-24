@@ -80,10 +80,6 @@ def parse_args():
 
 
 # Global variables to track timing
-network_constructor_time = 0
-effR_time = 0
-spl_time = 0
-
 def process_subset(df_subset, q, epsilon=0.1, method='kts'):
     global network_constructor_time, effR_time, spl_time
 
@@ -114,8 +110,12 @@ def process_subset(df_subset, q, epsilon=0.1, method='kts'):
     return filtered_df_subset
 
 def main():
-    global args
+    global args, network_constructor_time, effR_time, spl_time
     args = parse_args()
+
+    network_constructor_time = 0
+    effR_time = 0
+    spl_time = 0
 
     if not os.path.exists(args.input_dir):
         print(f'input directory not found: {args.input_dir}', flush=True)
