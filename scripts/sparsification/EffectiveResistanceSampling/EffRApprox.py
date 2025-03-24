@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import sparse
 from scipy.sparse.linalg import cg
+from tqdm import tqdm
 
 
 # Transform adj matrix to edge list
@@ -145,13 +146,13 @@ def EffR(E_list, weights, epsilon, type, tol=1e-10, precon=False):
     if type == 'ext':
         effR = np.zeros(shape=(1, m))
         if M is None:  # If no preconditioner
-            for i in range(m):
+            for i in tqdm(range(m), desc="EffR"):
                 Br = B[i, :].toarray()
                 Z = cg(L, Br.transpose(), tol=tol)[0]
                 R_eff = Br @ Z
                 effR[:, i] = R_eff[0]
         else:  # If preconditioner
-            for i in range(m):
+            for i in tqdm(range(m), desc="EffR"):
                 Br = B[i, :].toarray()
                 Z = cg(L, Br.transpose(), tol=tol, M=M)[0]
                 R_eff = Br @ Z
@@ -174,11 +175,11 @@ def EffR(E_list, weights, epsilon, type, tol=1e-10, precon=False):
         Z = np.zeros(shape=(int(scale), n))  # Create Z matrix to solve smaller dim SYS for effR
 
         if M is None:  # If no preconditioner
-            for i in range(int(scale)):
+            for i in tqdm(range(int(scale)), desc="EffR"):
                 SYSr = SYS[i, :].toarray()
                 Z[i, :] = cg(L, SYSr.transpose(), tol=tol)[0]
         else:  # If preconditioner
-            for i in range(int(scale)):
+            for i in tqdm(range(int(scale)), desc="EffR"):
                 SYSr = SYS[i, :].toarray()
                 Z[i, :] = cg(L, SYSr.transpose(), tol=tol, M=M)[0]
 
@@ -191,7 +192,7 @@ def EffR(E_list, weights, epsilon, type, tol=1e-10, precon=False):
         effR_res = np.zeros(shape=(1, m))
 
         if M is None:
-            for i in range(int(scale)):
+            for i in tqdm(range(int(scale)), desc="EffR"):
                 ons1 = sparse.random(1, m, 1, format='csr') > 0.5
                 ons2 = sparse.random(1, m, 1, format='csr') > 0
                 ons_not = ons1 - ons2  # need this to pass by invalid 'not' operator
@@ -207,7 +208,7 @@ def EffR(E_list, weights, epsilon, type, tol=1e-10, precon=False):
                 effR_res = effR_res + np.abs(np.square(Z[E_list[:, 0]] - Z[E_list[:, 1]]))
 
         else:
-            for i in range(int(scale)):
+            for i in tqdm(range(int(scale)), desc="EffR"):
                 # Create memory saving vectors
                 ons1 = sparse.random(1, m, 1, format='csr') > 0.5
                 ons2 = sparse.random(1, m, 1, format='csr') > 0
