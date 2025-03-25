@@ -114,6 +114,7 @@ def main():
 
     script_start = perf_counter()
 
+    preprocessing_time = 0
     network_constructor_time = 0
     effR_time = 0
     spl_time = 0
@@ -127,14 +128,6 @@ def main():
         df = pd.read_csv(input, nrows=1000)
     else:
         df = pd.read_csv(input)
-
-    # TODO: profile preprocessing
-    # if args.visual:
-        # if subprocess.run(['git', 'checkout', 'debug/rich-progresss-bars'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling').returncode != 0:
-            # raise Exception("git checkout failed")
-    # elif subprocess.run(['git', 'checkout', 'older-pythons'], cwd=fr'{os.path.dirname(os.path.realpath(__file__))}/EffectiveResistanceSampling').returncode != 0:
-        # raise Exception("git checkout failed")
-    # print("EffectiveResistanceSampling repo updated")
 
 
     if args.split is not None:
@@ -155,21 +148,22 @@ def main():
         subsets = df.groupby(subset_num(df['start_time']))
 
         # temp
+        start = perf_counter()
         df['duration'] = df['duration'].mask(
                             subset_num(df['start_time']) != subset_num(df['end_time']),
                             subset_size * (subset_num(df['start_time']) + 1) - df['start_time'])
         df['end_time'] = df['end_time'].mask(
                             subset_num(df['start_time']) != subset_num(df['end_time']),
                             df['start_time'] + df['duration'])
+        preprocessing_time = perf_counter() - start
         # TODO: spawn split-off days into other subset dataframes
 
         filtered_dfs = []
         results = [None] * len(subsets)
 
         start = perf_counter()
-
-        # q = int(args.resultant_sample_size * len(subsets))
-        subset_args = [[subset, int(args.resultant_sample_size * len(subset))] for _, subset in subsets]
+        q = int(args.resultant_sample_size * len(subsets))
+        subset_args = [[subset, q] for _, subset in subsets]
 
         if args.parallelize:
             with Pool(processes=args.process_count) as p:
@@ -211,6 +205,7 @@ def main():
         times_df = pd.DataFrame(columns=['network_constructor_time', 'effR_time', 'spl_time', 'total'])
 
     new_row = {
+        'preprocessing_time': preprocessing_time,
         'network_constructor_time': network_constructor_time,
         'effR_time': effR_time,
         'spl_time': spl_time,
