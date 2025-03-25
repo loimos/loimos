@@ -162,8 +162,7 @@ def main():
         results = [None] * len(subsets)
 
         start = perf_counter()
-        q = int(args.resultant_sample_size * len(subsets))
-        subset_args = [[subset, q] for _, subset in subsets]
+        subset_args = [[subset, int(args.resultant_sample_size * len(subset))] for _, subset in subsets]
 
         if args.parallelize:
             with Pool(processes=args.process_count) as p:
