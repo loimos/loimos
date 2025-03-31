@@ -15,6 +15,54 @@ from itertools import starmap
 # location_herustics.py
 #
 
+import multiprocessing
+import platform
+import os
+
+import cupy
+from cupy import cuda
+from mpi4py import MPI
+
+def worker_function(gpu_id, rank, hostname, *args):
+    """Function executed by each worker process."""
+    print(f"Rank {rank} on {hostname} using GPU {gpu_id}")
+    # with cuda.Device(gpu_id):
+    #     cupy.asarray(12345)  # Simple GPU operation
+    process_subset(gpu_id, *args)
+
+def spawn_workers_per_node(args_generator):
+    """Spawns GPU workers on each node."""
+    hostname = platform.node()
+    
+    # Initialize MPI
+    COMM = MPI.COMM_WORLD
+    RANK = COMM.Get_rank()
+    SIZE = COMM.Get_size()
+
+    # Determine number of GPUs on each node
+    num_gpus = cuda.runtime.getDeviceCount()
+    local_gpu_ids = list(range(num_gpus))
+
+    # Distribute GPUs across nodes
+    global_gpu_id_start = RANK * num_gpus
+    global_gpu_ids = [global_gpu_id_start + i for i in local_gpu_ids]
+
+    # Spawn a worker for each local GPU
+    processes = []
+    for gpu_id in local_gpu_ids:
+        p = multiprocessing.Process(target=worker_function, args=(gpu_id, RANK, hostname, *(args_generator(gpu_id))))
+        p.start()
+        processes.append(p)
+
+    # Wait for all processes to finish
+    for p in processes:
+        p.join()
+
+if __name__ == "__main__":
+    multiprocessing.set_start_method("forkserver", force=True)
+    spawn_workers_per_node()
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
 
@@ -78,8 +126,7 @@ def parse_args():
 
     return args
 
-
-def process_subset(df_subset, q, epsilon=0.1, method='kts'):
+def process_subset(gpu_id, df_subset, q, epsilon=0.1, method='kts'):
     edge_list = df_subset[['pid', 'lid']].to_numpy()  # should be 2 x m shape
     weights = df_subset['duration'].to_numpy()  # weight edge by visit duration
 
@@ -91,7 +138,8 @@ def process_subset(df_subset, q, epsilon=0.1, method='kts'):
     # Time the effective resistance calculation
     print("running effective resistance", flush=True)
     start = perf_counter()
-    Effective_R = network.effR(epsilon, method)
+    with cuda.Device(gpu_id):
+        Effective_R = network.effR(epsilon, method)
     effR_time = perf_counter() - start
     print("effective resistance complete", flush=True)
 
@@ -131,7 +179,7 @@ def main():
 
 
     if args.split is not None:
-        num_subsets = int(args.split)
+        num_subsets = cuda.runtime.getDeviceCount() if args.parallelize else args.split
 
         times = {}
 
@@ -165,8 +213,7 @@ def main():
         subset_args = [[subset, int(args.resultant_sample_size * len(subset))] for _, subset in subsets]
 
         if args.parallelize:
-            with Pool(processes=args.process_count) as p:
-                results = p.starmap(process_subset, subset_args)
+            spawn_workers_per_node(lambda gpu_id: (subset_args[gpu_id]))
         else:
             results = list(starmap(process_subset, subset_args))
 

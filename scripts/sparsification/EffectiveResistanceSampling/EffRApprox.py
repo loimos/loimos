@@ -1,7 +1,36 @@
+import cupy as cp
 import numpy as np
 from scipy import sparse
 from scipy.sparse.linalg import cg
 from tqdm import tqdm
+
+
+def gpu_conjugate_gradient(A, b, x0=None, tol=1e-6, maxiter=1000):
+    """Manual GPU-based Conjugate Gradient Solver using CuPy."""
+    N = A.shape[0]
+    if x0 is None:
+        x = cp.zeros(N, dtype=cp.float32)
+    else:
+        x = x0
+
+    r = b - A @ x
+    p = r.copy()
+    rs_old = cp.dot(r, r)
+
+    for _ in range(maxiter):
+        Ap = A @ p
+        alpha = rs_old / (cp.dot(p, Ap) + 1e-10)
+        x += alpha * p
+        r -= alpha * Ap
+        rs_new = cp.dot(r, r)
+
+        if cp.sqrt(rs_new) < tol:
+            break
+
+        p = r + (rs_new / rs_old) * p
+        rs_old = rs_new
+
+    return x
 
 
 # Transform adj matrix to edge list
@@ -148,13 +177,13 @@ def EffR(E_list, weights, epsilon, type, tol=1e-10, precon=False):
         if M is None:  # If no preconditioner
             for i in tqdm(range(m), desc="EffR"):
                 Br = B[i, :].toarray()
-                Z = cg(L, Br.transpose(), tol=tol)[0]
+                Z = gpu_conjugate_gradient(L, Br.transpose(), tol=tol)[0]
                 R_eff = Br @ Z
                 effR[:, i] = R_eff[0]
         else:  # If preconditioner
             for i in tqdm(range(m), desc="EffR"):
                 Br = B[i, :].toarray()
-                Z = cg(L, Br.transpose(), tol=tol, M=M)[0]
+                Z = gpu_conjugate_gradient(L, Br.transpose(), tol=tol, M=M)[0]
                 R_eff = Br @ Z
                 effR[:, i] = R_eff[0]
 
@@ -177,11 +206,11 @@ def EffR(E_list, weights, epsilon, type, tol=1e-10, precon=False):
         if M is None:  # If no preconditioner
             for i in tqdm(range(int(scale)), desc="EffR"):
                 SYSr = SYS[i, :].toarray()
-                Z[i, :] = cg(L, SYSr.transpose(), tol=tol)[0]
+                Z[i, :] = gpu_conjugate_gradient(L, SYSr.transpose(), tol=tol)[0]
         else:  # If preconditioner
             for i in tqdm(range(int(scale)), desc="EffR"):
                 SYSr = SYS[i, :].toarray()
-                Z[i, :] = cg(L, SYSr.transpose(), tol=tol, M=M)[0]
+                Z[i, :] = gpu_conjugate_gradient(L, SYSr.transpose(), tol=tol, M=M)[0]
 
         effR = np.sum(np.square(Z[:, E_list[:, 0]] - Z[:, E_list[:, 1]]),
                       axis=0)  # Calculate distance between poitns for effR
@@ -202,7 +231,7 @@ def EffR(E_list, weights, epsilon, type, tol=1e-10, precon=False):
                 b = ons @ W @ B
                 b = b.toarray()
 
-                Z = cg(L, b.transpose(), tol=tol)[0]
+                Z = gpu_conjugate_gradient(L, b.transpose(), tol=tol)[0]
                 Z = Z.transpose()
 
                 effR_res = effR_res + np.abs(np.square(Z[E_list[:, 0]] - Z[E_list[:, 1]]))
@@ -218,7 +247,7 @@ def EffR(E_list, weights, epsilon, type, tol=1e-10, precon=False):
 
                 b = ons @ W @ B
 
-                Z = cg(L, b.transpose(), tol=tol, M=M)[0]
+                Z = gpu_conjugate_gradient(L, b.transpose(), tol=tol, M=M)[0]
                 Z = Z.transpose()
 
                 effR_res = effR_res + np.abs(np.square(Z[E_list[:, 0]] - Z[E_list[:, 1]]))
