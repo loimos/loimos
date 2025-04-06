@@ -197,6 +197,9 @@ def main():
         GPUS_PER_NODE = cupy.cuda.runtime.getDeviceCount()
         GPUS_PER_NODE = min(GPUS_PER_NODE, SIZE)
 
+        if args.parallelize:
+            print(f"PARALLELIZED job {RANK}/{SIZE} on gpuID={RANK % GPUS_PER_NODE}", flush=True)
+
         # filtered_dfs = []
         # results = [None] * len(subsets)
 
