@@ -180,8 +180,8 @@ def main():
         def subset_num(col):
             return np.floor(col / subset_size)
 
-        df.where(subset_num(df['start_time']) == RANK, inplace=True)
-        # subsets = df.groupby(subset_num(df['start_time']))
+        if args.parallelize:
+            df.where(subset_num(df['start_time']) == RANK, inplace=True)
 
         # temp
         start = perf_counter()
@@ -201,13 +201,14 @@ def main():
         # results = [None] * len(subsets)
 
         start = perf_counter()
-        subset_args = [[subset, int(args.resultant_sample_size * len(subset))] for _, subset in subsets]
         result = None
 
         if args.parallelize:
             # spawn_workers_per_node(lambda gpu_id: (subset_args[gpu_id]))
             result = process_subset(RANK % GPUS_PER_NODE, df, int(args.resultant_sample_size * len(df)))
         else:
+            subsets = df.groupby(subset_num(df['start_time']))
+            subset_args = [[subset, int(args.resultant_sample_size * len(subset))] for _, subset in subsets]
             results = list(starmap(process_subset, subset_args))
 
         if not args.parallelize or RANK == 0:
