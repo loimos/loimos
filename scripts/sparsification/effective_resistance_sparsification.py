@@ -226,7 +226,13 @@ def main():
 
 
     if args.split is not None:
-        num_subsets = cuda.runtime.getDeviceCount() if args.parallelize else args.split
+        hostname = platform.node()
+
+        COMM = MPI.COMM_WORLD
+        RANK = COMM.Get_rank()
+        SIZE = COMM.Get_size()
+
+        num_subsets = SIZE if args.parallelize else args.split
 
         times = {}
 
@@ -240,7 +246,8 @@ def main():
         def subset_num(col):
             return np.floor(col / subset_size)
 
-        subsets = df.groupby(subset_num(df['start_time']))
+        df.where(subset_num(df['start_time']) == RANK, inplace=True)
+        # subsets = df.groupby(subset_num(df['start_time']))
 
         # temp
         start = perf_counter()
@@ -253,63 +260,68 @@ def main():
         preprocessing_time = perf_counter() - start
         # TODO: spawn split-off days into other subset dataframes
 
-        filtered_dfs = []
-        results = [None] * len(subsets)
+        GPUS_PER_NODE = cupy.cuda.runtime.getDeviceCount()
+        GPUS_PER_NODE = min(GPUS_PER_NODE, SIZE)
+
+        # filtered_dfs = []
+        # results = [None] * len(subsets)
 
         start = perf_counter()
         subset_args = [[subset, int(args.resultant_sample_size * len(subset))] for _, subset in subsets]
+        result = None
 
         if args.parallelize:
             # spawn_workers_per_node(lambda gpu_id: (subset_args[gpu_id]))
-            run_on_this_node(lambda gpu_id: (subset_args[gpu_id]))
+            result = process_subset(RANK % GPUS_PER_NODE, df, int(args.resultant_sample_size * len(df)))
         else:
             results = list(starmap(process_subset, subset_args))
 
-        # Combine results and update global times
-        filtered_dfs = []
-        for result in results:
-            filtered_dfs.append(result[0])
-            network_constructor_time += result[1]
-            effR_time += result[2]
-            spl_time += result[3]
-
-        print(f'Spent {perf_counter() - start}s sparsifying data')
-        final_filtered_df = pd.concat(filtered_dfs)
+        if not args.parallelize or RANK == 0:
+            # Combine results and update global times
+            filtered_dfs = []
+            for result in results:
+                filtered_dfs.append(result[0])
+                network_constructor_time += result[1]
+                effR_time += result[2]
+                spl_time += result[3]
+            print(f'Spent {perf_counter() - start}s sparsifying data')
+            final_filtered_df = pd.concat(filtered_dfs)
     else:
         q = int(args.resultant_sample_size * float(len(df)))
         final_filtered_df = process_subset(df, q, None, None)
 
-    if not os.path.exists(args.output_dir):
-        os.makedirs(args.output_dir)
+    if not args.parallelize or RANK == 0:
+        if not os.path.exists(args.output_dir):
+            os.makedirs(args.output_dir)
 
-    final_filtered_df.to_csv(os.path.join(args.output_dir, 'visits.csv'), index=False)
+        final_filtered_df.to_csv(os.path.join(args.output_dir, 'visits.csv'), index=False)
 
-    # Ensure times is a dictionary with proper keys and values
-    network_constructor_time /= len(subsets)
-    effR_time /= len(subsets)
-    spl_time /= len(subsets)
+        # Ensure times is a dictionary with proper keys and values
+        network_constructor_time /= num_subsets
+        effR_time /= num_subsets
+        spl_time /= num_subsets
 
-    end = perf_counter()
-    times["total"] = end - script_start
+        end = perf_counter()
+        times["total"] = end - script_start
 
-    times_path = args.time
-    if os.path.exists(times_path):
-        times_df = pd.read_csv(times_path)
-    else:
-        times_df = pd.DataFrame(columns=['network_constructor_time', 'effR_time', 'spl_time', 'total'])
+        times_path = args.time
+        if os.path.exists(times_path):
+            times_df = pd.read_csv(times_path)
+        else:
+            times_df = pd.DataFrame(columns=['network_constructor_time', 'effR_time', 'spl_time', 'total'])
 
-    new_row = {
-        'preprocessing_time': preprocessing_time,
-        'network_constructor_time': network_constructor_time,
-        'effR_time': effR_time,
-        'spl_time': spl_time,
-        'total': times["total"]
-    }
+        new_row = {
+            'preprocessing_time': preprocessing_time,
+            'network_constructor_time': network_constructor_time,
+            'effR_time': effR_time,
+            'spl_time': spl_time,
+            'total': times["total"]
+        }
 
-    times_df = pd.concat([times_df, pd.DataFrame([new_row])], ignore_index=True)
-    times_df.to_csv(times_path, index=False)
+        times_df = pd.concat([times_df, pd.DataFrame([new_row])], ignore_index=True)
+        times_df.to_csv(times_path, index=False)
 
-    print(f'complete: {os.path.join(args.output_dir, "visits.csv")}', flush=True)
+        print(f'complete: {os.path.join(args.output_dir, "visits.csv")}', flush=True)
 
 if __name__ == "__main__":
     main()
