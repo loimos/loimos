@@ -11,17 +11,31 @@ from time import perf_counter
 from multiprocessing import Pool, set_start_method
 from itertools import starmap
 
+import multiprocessing
+import platform
+import os
+import cupy
+from cupy import cuda
+from mpi4py import MPI
+
+
 # reference scripts:
 # location_herustics.py
 #
 
-import multiprocessing
-import platform
-import os
+# CuPy + CUDA Kernels:
+# CuPy is a flexible library that provides NumPy-like functionality on GPUs using CUDA. You can write custom CUDA kernels for optimal performance.
 
-import cupy
-from cupy import cuda
-from mpi4py import MPI
+# cuBLAS/cuSPARSE/cuSOLVER from CUDA Toolkit:
+# NVIDIA’s libraries (cuBLAS, cuSPARSE, cuSOLVER) offer high-performance linear algebra operations, including iterative solvers.
+
+# scikit-cuda or PyCUDA:
+# These wrappers around CUDA libraries let you handle allocations and computations manually.
+
+# PETSc or MAGMA for Large-Scale CG:
+# These specialized libraries offer high-performance solvers for scientific computing.
+
+MPI.Init()
 
 def worker_function(gpu_id, rank, hostname, *args):
     """Function executed by each worker process."""
@@ -29,6 +43,39 @@ def worker_function(gpu_id, rank, hostname, *args):
     # with cuda.Device(gpu_id):
     #     cupy.asarray(12345)  # Simple GPU operation
     process_subset(gpu_id, *args)
+
+def run_on_this_node(args_generator):
+    """Spawns GPU workers on each node."""
+    hostname = platform.node()
+    
+    # Initialize MPI
+    COMM = MPI.COMM_WORLD
+    RANK = COMM.Get_rank()
+    SIZE = COMM.Get_size()
+
+    # Determine number of GPUs on each node
+    num_gpus = cuda.runtime.getDeviceCount()
+    local_gpu_id = 0
+    #local_gpu_ids = list(range(num_gpus))
+
+    worker_function(local_gpu_id, RANK, hostname, *args_generator(local_gpu_id))
+
+    # Distribute GPUs across nodes
+    # global_gpu_id_start = RANK * num_gpus
+    # global_gpu_ids = [global_gpu_id_start + i for i in local_gpu_ids]
+
+    # Spawn a worker for each local GPU
+    # processes = []
+    # for gpu_id in local_gpu_ids:
+    #     p = multiprocessing.Process(target=worker_function, args=(gpu_id, RANK, hostname, *(args_generator(gpu_id))))
+    #     p.start()
+    #     processes.append(p)
+
+    # Wait for all processes to finish
+    # for p in processes:
+    #     p.join()
+
+
 
 def spawn_workers_per_node(args_generator):
     """Spawns GPU workers on each node."""
@@ -60,7 +107,7 @@ def spawn_workers_per_node(args_generator):
 
 if __name__ == "__main__":
     multiprocessing.set_start_method("forkserver", force=True)
-    spawn_workers_per_node()
+    # spawn_workers_per_node()
 
 
 def parse_args():
@@ -213,7 +260,8 @@ def main():
         subset_args = [[subset, int(args.resultant_sample_size * len(subset))] for _, subset in subsets]
 
         if args.parallelize:
-            spawn_workers_per_node(lambda gpu_id: (subset_args[gpu_id]))
+            # spawn_workers_per_node(lambda gpu_id: (subset_args[gpu_id]))
+            run_on_this_node(lambda gpu_id: (subset_args[gpu_id]))
         else:
             results = list(starmap(process_subset, subset_args))
 
