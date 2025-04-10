@@ -35,8 +35,6 @@ from mpi4py import MPI
 # PETSc or MAGMA for Large-Scale CG:
 # These specialized libraries offer high-performance solvers for scientific computing.
 
-MPI.Init()
-
 def worker_function(gpu_id, rank, hostname, *args):
     """Function executed by each worker process."""
     print(f"Rank {rank} on {hostname} using GPU {gpu_id}")
