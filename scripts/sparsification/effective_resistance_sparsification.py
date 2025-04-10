@@ -166,6 +166,9 @@ def main():
         RANK = COMM.Get_rank()
         SIZE = COMM.Get_size()
 
+        # includes MIG instances in cuda GPU awareness
+        cupy.cuda.runtime.setDeviceFlags(cupy.cuda.runtime.CU_DEVICE_MIG_SUPPORTED)
+
         num_subsets = SIZE if args.parallelize else args.split
 
         times = {}
@@ -198,7 +201,7 @@ def main():
         GPUS_PER_NODE = min(GPUS_PER_NODE, SIZE)
 
         if args.parallelize:
-            print(f"PARALLELIZED job {RANK}/{SIZE} on gpuID={RANK % GPUS_PER_NODE}", flush=True)
+            print(f"PARALLELIZED job {RANK}/{SIZE} (machine with {cupy.cuda.runtime.getDeviceCount()} GPUs) on gpuID={RANK % GPUS_PER_NODE}", flush=True)
 
         # filtered_dfs = []
         # results = [None] * len(subsets)
