@@ -164,9 +164,6 @@ def main():
         RANK = COMM.Get_rank()
         SIZE = COMM.Get_size()
 
-        # includes MIG instances in cuda GPU awareness
-        cupy.cuda.runtime.setDeviceFlags(cupy.cuda.runtime.CU_DEVICE_MIG_SUPPORTED)
-
         num_subsets = SIZE if args.parallelize else args.split
 
         times = {}
