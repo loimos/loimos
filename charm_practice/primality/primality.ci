@@ -1,0 +1,9 @@
+mainmodule Primality {
+    mainchare Main {
+        entry Main(CkArgMsg *m);
+        entry void checkDone(int index, int isPrimeResult);
+    };
+    chare checkPrimality {
+        entry void checkPrimality(int index, int number, CProxy_Main m);
+    }
+}
