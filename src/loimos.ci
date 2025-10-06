@@ -25,10 +25,6 @@ mainmodule loimos {
   #define SHOULD_LB(day) (day >= LB_START_DAY &&\
     (day - LB_START_DAY) % LB_INTERVAL == 0)
 
-#ifdef USE_HYPERCOMM
-  include "AggregatorParam.h";
-#endif // USE_HYPERCOMM
-
   include "string";
   include "vector";
   include "memory";
