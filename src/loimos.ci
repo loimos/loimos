@@ -160,11 +160,6 @@ mainmodule loimos {
               ID_PRINT_TYPE ".\n",
               day, CkWallTimer() - profile.iterationStartTime, infectiousCount
             );
-
-            // Trigger intervention updates.
-            if (scenario->hasInterventions()) {
-              globScenario.ApplyInterventions(day, infectiousCount);
-            }
           }
         }
 
