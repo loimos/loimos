@@ -104,6 +104,9 @@ TESTS=$(subst -,test-,$(TEST_NAMES))
 .PHONY:test $(TESTS)
 test: $(TESTS)
 
+# TODO:
+# add unit tests (naming convention: test-unit-[*])
+
 test-style:
 	cpplint --extensions=C,h,ci --root=loimos/src --recursive . &> linter-errors.log
 
