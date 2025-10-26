@@ -35,7 +35,7 @@ class Location : public DataInterface {
 #endif
   // Integer byte offsets in visits file by day.
   // For example, fseek(visitOffsetByDay[2]) would seek to the start
-  // of this person's visits on day 3.
+  // of this location's visits on day 3.
   std::vector<CacheOffset> visitOffsetByDay;
 
   // Holds visit messages for each day
