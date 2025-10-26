@@ -70,8 +70,9 @@ Locations::Locations(int seed, std::string scenarioPath) {
       scenario->numDaysWithDistinctVisits);
   }
 
-  // Load application data if not running on the fly. 
-  // If the scenario was on the fly, this will be done in ReceiveVisitSchedule, invoked from the people chares.
+  // Load application data if not running on the fly.
+  // If the scenario was on the fly, this will be done in ReceiveVisitSchedule, 
+  // invoked from the people chares.
   if (!scenario->isOnTheFly()) {
     loadLocationData(scenarioPath);
   }
