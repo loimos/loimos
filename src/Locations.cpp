@@ -13,7 +13,6 @@
 #include "DiseaseModel.h"
 #include "Location.h"
 #include "Person.h"
-#include "Event.h"
 #include "Extern.h"
 #include "Defs.h"
 #include "Partitioner.h"
@@ -71,7 +70,9 @@ Locations::Locations(int seed, std::string scenarioPath) {
       scenario->numDaysWithDistinctVisits);
   }
 
-  // Load application data
+  // Load application data if not running on the fly.
+  // If the scenario was on the fly, this will be done in ReceiveVisitSchedule,
+  // invoked from the people chares.
   if (!scenario->isOnTheFly()) {
     loadLocationData(scenarioPath);
   }
