@@ -121,11 +121,15 @@ namespace
             locationAttributes_ = BuildTestLocationAttributes();
             diseaseModel_ = std::make_unique<DiseaseModel>(
                 "../data/disease_models/safe_risky.textproto", -1.0, personAttributes_);
+            interventionModel = std::make_unique<InterventionModel>(
+                "../data/intervention_models/synthetic_small_city.textproto",
+                &personAttributes_, &locationAttributes_, *diseaseModel_);
         }
 
         AttributeTable personAttributes_;
         AttributeTable locationAttributes_;
         std::unique_ptr<DiseaseModel> diseaseModel_;
+        std::unique_ptr<InterventionModel> interventionModel_;
     };
 
 } // namespace
@@ -133,18 +137,16 @@ namespace
 TEST_F(InterventionModelTest, ApplyInterventionsUsesCustomCallbacks)
 {
     auto definition = BuildDayTriggeredDefinition();
-    InterventionModel model(definition, &personAttributes_, &locationAttributes_,
-                            *diseaseModel_);
 
     std::vector<int> peopleCalls;
     std::vector<int> locationCalls;
 
-    model.applyInterventions(/*day=*/5, /*newDailyInfections=*/0,
-                             /*numPeople=*/2,
-                             [&](int idx)
-                             { peopleCalls.push_back(idx); },
-                             [&](int idx)
-                             { locationCalls.push_back(idx); });
+    interventionModel_.applyInterventions(/*day=*/5, /*newDailyInfections=*/0,
+                                          /*numPeople=*/2,
+                                          [&](int idx)
+                                          { peopleCalls.push_back(idx); },
+                                          [&](int idx)
+                                          { locationCalls.push_back(idx); });
 
     ASSERT_EQ(peopleCalls.size(), 1u);
     EXPECT_EQ(peopleCalls.front(), 0);
@@ -155,28 +157,24 @@ TEST_F(InterventionModelTest, ApplyInterventionsUsesCustomCallbacks)
 TEST_F(InterventionModelTest, CaseTriggerDisablesWhenBelowOffThreshold)
 {
     auto definition = BuildCaseRateDefinition();
-    InterventionModel model(definition, &personAttributes_, nullptr,
-                            *diseaseModel_);
 
-    model.setTriggerFlags({true});
-    model.toggleInterventions(/*day=*/0, /*newDailyInfections=*/1,
-                              /*numPeople=*/50);
+    interventionModel_.setTriggerFlags({true});
+    interventionModel_.toggleInterventions(/*day=*/0, /*newDailyInfections=*/1,
+                                           /*numPeople=*/50);
 
-    EXPECT_FALSE(model.getTriggerFlag(0));
+    EXPECT_FALSE(interventionModel_.getTriggerFlag(0));
 }
 
 TEST_F(InterventionModelTest, LocationOnlyModelNotifiesLocations)
 {
     auto definition = BuildLocationOnlyDefinition();
-    InterventionModel model(definition, nullptr, &locationAttributes_,
-                            *diseaseModel_);
 
     std::vector<int> locationCalls;
-    model.applyInterventions(/*day=*/2, /*newDailyInfections=*/0,
-                             /*numPeople=*/10,
-                             InterventionModel::NotificationFn(),
-                             [&](int idx)
-                             { locationCalls.push_back(idx); });
+    interventionModel_.applyInterventions(/*day=*/2, /*newDailyInfections=*/0,
+                                          /*numPeople=*/10,
+                                          InterventionModel::NotificationFn(),
+                                          [&](int idx)
+                                          { locationCalls.push_back(idx); });
 
     ASSERT_EQ(locationCalls.size(), 1u);
     EXPECT_EQ(locationCalls.front(), 0);
