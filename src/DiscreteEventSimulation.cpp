@@ -10,6 +10,39 @@
 #include "contact_model/ContactModel.h"
 #include <vector>
 
+// Forward declarations
+Counter processEvents(Location *loc, Scenario *scenario);
+
+#if OUTPUT_FLAGS & OUTPUT_OVERLAPS
+Counter saveInteractions(const Location &loc,
+    const Event &departure, std::ofstream *out, 
+    std::vector<Event> &susceptibleArrivals, 
+    std::vector<Event> &infectiousArrivals);
+#endif  // OUTPUT_OVERLAPS
+
+void onDeparture(Location *loc, Scenario *scenario, const Event& departure, 
+    std::vector<Event> &susceptibleArrivals, 
+    std::vector<Event> &infectiousArrivals, 
+    std::unordered_map<Id, std::vector<Interaction>> &interactions);
+
+void onSusceptibleDeparture(Location *loc, Scenario *scenario,
+    const Event& susceptibleDeparture, 
+    std::vector<Event> &infectiousArrivals, 
+    std::unordered_map<Id, std::vector<Interaction>> &interactions);
+
+void onInfectiousDeparture(Location *loc, Scenario *scenario,
+    const Event& infectiousDeparture, 
+    std::vector<Event> &susceptibleArrivals, 
+    std::unordered_map<Id, std::vector<Interaction>> &interactions);
+
+inline void registerInteraction(Location *loc, Scenario *scenario,
+    const Event &susceptibleEvent, const Event &infectiousEvent,
+    Time startTime, Time endTime, 
+    std::unordered_map<Id, std::vector<Interaction>> &interactions);
+
+inline void sendInteractions(Location *loc, Scenario *scenario, 
+    Id personIdx, std::unordered_map<Id, std::vector<Interaction>> &interactions);
+
 void ComputeInteractions(std::vector<Location> *locations, Scenario *scenario, int day) {
   Counter numVisits = 0;
   Counter numInteractions = 0;
