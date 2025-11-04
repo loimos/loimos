@@ -237,10 +237,6 @@ inline void registerInteraction(Location *loc, Scenario *scenario,
     return;
   }
 
-  // exposureDuration += endTime - startTime;
-  // CkPrintf("  inf: %ld sus: %ld dt: "COUNTER_PRINT_TYPE"\n",
-  //     infectiousEvent.personIdx, susceptibleEvent.personIdx,
-  //     endTime - startTime);
   double propensity = scenario->diseaseModel->getPropensity(
     susceptibleEvent.personState, infectiousEvent.personState, startTime, endTime,
     susceptibleEvent.transmissionModifier, infectiousEvent.transmissionModifier);
@@ -279,13 +275,6 @@ inline void sendInteractions(Location *loc, Scenario *scenario,
 #endif  // USE_HYPERCOMM
 
   peopleArray[personPartition].ReceiveInteractions(interMsg);
-
-  // CkPrintf(
-  //   "    Sending %d interactions to person %d in partition %d\r\n",
-  //   (int) interactions[personIdx].size(),
-  //   personIdx,
-  //   personPartition
-  // );
 
   // Free up space where we were storing interactions data. This also prevents
   // interactions from being sent multiple times if this person has multiple
