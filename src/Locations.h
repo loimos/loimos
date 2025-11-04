@@ -80,7 +80,7 @@ class Locations : public CBase_Locations {
   void ReceiveVisitorStates(PersonStatesMessage msg);
   void QueueVisits();
   void ReceiveVisitMessages(VisitMessage visitMsg);
-  void ComputeInteractions();  // calls ReceiveInfections
+  // void ComputeInteractions();  // calls ReceiveInfections
   void ReceiveIntervention(PartitionId interventionIdx);
   void ReceiveVisitIntervention(VisitInterventionMessage msg);
   #ifdef ENABLE_LB

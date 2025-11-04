@@ -9,6 +9,7 @@
 #include "Interaction.h"
 #include "contact_model/ContactModel.h"
 #include <vector>
+#include "Extern.h"
 
 // Forward declarations
 Counter processEvents(Location *loc, Scenario *scenario);
@@ -131,7 +132,7 @@ Counter processEvents(Location *loc, Scenario *scenario) {
       saveInteractions(*loc, event, interactionsFile, susceptibleArrivals, infectiousArrivals);
 #endif
 
-      onDeparture(loc, event, susceptibleArrivals, infectiousArrivals, interactions);
+      onDeparture(loc, scenario, event, susceptibleArrivals, infectiousArrivals, interactions);
     }
   }
   loc->reset();
