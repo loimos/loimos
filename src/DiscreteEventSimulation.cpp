@@ -1,3 +1,9 @@
+/* Copyright 2020-2023 The Loimos Project Developers.
+ * See the top-level LICENSE file for details.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #include "loimos.decl.h"
 #include "DiscreteEventSimulation.h"
 #include "Types.h"
@@ -8,9 +14,9 @@
 #include "Scenario.h"
 #include "Interaction.h"
 #include "contact_model/ContactModel.h"
-#include <vector>
 #include "Extern.h"
 
+#include <vector>
 // Forward declarations
 Counter processEvents(Location *loc, Scenario *scenario);
 
@@ -47,19 +53,12 @@ inline void sendInteractions(Location *loc, Scenario *scenario,
 void ComputeInteractions(std::vector<Location> *locations, Scenario *scenario, int day) {
   Counter numVisits = 0;
   Counter numInteractions = 0;
-  // exposureDuration = 0;
-  // expectedExposureDuration = 0;
   for (Location &loc : *locations) {
     Counter locVisits = loc.events.size() / 2;
     numVisits += locVisits;
 
     Counter locInters = processEvents(&loc, scenario);
     numInteractions += locInters;
-
-    // if (0 < locInters) {
-    //   CkPrintf("    Chare %d: loc %d found %d interactions from %d visits\n",
-    //       thisIndex, loc.getUniqueId(), locInters, locVisits);
-    // }
   }
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   CkCallback cb(CkReductionTarget(Main, ReceiveInteractionsCount), mainProxy);
@@ -136,7 +135,6 @@ Counter processEvents(Location *loc, Scenario *scenario) {
     }
   }
   loc->reset();
-  // interactions.clear();
 
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   double p = scenario->contactModel->getContactProbability(*loc);
