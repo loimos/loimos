@@ -35,15 +35,6 @@ class Locations : public CBase_Locations {
   // For random generation.
   static std::uniform_real_distribution<> unitDistrib;
 
-  // Each Event in one of these containers is the arrival event for a
-  // a person at a location
-  std::vector<Event> infectiousArrivals;
-  std::vector<Event> susceptibleArrivals;
-
-  // Maps each susceptible person's id to a list of interactions with people
-  // who could have infected them
-  std::unordered_map<Id, std::vector<Interaction> > interactions;
-
   // Runs through all of the current events and return the indices of
   // any people who have been infected
   Counter processEvents(Location *loc);
