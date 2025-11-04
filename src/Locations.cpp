@@ -22,6 +22,7 @@
 #include "intervention_model/InterventionModel.h"
 #include "intervention_model/Intervention.h"
 #include "pup_stl.h"
+#include "DiscreteEventSimulation.h"
 
 #include <algorithm>
 #include <queue>
@@ -330,7 +331,8 @@ void Locations::QueueVisits() {
     }
   }
 
-  ComputeInteractions();
+  ComputeInteractions(&locations, &scenario, day);
+  day++;
 }
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
@@ -394,39 +396,39 @@ void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   loc.addEvent(departure);
 }
 
-void Locations::ComputeInteractions() {
-  Counter numVisits = 0;
-  Counter numInteractions = 0;
-  exposureDuration = 0;
-  expectedExposureDuration = 0;
-  for (Location &loc : locations) {
-    Counter locVisits = loc.events.size() / 2;
-    numVisits += locVisits;
+// void Locations::ComputeInteractions() {
+//   Counter numVisits = 0;
+//   Counter numInteractions = 0;
+//   exposureDuration = 0;
+//   expectedExposureDuration = 0;
+//   for (Location &loc : locations) {
+//     Counter locVisits = loc.events.size() / 2;
+//     numVisits += locVisits;
 
-    Counter locInters = processEvents(&loc);
-    numInteractions += locInters;
+//     Counter locInters = processEvents(&loc);
+//     numInteractions += locInters;
 
-    // if (0 < locInters) {
-    //   CkPrintf("    Chare %d: loc %d found %d interactions from %d visits\n",
-    //       thisIndex, loc.getUniqueId(), locInters, locVisits);
-    // }
-  }
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
-  CkCallback cb(CkReductionTarget(Main, ReceiveInteractionsCount), mainProxy);
-  contribute(sizeof(Counter), &numInteractions,
-      CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), cb);
-#endif
+//     // if (0 < locInters) {
+//     //   CkPrintf("    Chare %d: loc %d found %d interactions from %d visits\n",
+//     //       thisIndex, loc.getUniqueId(), locInters, locVisits);
+//     // }
+//   }
+// #if ENABLE_DEBUG >= DEBUG_VERBOSE
+//   CkCallback cb(CkReductionTarget(Main, ReceiveInteractionsCount), mainProxy);
+//   contribute(sizeof(Counter), &numInteractions,
+//       CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), cb);
+// #endif
 
-#if ENABLE_DEBUG >= DEBUG_PER_CHARE
-  if (0 == day) {
-    CkPrintf("    Process %d, thread %d: " COUNTER_PRINT_TYPE " visits, "
-        COUNTER_PRINT_TYPE" interactions, %lu locations\n",
-        CkMyNode(), CkMyPe(), numVisits, numInteractions, locations.size());
-  }
-#endif
+// #if ENABLE_DEBUG >= DEBUG_PER_CHARE
+//   if (0 == day) {
+//     CkPrintf("    Process %d, thread %d: " COUNTER_PRINT_TYPE " visits, "
+//         COUNTER_PRINT_TYPE" interactions, %lu locations\n",
+//         CkMyNode(), CkMyPe(), numVisits, numInteractions, locations.size());
+//   }
+// #endif
 
-  day++;
-}
+//   day++;
+// }
 
 Counter Locations::processEvents(Location *loc) {
   std::vector<Event> *arrivals;
