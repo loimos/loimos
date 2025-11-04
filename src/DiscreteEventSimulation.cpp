@@ -131,7 +131,7 @@ Counter processEvents(Location *loc, Scenario *scenario) {
       saveInteractions(*loc, event, interactionsFile, susceptibleArrivals, infectiousArrivals);
 #endif
 
-      onDeparture(loc, scenario, event, susceptibleArrivals, infectiousArrivals, interactions);
+      onDeparture(loc, scenario, event, susceptibleArrivals, infectiousArrivals, &interactions);
     }
   }
   loc->reset();
