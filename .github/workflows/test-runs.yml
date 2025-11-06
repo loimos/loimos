@@ -6,9 +6,9 @@ name: Loimos Test Runs
 
 on:
   push:
-    branches: [develop]
+    branches: [develop, develop-unit-testing]
   pull_request:
-    branches: [develop]
+    branches:
 
 env:
   ACTIONS_RUNNER_DEBUG: true
@@ -86,7 +86,7 @@ jobs:
         run: |
           git submodule init
           git submodule update
-          
+
       - name: Build and Test Debug Version
         id: test-debug-loimos
         run: |
@@ -105,7 +105,7 @@ jobs:
             ci-test-non-smp.csv \
             ../data/disease_models/covid19_onepath.textproto \
             +setcpuaffinity ++local
-      
+
       - name: Build and Test Detailed Outputs
         id: test-out-loimos
         run: |
@@ -167,7 +167,7 @@ jobs:
           ./charmrun +p4 ./loimos-smp 1 100 100 50 50 5 5 5 32 7 \
             ci-test-smp.csv ../data/disease_models/covid19_onepath.textproto \
             +setcpuaffinity ++local
-      
+
       - name: Build and Test Optimizations
         id: test-opts
         run: |
@@ -239,7 +239,7 @@ jobs:
             ../data/disease_models/covid19_onepath.textproto ++local
           cat test-syn.csv
           diff test-syn.csv ../data/validation/test-syn.csv
-      
+
       # Make sure epi-curve doesn't change when we introduce optimizations
       - name: Test Epicurve on Synthetic Population With Optimizations
         id: test-regression-synthetic-opts
