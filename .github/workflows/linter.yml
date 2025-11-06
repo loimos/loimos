@@ -11,9 +11,12 @@ name: Lint Code Base
 #############################
 on:
   push:
-    branches: [develop, develop-unit-testing]
+    branches:
+      - develop
+      - "develop-*"
   pull_request:
     branches:
+      - "*"
 
 ###############
 # Set the Job #
