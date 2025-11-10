@@ -18,7 +18,7 @@
 
 #include <vector>
 // Forward declarations
-Counter processEvents(Location *loc, Scenario *scenario);
+Counter processEvents(Location *loc, Scenario *scenario, int thisIndex);
 
 #if OUTPUT_FLAGS & OUTPUT_OVERLAPS
 Counter saveInteractions(const Location &loc,
@@ -30,12 +30,12 @@ Counter saveInteractions(const Location &loc,
 inline void onDeparture(Location *loc, Scenario *scenario, const Event& departure, 
     const std::vector<Event> &susceptibleArrivals, 
     const std::vector<Event> &infectiousArrivals, 
-    std::unordered_map<Id, std::vector<Interaction>> *interactions);
+    std::unordered_map<Id, std::vector<Interaction>> *interactions, int thisIndex);
 
 void onSusceptibleDeparture(Location *loc, Scenario *scenario,
     const Event& susceptibleDeparture, 
     const std::vector<Event> &infectiousArrivals, 
-    std::unordered_map<Id, std::vector<Interaction>> *interactions);
+    std::unordered_map<Id, std::vector<Interaction>> *interactions, int thisIndex);
 
 void onInfectiousDeparture(Location *loc, Scenario *scenario,
     const Event& infectiousDeparture, 
@@ -48,16 +48,16 @@ inline void registerInteraction(Location *loc, Scenario *scenario,
     std::unordered_map<Id, std::vector<Interaction>> *interactions);
 
 inline void sendInteractions(Location *loc, Scenario *scenario, 
-    Id personIdx, std::unordered_map<Id, std::vector<Interaction>> *interactions);
+    Id personIdx, std::unordered_map<Id, std::vector<Interaction>> *interactions, int thisIndex);
 
-void ComputeInteractions(std::vector<Location> *locations, Scenario *scenario, int day) {
+void ComputeInteractions(std::vector<Location> *locations, Scenario *scenario, int day, int thisIndex) {
   Counter numVisits = 0;
   Counter numInteractions = 0;
   for (Location &loc : *locations) {
     Counter locVisits = loc.events.size() / 2;
     numVisits += locVisits;
 
-    Counter locInters = processEvents(&loc, scenario);
+    Counter locInters = processEvents(&loc, scenario, thisIndex);
     numInteractions += locInters;
   }
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
@@ -76,7 +76,7 @@ void ComputeInteractions(std::vector<Location> *locations, Scenario *scenario, i
 
 }
 
-Counter processEvents(Location *loc, Scenario *scenario) {
+Counter processEvents(Location *loc, Scenario *scenario, int thisIndex) {
   std::vector<Event> *arrivals;
   std::vector<Event> infectiousArrivals;
   std::vector<Event> susceptibleArrivals;
@@ -131,7 +131,7 @@ Counter processEvents(Location *loc, Scenario *scenario) {
       saveInteractions(*loc, event, interactionsFile, susceptibleArrivals, infectiousArrivals);
 #endif
 
-      onDeparture(loc, scenario, event, susceptibleArrivals, infectiousArrivals, &interactions);
+      onDeparture(loc, scenario, event, susceptibleArrivals, infectiousArrivals, &interactions, thisIndex);
     }
   }
   loc->reset();
@@ -191,11 +191,11 @@ Counter saveInteractions(const Location &loc,
 #endif  // OUTPUT_OVERLAPS
 
 // Simple dispatch to the susceptible/infectious depature handlers
-inline void onDeparture(Location *loc, Scenario *scenario, const Event& departure, const std::vector<Event> &susceptibleArrivals, const std::vector<Event> &infectiousArrivals, std::unordered_map<Id, std::vector<Interaction>> *interactions) {
+inline void onDeparture(Location *loc, Scenario *scenario, const Event& departure, const std::vector<Event> &susceptibleArrivals, const std::vector<Event> &infectiousArrivals, std::unordered_map<Id, std::vector<Interaction>> *interactions, int thisIndex) {
   DiseaseModel *diseaseModel = scenario->diseaseModel;
 
   if (diseaseModel->isSusceptible(departure.personState)) {
-    onSusceptibleDeparture(loc, scenario, departure, infectiousArrivals, interactions);
+    onSusceptibleDeparture(loc, scenario, departure, infectiousArrivals, interactions, thisIndex);
 
   } else if (diseaseModel->isInfectious(departure.personState)) {
     onInfectiousDeparture(loc, scenario, departure, susceptibleArrivals, interactions);
@@ -203,7 +203,7 @@ inline void onDeparture(Location *loc, Scenario *scenario, const Event& departur
 }
 
 void onSusceptibleDeparture(Location *loc, Scenario *scenario,
-    const Event& susceptibleDeparture, const std::vector<Event> &infectiousArrivals, std::unordered_map<Id, std::vector<Interaction>> *interactions) {
+    const Event& susceptibleDeparture, const std::vector<Event> &infectiousArrivals, std::unordered_map<Id, std::vector<Interaction>> *interactions, int thisIndex) {
   // Each infectious person at this location might have infected this
   // susceptible person
   for (const Event &infectiousArrival : infectiousArrivals) {
@@ -214,7 +214,7 @@ void onSusceptibleDeparture(Location *loc, Scenario *scenario,
         susceptibleDeparture.scheduledTime, interactions);
   }
 
-  sendInteractions(loc, scenario, susceptibleDeparture.personIdx, interactions);
+  sendInteractions(loc, scenario, susceptibleDeparture.personIdx, interactions, thisIndex);
 }
 
 void onInfectiousDeparture(Location *loc, Scenario *scenario,
@@ -251,7 +251,7 @@ inline void registerInteraction(Location *loc, Scenario *scenario,
 // Simple helper function which send the list of interactions with the
 // specified person to the appropriate People chare
 inline void sendInteractions(Location *loc, Scenario *scenario, 
-    Id personIdx, std::unordered_map<Id, std::vector<Interaction>> *interactions) {
+    Id personIdx, std::unordered_map<Id, std::vector<Interaction>> *interactions, int thisIndex) {
   Partitioner *partitioner = scenario->partitioner;
   PartitionId personPartition = partitioner->getPersonPartitionIndex(personIdx);
 #ifdef ENABLE_DEBUG

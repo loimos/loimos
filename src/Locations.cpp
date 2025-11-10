@@ -330,7 +330,7 @@ void Locations::QueueVisits() {
     }
   }
 
-  ComputeInteractions(&locations, scenario, day);
+  ComputeInteractions(&locations, scenario, day, thisIndex);
   day++;
 }
 
