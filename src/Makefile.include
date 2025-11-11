@@ -36,7 +36,7 @@ OPTS     += -g -O2
 endif
 
 CXX       = g++
-INCLUDES  = -I$(PROTOBUF_HOME)/include
+INCLUDES  = -I$(PROTOBUF_HOME)/include -I$(CHARM_HOME)/include
 LIBS      = -lpthread -lprotobuf
 
 # Protobuf is installed under lib64 on Rivanna
