@@ -12,6 +12,8 @@
 #include "../Person.h"
 #include "../Event.h"
 
+#include <vector>
+
 namespace TestHelpers
 {
 
@@ -40,6 +42,14 @@ namespace TestHelpers
         schoolDefault.bool_val = false;
         schoolAttribute.defaultValue = schoolDefault;
         table.list.push_back(schoolAttribute);
+
+        Attribute maxVisitsAttribute;
+        maxVisitsAttribute.name = "max_simultaneous_visits";
+        maxVisitsAttribute.dataType = DataTypes::int32_;
+        Data maxVisitsDefault{};
+        maxVisitsDefault.int32_val = 10;
+        maxVisitsAttribute.defaultValue = maxVisitsDefault;
+        table.list.push_back(maxVisitsAttribute);
         return table;
     }
 
@@ -49,18 +59,31 @@ namespace TestHelpers
         AttributeTable attrs = CreateTestLocationAttributes();
         Location loc(attrs, numInterventions, uniqueId, numDays);
         loc.setSeed(12345);
+        int maxVisitsIndex = attrs.getAttributeIndex("max_simultaneous_visits");
+        if (maxVisitsIndex >= 0)
+        {
+            std::vector<union Data> &data = loc.getData();
+            data[maxVisitsIndex].int32_val = 10 + uniqueId;
+        }
         return loc;
     }
 
     // Builds a test location with minimal setup; uniqueId is set from 0 to numLocations-1, seeds are set to 12345 + uniqueId
-    std::vector<Location> BuildTestLocations(int numLocations, int numInterventions = 0, int numDays = 1)
+    inline std::vector<Location> BuildTestLocations(int numLocations, int numInterventions = 0, int numDays = 1)
     {
         AttributeTable attrs = CreateTestLocationAttributes();
         std::vector<Location> locations;
+        locations.reserve(numLocations);
+        const int maxVisitsIndex = attrs.getAttributeIndex("max_simultaneous_visits");
         for (int i = 0; i < numLocations; i++)
         {
             Location loc(attrs, numInterventions, i, numDays);
             loc.setSeed(12345 + i);
+            if (maxVisitsIndex >= 0)
+            {
+                std::vector<union Data> &data = loc.getData();
+                data[maxVisitsIndex].int32_val = 10 + i;
+            }
             locations.push_back(loc);
         }
         return locations;
