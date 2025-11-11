@@ -1,3 +1,6 @@
+# No editor generated files
+*.swp
+
 # No generated code files
 *.decl.h
 *.def.h
