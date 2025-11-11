@@ -23,7 +23,7 @@ namespace
         void SetUp() override
         {
             locationAttrs_ = TestHelpers::CreateTestLocationAttributes();
-            contactModel_ = std::make_unique<ContactModel>(locationAttrs_);
+            contactModel_.reset(new ContactModel(locationAttrs_));
         }
 
         AttributeTable locationAttrs_;

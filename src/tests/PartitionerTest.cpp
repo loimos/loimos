@@ -20,7 +20,7 @@ namespace
         void SetUp() override
         {
             // Create a simple partitioner: 100 people, 10 locations, 4 partitions each
-            partitioner_ = std::make_unique<Partitioner>(4, 4, 100, 10);
+            partitioner_.reset(new Partitioner(4, 4, 100, 10));
         }
 
         std::unique_ptr<Partitioner> partitioner_;

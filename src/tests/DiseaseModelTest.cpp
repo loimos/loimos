@@ -40,8 +40,8 @@ namespace
     void SetUp() override
     {
       attribute_table_ = BuildTestAttributeTable();
-      disease_model_ = std::make_unique<DiseaseModel>(
-          "../data/disease_models/safe_risky.textproto", -1.0, attribute_table_);
+    disease_model_.reset(new DiseaseModel(
+      "../data/disease_models/safe_risky.textproto", -1.0, attribute_table_));
     }
 
     AttributeTable attribute_table_;

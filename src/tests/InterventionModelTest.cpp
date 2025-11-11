@@ -119,9 +119,9 @@ namespace
         {
             personAttributes_ = BuildTestPersonAttributes();
             locationAttributes_ = BuildTestLocationAttributes();
-            diseaseModel_ = std::make_unique<DiseaseModel>(
-                "../data/disease_models/safe_risky.textproto", -1.0, personAttributes_);
-            interventionModel = std::make_unique<InterventionModel>(
+            diseaseModel_.reset(new DiseaseModel(
+                "../data/disease_models/safe_risky.textproto", -1.0, personAttributes_));
+            interventionModel_.reset(new InterventionModel(
                 "../data/intervention_models/synthetic_small_city.textproto",
                 &personAttributes_, &locationAttributes_, *diseaseModel_);
         }
