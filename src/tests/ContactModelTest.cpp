@@ -30,6 +30,91 @@ namespace
         std::unique_ptr<ContactModel> contactModel_;
     };
 
+    class MinMaxAlphaModelTest : public ::testing::Test
+    {
+    protected:
+        void SetUp() override
+        {
+            locationAttrs_ = TestHelpers::CreateTestLocationAttributes();
+            minMaxModel_.reset(new MinMaxAlphaModel(locationAttrs_));
+        }
+
+        AttributeTable locationAttrs_;
+        std::unique_ptr<MinMaxAlphaModel> minMaxModel_;
+    };
+
+    // ConstantProbability tests
+
+    TEST(ContactModelFactoryTest, CreatesConstantProbabilityModel)
+    {
+        AttributeTable attrs = TestHelpers::CreateTestLocationAttributes();
+
+        ContactModel *model = createContactModel(
+            static_cast<int>(ContactModelType::constant_probability),
+            attrs);
+
+        ASSERT_NE(model, nullptr);
+
+        Location loc = TestHelpers::BuildTestLocation();
+        EXPECT_DOUBLE_EQ(model->getContactProbability(loc), 0.5);
+
+        delete model;
+    }
+
+    TEST_F(ContactModelTest, DefaultProbabilityIsConstant)
+    {
+        Location loc = TestHelpers::BuildTestLocation();
+
+        // Default contact probability should be 0.5
+        EXPECT_DOUBLE_EQ(contactModel_->getContactProbability(loc), 0.5);
+    }
+
+    TEST_F(ContactModelTest, ComputeLocationValuesDoesNotCrash)
+    {
+        Location loc = TestHelpers::BuildTestLocation();
+
+        // For default ContactModel, this should do nothing
+        EXPECT_NO_THROW(contactModel_->computeLocationValues(&loc));
+    }
+
+    TEST_F(ContactModelTest, MadeContactStatisticallyCorrect)
+    {
+        // Statistical test for contact probability
+        // Uses 99% confidence interval to reduce flakiness
+
+        Location loc = TestHelpers::BuildTestLocation();
+
+        Event e1 = TestHelpers::BuildTestEvent(0, ARRIVAL, 0);
+        Event e2 = TestHelpers::BuildTestEvent(1, ARRIVAL, 0);
+
+        const int trials = 10000;
+        int contacts = 0;
+
+        for (int i = 0; i < trials; i++)
+        {
+            if (contactModel_->madeContact(e1, e2, &loc))
+            {
+                contacts++;
+            }
+        }
+
+        double default_probability = 0.5;
+        double rate = static_cast<double>(contacts) / trials;
+
+        // Standard error for proportion: sqrt(p*(1-p)/n)
+        double std_error = sqrt(default_probability * (1 - default_probability) / trials);
+        
+        // 99.9% confidence interval (z = 3.29) to minimize flakiness
+        const double z_999 = 3.29;
+        double margin = z_999 * std_error;
+
+        // Rate should be within [0.5 - margin, 0.5 + margin]
+        EXPECT_GE(rate, default_probability - margin) 
+            << "Contact rate " << rate << " is too low";
+        EXPECT_LE(rate, default_probability + margin)
+            << "Contact rate " << rate << " is too high";
+    }
+
     TEST_F(MinMaxAlphaModelTest, EpsilonToEquation)
     {
         const unsigned int MIN = 5;
@@ -42,7 +127,7 @@ namespace
         const int numLocations = 20;
         std::vector<Location> locations = TestHelpers::BuildTestLocations(numLocations);
 
-        for (unsigned int index = 0; index <= numLocations; ++index)
+        for (unsigned int index = 0; index < numLocations; ++index)
         {
             Location &location = locations[index];
             std::vector<union Data> &data = location.getData();
@@ -67,7 +152,7 @@ namespace
         }
     }
 
-    // also test within epsilon exact equation for contact prob:
+    // idea of minmaxalphamodel (fixed for a given location):
     //   contactProbability.double_val = (MIN + (MAX - MIN) * (1.0 - exp(-max_visits / ALPHA))) / (max_visits - 1));
 
     // idea of minmaxalphamodel (fixed for a given location):
@@ -77,22 +162,9 @@ namespace
     // probability any pair of people interact == alpha
 
     // template code to acess MSV:
-    //   std::vector<union Data> &data = location->getData();
+    //   std::vector<union Data> &data = location.getData();
     //   double max_visits =
     //      static_cast<double>(data[maxSimVisitsIndex].int32_val);
-
-    class MinMaxAlphaModelTest : public ::testing::Test
-    {
-    protected:
-        void SetUp() override
-        {
-            locationAttrs_ = TestHelpers::CreateTestLocationAttributes();
-            minMaxModel_ = std::make_unique<MinMaxAlphaModel>(locationAttrs_);
-        }
-
-        AttributeTable locationAttrs_;
-        std::unique_ptr<MinMaxAlphaModel> minMaxModel_;
-    };
 
     TEST_F(MinMaxAlphaModelTest, ProbabilityIsValidRange)
     {
