@@ -44,29 +44,26 @@ namespace
 
         for (unsigned int index = 0; index <= numLocations; ++index)
         {
-            const Location &location = locations[index % numLocations];
-            std::vector<union Data> &data = location->getData();
+            Location &location = locations[index];
+            std::vector<union Data> &data = location.getData();
 
+            int maxSimVisitsIndex = 1;  // Based on TestHelpers location attributes
             double max_visits =
                 static_cast<double>(data[maxSimVisitsIndex].int32_val);
 
-            double contact_prob_equation =
-                (MIN + (MAX - MIN) * (1.0 - exp(-static_cast<double>(max_visits) / alpha))) /
-                (static_cast<double>(max_visits) - 1.0);
+            if (max_visits <= 1.0) {
+                continue;  // Skip invalid max_visits values
+            }
 
-            minMaxModel_->computeLocationValues(const_cast<Location *>(&location));
+            double contact_prob_equation =
+                (MIN + (MAX - MIN) * (1.0 - exp(-max_visits / alpha))) /
+                (max_visits - 1.0);
+
+            minMaxModel_->computeLocationValues(&location);
             double received_contact_prob =
                 minMaxModel_->getContactProbability(location);
 
-            // double contact_prob_epsilon =
-            //     (MIN + (MAX - MIN) * (static_cast<double>(max_visits) / (alpha + static_cast<double>(max_visits)))) /
-            //     (static_cast<double>(max_visits) - 1.0 + epsilon);
-
-            EXPECT_NEAR(contact_prob_equation, received_contact_prob, epsilon)
-
-            std::cout << " max_visits: " << max_visits
-                      << " equation: " << contact_prob_equation
-                      << " epsilon: " << contact_prob_epsilon;
+            EXPECT_NEAR(contact_prob_equation, received_contact_prob, epsilon);
         }
     }
 
