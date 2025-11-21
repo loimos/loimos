@@ -52,7 +52,8 @@ inline void sendInteractions(Location *loc, Scenario *scenario,
     Id personIdx, std::unordered_map<Id, std::vector<Interaction>> *interactions,
     int thisIndex);
 
-Counter processEvents(Location *loc, Scenario *scenario, int thisIndex) {
+Counter processEvents(Location *loc, Scenario *scenario,
+  std::ofstream *interactionsFile, int thisIndex) {
   std::vector<Event> *arrivals;
   std::vector<Event> infectiousArrivals;
   std::vector<Event> susceptibleArrivals;

@@ -7,4 +7,5 @@
 #include "Location.h"
 #include "Scenario.h"
 
-Counter processEvents(Location *loc, Scenario *scenario, int thisIndex);
+Counter processEvents(Location *loc, Scenario *scenario,
+    std::ofstream *interactionsFile, int thisIndex);

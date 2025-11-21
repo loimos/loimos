@@ -340,7 +340,7 @@ void Locations::ComputeInteractions() {
     Counter locVisits = loc.events.size() / 2;
     numVisits += locVisits;
 
-    Counter locInters = processEvents(&loc, scenario, thisIndex);
+    Counter locInters = processEvents(&loc, scenario, interactionsFile, thisIndex);
     numInteractions += locInters;
   }
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
