@@ -37,7 +37,7 @@ class Locations : public CBase_Locations {
 
   // Runs through all of the current events and return the indices of
   // any people who have been infected
-  Counter processEvents(Location *loc);
+  // Counter processEvents(Location *loc);
 
   // Helper functions to handle when a person leaves a location
   // onDeparture branches to one of the two other functions
@@ -71,7 +71,7 @@ class Locations : public CBase_Locations {
   void ReceiveVisitorStates(PersonStatesMessage msg);
   void QueueVisits();
   void ReceiveVisitMessages(VisitMessage visitMsg);
-  // void ComputeInteractions();  // calls ReceiveInfections
+  void ComputeInteractions();  // calls ReceiveInfections
   void ReceiveIntervention(PartitionId interventionIdx);
   void ReceiveVisitIntervention(VisitInterventionMessage msg);
   #ifdef ENABLE_LB

@@ -336,7 +336,7 @@ void Locations::QueueVisits() {
 void Locations::ComputeInteractions() {
   Counter numVisits = 0;
   Counter numInteractions = 0;
-  for (Location &loc : *locations) {
+  for (Location &loc : locations) {
     Counter locVisits = loc.events.size() / 2;
     numVisits += locVisits;
 
