@@ -224,7 +224,7 @@ void onInfectiousDeparture(Location *loc, Scenario *scenario,
 }
 
 inline void registerInteraction(Location *loc, Scenario *scenario,
-    const Event &susceptibleEvent, const Event &infectiousEvent,Time startTime,
+    const Event &susceptibleEvent, const Event &infectiousEvent, Time startTime,
     Time endTime, std::unordered_map<Id, std::vector<Interaction>> *interactions) {
   if (!scenario->contactModel->madeContact(susceptibleEvent, infectiousEvent, loc)) {
     return;
