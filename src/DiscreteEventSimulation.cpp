@@ -19,9 +19,8 @@
 #include <vector>
 #include <algorithm>
 #include <unordered_map>
-// Forward declarations
-Counter processEvents(Location *loc, Scenario *scenario, int thisIndex);
 
+// Forward declarations
 #if OUTPUT_FLAGS & OUTPUT_OVERLAPS
 Counter saveInteractions(const Location &loc,
     const Event &departure, std::ofstream *out,
@@ -52,32 +51,6 @@ inline void registerInteraction(Location *loc, Scenario *scenario,
 inline void sendInteractions(Location *loc, Scenario *scenario,
     Id personIdx, std::unordered_map<Id, std::vector<Interaction>> *interactions,
     int thisIndex);
-
-void ComputeInteractions(std::vector<Location> *locations, Scenario *scenario,
-  int day, int thisIndex) {
-  Counter numVisits = 0;
-  Counter numInteractions = 0;
-  for (Location &loc : *locations) {
-    Counter locVisits = loc.events.size() / 2;
-    numVisits += locVisits;
-
-    Counter locInters = processEvents(&loc, scenario, thisIndex);
-    numInteractions += locInters;
-  }
-#if ENABLE_DEBUG >= DEBUG_VERBOSE
-  CkCallback cb(CkReductionTarget(Main, ReceiveInteractionsCount), mainProxy);
-  contribute(sizeof(Counter), &numInteractions,
-      CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), cb);
-#endif
-
-#if ENABLE_DEBUG >= DEBUG_PER_CHARE
-  if (0 == day) {
-    CkPrintf("    Process %d, thread %d: " COUNTER_PRINT_TYPE " visits, "
-        COUNTER_PRINT_TYPE" interactions, %lu locations\n",
-        CkMyNode(), CkMyPe(), numVisits, numInteractions, locations.size());
-  }
-#endif
-}
 
 Counter processEvents(Location *loc, Scenario *scenario, int thisIndex) {
   std::vector<Event> *arrivals;
