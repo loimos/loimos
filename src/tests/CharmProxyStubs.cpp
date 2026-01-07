@@ -8,8 +8,8 @@
  * InterventionModel.cpp references, allowing unit tests to link.
  */
 
-// Include the Charm++ declarations
-#include "../loimos.decl.h"
+// Include stubbed Charm++ declarations for unit testing
+#include "loimos.decl.h"
 
 // Define the global proxy instances (declared extern in Extern.h)
 CProxy_People peopleArray;

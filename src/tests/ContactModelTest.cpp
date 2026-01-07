@@ -80,7 +80,7 @@ namespace
     TEST_F(ContactModelTest, MadeContactStatisticallyCorrect)
     {
         // Statistical test for contact probability
-        // Uses 99% confidence interval to reduce flakiness
+        // Uses 99% confidence interval for low flakiness
 
         Location loc = TestHelpers::BuildTestLocation();
 
@@ -98,18 +98,20 @@ namespace
             }
         }
 
+        // TODO: make parameter/CLI argument
+        // look at parse.h/parse.cpp
         double default_probability = 0.5;
         double rate = static_cast<double>(contacts) / trials;
 
         // Standard error for proportion: sqrt(p*(1-p)/n)
         double std_error = sqrt(default_probability * (1 - default_probability) / trials);
-        
+
         // 99.9% confidence interval (z = 3.29) to minimize flakiness
         const double z_999 = 3.29;
         double margin = z_999 * std_error;
 
         // Rate should be within [0.5 - margin, 0.5 + margin]
-        EXPECT_GE(rate, default_probability - margin) 
+        EXPECT_GE(rate, default_probability - margin)
             << "Contact rate " << rate << " is too low";
         EXPECT_LE(rate, default_probability + margin)
             << "Contact rate " << rate << " is too high";
@@ -132,12 +134,13 @@ namespace
             Location &location = locations[index];
             std::vector<union Data> &data = location.getData();
 
-            int maxSimVisitsIndex = 1;  // Based on TestHelpers location attributes
+            int maxSimVisitsIndex = 1; // Based on TestHelpers location attributes
             double max_visits =
                 static_cast<double>(data[maxSimVisitsIndex].int32_val);
 
-            if (max_visits <= 1.0) {
-                continue;  // Skip invalid max_visits values
+            if (max_visits <= 1.0)
+            {
+                continue; // Skip invalid max_visits values
             }
 
             double contact_prob_equation =
@@ -152,7 +155,6 @@ namespace
         }
     }
 
-    // idea of minmaxalphamodel (fixed for a given location):
     //   contactProbability.double_val = (MIN + (MAX - MIN) * (1.0 - exp(-max_visits / ALPHA))) / (max_visits - 1));
 
     // idea of minmaxalphamodel (fixed for a given location):

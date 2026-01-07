@@ -7,7 +7,11 @@
 #include "AttributeTable.h"
 #include "DataReader.h"
 #include "Data.h"
+
+#ifndef UNIT_TEST
 #include "../loimos.decl.h"
+#endif
+
 #include "../protobuf/data.pb.h"
 #include "../Types.h"
 #include "../Defs.h"

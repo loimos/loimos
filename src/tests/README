@@ -1,4 +1,4 @@
-This testing suite uses GoogleTest.
+This testing suite uses GoogleTest and local Charm++ stubs (no Charm++ runtime required).
 
 To run the tests you have to install 
 https://github.com/google/googletest/tree/master/googletest

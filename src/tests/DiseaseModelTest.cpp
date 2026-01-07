@@ -6,7 +6,7 @@
 
 #include "../DiseaseModel.h"
 #include "../Defs.h"
-#include "../loimos.decl.h"
+// #include "../loimos.decl.h"
 #include "../Event.h"
 #include "../readers/AttributeTable.h"
 #include "gtest/gtest.h"
