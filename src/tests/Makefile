@@ -111,5 +111,26 @@ test-local: $(WORKING_TEST_BINS)
 	@echo "Running tests locally..."
 	@for test in $(WORKING_TEST_BINS); do ./$$test || exit 1; done
 
+# Code coverage support
+# Usage: make coverage CXXFLAGS="-g -O0 -std=c++11 --coverage"
+.PHONY: coverage coverage-report coverage-clean
+
+coverage: CXXFLAGS += --coverage -fprofile-arcs -ftest-coverage
+coverage: clean test-all
+	@echo "Coverage data collected. Run 'make coverage-report' to generate HTML."
+
+coverage-report:
+	@echo "Generating coverage report..."
+	cd .. && lcov --capture --directory . --output-file coverage.info
+	cd .. && lcov --remove coverage.info '/usr/*' '*/googletest/*' '*/protobuf/*' --output-file coverage.info
+	cd .. && genhtml coverage.info --output-directory coverage_html
+	@echo "Coverage report generated in src/coverage_html/index.html"
+
+coverage-clean:
+	find .. -name "*.gcda" -delete
+	find .. -name "*.gcno" -delete
+	rm -f ../coverage.info
+	rm -rf ../coverage_html
+
 clean:
 	rm -f *.o $(UNIT_TEST_BINS)
