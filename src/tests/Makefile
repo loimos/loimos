@@ -5,6 +5,10 @@
 
 include ../Makefile.include
 
+# Local Charm++ stubs for unit tests (avoid Charm runtime dependency)
+TEST_STUBS = $(CURDIR)/stubs
+CXXFLAGS += -I$(TEST_STUBS) -DUNIT_TEST -DENABLE_UNIT_TESTING
+
 # GoogleTest paths - GTEST_HOME should point to the googletest repo root
 # e.g., /path/to/loimos/src/googletest
 GTEST_INCLUDE = $(GTEST_HOME)/googletest/include
@@ -17,6 +21,14 @@ LIBS     += -L$(GTEST_LIB)
 # Currently working unit test executables
 WORKING_TEST_BINS = DiseaseModelTest InterventionModelTest ContactModelTest PartitionerTest
 UNIT_TEST_BINS = DiseaseModelTest InterventionModelTest ContactModelTest PartitionerTest
+
+# NOTE: charmrun prob not necessary for unit tests
+# CHARMC 
+
+# Unit tests use Charm++ stubs and avoid .decl.h/.def.h dependencies
+
+# look out for includes of charm.h, pupstl.h -- 
+# 	probably not needed for Scenario 
 
 # Required object files from parent directory for unit tests
 DISEASE_MODEL_DEPS = ../DiseaseModel.o ../Event.o ../readers/AttributeTable.o \
@@ -121,8 +133,8 @@ coverage: clean test-all
 
 coverage-report:
 	@echo "Generating coverage report..."
-	cd .. && lcov --capture --directory . --output-file coverage.info
-	cd .. && lcov --remove coverage.info '/usr/*' '*/googletest/*' '*/protobuf/*' --output-file coverage.info
+	cd .. && lcov --capture --directory . --ignore-errors mismatch --ignore-errors unused --output-file coverage.info
+	cd .. && lcov --remove coverage.info '/usr/*' '*/protobuf/*' --output-file coverage.info
 	cd .. && genhtml coverage.info --output-directory coverage_html
 	@echo "Coverage report generated in src/coverage_html/index.html"
 
@@ -132,5 +144,5 @@ coverage-clean:
 	rm -f ../coverage.info
 	rm -rf ../coverage_html
 
-clean:
+clean: coverage-clean
 	rm -f *.o $(UNIT_TEST_BINS)
