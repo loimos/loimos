@@ -104,6 +104,9 @@ Counter processEvents(Location *loc, Scenario *scenario,
 #endif  // DEBUG_VERBOSE
 }
 
+// Writes a line per overlap containing information about
+// the overlapping people. For debugging/instrumentation 
+// purposes. 
 #if OUTPUT_FLAGS & OUTPUT_OVERLAPS
 Counter saveInteractions(const Location &loc,
     const Event &departure, std::ofstream *out,
@@ -157,6 +160,8 @@ inline void onDeparture(Location *loc, Scenario *scenario, const Event& departur
   }
 }
 
+// Handles a susceptible person's departure, registering any interactions
+// with infectious people. 
 void onSusceptibleDeparture(Location *loc, Scenario *scenario,
     const Event& susceptibleDeparture, const std::vector<Event> &infectiousArrivals,
     std::unordered_map<Id, std::vector<Interaction>> *interactions, int thisIndex) {
@@ -174,6 +179,8 @@ void onSusceptibleDeparture(Location *loc, Scenario *scenario,
     thisIndex);
 }
 
+// Handles an infectious person's departure, registering any interactions 
+// with susceptible people. 
 void onInfectiousDeparture(Location *loc, Scenario *scenario,
     const Event& infectiousDeparture, const std::vector<Event> &susceptibleArrivals,
     std::unordered_map<Id, std::vector<Interaction>> *interactions) {
