@@ -42,7 +42,7 @@ inline void registerInteraction(Location *loc, Scenario *scenario,
     const Event &susceptibleEvent, const Event &infectiousEvent,
     Time startTime, Time endTime,
     std::unordered_map<Id, std::vector<Interaction>> *interactions);
-    
+
 inline void sendInteractions(Location *loc, Scenario *scenario,
     Id personIdx, std::unordered_map<Id, std::vector<Interaction>> *interactions,
     int thisIndex);
