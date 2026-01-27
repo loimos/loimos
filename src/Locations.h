@@ -79,6 +79,7 @@ class Locations : public CBase_Locations {
   void SendExpectedVisitors();
   void ReceiveVisitorStates(PersonStatesMessage msg);
   void QueueVisits();
+  void queueVisitsImpl();
   void ReceiveVisitMessages(VisitMessage visitMsg);
   void ComputeInteractions();  // calls ReceiveInfections
   void ReceiveIntervention(PartitionId interventionIdx);

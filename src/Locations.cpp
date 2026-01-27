@@ -302,7 +302,13 @@ void Locations::ReceiveVisitorStates(PersonStatesMessage msg) {
   msg.states.clear();
 }
 
+
 void Locations::QueueVisits() {
+  queueVisitsImpl();
+  ComputeInteractions();
+}
+
+void Locations::queueVisitsImpl() {
   for (Location &location : locations) {
     const std::vector<VisitMessage> &visits =
       location.visitsByDay[day % scenario->numDaysWithDistinctVisits];
@@ -329,8 +335,6 @@ void Locations::QueueVisits() {
 #endif
     }
   }
-
-  ComputeInteractions();
 }
 
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
