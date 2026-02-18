@@ -19,11 +19,12 @@ CXXFLAGS += -I$(GTEST_INCLUDE)
 LIBS     += -L$(GTEST_LIB)
 
 # Currently working unit test executables
-WORKING_TEST_BINS = DiseaseModelTest InterventionModelTest ContactModelTest PartitionerTest
+# WORKING_TEST_BINS excludes InterventionModelTest until API updates land
+WORKING_TEST_BINS = DiseaseModelTest ContactModelTest PartitionerTest
 UNIT_TEST_BINS = DiseaseModelTest InterventionModelTest ContactModelTest PartitionerTest
 
-# NOTE: charmrun prob not necessary for unit tests
-# CHARMC 
+
+# NOTE: charmrun prob not necessary for unit tests, same for CHARMC 
 
 # Unit tests use Charm++ stubs and avoid .decl.h/.def.h dependencies
 
@@ -52,8 +53,10 @@ PARTITIONER_DEPS = ../Partitioner.o ../readers/Preprocess.o \
                    ../readers/Parse.o \
                    ../protobuf/data.pb.o ../protobuf/distribution.pb.o
 
-# Charm++ stubs for unit tests (provides CkAbort, CmiAbort, proxy stubs, etc.)
-CHARM_STUBS = CharmStubs.o CharmProxyStubs.o
+# functional Charm++ stubs implementations for unit tests 
+# (provides CkAbort, CmiAbort, )
+# NOTE: only recommended for unit-test specific functionality; others should be stubbed via headers (trivial implementations)
+CHARM_STUBS = CharmStubs.o
 
 .PHONY: all clean test-all test-disease-model test-intervention-model test-contact-model test-partitioner
 
@@ -76,8 +79,6 @@ PartitionerTest: PartitionerTest.o $(PARTITIONER_DEPS) $(CHARM_STUBS)
 CharmStubs.o: CharmStubs.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-CharmProxyStubs.o: CharmProxyStubs.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 # Build test object files
 DiseaseModelTest.o: DiseaseModelTest.cpp

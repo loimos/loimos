@@ -4,9 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#ifndef UNIT_TEST
 #include "loimos.decl.h"
-#endif
 #include "Event.h"
 #include "Defs.h"
 #include "Types.h"

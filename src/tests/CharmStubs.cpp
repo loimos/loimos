@@ -10,6 +10,22 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstdarg>
+#include <string>
+#include "gtest/gtest.h"
+
+// Helper: format a va_list message into a std::string.
+static std::string FormatVA(const char* format, va_list args) {
+    // Measure required size.
+    va_list args_copy;
+    va_copy(args_copy, args);
+    int n = vsnprintf(nullptr, 0, format, args_copy);
+    va_end(args_copy);
+    if (n < 0) return "(vsnprintf error)";
+    std::string buf(static_cast<size_t>(n) + 1, '\0');
+    vsnprintf(&buf[0], buf.size(), format, args);
+    buf.resize(static_cast<size_t>(n));
+    return buf;
+}
 
 extern "C" {
 
@@ -17,24 +33,23 @@ extern "C" {
 int _Cmi_mype = 0;      // Current PE (processor element)
 int _Cmi_numpes = 1;    // Total number of PEs
 
-// CkAbort - called for fatal errors
+// CkAbort - log a non-fatal GoogleTest failure so the test is marked FAILED
+// but the process keeps running (no abort()).
 void CkAbort(const char* format, ...) {
     va_list args;
     va_start(args, format);
-    fprintf(stderr, "CkAbort: ");
-    vfprintf(stderr, format, args);
+    std::string msg = FormatVA(format, args);
     va_end(args);
-    abort();
+    GTEST_FAIL() << "CkAbort: " << msg;
 }
 
-// CmiAbort - lower-level abort
+// CmiAbort - same treatment as CkAbort for unit-test builds.
 void CmiAbort(const char* format, ...) {
     va_list args;
     va_start(args, format);
-    fprintf(stderr, "CmiAbort: ");
-    vfprintf(stderr, format, args);
+    std::string msg = FormatVA(format, args);
     va_end(args);
-    abort();
+    GTEST_FAIL() << "CmiAbort: " << msg;
 }
 
 // CkPrintf - Charm++ printf

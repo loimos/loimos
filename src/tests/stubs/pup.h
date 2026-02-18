@@ -11,6 +11,12 @@
 namespace PUP {
 class er {
  public:
+  // State query methods used by production pup() implementations
+  bool isPacking() const { return false; }
+  bool isUnpacking() const { return false; }
+  bool isSizing() const { return false; }
+  bool isDeleting() const { return false; }
+
   template <typename T>
   er &operator|(T &) {
     return *this;
@@ -23,7 +29,7 @@ class er {
 }  // namespace PUP
 
 #ifndef PUPbytes
-#define PUPbytes(type)
+#define PUPbytes(type) static_assert(sizeof(type) >= 0, "PUPbytes stub requires complete type")
 #endif
 
 #endif  // TESTS_STUBS_PUP_H_
