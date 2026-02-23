@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#ifndef UNIT_TEST
+#ifndef ENABLE_UNIT_TESTING
 #include "../loimos.decl.h"
 #endif
 #include "../Location.h"
