@@ -46,7 +46,12 @@ class Locations : public CBase_Locations {
   void SendExpectedVisitors();
   void ReceiveVisitorStates(PersonStatesMessage msg);
   void QueueVisits();
-  void queueVisitsImpl();
+  static void queueVisitsImpl(
+    std::vector<Location>& locations,
+    const Scenario* scenario,
+    int day,
+    const std::unordered_map<Id, PersonState>& visitorStates
+  );
   void ReceiveVisitMessages(VisitMessage visitMsg);
   void ComputeInteractions();  // calls ReceiveInfections
   void ReceiveIntervention(PartitionId interventionIdx);

@@ -304,11 +304,16 @@ void Locations::ReceiveVisitorStates(PersonStatesMessage msg) {
 
 
 void Locations::QueueVisits() {
-  queueVisitsImpl();
+  queueVisitsImpl(locations, scenario, day, visitorStates);
   ComputeInteractions();
 }
 
-void Locations::queueVisitsImpl() {
+void Locations::queueVisitsImpl(
+    std::vector<Location>& locations,
+    const Scenario* scenario,
+    int day,
+    const std::unordered_map<Id, PersonState>& visitorStates
+ ) {
   for (Location &location : locations) {
     const std::vector<VisitMessage> &visits =
       location.visitsByDay[day % scenario->numDaysWithDistinctVisits];
