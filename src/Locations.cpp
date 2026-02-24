@@ -322,7 +322,7 @@ void Locations::queueVisitsImpl(
         continue;
       }
 
-      const PersonState &state = visitorStates[visit.personIdx];
+      const PersonState &state = visitorStates.at(visit.personIdx);
       Event arrival { ARRIVAL, visit.personIdx, state.state,
         state.transmissionModifier, visit.visitStart };
       Event departure { DEPARTURE, visit.personIdx, state.state,
