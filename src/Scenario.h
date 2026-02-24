@@ -55,6 +55,22 @@ class Scenario : public CBase_Scenario {
   ContactModel *contactModel;
   InterventionModel *interventionModel;
 
+  Scenario()
+          : seed(0),
+            numDays(0),
+            numDaysWithDistinctVisits(1),
+            numDaysToSeedOutbreak(0),
+            numInitialInfectionsPerDay(0),
+            scenarioPath(""),
+            outputPath(""),
+            personDef(nullptr),
+            locationDef(nullptr),
+            visitDef(nullptr),
+            onTheFly(nullptr),
+            partitioner(nullptr),
+            diseaseModel(nullptr),
+            contactModel(nullptr),
+            interventionModel(nullptr) {}
   explicit Scenario(Arguments args);
   void ApplyInterventions(int day, Id newDailyInfections);
   bool isOnTheFly();

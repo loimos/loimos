@@ -43,6 +43,11 @@ class DiseaseModel {
   int susceptibilityIndex;
   int infectivityIndex;
 
+  DiseaseModel()
+          : model(nullptr),
+            ageIndex(0),
+            susceptibilityIndex(0),
+            infectivityIndex(0) {}
   DiseaseModel(std::string diseasePath, double transmissibility,
     const AttributeTable &attrs);
   DiseaseState getIndexOfState(std::string stateLabel) const;
