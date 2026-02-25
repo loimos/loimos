@@ -20,6 +20,7 @@
 
 #include <string>
 #include <vector>
+ #include <cstdint>
 
 AttributeTable::AttributeTable(int size) {
   if (size != 0) {
