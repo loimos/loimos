@@ -9,6 +9,7 @@ on:
     branches:
       - develop
       - "develop-*"
+      - "UnitTests/CICD"
   pull_request:
     branches:
       - "*"
