@@ -19,7 +19,7 @@
 // as well as the constants MIN, MAX, and ALPHA
 class MinMaxAlphaModel : public ContactModel
 {
-#if ENABLE_UNIT_TESTS
+#if ENABLE_UNIT_TESTING
 public:
 #else
 private:

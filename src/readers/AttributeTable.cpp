@@ -8,7 +8,7 @@
 #include "DataReader.h"
 #include "Data.h"
 
-#ifndef UNIT_TEST
+#ifndef ENABLE_UNIT_TESTING
 #include "../loimos.decl.h"
 #endif
 
