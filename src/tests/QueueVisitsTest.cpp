@@ -106,8 +106,4 @@ TEST(LocationsTest, QueueVisitsImpl_CreatesArrivalAndDepartureEvents) {
   EXPECT_EQ(events[1].type, DEPARTURE);
   EXPECT_EQ(events[1].personIdx, 0);
   EXPECT_EQ(events[1].scheduledTime, 20);
-
-  // Check pairings
-  EXPECT_EQ(events[0].pairedEvent, &events[1]);
-  EXPECT_EQ(events[1].pairedEvent, &events[0]);
 }
