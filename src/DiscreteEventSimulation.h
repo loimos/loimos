@@ -15,6 +15,10 @@
 #include <vector>
 #include <unordered_map>
 
+void queueVisitsImpl(std::vector<Location>& locations,
+   const Scenario* scenario, int day,
+   const std::unordered_map<Id, PersonState>& visitorStates);
+
 // Processes all of the current events and returns indices of
 // people who have been infected.
 Counter processEvents(Location *loc, Scenario *scenario,

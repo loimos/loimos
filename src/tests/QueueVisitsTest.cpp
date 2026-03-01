@@ -8,6 +8,7 @@
 #include "../DiseaseModel.h"
 #include "../Types.h"
 #include "../Defs.h"
+#include "../DiscreteEventSimulation.h"
 
 class FakeDiseaseModel : public DiseaseModel {
 public:
@@ -86,7 +87,7 @@ TEST(LocationsTest, QueueVisitsImpl_CreatesArrivalAndDepartureEvents) {
 
   visitorStates.emplace(0, ps);
 
-  Locations::queueVisitsImpl(
+  queueVisitsImpl(
       locations,
       &scenario,
       day,
