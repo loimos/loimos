@@ -5,6 +5,9 @@
 
 include ../Makefile.include
 
+# GoogleTest requires at least C++17
+CXXFLAGS := $(OPTS) -std=c++17 $(INCLUDES)
+
 # GoogleTest paths - GTEST_HOME should point to the googletest repo root
 # e.g., /path/to/loimos/src/googletest
 GTEST_INCLUDE = $(GTEST_HOME)/googletest/include
