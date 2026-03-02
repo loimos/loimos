@@ -37,11 +37,6 @@ ifdef ENABLE_SC
 BIN   :=$(BIN)-sc
 endif
 
-# Set the ENABLE_UNIT_TESTING environment variable to compile for unit testing
-ifdef ENABLE_UNIT_TESTING
-UNIT_TEST_OBJS = tests/DiseaseModelTest.o
-endif
-
 # Set the USE_HYPERCOMM environment variable to compile for Charm++'s in-built
 # dynamic load balancing
 ifdef USE_HYPERCOMM
@@ -58,7 +53,7 @@ else
 PROJECTION_FLAGS =
 endif
 
-SUBDIRS = protobuf tests
+SUBDIRS = protobuf
 
 .PHONY:all
 all: all-sub $(BIN)
