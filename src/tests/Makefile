@@ -15,8 +15,8 @@ CXXFLAGS += -I$(GTEST_INCLUDE)
 LIBS     += -L$(GTEST_LIB)
 
 # Currently working unit test executables
-WORKING_TEST_BINS = DiseaseModelTest InterventionModelTest ContactModelTest PartitionerTest
-UNIT_TEST_BINS = DiseaseModelTest InterventionModelTest ContactModelTest PartitionerTest
+WORKING_TEST_BINS = DiseaseModelTest InterventionModelTest ContactModelTest PartitionerTest QueueVisitsTest
+UNIT_TEST_BINS = DiseaseModelTest InterventionModelTest ContactModelTest PartitionerTest QueueVisitsTest
 
 # Required object files from parent directory for unit tests
 DISEASE_MODEL_DEPS = ../DiseaseModel.o ../Event.o ../readers/AttributeTable.o \
@@ -39,6 +39,8 @@ PARTITIONER_DEPS = ../Partitioner.o ../readers/Preprocess.o \
                    ../readers/DataReader.o ../readers/AttributeTable.o \
                    ../readers/Parse.o \
                    ../protobuf/data.pb.o ../protobuf/distribution.pb.o
+QUEUE_VISITS_DEPS = ../Locations.o ../Location.o ../Scenario.o \
+		    ../DiseaseModel.o ../DiscreteEventSimulation.o
 
 # Charm++ stubs for unit tests (provides CkAbort, CmiAbort, proxy stubs, etc.)
 CHARM_STUBS = CharmStubs.o CharmProxyStubs.o
@@ -58,6 +60,8 @@ ContactModelTest: ContactModelTest.o $(CONTACT_MODEL_DEPS) $(CHARM_STUBS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ -lgtest -lgtest_main -lpthread $(LIBS)
 
 PartitionerTest: PartitionerTest.o $(PARTITIONER_DEPS) $(CHARM_STUBS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ -lgtest -lgtest_main -lpthread $(LIBS)
+QueueVisitsTest: QueueVisitsTest.o $(QUEUE_VISITS_DEPS) 
 	$(CXX) $(CXXFLAGS) -o $@ $^ -lgtest -lgtest_main -lpthread $(LIBS)
 
 # Build Charm++ stubs
@@ -79,7 +83,8 @@ ContactModelTest.o: ContactModelTest.cpp
 
 PartitionerTest.o: PartitionerTest.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
+QueueVisitsTest.o: QueueVisitsTest.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 # Run individual unit tests (from src/ directory for data file paths)
 test-disease-model: DiseaseModelTest
 	cd .. && ./tests/DiseaseModelTest
