@@ -4,10 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "loimos.decl.h"
 #include "Scenario.h"
 #include "Types.h"
-#include "Extern.h"
 #include "Defs.h"
 #include "Partitioner.h"
 #include "DiseaseModel.h"
