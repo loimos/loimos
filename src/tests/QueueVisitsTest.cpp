@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 
-#include "../loimos.decl.h"
-#include "../Locations.h"
+struct CBase_Scenario {};
+
 #include "../Location.h"
 #include "../Message.h"
 #include "../Scenario.h"
