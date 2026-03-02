@@ -1,7 +1,5 @@
 #include "gtest/gtest.h"
 
-struct CBase_Scenario {};
-
 #include "../Location.h"
 #include "../Message.h"
 #include "../Scenario.h"
