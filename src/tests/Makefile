@@ -39,7 +39,7 @@ PARTITIONER_DEPS = ../Partitioner.o ../readers/Preprocess.o \
                    ../readers/DataReader.o ../readers/AttributeTable.o \
                    ../readers/Parse.o \
                    ../protobuf/data.pb.o ../protobuf/distribution.pb.o
-QUEUE_VISITS_DEPS = ../Locations.o ../Location.o ../Scenario.o \
+QUEUE_VISITS_DEPS = ../Location.o ../Scenario.o \
 		    ../DiseaseModel.o ../DiscreteEventSimulation.o
 
 # Charm++ stubs for unit tests (provides CkAbort, CmiAbort, proxy stubs, etc.)

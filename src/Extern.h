@@ -7,7 +7,7 @@
 #ifndef EXTERN_H_
 #define EXTERN_H_
 
-#include "loimos.decl.h"
+#include "decl.h"
 
 #include <string>
 
