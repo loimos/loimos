@@ -6,12 +6,6 @@
 #ifndef SCENARIO_H__
 #define SCENARIO_H__
 
-#ifdef ENABLE_UNIT_TESTING
-struct CBase_Scenario {};
-#else
-#include "loimos.decl.h"
-#endif
-
 #include "Types.h"
 #include "Event.h"
 #include "Person.h"
@@ -19,7 +13,6 @@ struct CBase_Scenario {};
 #include "protobuf/data.pb.h"
 #include "Partitioner.h"
 #include "DiseaseModel.h"
-#include "readers/Parse.h"
 #include "contact_model/ContactModel.h"
 #include "intervention_model/InterventionModel.h"
 
