@@ -6,16 +6,16 @@
  name: C++ Unit Tests
  
  on:
-   push:
-     branches: [ main, master, develop ]
-   pull_request:
-     branches: [ main, master, develop ]
+  push:
+    branches:
+      - develop
+      - "develop-*"
+      - "UnitTests/CICD"
+  pull_request:
+    branches:
+      - "*"
+
  
- env:
-   # Compiler settings
-   CXX: g++
-   CXXFLAGS: -g -O2 -std=c++11
-   
  jobs:
    test:
      runs-on: ubuntu-22.04

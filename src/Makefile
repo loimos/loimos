@@ -58,7 +58,7 @@ else
 PROJECTION_FLAGS =
 endif
 
-SUBDIRS = protobuf tests
+SUBDIRS = protobuf
 
 .PHONY:all
 all: all-sub $(BIN)
