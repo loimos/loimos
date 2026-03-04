@@ -6,6 +6,7 @@
 #ifndef SCENARIO_H__
 #define SCENARIO_H__
 
+#include "readers/Parse.h"
 #include "Types.h"
 #include "Event.h"
 #include "Person.h"
