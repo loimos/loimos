@@ -1,3 +1,12 @@
+# No editor generated files
+*.swp
+
+# No code coverage reports
+src/coverage.info
+src/coverage_html/*
+*.gcda
+*.gcno
+
 # No generated code files
 *.decl.h
 *.def.h
