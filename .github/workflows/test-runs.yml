@@ -13,6 +13,8 @@ on:
   pull_request:
     branches:
       - "*"
+    branches:
+      - "*"
 
 env:
   ACTIONS_RUNNER_DEBUG: true
