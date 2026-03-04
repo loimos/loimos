@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "loimos.decl.h"
+#include "decl.h"
 #include "DiscreteEventSimulation.h"
 #include "Types.h"
 #include "Location.h"

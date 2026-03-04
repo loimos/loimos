@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "../loimos.decl.h"
+#include "../decl.h"
 #include "../Locations.h"
 #include "../Location.h"
 #include "../Message.h"
