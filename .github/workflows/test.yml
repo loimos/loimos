@@ -49,9 +49,10 @@
          git clone --branch v1.12.x https://github.com/google/googletest.git gtest
          cd gtest
          git checkout release-1.12.1
-         mkdir build && cd build
-         cmake .. -DCMAKE_CXX_STANDARD=11
-         make -j$(nproc)
+         mkdir build install 
+         cd build
+         cmake .. -DCMAKE_CXX_STANDARD=11 -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/gtest/install
+         make -j$(nproc) && make install
  
      - name: Set environment variables
        run: |
