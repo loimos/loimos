@@ -102,6 +102,9 @@ void InterventionModel::applyInterventions(int day, Id newDailyInfections,
       triggerFlags.end());
   toggleInterventions(day, newDailyInfections, numPeople);
 
+// TODO: review hackiness of this testing exclusion
+#ifndef ENABLE_UNIT_TESTING
+  // no need to run charm broadcasts in unit tests
   for (uint i = 0; i < personInterventions.size(); ++i) {
     int triggerIndex = personInterventions[i]->getTriggerIndex();
     if (triggerFlags[triggerIndex] || prevTriggerFlags[triggerIndex]) {
@@ -114,6 +117,7 @@ void InterventionModel::applyInterventions(int day, Id newDailyInfections,
       locationsArray.ReceiveIntervention(i);
     }
   }
+#endif  // ENABLE_UNIT_TESTING
 }
 
 void InterventionModel::toggleInterventions(int day, Id newDailyInfections,
