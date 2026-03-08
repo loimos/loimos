@@ -58,7 +58,7 @@ else
 PROJECTION_FLAGS =
 endif
 
-SUBDIRS = protobuf tests
+SUBDIRS = protobuf
 
 .PHONY:all
 all: all-sub $(BIN)
@@ -103,6 +103,18 @@ TESTS=$(subst -,test-,$(TEST_NAMES))
 # Run all tests with test rule
 .PHONY:test $(TESTS)
 test: $(TESTS)
+
+# Unit tests (naming convention: test-unit-[*])
+.PHONY:test-unit-disease-model test-unit-intervention-model test-unit-all
+
+test-unit-disease-model:
+	$(MAKE) -C tests test-disease-model
+
+test-unit-intervention-model:
+	$(MAKE) -C tests test-intervention-model
+
+test-unit-all:
+	$(MAKE) -C tests test-all
 
 test-style:
 	cpplint --extensions=C,h,ci --root=loimos/src --recursive . &> linter-errors.log
