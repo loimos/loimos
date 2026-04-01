@@ -6,7 +6,6 @@
 
 #include "DataReader.h"
 
-#include <unistd.h>
 #include <vector>
 #include <stdio.h>
 #include <string>

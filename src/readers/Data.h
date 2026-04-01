@@ -8,7 +8,6 @@
 #define READERS_DATA_H_
 
 #include "charm++.h"
-#include <cstdint>
 
 #include <string>
 

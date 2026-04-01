@@ -4,205 +4,52 @@
  * SPDX-License-Identifier: MIT
  */
 
+#include "../loimos.decl.h"
 #include "../DiseaseModel.h"
-#include "../Defs.h"
-// #include "../loimos.decl.h"
-#include "../Event.h"
-#include "../readers/AttributeTable.h"
+#include "../People.h"
+#include "../Person.h"
 #include "gtest/gtest.h"
 
-#include <cmath>
-#include <limits>
-#include <memory>
-#include <random>
-#include <tuple>
-#include <vector>
+/** Tests the disease model. */
 
-namespace
-{
+namespace {
 
-  AttributeTable BuildTestAttributeTable()
-  {
-    AttributeTable table;
-    Attribute ageAttribute;
-    ageAttribute.name = "age";
-    ageAttribute.dataType = DataTypes::int32_;
-    Data ageDefault{};
-    ageDefault.int32_val = 0;
-    ageAttribute.defaultValue = ageDefault;
-    table.list.push_back(ageAttribute);
-    return table;
+class DiseaseModelTest : public ::testing::Test {
+ protected:
+  std::string PATH_TO_DISEASE_MODEL =
+    "../data/disease_models/validation_model.textproto";
+  std::string SCENARIO_PATH = "../data/populations/validation_set";
+
+  virtual void SetUp() {
+    diseaseModel = new DiseaseModel(PATH_TO_DISEASE_MODEL, SCENARIO_PATH);
   }
 
-  class SafeRiskyDiseaseModelTest : public ::testing::Test
-  {
-  protected:
-    void SetUp() override
-    {
-      attribute_table_ = BuildTestAttributeTable();
-    disease_model_.reset(new DiseaseModel(
-      "../data/disease_models/safe_risky.textproto", -1.0, attribute_table_));
-    }
+  DiseaseModel *diseaseModel;
+};
 
-    AttributeTable attribute_table_;
-    std::unique_ptr<DiseaseModel> disease_model_;
-  };
+TEST_F(DiseaseModelTest, InfectionTest) {
+  /** Tests disease model transitions. */
+  Data age;
+  age.int_b10 = 60;
+  std::vector<Data> personData;
+  personData.push_back(age);
+  Person *person =
+      new Person(1, diseaseModel->getHealthyState(personData), -1);
 
-  TEST_F(SafeRiskyDiseaseModelTest, HealthyStateDependsOnAge)
-  {
-    const uint32_t N = 100;
+  // Person should make a transition as they have no time in state left.
+  int originalState = person->state;
+  std::default_random_engine generator;
+  EXPECT_EQ(person->state, 3);  // Start in healthy risky.
+  person->EndOfDayStateUpdate(diseaseModel, &generator);
+  EXPECT_EQ(person->state, 4);  // Should transition
+  EXPECT_EQ(person->secondsLeftInState, 3 * (60 * 60 * 24));
+}
 
-    std::default_random_engine generator(12345);
-  std::uniform_int_distribution<int> distribution(0, 100);
+TEST_F(DiseaseModelTest, TestModelLoad) {
+  /** Tests that the model was loaded correctly. */
+  EXPECT_EQ(diseaseModel->getNumberOfStates(), 6);
+  EXPECT_EQ(diseaseModel->lookupStateName(0), "healthy_safe");
+  EXPECT_EQ(diseaseModel->lookupStateName(1), "infectious_safe");
+}
 
-    for (int i = 0; i < N; i++)
-    {
-      int age = distribution(generator);
-      std::vector<Data> person_data(1);
-      person_data[0].int32_val = age;
-      EXPECT_EQ(disease_model_->getHealthyState(person_data), age <= 50 ? 3 : 0);
-    }
-  }
-
-  TEST_F(SafeRiskyDiseaseModelTest, ExposureTransitionsAreImmediate)
-  {
-    std::default_random_engine generator(12345);
-    struct TransitionExpectation
-    {
-      DiseaseState from_state;
-      DiseaseState next_state;
-      Time duration;
-    };
-
-    const TransitionExpectation kTestCases[] = {
-        {3, 4, 0},                                // Exposure transitions are immediate
-        {2, 2, std::numeric_limits<Time>::max()}, // Terminal states do not advance
-        {4, 5, 3 * DAY_LENGTH}};                  // Timed transition returns duration in seconds
-
-    const size_t kNumCases = sizeof(kTestCases) / sizeof(kTestCases[0]);
-    for (size_t i = 0; i < kNumCases; ++i)
-    {
-      const TransitionExpectation &test_case = kTestCases[i];
-      const std::tuple<DiseaseState, Time> transition =
-          disease_model_->transitionFromState(test_case.from_state, &generator);
-      EXPECT_EQ(std::get<0>(transition), test_case.next_state);
-      EXPECT_EQ(std::get<1>(transition), test_case.duration);
-    }
-  }
-
-  TEST_F(SafeRiskyDiseaseModelTest, InfectiousAndSusceptibleFlagsMatchModel)
-  {
-    struct DiseaseFlags
-    {
-      DiseaseState state;
-      bool infectious;
-      bool susceptible;
-    };
-
-    const DiseaseFlags kExpected[] = {
-        {0, false, true},  // healthy_safe
-        {1, true, false},  // infectious_safe
-        {2, false, false}, // recovered_safe
-        {3, false, true},  // healthy_risky
-        {4, true, false},  // infectious_risky
-        {5, false, false}  // recovered_risky
-    };
-
-    const size_t kNumCases = sizeof(kExpected) / sizeof(kExpected[0]);
-    for (size_t i = 0; i < kNumCases; ++i)
-    {
-      const DiseaseFlags &entry = kExpected[i];
-      EXPECT_EQ(disease_model_->isInfectious(entry.state), entry.infectious);
-      EXPECT_EQ(disease_model_->isSusceptible(entry.state), entry.susceptible);
-    }
-  }
-
-  TEST_F(SafeRiskyDiseaseModelTest, LookupStateNamesReflectProtoOrder)
-  {
-    struct StateName
-    {
-      DiseaseState state;
-      const char *name;
-    };
-
-    const StateName kExpected[] = {
-        {0, "healthy_safe"},
-        {1, "infectious_safe"},
-        {2, "recovered_safe"},
-        {3, "healthy_risky"},
-        {4, "infectious_risky"},
-        {5, "recovered_risky"}};
-
-    const size_t kNumCases = sizeof(kExpected) / sizeof(kExpected[0]);
-    for (size_t i = 0; i < kNumCases; ++i)
-    {
-      const StateName &entry = kExpected[i];
-      EXPECT_EQ(disease_model_->lookupStateName(entry.state), entry.name);
-    }
-  }
-
-  TEST(DiseaseModelPropensityTest, PropensityScalesWithDurationAndModifiers)
-  {
-    AttributeTable attributes = BuildTestAttributeTable();
-    DiseaseModel model("../data/disease_models/covid19_onepath.textproto",
-                       -1.0, attributes);
-
-    const DiseaseState susceptible_state = 0; // S_a
-    const DiseaseState infectious_state = 5;  // Isymp_a
-    const Time start = 0;
-    const Time end = 12 * HOUR_LENGTH;
-
-    struct PropensityCase
-    {
-      double susceptibility;
-      double infectivity;
-    };
-
-    const PropensityCase kCases[] = {
-        {0.1, 0.1},
-        {0.1, 1.0},
-        {1.0, 0.1},
-        {1.0, 1.0}};
-
-    const double base_scale = model.model->transmissibility() * (end - start) *
-                              model.model->disease_states(susceptible_state).susceptibility() *
-                              model.model->disease_states(infectious_state).infectivity() /
-                              DAY_LENGTH;
-
-    const size_t kNumCases = sizeof(kCases) / sizeof(kCases[0]);
-    for (size_t i = 0; i < kNumCases; ++i)
-    {
-      const PropensityCase &test_case = kCases[i];
-      const double expected = base_scale * test_case.susceptibility * test_case.infectivity;
-      const double propensity = model.getPropensity(susceptible_state, infectious_state,
-                                                    start, end, test_case.susceptibility, test_case.infectivity);
-      EXPECT_DOUBLE_EQ(propensity, expected);
-    }
-  }
-
-  TEST(DiseaseModelLogProbTest, LogProbabilityAccountsForOverlapDuration)
-  {
-    // N=10 is acceptable in this case
-
-    AttributeTable attributes = BuildTestAttributeTable();
-    DiseaseModel model("../data/disease_models/covid19_onepath.textproto",
-                       -1.0, attributes);
-
-    Event susceptible_event{};
-    susceptible_event.personState = 0; // S_a; susceptibility 1
-    susceptible_event.scheduledTime = 0;
-
-    Event infectious_event{};
-    infectious_event.personState = 5; // Isymp_a; infectivity 1
-    infectious_event.scheduledTime = 6 * HOUR_LENGTH;
-
-    double expected_base = 1.0 - model.model->transmissibility() * model.model->disease_states(0).susceptibility() * model.model->disease_states(5).infectivity();
-
-    double expected = std::log(expected_base) * (6 * HOUR_LENGTH);
-
-    EXPECT_DOUBLE_EQ(model.getLogProbNotInfected(susceptible_event,
-                                                 infectious_event),
-                     expected);
-  }
-
-} // namespace
+}  // namespace

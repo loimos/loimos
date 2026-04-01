@@ -7,11 +7,7 @@
 #include "AttributeTable.h"
 #include "DataReader.h"
 #include "Data.h"
-
-#ifndef ENABLE_UNIT_TESTING
 #include "../loimos.decl.h"
-#endif
-
 #include "../protobuf/data.pb.h"
 #include "../Types.h"
 #include "../Defs.h"
@@ -20,7 +16,6 @@
 
 #include <string>
 #include <vector>
- #include <cstdint>
 
 AttributeTable::AttributeTable(int size) {
   if (size != 0) {

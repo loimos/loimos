@@ -11,9 +11,7 @@
  * dependent on the files given and the number of chares
  */
 
-#ifndef UNIT_TEST
 #include "../loimos.decl.h"
-#endif
 #include "Preprocess.h"
 #include "DataReader.h"
 #include "../Partitioner.h"
