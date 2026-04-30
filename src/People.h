@@ -57,7 +57,7 @@ class People : public CBase_People {
   void SendVisitorStates();
   void SendVisitMessages();
   double getTransmissionModifier(const Person &person);
-  void ReceiveInteractions(InteractionMessage interMsg);
+  void ReceiveInteractions(std::vector<InteractionMessage> interMsgs);
   void EndOfDayStateUpdate();
   void SendStats();
   void ReceiveIntervention(int interventionIdx);
