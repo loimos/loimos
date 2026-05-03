@@ -364,13 +364,13 @@ void Locations::ComputeInteractions() {
 
 // Add explanation here
 void Locations::sendInteractions(Location *loc, std::unordered_map<Id, std::vector<Interaction>> *interactions) {
-  for (auto &[personPartition, messages] : createPartitionToInteractionsMapping(&loc, interactions)) {
+  for (auto &[personPartition, messages] : createPartitionToMessagesMapping(loc, interactions)) {
     peopleArray[personPartition].ReceiveInteractions(messages);
   }
 }
 
 // Add explanation here
-std::unordered_map<PartitionId, std::vector<InteractionMessage>> Locations::createPartitionToInteractionsMapping(Location *loc, std::unordered_map<Id, std::vector<Interaction>> *interactions) {
+std::unordered_map<PartitionId, std::vector<InteractionMessage>> Locations::createPartitionToMessagesMapping(Location *loc, std::unordered_map<Id, std::vector<Interaction>> *interactions) {
   Partitioner *partitioner = scenario->partitioner;
   std::unordered_map<PartitionId, std::vector<InteractionMessage>> ans;
   for (const auto &[personIdx, interactionsList] : *interactions) {

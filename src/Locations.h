@@ -38,7 +38,7 @@ class Locations : public CBase_Locations {
   void loadLocationData(std::string scenarioPath);
   void loadVisitData(std::ifstream *activityData);
   void sendInteractions(Location *loc, std::unordered_map<Id, std::vector<Interaction>> *interactions);
-  std::unordered_map<PartitionId, std::vector<InteractionMessage>> Locations::createPartitionToInteractionsMapping(Location *loc, std::unordered_map<Id, std::vector<Interaction>> *interactions);
+  std::unordered_map<PartitionId, std::vector<InteractionMessage>> Locations::createPartitionToMessagesMapping(Location *loc, std::unordered_map<Id, std::vector<Interaction>> *interactions);
 
  public:
   explicit Locations(int seed, std::string scenarioPath);
