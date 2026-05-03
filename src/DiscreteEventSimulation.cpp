@@ -23,11 +23,11 @@
 // Runs through all of the current events and return the indices of
 // any people who have been infected
 Counter processEvents(Location *loc, Scenario *scenario,
-  std::ofstream *interactionsFile, int thisIndex) {
+  std::ofstream *interactionsFile, int thisIndex,
+  std::unordered_map<Id, std::vector<Interaction>> *interactions) {
   std::vector<Event> *arrivals;
   std::vector<Event> infectiousArrivals;
   std::vector<Event> susceptibleArrivals;
-  std::unordered_map<Id, std::vector<Interaction>> interactions;
 #if ENABLE_DEBUG >= DEBUG_VERBOSE
   Counter numInteractions = 0;
   Counter numPresent = 0;
@@ -80,7 +80,7 @@ Counter processEvents(Location *loc, Scenario *scenario,
 #endif
 
       onDeparture(loc, scenario, event, susceptibleArrivals, infectiousArrivals,
-        &interactions, thisIndex);
+        interactions, thisIndex);
     }
   }
   loc->reset();
@@ -174,9 +174,6 @@ void onSusceptibleDeparture(Location *loc, Scenario *scenario,
         susceptibleDeparture.partnerTime),
         susceptibleDeparture.scheduledTime, interactions);
   }
-
-  sendInteractions(loc, scenario, susceptibleDeparture.personIdx, interactions,
-    thisIndex);
 }
 
 // Handles an infectious person's departure, registering any interactions
@@ -214,39 +211,4 @@ inline void registerInteraction(Location *loc, Scenario *scenario,
   Interaction inter { propensity, infectiousEvent.personIdx,
     infectiousEvent.personState, startTime, endTime };
   (*interactions)[susceptibleEvent.personIdx].emplace_back(inter);
-}
-
-// Simple helper function which send the list of interactions with the
-// specified person to the appropriate People chare
-inline void sendInteractions(Location *loc, Scenario *scenario,
-    Id personIdx, std::unordered_map<Id, std::vector<Interaction>> *interactions,
-    int thisIndex) {
-  Partitioner *partitioner = scenario->partitioner;
-  PartitionId personPartition = partitioner->getPersonPartitionIndex(personIdx);
-#ifdef ENABLE_DEBUG
-  if (outOfBounds(0, partitioner->getNumPersonPartitions(), personPartition)) {
-    CkAbort("Error on chare %d: sending exposures at "
-      ID_PRINT_TYPE" to person " ID_PRINT_TYPE " on chare "
-      PARTITION_ID_PRINT_TYPE" outside of valid range [0, "
-      PARTITION_ID_PRINT_TYPE")\n", thisIndex, loc->getUniqueId(),
-      personIdx, personPartition, partitioner->getNumPersonPartitions());
-  }
-#endif
-
-  InteractionMessage interMsg(loc->getUniqueId(), personIdx,
-      (*interactions)[personIdx]);
-#ifdef USE_HYPERCOMM
-  Aggregator *agg = aggregatorProxy.ckLocalBranch();
-  if (agg->interact_aggregator) {
-    agg->interact_aggregator->send(peopleArray[personPartition], interMsg);
-    continue;
-  }
-#endif  // USE_HYPERCOMM
-
-  peopleArray[personPartition].ReceiveInteractions(interMsg);
-
-  // Free up space where we were storing interactions data. This also prevents
-  // interactions from being sent multiple times if this person has multiple
-  // visits to this location
-  interactions->erase(personIdx);
 }

@@ -51,9 +51,4 @@ inline void registerInteraction(Location *loc, Scenario *scenario,
     Time startTime, Time endTime,
     std::unordered_map<Id, std::vector<Interaction>> *interactions);
 
-// Sends interactions to appropriate People chare.
-inline void sendInteractions(Location *loc, Scenario *scenario,
-    Id personIdx, std::unordered_map<Id, std::vector<Interaction>> *interactions,
-    int thisIndex);
-
 #endif  // DISCRETEEVENTSIMULATION_H_
