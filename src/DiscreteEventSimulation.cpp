@@ -14,7 +14,6 @@
 #include "Scenario.h"
 #include "Interaction.h"
 #include "contact_model/ContactModel.h"
-#include "Extern.h"
 
 #include <vector>
 #include <algorithm>
