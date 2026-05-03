@@ -276,12 +276,7 @@ void Main::SeedInfections() {
       std::numeric_limits<double>::max(), -1, -1, -1, -1);
 
     InteractionMessage interMsg(-1, personIdx, interactions);
-    Aggregator* agg = aggregatorProxy.ckLocalBranch();
-    if (agg->interact_aggregator) {
-      agg->interact_aggregator->send(peopleArray[peoplePartitionIdx], interMsg);
-    } else {
-      peopleArray[peoplePartitionIdx].ReceiveInteractions(std::vector<InteractionMessage>{interMsg});
-    }
+    peopleArray[peoplePartitionIdx].ReceiveInteractions(std::vector<InteractionMessage>{interMsg});
   }
 }
 
