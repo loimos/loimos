@@ -18,7 +18,7 @@
 // Processes all of the current events and returns indices of
 // people who have been infected.
 Counter processEvents(Location *loc, Scenario *scenario,
-    std::ofstream *interactionsFile, int thisIndex, std::unordered_map<Id, 
+    std::ofstream *interactionsFile, int thisIndex, std::unordered_map<Id,
     std::vector<Interaction>> *interactions);
 
 // Debugging/Instrumentation

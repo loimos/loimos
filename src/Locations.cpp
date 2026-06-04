@@ -342,7 +342,7 @@ void Locations::ComputeInteractions() {
 
     // Map that will be populated with person ID to their list of interactions
     std::unordered_map<Id, std::vector<Interaction>> interactions;
-    Counter locInters = processEvents(&loc, scenario, interactionsFile, thisIndex, 
+    Counter locInters = processEvents(&loc, scenario, interactionsFile, thisIndex,
       &interactions);
     numInteractions += locInters;
 
@@ -366,19 +366,19 @@ void Locations::ComputeInteractions() {
 
 // Sends all person interactions. Groups interactions by person partition and sends each
 // partition's interaction messages as a single batch.
-void Locations::sendInteractions(Location *loc, std::unordered_map<Id, 
+void Locations::sendInteractions(Location *loc, std::unordered_map<Id,
   std::vector<Interaction>> *interactions) {
-  for (auto &[personPartition, messages] : 
+  for (auto &[personPartition, messages] :
     createPartitionToMessagesMapping(loc, interactions)) {
     peopleArray[personPartition].ReceiveInteractions(messages);
   }
 }
 
-// Groups interaction messages by destination person partition and returns this mapping. 
+// Groups interaction messages by destination person partition and returns this mapping.
 // Creates one InteractionMessage per person and stores it in the bucket corresponding
 // to that person's partition.
-std::unordered_map<PartitionId, std::vector<InteractionMessage>> 
-Locations::createPartitionToMessagesMapping(Location *loc, std::unordered_map<Id, 
+std::unordered_map<PartitionId, std::vector<InteractionMessage>>
+Locations::createPartitionToMessagesMapping(Location *loc, std::unordered_map<Id,
   std::vector<Interaction>> *interactions) {
   Partitioner *partitioner = scenario->partitioner;
   std::unordered_map<PartitionId, std::vector<InteractionMessage>> ans;
