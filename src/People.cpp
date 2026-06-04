@@ -470,34 +470,36 @@ double People::getTransmissionModifier(const Person &person) {
   return 1.0;
 }
 
-void People::ReceiveInteractions(InteractionMessage interMsg) {
-  Id localIdx = scenario->partitioner->getLocalPersonIndex(
+void People::ReceiveInteractions(std::vector<InteractionMessage> interMsgs) {
+  for (InteractionMessage interMsg : interMsgs) {
+    Id localIdx = scenario->partitioner->getLocalPersonIndex(
     interMsg.personIdx, thisIndex);
 
-#ifdef ENABLE_DEBUG
-  Id trueIdx = people[localIdx].getUniqueId();
-  if (interMsg.personIdx != trueIdx) {
-    CkAbort("Error on chare " PARTITION_ID_PRINT_TYPE
-    ": Person " ID_PRINT_TYPE "'s exposure at loc " ID_PRINT_TYPE
-    " received by person " ID_PRINT_TYPE " (local " ID_PRINT_TYPE ")\n",
-        thisIndex, interMsg.personIdx, interMsg.locationIdx, trueIdx,
-        localIdx);
-  }
+  #ifdef ENABLE_DEBUG
+    Id trueIdx = people[localIdx].getUniqueId();
+    if (interMsg.personIdx != trueIdx) {
+      CkAbort("Error on chare " PARTITION_ID_PRINT_TYPE
+      ": Person " ID_PRINT_TYPE "'s exposure at loc " ID_PRINT_TYPE
+      " received by person " ID_PRINT_TYPE " (local " ID_PRINT_TYPE ")\n",
+          thisIndex, interMsg.personIdx, interMsg.locationIdx, trueIdx,
+          localIdx);
+    }
 
-  if (outOfBounds(0l, numLocalPeople, localIdx)) {
-    CkAbort("Error on chare " PARTITION_ID_PRINT_TYPE
-      ": visit to location ("
-      ID_PRINT_TYPE "/" ID_PRINT_TYPE") outside of valid range [0, "
-      ID_PRINT_TYPE ")\n", thisIndex, localIdx, interMsg.personIdx,
-      numLocalPeople);
-  }
-#endif
+    if (outOfBounds(0l, numLocalPeople, localIdx)) {
+      CkAbort("Error on chare " PARTITION_ID_PRINT_TYPE
+        ": visit to location ("
+        ID_PRINT_TYPE "/" ID_PRINT_TYPE") outside of valid range [0, "
+        ID_PRINT_TYPE ")\n", thisIndex, localIdx, interMsg.personIdx,
+        numLocalPeople);
+    }
+  #endif
 
-  // Just concatenate the interaction lists so that we can process all of the
-  // interactions at the end of the day
-  Person &person = people[localIdx];
-  person.interactions.insert(person.interactions.end(),
-    interMsg.interactions.cbegin(), interMsg.interactions.cend());
+    // Just concatenate the interaction lists so that we can process all of the
+    // interactions at the end of the day
+    Person &person = people[localIdx];
+    person.interactions.insert(person.interactions.end(),
+      interMsg.interactions.cbegin(), interMsg.interactions.cend());
+    }
 }
 
 void People::ReceiveIntervention(int interventionIdx) {
