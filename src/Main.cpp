@@ -276,7 +276,8 @@ void Main::SeedInfections() {
       std::numeric_limits<double>::max(), -1, -1, -1, -1);
 
     InteractionMessage interMsg(-1, personIdx, interactions);
-    peopleArray[peoplePartitionIdx].ReceiveInteractions(std::vector<InteractionMessage>{interMsg});
+    peopleArray[peoplePartitionIdx].ReceiveInteractions(
+      std::vector<InteractionMessage>{interMsg});
   }
 }
 

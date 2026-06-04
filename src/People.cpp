@@ -499,7 +499,6 @@ void People::ReceiveInteractions(std::vector<InteractionMessage> interMsgs) {
     Person &person = people[localIdx];
     person.interactions.insert(person.interactions.end(),
       interMsg.interactions.cbegin(), interMsg.interactions.cend());
-
     }
 }
 
