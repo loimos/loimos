@@ -193,7 +193,7 @@ void onInfectiousDeparture(Location *loc, Scenario *scenario,
 
 // Helper function which packages all the necessary information about
 // an interaction between a susceptible person and an infectious person
-// and add it to the approriate list for the susceptible person
+// and adds it to the appropriate list for the susceptible person
 inline void registerInteraction(Location *loc, Scenario *scenario,
     const Event &susceptibleEvent, const Event &infectiousEvent, Time startTime,
     Time endTime, std::unordered_map<Id, std::vector<Interaction>> *interactions) {
@@ -205,8 +205,8 @@ inline void registerInteraction(Location *loc, Scenario *scenario,
     susceptibleEvent.personState, infectiousEvent.personState, startTime, endTime,
     susceptibleEvent.transmissionModifier, infectiousEvent.transmissionModifier);
 
-  // Note that this will create a new vector if this is the first potential
-  // infection for the susceptible person in question
+  // Note that this will create a new vector if this is the first potential infection 
+  // for the susceptible person in question
   Interaction inter { propensity, infectiousEvent.personIdx,
     infectiousEvent.personState, startTime, endTime };
   (*interactions)[susceptibleEvent.personIdx].emplace_back(inter);
