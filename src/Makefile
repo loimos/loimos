@@ -7,7 +7,7 @@
 include Makefile.include
 
 OBJS   = Main.o DiseaseModel.o People.o Locations.o Location.o Person.o  \
-         Event.o Scenario.o Partitioner.o \
+         Event.o Scenario.o Partitioner.o DiscreteEventSimulation.o \
          readers/Preprocess.o \
          readers/DataInterface.o readers/AttributeTable.o \
          readers/DataReader.o readers/Parse.o \
