@@ -17,20 +17,26 @@
 // Each location has a fixed probability of two people making contact which
 // depends on the maximum number of simultaneous visits to that location,
 // as well as the constants MIN, MAX, and ALPHA
-class MinMaxAlphaModel : public ContactModel {
- private:
+class MinMaxAlphaModel : public ContactModel
+{
+#if ENABLE_UNIT_TESTING
+public:
+#else
+private:
+#endif
+
   // Specifies where to look for the attribute we create to store each
   // location's contact probability
   int maxSimVisitsIndex;
 
- public:
+public:
   // We need to re-declare all of these methods from ContactModel so
   // we can override them
   explicit MinMaxAlphaModel(const AttributeTable &attrs);
   void computeLocationValues(Location *location) override;
   bool madeContact(const Event &susceptibleEvent,
-    const Event& infectiousEvent, Location *location) override;
+                   const Event &infectiousEvent, Location *location) override;
   double getContactProbability(const Location &location) const override;
 };
 
-#endif  // CONTACT_MODEL_MINMAXALPHAMODEL_H_
+#endif // CONTACT_MODEL_MINMAXALPHAMODEL_H_

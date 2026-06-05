@@ -1,0 +1,105 @@
+ # Copyright 2020-2025 The Loimos Project Developers.
+ # See the top-level LICENSE file for details.
+ #
+ # SPDX-License-Identifier: MIT
+ 
+ name: C++ Unit Tests
+ 
+ on:
+  push:
+    branches:
+      - develop
+      - "develop-*"
+      - "UnitTests/CICD"
+  pull_request:
+    branches:
+      - "*"
+
+ 
+ jobs:
+   test:
+     runs-on: ubuntu-22.04
+     
+     steps:
+     - name: Checkout repository
+       uses: actions/checkout@v4
+       with:
+         submodules: recursive
+ 
+     - name: Install system dependencies
+       run: |
+         sudo apt-get update
+         sudo apt-get install -y \
+           build-essential \
+           cmake \
+           protobuf-compiler \
+           libprotobuf-dev
+ 
+     - name: Cache GoogleTest
+       id: cache-gtest-coverage
+       uses: actions/cache@v4
+       with:
+         path: ~/gtest
+         key: googletest-1.12.1
+ 
+     - name: Build GoogleTest (if not cached)
+       if: steps.cache-gtest-coverage.outputs.cache-hit != 'true'
+       run: |
+         cd ~
+         git clone --branch v1.12.x https://github.com/google/googletest.git gtest
+         cd gtest
+         git checkout release-1.12.1
+         mkdir build install 
+         cd build
+         cmake .. -DCMAKE_CXX_STANDARD=11 -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/gtest/install
+         make -j$(nproc) && make install
+ 
+     - name: Set environment variables
+       run: |
+-        echo "CHARM_HOME=$HOME/charm" >> $GITHUB_ENV
+         echo "GTEST_HOME=$HOME/gtest" >> $GITHUB_ENV
+         echo "PROTOBUF_HOME=/usr" >> $GITHUB_ENV
+         # Add coverage flags
+         echo "CXXFLAGS=-g -O0 -std=c++11 --coverage -fprofile-arcs -ftest-coverage" >> $GITHUB_ENV
+ 
+     - name: Build with coverage instrumentation
+       run: |
+         cd src/protobuf
+         make clean || true
+         make
+-        cd ..
+-        make clean || true
+-        make DiseaseModel.o Event.o Partitioner.o
+-        make -C readers clean || true
+-        make -C readers
+-        make -C contact_model clean || true
+-        make -C contact_model
+-        make -C intervention_model clean || true
+-        make -C intervention_model
+ 
+     - name: Build and run tests with coverage
+       run: |
+         cd src/tests
+         make clean || true
+         make test-all
+ 
+     - name: Generate coverage report
+       run: |
+         cd src
+         lcov --capture --directory . --output-file coverage.info
+         lcov --remove coverage.info '/usr/*' '*/googletest/*' '*/protobuf/*' --output-file coverage.info
+         lcov --list coverage.info
+ 
+     - name: Upload coverage to Codecov
+       uses: codecov/codecov-action@v4
+       with:
+         files: src/coverage.info
+         flags: unittests
+         name: loimos-coverage
+         fail_ci_if_error: false
+ 
+     - name: Upload coverage artifact
+       uses: actions/upload-artifact@v4
+       with:
+         name: coverage-report
+         path: src/coverage.info
