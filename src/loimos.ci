@@ -314,7 +314,7 @@ mainmodule loimos {
     entry void ReceiveExpectedVisitors(ExpectedVisitorsMessage msg);
     entry void SendVisitorStates();
     entry void SendVisitMessages(); // calls ReceiveVisitMessages
-    entry AGGREGATE void ReceiveInteractions(InteractionMessage);
+    entry AGGREGATE void ReceiveInteractions(std::vector<InteractionMessage>);
     entry void EndOfDayStateUpdate(); // contribute call to ReceiveInfectiousCount
     entry void SendStats(); // contribute call to ReceiveStats
     entry void ReceiveIntervention(int interventionIdx);
@@ -329,7 +329,6 @@ mainmodule loimos {
     entry void ReceiveVisitorStates(PersonStatesMessage msg);
     entry void QueueVisits();
     entry AGGREGATE void ReceiveVisitMessages(VisitMessage);
-    entry void ComputeInteractions(); // calls ReceiveInteractions
     entry void ReceiveIntervention(int interventionIdx);
     entry void ReceiveVisitIntervention(VisitInterventionMessage msg);
     entry void AtSync();

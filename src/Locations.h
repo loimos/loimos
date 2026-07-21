@@ -35,41 +35,17 @@ class Locations : public CBase_Locations {
   // For random generation.
   static std::uniform_real_distribution<> unitDistrib;
 
-  // Each Event in one of these containers is the arrival event for a
-  // a person at a location
-  std::vector<Event> infectiousArrivals;
-  std::vector<Event> susceptibleArrivals;
-
-  // Maps each susceptible person's id to a list of interactions with people
-  // who could have infected them
-  std::unordered_map<Id, std::vector<Interaction> > interactions;
-
-  // Runs through all of the current events and return the indices of
-  // any people who have been infected
-  Counter processEvents(Location *loc);
-
-  // Helper functions to handle when a person leaves a location
-  // onDeparture branches to one of the two other functions
-  inline void onDeparture(Location *loc, const Event& departure);
-  void onSusceptibleDeparture(Location *loc, const Event& departure);
-  void onInfectiousDeparture(Location *loc, const Event& departure);
-
-  // Helper function which packages all the neccessary information about
-  // an interaction between a susceptible person and an infectious person
-  // and add it to the approriate list for the susceptible person
-  inline void registerInteraction(Location *loc, const Event &susceptibleEvent,
-    const Event &infectiousEvent, Time startTime, Time endTime);
-
-  // Simple helper function which send the list of interactions with the
-  // specified person to the appropriate People chare
-  inline void sendInteractions(Location *loc, Id personIdx);
-
-#if OUTPUT_FLAGS & OUTPUT_OVERLAPS
-  Counter saveInteractions(const Location &loc, const Event &departure,
-    std::ofstream *out);
-#endif
   void loadLocationData(std::string scenarioPath);
   void loadVisitData(std::ifstream *activityData);
+
+  // Sends batched interaction messages to person partitions.
+  void sendInteractions(Location *loc,
+    std::unordered_map<Id, std::vector<Interaction>> *interactions);
+
+  // Creates interaction messages-destination person partition mapping for batch send.
+  std::unordered_map<PartitionId, std::vector<InteractionMessage>>
+  createPartitionToMessagesMapping(Location *loc, std::unordered_map<Id,
+    std::vector<Interaction>> *interactions);
 
  public:
   explicit Locations(int seed, std::string scenarioPath);
