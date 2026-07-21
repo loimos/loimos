@@ -15,14 +15,17 @@
 #include <vector>
 #include <unordered_map>
 
-void queueVisitsImpl(std::vector<Location>& locations,
+// Processes existing visits for a given day to prepare each location
+// for running the DES in processEvents
+void queueVisitsImpl(std::vector<Location> *locations,
    const Scenario* scenario, int day,
-   const std::unordered_map<Id, PersonState>& visitorStates);
+   const std::unordered_map<Id, PersonState> &visitorStates);
 
 // Processes all of the current events and returns indices of
 // people who have been infected.
 Counter processEvents(Location *loc, Scenario *scenario,
-    std::ofstream *interactionsFile, int thisIndex);
+    std::ofstream *interactionsFile, int thisIndex, std::unordered_map<Id,
+    std::vector<Interaction>> *interactions);
 
 // Debugging/Instrumentation
 // Writes visit overlaps to an output stream
@@ -54,10 +57,5 @@ inline void registerInteraction(Location *loc, Scenario *scenario,
     const Event &susceptibleEvent, const Event &infectiousEvent,
     Time startTime, Time endTime,
     std::unordered_map<Id, std::vector<Interaction>> *interactions);
-
-// Sends interactions to appropriate People chare.
-inline void sendInteractions(Location *loc, Scenario *scenario,
-    Id personIdx, std::unordered_map<Id, std::vector<Interaction>> *interactions,
-    int thisIndex);
 
 #endif  // DISCRETEEVENTSIMULATION_H_
