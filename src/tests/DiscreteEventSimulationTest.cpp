@@ -1,3 +1,9 @@
+/* Copyright 2020-2026 The Loimos Project Developers.
+ * See the top-level LICENSE file for details.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #include "gtest/gtest.h"
 
 #include "../decl.h"
@@ -26,9 +32,8 @@ class FakeDiseaseModel : public DiseaseModel {
     DiseaseState infectiousState, Time startTime, Time endTime,
     double susceptibility, double infectivity)
     const {
-
-    Time dt = endTime - startTime;
-    return dt * susceptibility * infectivity;
+      Time dt = endTime - startTime;
+      return dt * susceptibility * infectivity;
   }
 };
 
@@ -105,8 +110,7 @@ TEST(LocationsTest, QueueVisitsImpl_CreatesArrivalAndDepartureEvents) {
       locations,
       &scenario,
       day,
-      visitorStates
-  );
+      visitorStates);
 
   const auto& events = locations[0].events;
 
@@ -123,7 +127,7 @@ TEST(LocationsTest, QueueVisitsImpl_CreatesArrivalAndDepartureEvents) {
   EXPECT_EQ(events[1].scheduledTime, 20);
 }
 
-TEST(LocationsTest, QueueVisitsImpl_CreatesArrivalAndDepartureEvents) {
+TEST(LocationsTest, processEvents_ComputesInteractions) {
   FakeScenario scenario;
   int day = 0;
 
@@ -180,12 +184,11 @@ TEST(LocationsTest, QueueVisitsImpl_CreatesArrivalAndDepartureEvents) {
       locations,
       &scenario,
       day,
-      visitorStates
-  );
+      visitorStates);
 
   std::unordered_map<Id, std::vector<Interaction>> interactions;
-  Counter locInters = processEvents(&locations[0], scenario, interactionsFile, thisIndex,
-    &interactions);
+  Counter locInters = processEvents(&locations[0], scenario, interactionsFile,
+      thisIndex, &interactions);
 
   EXPECT_EQ(interactions.count(0), 1);
   EXPECT_EQ(interactions.count(1), 0);
