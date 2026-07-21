@@ -38,6 +38,15 @@ class Locations : public CBase_Locations {
   void loadLocationData(std::string scenarioPath);
   void loadVisitData(std::ifstream *activityData);
 
+  // Sends batched interaction messages to person partitions.
+  void sendInteractions(Location *loc,
+    std::unordered_map<Id, std::vector<Interaction>> *interactions);
+
+  // Creates interaction messages-destination person partition mapping for batch send.
+  std::unordered_map<PartitionId, std::vector<InteractionMessage>>
+  createPartitionToMessagesMapping(Location *loc, std::unordered_map<Id,
+    std::vector<Interaction>> *interactions);
+
  public:
   explicit Locations(int seed, std::string scenarioPath);
   explicit Locations(CkMigrateMessage *msg);

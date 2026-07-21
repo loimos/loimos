@@ -368,6 +368,77 @@ void Locations::ComputeInteractions() {
   day++;
 }
 
+void Locations::ComputeInteractions() {
+  Counter numVisits = 0;
+  Counter numInteractions = 0;
+  for (Location &loc : locations) {
+    Counter locVisits = loc.events.size() / 2;
+    numVisits += locVisits;
+
+    // Map that will be populated with person ID to their list of interactions
+    std::unordered_map<Id, std::vector<Interaction>> interactions;
+    Counter locInters = processEvents(&loc, scenario, interactionsFile, thisIndex,
+      &interactions);
+    numInteractions += locInters;
+
+    sendInteractions(&loc, &interactions);
+  }
+#if ENABLE_DEBUG >= DEBUG_VERBOSE
+  CkCallback cb(CkReductionTarget(Main, ReceiveInteractionsCount), mainProxy);
+  contribute(sizeof(Counter), &numInteractions,
+      CONCAT(CkReduction::sum_, COUNTER_REDUCTION_TYPE), cb);
+#endif
+
+#if ENABLE_DEBUG >= DEBUG_PER_CHARE
+  if (0 == day) {
+    CkPrintf("    Process %d, thread %d: " COUNTER_PRINT_TYPE " visits, "
+        COUNTER_PRINT_TYPE" interactions, %lu locations\n",
+        CkMyNode(), CkMyPe(), numVisits, numInteractions, locations.size());
+  }
+#endif
+  day++;
+}
+
+// Sends all person interactions. Groups interactions by person partition and sends each
+// partition's interaction messages as a single batch.
+void Locations::sendInteractions(Location *loc, std::unordered_map<Id,
+  std::vector<Interaction>> *interactions) {
+  for (auto &[personPartition, messages] :
+    createPartitionToMessagesMapping(loc, interactions)) {
+    peopleArray[personPartition].ReceiveInteractions(messages);
+  }
+}
+
+// Groups interaction messages by destination person partition and returns this mapping.
+// Creates one InteractionMessage per person and stores it in the bucket corresponding
+// to that person's partition.
+std::unordered_map<PartitionId, std::vector<InteractionMessage>>
+Locations::createPartitionToMessagesMapping(Location *loc, std::unordered_map<Id,
+  std::vector<Interaction>> *interactions) {
+  Partitioner *partitioner = scenario->partitioner;
+  std::unordered_map<PartitionId, std::vector<InteractionMessage>> ans;
+  for (const auto &[personIdx, interactionsList] : *interactions) {
+    PartitionId personPartition = partitioner->getPersonPartitionIndex(personIdx);
+
+    #ifdef ENABLE_DEBUG
+      if (outOfBounds(0, partitioner->getNumPersonPartitions(), personPartition)) {
+        CkAbort("Error on chare %d: sending exposures at "
+          ID_PRINT_TYPE" to person " ID_PRINT_TYPE " on chare "
+          PARTITION_ID_PRINT_TYPE" outside of valid range [0, "
+          PARTITION_ID_PRINT_TYPE")\n", thisIndex, loc->getUniqueId(),
+          personIdx, personPartition, partitioner->getNumPersonPartitions());
+      }
+    #endif
+
+    // Create message for this person
+    InteractionMessage interMsg(loc->getUniqueId(), personIdx, interactionsList);
+
+    // Add to the correct partition bucket
+    ans[personPartition].emplace_back(interMsg);
+  }
+  return ans;
+}
+
 void Locations::ReceiveVisitMessages(VisitMessage visitMsg) {
   // adding person to location visit list
   Id localLocIdx = scenario->partitioner->getLocalLocationIndex(
