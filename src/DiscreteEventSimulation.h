@@ -15,6 +15,12 @@
 #include <vector>
 #include <unordered_map>
 
+// Processes existing visits for a given day to prepare each location
+// for running the DES in processEvents
+void queueVisitsImpl(std::vector<Location> *locations,
+   const Scenario* scenario, int day,
+   const std::unordered_map<Id, PersonState> &visitorStates);
+
 // Processes all of the current events and returns indices of
 // people who have been infected.
 Counter processEvents(Location *loc, Scenario *scenario,

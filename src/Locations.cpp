@@ -302,34 +302,9 @@ void Locations::ReceiveVisitorStates(PersonStatesMessage msg) {
   msg.states.clear();
 }
 
+
 void Locations::QueueVisits() {
-  for (Location &location : locations) {
-    const std::vector<VisitMessage> &visits =
-      location.visitsByDay[day % scenario->numDaysWithDistinctVisits];
-    for (const VisitMessage &visit : visits) {
-      if (!visit.isActive()) {
-        continue;
-      }
-
-      const PersonState &state = visitorStates[visit.personIdx];
-      Event arrival { ARRIVAL, visit.personIdx, state.state,
-        state.transmissionModifier, visit.visitStart };
-      Event departure { DEPARTURE, visit.personIdx, state.state,
-        state.transmissionModifier, visit.visitEnd };
-      Event::pair(&arrival, &departure);
-
-      location.addEvent(arrival);
-      location.addEvent(departure);
-
-#ifdef ENABLE_SC
-      bool isInfectious = scenario->diseaseModel->isInfectious(state.state);
-      if (!location.anyInfectious && isInfectious) {
-        location.anyInfectious = true;
-      }
-#endif
-    }
-  }
-
+  queueVisitsImpl(&locations, scenario, day, visitorStates);
   ComputeInteractions();
 }
 
