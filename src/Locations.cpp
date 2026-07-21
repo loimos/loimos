@@ -308,40 +308,6 @@ void Locations::QueueVisits() {
   ComputeInteractions();
 }
 
-// void Locations::queueVisitsImpl(
-//     std::vector<Location>& locations,
-//     const Scenario* scenario,
-//     int day,
-//     const std::unordered_map<Id, PersonState>& visitorStates
-//  ) {
-//   for (Location &location : locations) {
-//     const std::vector<VisitMessage> &visits =
-//       location.visitsByDay[day % scenario->numDaysWithDistinctVisits];
-//     for (const VisitMessage &visit : visits) {
-//       if (!visit.isActive()) {
-//         continue;
-//       }
-
-//       const PersonState &state = visitorStates.at(visit.personIdx);
-//       Event arrival { ARRIVAL, visit.personIdx, state.state,
-//         state.transmissionModifier, visit.visitStart };
-//       Event departure { DEPARTURE, visit.personIdx, state.state,
-//         state.transmissionModifier, visit.visitEnd };
-//       Event::pair(&arrival, &departure);
-
-//       location.addEvent(arrival);
-//       location.addEvent(departure);
-
-// #ifdef ENABLE_SC
-//       bool isInfectious = scenario->diseaseModel->isInfectious(state.state);
-//       if (!location.anyInfectious && isInfectious) {
-//         location.anyInfectious = true;
-//       }
-// #endif
-//     }
-//   }
-// }
-
 void Locations::ComputeInteractions() {
   Counter numVisits = 0;
   Counter numInteractions = 0;
